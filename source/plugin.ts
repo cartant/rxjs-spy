@@ -19,6 +19,7 @@ export interface Plugin {
     beforeNext: (observable: Observable<any>, subscriber: Subscriber<any>, value: any) => void;
     beforeSubscribe: (observable: Observable<any>, subscriber: Subscriber<any>) => void;
     beforeUnsubscribe: (observable: Observable<any>, subscriber: Subscriber<any>) => void;
+    overrideMatch?: (observable: Observable<any>) => boolean;
     overrideObservable?: (observable: Observable<any>, subscriber: Subscriber<any>) => Observable<any>;
     overrideValue?: (observable: Observable<any>, subscriber: Subscriber<any>, value: any) => any;
 }

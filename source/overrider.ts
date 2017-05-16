@@ -12,55 +12,49 @@ import { attach, detach } from "./spy";
 
 export class Overrider {
 
-    private observableOverrides_: {
-        match: any;
-        override: (observable: Observable<any>) => Observable<any>;
-    }[] = [];
+    private match_: any;
+    private observableOverride_: (observable: Observable<any>) => Observable<any>;
     private plugin_: Plugin;
-    private valueOverrides_: {
-        match: any;
-        override: (value: any) => any;
-    }[] = [];
+    private valueOverride_: (value: any) => any;
 
-    constructor() {
+    constructor(match: string);
+    constructor(match: RegExp);
+    constructor(match: (tag: string) => boolean);
+    constructor(match: any) {
 
         this.plugin_ = emptyPlugin();
-        this.plugin_.overrideObservable = (observable: Observable<any>, subscriber: Subscriber<any>) => {
-
-            const found = this.observableOverrides_.find((o) => tagged(observable, o.match));
-            return found ? found.override(observable) : observable;
-        };
-        this.plugin_.overrideValue = (observable: Observable<any>, subscriber: Subscriber<any>, value: any) => {
-
-            const found = this.valueOverrides_.find((o) => tagged(observable, o.match));
-            return found ? found.override(value) : value;
-        };
-        this.attach();
+        this.plugin_.overrideMatch = (observable) => tagged(observable, this.match_);
+        this.plugin_.overrideObservable = (observable, subscriber) => this.observableOverride_ ?
+            this.observableOverride_(observable) :
+            observable;
+        this.plugin_.overrideValue = (observable, subscriber, value) => this.valueOverride_ ?
+            this.valueOverride_(value) :
+            value;
+        this.attach(match);
     }
 
-    attach(): void {
+    attach(match: string): void;
+    attach(match: RegExp): void;
+    attach(match: (tag: string) => boolean): void;
+    attach(match: any): void {
 
+        this.match_ = match;
         attach(this.plugin_);
     }
 
     detach(): void {
 
         detach(this.plugin_);
+        this.match_ = null;
     }
 
-    overrideObservable(match: string, override: (observable: Observable<any>) => Observable<any>): void;
-    overrideObservable(match: RegExp, override: (observable: Observable<any>) => Observable<any>): void;
-    overrideObservable(match: (tag: string) => boolean, override: (observable: Observable<any>) => Observable<any>): void;
-    overrideObservable(match: any, override: (observable: Observable<any>) => Observable<any>): void {
+    overrideObservable(override: (observable: Observable<any>) => Observable<any>): void {
 
-        this.observableOverrides_.push({ match, override });
+        this.observableOverride_ = override;
     }
 
-    overrideValue(match: string, override: (value: any) => any): void;
-    overrideValue(match: RegExp, override: (value: any) => any): void;
-    overrideValue(match: (tag: string) => boolean, override: (value: any) => any): void;
-    overrideValue(match: any, override: (value: any) => any): void {
+    overrideValue(override: (value: any) => any): void {
 
-        this.valueOverrides_.push({ match, override });
+        this.valueOverride_ = override;
     }
 }

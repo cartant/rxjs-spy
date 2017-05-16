@@ -19,8 +19,8 @@ describe("overrider", () => {
         it("should override an observable subscription", () => {
 
             const override = new Subject<string>();
-            const overrider = new Overrider();
-            overrider.overrideObservable("people", (observable) => override);
+            const overrider = new Overrider("people");
+            overrider.overrideObservable((observable) => override);
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -40,8 +40,8 @@ describe("overrider", () => {
 
         it("should override a value", () => {
 
-            const overrider = new Overrider();
-            overrider.overrideValue("people", (value) => "bob");
+            const overrider = new Overrider("people");
+            overrider.overrideValue((value) => "bob");
 
             const values: any[] = [];
             const subject = new Subject<string>();
