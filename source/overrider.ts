@@ -23,10 +23,10 @@ export class Overrider {
     constructor(match: any) {
 
         this.plugin_ = emptyPlugin();
-        this.plugin_.overrideMatch = (observable) => tagged(observable, this.match_);
         this.plugin_.overrideObservable = (observable, subscriber) => this.observableOverride_ ?
             this.observableOverride_(observable) :
             observable;
+        this.plugin_.overrides = (observable, subscriber) => tagged(observable, this.match_);
         this.plugin_.overrideValue = (observable, subscriber, value) => this.valueOverride_ ?
             this.valueOverride_(value) :
             value;

@@ -47,7 +47,7 @@ function overrideObservable(
 
     for (let p = plugins_.length - 1; p >= 0; --p) {
         const plugin = plugins_[p];
-        if (plugin.overrideMatch && plugin.overrideObservable && plugin.overrideMatch(observable)) {
+        if (plugin.overrides && plugin.overrideObservable && plugin.overrides(observable, subscriber)) {
             return plugin.overrideObservable(observable, subscriber);
         }
     }
@@ -62,7 +62,7 @@ function overrideValue(
 
     for (let p = plugins_.length - 1; p >= 0; --p) {
         const plugin = plugins_[p];
-        if (plugin.overrideMatch && plugin.overrideValue && plugin.overrideMatch(observable)) {
+        if (plugin.overrides && plugin.overrideValue && plugin.overrides(observable, subscriber)) {
             return plugin.overrideValue(observable, subscriber, value);
         }
     }
