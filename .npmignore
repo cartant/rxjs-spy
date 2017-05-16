@@ -1,0 +1,8 @@
+/build
+/bundles/*-test.umd.js
+/node_modules
+/scripts
+/source
+/temp
+/*.js
+/ts*.json
