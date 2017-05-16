@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { read } from "./operator/tag";
-import { emptyPlugin, Plugin } from "./plugin";
+import { empty, Plugin } from "./plugin";
 import { attach, detach, tick } from "./spy";
 
 export interface Snapshot {
@@ -42,7 +42,7 @@ export class Snapshotter {
 
     constructor() {
 
-        this.plugin_ = emptyPlugin();
+        this.plugin_ = empty();
         this.plugin_.afterSubscribe = (observable, subscriber) => this.afterSubscribe_(observable);
         this.plugin_.beforeComplete = (observable, subscriber) => this.beforeComplete_(observable);
         this.plugin_.beforeError = (observable, subscriber, error) => this.beforeError_(observable, error);

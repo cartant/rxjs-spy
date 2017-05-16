@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { read, tagged } from "./operator/tag";
-import { emptyPlugin, Plugin } from "./plugin";
+import { empty, Plugin } from "./plugin";
 import { attach, detach } from "./spy";
 
 export class Logger {
@@ -21,7 +21,7 @@ export class Logger {
     constructor(match: (tag: string) => boolean);
     constructor(match: any) {
 
-        this.plugin_ = emptyPlugin();
+        this.plugin_ = empty();
         this.plugin_.beforeComplete = (observable, subscriber) => this.log_(observable, subscriber, "complete");
         this.plugin_.beforeError = (observable, subscriber, error) => this.log_(observable, subscriber, "error", [error]);
         this.plugin_.beforeNext = (observable, subscriber, value) => this.log_(observable, subscriber, "next", [value]);

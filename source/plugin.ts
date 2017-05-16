@@ -24,7 +24,7 @@ export interface Plugin {
     overrideValue?: (observable: Observable<any>, subscriber: Subscriber<any>, value: any) => any;
 }
 
-export function emptyPlugin(): Plugin {
+export function empty(): Plugin {
 
     return {
         afterComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {},

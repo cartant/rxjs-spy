@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { tagged } from "./operator/tag";
-import { emptyPlugin, Plugin } from "./plugin";
+import { empty, Plugin } from "./plugin";
 import { attach, detach } from "./spy";
 
 export type ListenerEventType =
@@ -43,7 +43,7 @@ export class Listener {
     constructor(match: (tag: string) => boolean);
     constructor(match: any) {
 
-        this.plugin_ = emptyPlugin();
+        this.plugin_ = empty();
         this.plugin_.afterComplete = (observable, subscriber) => this.handle_({ observable, subscriber, type: "afterComplete" });
         this.plugin_.afterError = (observable, subscriber, error) => this.handle_({ error, observable, subscriber, type: "afterError" });
         this.plugin_.afterNext = (observable, subscriber, value) => this.handle_({ observable, subscriber, type: "afterNext", value });

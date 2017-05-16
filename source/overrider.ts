@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { tagged } from "./operator/tag";
-import { emptyPlugin, Plugin } from "./plugin";
+import { empty, Plugin } from "./plugin";
 import { attach, detach } from "./spy";
 
 export class Overrider {
@@ -22,7 +22,7 @@ export class Overrider {
     constructor(match: (tag: string) => boolean);
     constructor(match: any) {
 
-        this.plugin_ = emptyPlugin();
+        this.plugin_ = empty();
         this.plugin_.overrideObservable = (observable, subscriber) => this.observableOverride_ ?
             this.observableOverride_(observable) :
             observable;
