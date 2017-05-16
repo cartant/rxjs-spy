@@ -8,10 +8,12 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
+import { tagged } from "./operator/tag";
 import { SnapshotObservable, Snapshotter } from "./snapshotter";
 
 import "rxjs/add/observable/combineLatest";
 import "rxjs/add/operator/map";
+import "./add/operator/tag";
 
 describe("snapshotter", () => {
 
@@ -262,6 +264,21 @@ describe("snapshotter", () => {
             subject.next(1);
 
             snapshot = snapshotter.snapshot({ since });
+            expect(snapshot.observables).to.have.length(1);
+        });
+
+        it("should support a filter", () => {
+
+            const subject = new Subject<number>();
+            const subscription = subject.tag("tagged").subscribe();
+
+            let since = snapshotter.snapshot();
+            expect(since.observables).to.have.length(2);
+
+            let snapshot = snapshotter.snapshot({ filter: (o) => tagged(o.observable, "tagged") });
+            expect(snapshot.observables).to.have.length(1);
+
+            snapshot = snapshotter.snapshot({ filter: (o) => o.subscriptions.some((s) => s.explicit) });
             expect(snapshot.observables).to.have.length(1);
         });
 
