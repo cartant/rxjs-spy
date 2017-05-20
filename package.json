@@ -30,7 +30,7 @@
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
     "typescript": "^2.2.2",
-    "uglifyjs": "2.4.10"
+    "uglify-js": "^3.0.10"
   },
   "homepage": "https://github.com/cartant/rxjs-spy",
   "jsnext:main": "./dist/index.js",
@@ -60,7 +60,7 @@
     "dist:build": "npm run dist:clean && tsc -p tsconfig-dist.json && rollup -c rollup-config.js",
     "dist:clean": "rimraf dist && rimraf bundles/rxjs-spy.* && mkdirp bundles",
     "dist:copy": "node scripts/pack.js && cpy bundles/rxjs-spy.* dist/bundles/ && cpy CHANGELOG.md LICENSE README.md dist/ && cpy **/package.json ../dist/ --cwd=source --parents",
-    "dist:uglify": "uglifyjs -c --comments /license/ -m --screw-ie8 -o bundles/rxjs-spy.min.umd.js bundles/rxjs-spy.umd.js",
+    "dist:uglify": "uglifyjs -c --comments /license/ -m -o bundles/rxjs-spy.min.umd.js bundles/rxjs-spy.umd.js",
     "lint": "tslint --project tsconfig.json --type-check source/**/*.ts",
     "test": "npm run lint && npm run test:build && karma start",
     "test:build": "npm run test:clean && tsc -p tsconfig.json && rollup -c rollup-config-test.js",
