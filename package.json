@@ -30,7 +30,7 @@
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
     "typescript": "^2.2.2",
-    "uglifyjs": "^2.4.10"
+    "uglifyjs": "2.4.10"
   },
   "homepage": "https://github.com/cartant/rxjs-spy",
   "jsnext:main": "./dist/index.js",
