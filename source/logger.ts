@@ -60,7 +60,8 @@ export class Logger {
         if (tagged(observable, this.match_)) {
             const { logger_ } = this;
             const tag = read(observable);
-            logger_.log.apply(logger_, [`${type}: ${tag}`].concat(params));
+            const method = (type === "error") ? "error" : "log";
+            (logger_[method] || logger_.log).apply(logger_, [`${type}: ${tag}`].concat(params));
         }
     }
 }
