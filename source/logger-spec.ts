@@ -25,7 +25,7 @@ describe("logger", () => {
     beforeEach(() => {
 
         logger = new Logger("people");
-        logger.logger = {
+        logger.implementation = {
             log(...args: any[]): void { calls.push(args); }
         };
         calls = [];

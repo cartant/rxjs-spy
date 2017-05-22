@@ -10,9 +10,15 @@ import { read, tagged } from "./operator/tag";
 import { empty, Plugin } from "./plugin";
 import { attach, detach } from "./spy";
 
+export interface LoggerImplementation {
+    readonly error?: (...args: any[]) => void;
+    readonly log: (...args: any[]) => void;
+    readonly warn?: (...args: any[]) => void;
+}
+
 export class Logger {
 
-    private logger_: any = console;
+    private implementation_: LoggerImplementation = console;
     private match_: any;
     private plugin_: Plugin;
 
@@ -30,9 +36,9 @@ export class Logger {
         this.attach(match);
     }
 
-    set logger(value: any) {
+    set implementation(value: LoggerImplementation) {
 
-        this.logger_ = value;
+        this.implementation_ = value;
     }
 
     attach(match: string): void;
@@ -58,10 +64,10 @@ export class Logger {
     ): void {
 
         if (tagged(observable, this.match_)) {
-            const { logger_ } = this;
+            const { implementation_ } = this;
             const tag = read(observable);
             const method = (type === "error") ? "error" : "log";
-            (logger_[method] || logger_.log).apply(logger_, [`${type}: ${tag}`].concat(params));
+            (implementation_[method] || implementation_.log).apply(implementation_, [`${type}: ${tag}`].concat(params));
         }
     }
 }
