@@ -8,6 +8,6 @@ export default {
     external: external,
     format: "umd",
     globals: Object.assign({}, globals),
-    moduleName: "rxjsSpy",
+    moduleName: "RxSpy",
     plugins: [nodeResolve({})]
 }
