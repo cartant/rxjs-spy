@@ -77,7 +77,8 @@ export class SnapshotPlugin extends BasePlugin {
 
         const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
         if (!snapshotObservable) {
-            throw new Error("Snapshot not found.");
+            noSnapshot();
+            return;
         }
         stack_.push({ event: "complete", snapshotObservable });
 
@@ -92,7 +93,8 @@ export class SnapshotPlugin extends BasePlugin {
 
         const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
         if (!snapshotObservable) {
-            throw new Error("Snapshot not found.");
+            noSnapshot();
+            return;
         }
         stack_.push({ event: "error", snapshotObservable });
 
@@ -108,13 +110,15 @@ export class SnapshotPlugin extends BasePlugin {
 
         const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
         if (!snapshotObservable) {
-            throw new Error("Snapshot not found.");
+            noSnapshot();
+            return;
         }
         stack_.push({ event: "next", snapshotObservable });
 
         const snapshotSubscription = snapshotObservable.subscriptions.find((s) => s.subscriber === subscriber);
         if (!snapshotSubscription) {
-            throw new Error("Snapshot not found.");
+            noSnapshot();
+            return;
         }
 
         snapshotObservable.tick = tick();
@@ -181,7 +185,8 @@ export class SnapshotPlugin extends BasePlugin {
 
         const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
         if (!snapshotObservable) {
-            throw new Error("Snapshot not found.");
+            noSnapshot();
+            return;
         }
         stack_.push({ event: "unsubscribe", snapshotObservable });
 
@@ -249,4 +254,10 @@ function getType(observable: Observable<any>): string {
         return prototype.constructor.name;
     }
     return "Object";
+}
+
+function noSnapshot(): void {
+
+    /*tslint:disable-next-line:no-console*/
+    console.warn("Snapshot not found; subscriptions made prior to calling 'spy' are not snapshotted.");
 }
