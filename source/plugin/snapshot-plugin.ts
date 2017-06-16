@@ -25,6 +25,7 @@ export interface SnapshotObservable {
     subscriptions: SnapshotSubscription[];
     tag: string | null;
     tick: number;
+    type: string;
     values: { timestamp: number; value: any; }[];
 }
 
@@ -141,6 +142,7 @@ export class SnapshotPlugin extends BasePlugin {
                 subscriptions: [],
                 tag,
                 tick: tick(),
+                type: getType(observable),
                 values: []
             };
             snapshotObservables_.push(snapshotObservable);
@@ -238,4 +240,13 @@ function addOnce<T>(array: T[], element: T): void {
     if (found === -1) {
         array.push(element);
     }
+}
+
+function getType(observable: Observable<any>): string {
+
+    const prototype = Object.getPrototypeOf(observable);
+    if (prototype.constructor && prototype.constructor.name) {
+        return prototype.constructor.name;
+    }
+    return "Object";
 }
