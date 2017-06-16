@@ -6,7 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { matches } from "../operator/tag";
+import { matches, MatchFunction } from "../operator/tag";
 import { BasePlugin } from "./plugin";
 import { isObservable } from "../util";
 
@@ -24,9 +24,9 @@ export class PatchPlugin extends BasePlugin {
     constructor(match: RegExp, source: Observable<any>);
     constructor(match: RegExp, project: (value: any) => any);
     constructor(match: RegExp, value: any);
-    constructor(match: (tag: string) => boolean, source: Observable<any>);
-    constructor(match: (tag: string) => boolean, project: (value: any) => any);
-    constructor(match: (tag: string) => boolean, value: any);
+    constructor(match: MatchFunction, source: Observable<any>);
+    constructor(match: MatchFunction, project: (value: any) => any);
+    constructor(match: MatchFunction, value: any);
     constructor(match: any, arg: any) {
 
         super();

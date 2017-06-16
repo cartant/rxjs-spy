@@ -7,6 +7,7 @@
 
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
+import * as sinon from "sinon";
 import { matches, tag } from "../../operator/tag";
 
 import "rxjs/add/observable/from";
@@ -52,6 +53,16 @@ describe("matches", () => {
 
         expect(matches(source, predicate)).to.be.true;
         expect(matches(Observable.of("mallory"), predicate)).to.be.false;
+    });
+
+    it("should pass the observable to the predicate", () => {
+
+        const stub = sinon.stub().returns(true);
+
+        matches(source, stub);
+
+        expect(stub).to.have.property("calledOnce", true);
+        expect(stub.calledWith("people", source)).to.be.true;
     });
 });
 

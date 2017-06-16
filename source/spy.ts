@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
-import { matches } from "./operator/tag";
+import { matches, MatchFunction } from "./operator/tag";
 import { Event, LogPlugin, PatchPlugin, Plugin, SnapshotObservable, SnapshotPlugin } from "./plugin";
 import { isObservable, toSubscriber } from "./util";
 
@@ -18,8 +18,6 @@ let undos_: { name: string, teardown: () => void }[] = [];
 let tick_ = 0;
 
 if (typeof window !== "undefined") {
-
-    /*tslint:disable:no-console*/
 
     window["rxSpy"] = {
 
@@ -51,11 +49,13 @@ if (typeof window !== "undefined") {
         undo(...args: any[]): void {
 
             if (args.length === 0) {
+                /*tslint:disable:no-console*/
                 console.group("Undo(s)");
                 undos_.forEach((undo, index) => {
                     console.log(`${index + 1} ${undo.name}`);
                 });
                 console.groupEnd();
+                /*tslint:enable:no-console*/
             } else {
                 args
                     .map((at) => undos_[at - 1])
@@ -63,14 +63,12 @@ if (typeof window !== "undefined") {
             }
         }
     };
-
-    /*tslint:enable:no-console*/
 }
 
 export function debug(observable: Observable<any>, ...events: Event[]): () => void;
 export function debug(match: string, ...events: Event[]): () => void;
 export function debug(match: RegExp, ...events: Event[]): () => void;
-export function debug(match: (tag: string) => boolean, ...events: Event[]): () => void;
+export function debug(match: MatchFunction, ...events: Event[]): () => void;
 export function debug(match: any, ...events: Event[]): () => void {
 
     if (events.length === 0) {
@@ -96,7 +94,7 @@ export function debug(match: any, ...events: Event[]): () => void {
 export function log(observable: Observable<any>, partialLogger?: PartialLogger): () => void;
 export function log(match: string, partialLogger?: PartialLogger): () => void;
 export function log(match: RegExp, partialLogger?: PartialLogger): () => void;
-export function log(match: (tag: string) => boolean, partialLogger?: PartialLogger): () => void;
+export function log(match: MatchFunction, partialLogger?: PartialLogger): () => void;
 export function log(match: any, partialLogger: PartialLogger = defaultLogger): () => void {
 
     const plugin = new LogPlugin(match, partialLogger);
@@ -124,9 +122,9 @@ export function patch(match: string, value: any): () => void;
 export function patch(match: RegExp, source: Observable<any>): () => void;
 export function patch(match: RegExp, project: (value: any) => any): () => void;
 export function patch(match: RegExp, value: any): () => void;
-export function patch(match: (tag: string) => boolean, source: Observable<any>): () => void;
-export function patch(match: (tag: string) => boolean, project: (value: any) => any): () => void;
-export function patch(match: (tag: string) => boolean, value: any): () => void;
+export function patch(match: MatchFunction, source: Observable<any>): () => void;
+export function patch(match: MatchFunction, project: (value: any) => any): () => void;
+export function patch(match: MatchFunction, value: any): () => void;
 export function patch(match: any, arg: any): () => void {
 
     const plugin = new PatchPlugin(match, arg);
