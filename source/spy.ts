@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
-import { tagged } from "./operator/tag";
+import { matches } from "./operator/tag";
 import { Event, LogPlugin, PatchPlugin, Plugin, SnapshotObservable, SnapshotPlugin } from "./plugin";
 import { isObservable, toSubscriber } from "./util";
 
@@ -93,7 +93,7 @@ export function debug(match: any, ...events: Event[]): () => void {
         events = ["complete", "error", "next", "subscribe", "unsubscribe"];
     }
 
-    const matcher = (observable: Observable<any>, event: Event) => ((observable === match) || tagged(observable, match)) && (events.indexOf(event) !== -1);
+    const matcher = (observable: Observable<any>, event: Event) => matches(observable, match) && (events.indexOf(event) !== -1);
     debugMatchers_.push(matcher);
 
     return () => {
@@ -162,14 +162,14 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
 
     const snapshotPlugin = plugin as SnapshotPlugin;
     const snapshot = snapshotPlugin.snapshot();
-    const matches = snapshot.observables.filter((o) => (o.observable === match) || tagged(o.observable, match));
-    const method = (matches.length > 3) ? "groupCollapsed" : "group";
+    const filtered = snapshot.observables.filter((o) => matches(o.observable, match));
+    const method = (filtered.length > 3) ? "groupCollapsed" : "group";
 
     const logger = toLogger(partialLogger);
     const tag = (typeof match === "function") ? "function" : match.toString();
 
     logger.group(`Snapshot(s) for ${tag}`);
-    matches.forEach((o) => {
+    filtered.forEach((o) => {
 
         logger[method].call(logger, o.tag || "unknown");
         logger.log(o);

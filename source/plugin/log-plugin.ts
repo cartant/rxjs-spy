@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
-import { read, tagged } from "../operator/tag";
+import { matches, read } from "../operator/tag";
 import { BasePlugin } from "./plugin";
 
 export class LogPlugin extends BasePlugin {
@@ -61,7 +61,7 @@ export class LogPlugin extends BasePlugin {
 
         const { logger_, match_ } = this;
 
-        if ((observable === match_) || tagged(observable, match_)) {
+        if (matches(observable, match_)) {
             const tag = read(observable);
             const method = (type === "error") ? "error" : "log";
             logger_[method].apply(logger_, [`${type}: ${tag}`].concat(params));

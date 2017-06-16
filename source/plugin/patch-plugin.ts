@@ -6,7 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { tagged } from "../operator/tag";
+import { matches } from "../operator/tag";
 import { BasePlugin } from "./plugin";
 import { isObservable } from "../util";
 
@@ -39,7 +39,7 @@ export class PatchPlugin extends BasePlugin {
 
         const { match_, patch_ } = this;
 
-        if ((observable === match_) || tagged(observable, match_)) {
+        if (matches(observable, match_)) {
             return patch_;
         }
         return null;

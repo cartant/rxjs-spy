@@ -7,13 +7,53 @@
 
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
-import { tag, tagged } from "../../operator/tag";
+import { matches, tag } from "../../operator/tag";
 
 import "rxjs/add/observable/from";
 import "rxjs/add/observable/of";
 import "rxjs/add/operator/toArray";
 import "rxjs/add/operator/toPromise";
 import "./tag";
+
+describe("matches", () => {
+
+    let source: Observable<string>;
+
+    beforeEach(() => {
+
+        source = Observable
+            .from(["alice", "bob"])
+            .tag("people");
+    });
+
+    it("should match an observable", () => {
+
+        expect(matches(source, source)).to.be.true;
+        expect(matches(Observable.of("mallory"), source)).to.be.false;
+    });
+
+    it("should match a string", () => {
+
+        expect(matches(source, "people")).to.be.true;
+        expect(matches(Observable.of("mallory"), "people")).to.be.false;
+    });
+
+    it("should match a regular expression", () => {
+
+        expect(matches(source, /^people$/)).to.be.true;
+        expect(matches(Observable.of("mallory"), /^people$/)).to.be.false;
+    });
+
+    it("should match a predicate", () => {
+
+        function predicate(tag: string): boolean {
+            return tag === "people";
+        }
+
+        expect(matches(source, predicate)).to.be.true;
+        expect(matches(Observable.of("mallory"), predicate)).to.be.false;
+    });
+});
 
 describe("tag", () => {
 
@@ -38,39 +78,5 @@ describe("tag", () => {
 
                 expect(value).to.deep.equal(["alice", "bob"]);
             });
-    });
-});
-
-describe("tagged", () => {
-
-    let source: Observable<string>;
-
-    beforeEach(() => {
-
-        source = Observable
-            .from(["alice", "bob"])
-            .tag("people");
-    });
-
-    it("should match a string", () => {
-
-        expect(tagged(source, "people")).to.be.true;
-        expect(tagged(Observable.of("mallory"), "people")).to.be.false;
-    });
-
-    it("should match a regular expression", () => {
-
-        expect(tagged(source, /^people$/)).to.be.true;
-        expect(tagged(Observable.of("mallory"), /^people$/)).to.be.false;
-    });
-
-    it("should match a predicate", () => {
-
-        function predicate(tag: string): boolean {
-            return tag === "people";
-        }
-
-        expect(tagged(source, predicate)).to.be.true;
-        expect(tagged(Observable.of("mallory"), predicate)).to.be.false;
     });
 });

@@ -8,7 +8,7 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { tagged } from "../operator/tag";
+import { matches } from "../operator/tag";
 import { spy } from "../spy";
 import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
 
@@ -282,7 +282,7 @@ describe("SnapshotPlugin", () => {
             let since = plugin.snapshot();
             expect(since.observables).to.have.length(2);
 
-            let snapshot = plugin.snapshot({ filter: (o) => tagged(o.observable, "tagged") });
+            let snapshot = plugin.snapshot({ filter: (o) => matches(o.observable, "tagged") });
             expect(snapshot.observables).to.have.length(1);
 
             snapshot = plugin.snapshot({ filter: (o) => o.subscriptions.some((s) => s.explicit) });

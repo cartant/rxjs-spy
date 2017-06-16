@@ -9,12 +9,19 @@
 import { Observable } from "rxjs/Observable";
 import { Operator } from "rxjs/Operator";
 import { Subscriber } from "rxjs/Subscriber";
+import { isObservable } from "../util";
 
-export function matches<T>(tag: string | null, match: string): boolean;
-export function matches<T>(tag: string | null, match: RegExp): boolean;
-export function matches<T>(tag: string | null, match: (tag: string) => boolean): boolean;
-export function matches<T>(tag: string | null, match: any): boolean {
+export function matches<T>(observable: Observable<T>, match: Observable<T>): boolean;
+export function matches<T>(observable: Observable<T>, match: string): boolean;
+export function matches<T>(observable: Observable<T>, match: RegExp): boolean;
+export function matches<T>(observable: Observable<T>, match: (tag: string) => boolean): boolean;
+export function matches<T>(observable: Observable<T>, match: any): boolean {
 
+    if (isObservable(match)) {
+        return observable === match;
+    }
+
+    const tag = read(observable);
     if (tag === null) {
         return false;
     }
@@ -44,14 +51,6 @@ export function read<T>(observable: Observable<T>): string | null {
 export function tag<T>(this: Observable<T>, tag: string): Observable<T> {
 
     return this.lift(new TagOperator(tag));
-}
-
-export function tagged<T>(observable: Observable<T>, match: string): boolean;
-export function tagged<T>(observable: Observable<T>, match: RegExp): boolean;
-export function tagged<T>(observable: Observable<T>, match: (tag: string) => boolean): boolean;
-export function tagged<T>(observable: Observable<T>, match: any): boolean {
-
-    return matches(read(observable), match);
 }
 
 class TagOperator<T> implements Operator<T, T> {
