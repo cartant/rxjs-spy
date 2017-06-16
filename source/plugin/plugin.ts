@@ -7,6 +7,8 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 
+export type Event = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
+
 export interface Plugin {
 
     afterComplete: (observable: Observable<any>, subscriber: Subscriber<any>) => void;

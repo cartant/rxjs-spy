@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { read } from "../operator/tag";
-import { BasePlugin } from "./plugin";
+import { Event, BasePlugin } from "./plugin";
 import { tick } from "../spy";
 
 export interface Snapshot {
@@ -39,7 +39,7 @@ export interface SnapshotSubscription {
 export class SnapshotPlugin extends BasePlugin {
 
     private snapshotObservables_: SnapshotObservable[] = [];
-    private stack_: { operation: string, snapshotObservable: SnapshotObservable }[] = [];
+    private stack_: { event: Event, snapshotObservable: SnapshotObservable }[] = [];
 
     afterComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
 
@@ -79,7 +79,7 @@ export class SnapshotPlugin extends BasePlugin {
         if (!snapshotObservable) {
             throw new Error("Snapshot not found.");
         }
-        stack_.push({ operation: "complete", snapshotObservable });
+        stack_.push({ event: "complete", snapshotObservable });
 
         snapshotObservable.complete = true;
         snapshotObservable.subscriptions = [];
@@ -94,7 +94,7 @@ export class SnapshotPlugin extends BasePlugin {
         if (!snapshotObservable) {
             throw new Error("Snapshot not found.");
         }
-        stack_.push({ operation: "error", snapshotObservable });
+        stack_.push({ event: "error", snapshotObservable });
 
         snapshotObservable.error = error;
         snapshotObservable.subscriptions = [];
@@ -110,7 +110,7 @@ export class SnapshotPlugin extends BasePlugin {
         if (!snapshotObservable) {
             throw new Error("Snapshot not found.");
         }
-        stack_.push({ operation: "next", snapshotObservable });
+        stack_.push({ event: "next", snapshotObservable });
 
         const snapshotSubscription = snapshotObservable.subscriptions.find((s) => s.subscriber === subscriber);
         if (!snapshotSubscription) {
@@ -149,13 +149,13 @@ export class SnapshotPlugin extends BasePlugin {
         }
 
         let explicit = true;
-        if ((stack_.length > 0) && (stack_[stack_.length - 1].operation === "next")) {
+        if ((stack_.length > 0) && (stack_[stack_.length - 1].event === "next")) {
             explicit = false;
             const source = stack_[stack_.length - 1].snapshotObservable;
             addOnce(source.merges, snapshotObservable);
         } else {
             for (let s = stack_.length - 1; s > -1; --s) {
-                if (stack_[s].operation === "subscribe") {
+                if (stack_[s].event === "subscribe") {
                     explicit = false;
                     const dependent = stack_[s].snapshotObservable;
                     addOnce(dependent.dependencies, snapshotObservable);
@@ -164,7 +164,7 @@ export class SnapshotPlugin extends BasePlugin {
                 }
             }
         }
-        stack_.push({ operation: "subscribe", snapshotObservable });
+        stack_.push({ event: "subscribe", snapshotObservable });
 
         const snapshotSubscription: SnapshotSubscription = {
             explicit,
@@ -183,7 +183,7 @@ export class SnapshotPlugin extends BasePlugin {
         if (!snapshotObservable) {
             throw new Error("Snapshot not found.");
         }
-        stack_.push({ operation: "unsubscribe", snapshotObservable });
+        stack_.push({ event: "unsubscribe", snapshotObservable });
 
         snapshotObservable.subscriptions = snapshotObservable.subscriptions.filter((s) => s.subscriber !== subscriber);
     }

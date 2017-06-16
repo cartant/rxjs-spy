@@ -8,4 +8,4 @@ import "./add/operator/tag";
 
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { BasePlugin, Plugin } from "./plugin";
-export { log, patch, show, spy } from "./spy";
+export { debug, log, patch, show, spy } from "./spy";
