@@ -83,6 +83,7 @@ if (typeof window !== "undefined") {
     /*tslint:enable:no-console no-invalid-this*/
 }
 
+export function debug(observable: Observable<any>, ...events: Event[]): () => void;
 export function debug(match: string, ...events: Event[]): () => void;
 export function debug(match: RegExp, ...events: Event[]): () => void;
 export function debug(match: (tag: string) => boolean, ...events: Event[]): () => void;
@@ -92,7 +93,7 @@ export function debug(match: any, ...events: Event[]): () => void {
         events = ["complete", "error", "next", "subscribe", "unsubscribe"];
     }
 
-    const matcher = (observable: Observable<any>, event: Event) => tagged(observable, match) && (events.indexOf(event) !== -1);
+    const matcher = (observable: Observable<any>, event: Event) => ((observable === match) || tagged(observable, match)) && (events.indexOf(event) !== -1);
     debugMatchers_.push(matcher);
 
     return () => {
@@ -104,6 +105,7 @@ export function debug(match: any, ...events: Event[]): () => void {
     };
 }
 
+export function log(observable: Observable<any>, partialLogger?: PartialLogger): () => void;
 export function log(match: string, partialLogger?: PartialLogger): () => void;
 export function log(match: RegExp, partialLogger?: PartialLogger): () => void;
 export function log(match: (tag: string) => boolean, partialLogger?: PartialLogger): () => void;
@@ -121,6 +123,9 @@ export function log(match: any, partialLogger: PartialLogger = defaultLogger): (
     };
 }
 
+export function patch(observable: Observable<any>, source: Observable<any>): () => void;
+export function patch(observable: Observable<any>, project: (value: any) => any): () => void;
+export function patch(observable: Observable<any>, value: any): () => void;
 export function patch(match: string, source: Observable<any>): () => void;
 export function patch(match: string, project: (value: any) => any): () => void;
 export function patch(match: string, value: any): () => void;
@@ -144,6 +149,7 @@ export function patch(match: any, arg: any): () => void {
     };
 }
 
+export function show(observable: Observable<any>, partialLogger?: PartialLogger): void;
 export function show(match: string, partialLogger?: PartialLogger): void;
 export function show(match: RegExp, partialLogger?: PartialLogger): void;
 export function show(match: (tag: string) => boolean, partialLogger?: PartialLogger): void;
@@ -156,7 +162,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
 
     const snapshotPlugin = plugin as SnapshotPlugin;
     const snapshot = snapshotPlugin.snapshot();
-    const matches = snapshot.observables.filter((o) => tagged(o.observable, match));
+    const matches = snapshot.observables.filter((o) => (o.observable === match) || tagged(o.observable, match));
     const method = (matches.length > 3) ? "groupCollapsed" : "group";
 
     const logger = toLogger(partialLogger);

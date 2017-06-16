@@ -15,6 +15,9 @@ export class PatchPlugin extends BasePlugin {
     private match_: any;
     private patch_: Observable<any> | ((value: any) => any);
 
+    constructor(observable: Observable<any>, source: Observable<any>);
+    constructor(observable: Observable<any>, project: (value: any) => any);
+    constructor(observable: Observable<any>, value: any);
     constructor(match: string, source: Observable<any>);
     constructor(match: string, project: (value: any) => any);
     constructor(match: string, value: any);
@@ -34,8 +37,10 @@ export class PatchPlugin extends BasePlugin {
 
     patch(observable: Observable<any>, subscriber: Subscriber<any>): Observable<any> | ((value: any) => any) | null {
 
-        if (tagged(observable, this.match_)) {
-            return this.patch_;
+        const { match_, patch_ } = this;
+
+        if ((observable === match_) || tagged(observable, match_)) {
+            return patch_;
         }
         return null;
     }

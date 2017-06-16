@@ -15,6 +15,7 @@ export class LogPlugin extends BasePlugin {
     private logger_: Logger;
     private match_: any;
 
+    constructor(observable: Observable<any>, partialLogger?: PartialLogger);
     constructor(match: string, partialLogger?: PartialLogger);
     constructor(match: RegExp, partialLogger?: PartialLogger);
     constructor(match: (tag: string) => boolean, partialLogger?: PartialLogger);
@@ -58,8 +59,9 @@ export class LogPlugin extends BasePlugin {
         params: any[] = []
     ): void {
 
-        if (tagged(observable, this.match_)) {
-            const { logger_ } = this;
+        const { logger_, match_ } = this;
+
+        if ((observable === match_) || tagged(observable, match_)) {
             const tag = read(observable);
             const method = (type === "error") ? "error" : "log";
             logger_[method].apply(logger_, [`${type}: ${tag}`].concat(params));
