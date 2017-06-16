@@ -14,16 +14,73 @@ import { isObservable, toSubscriber } from "./util";
 const observableSubscribe = Observable.prototype.subscribe;
 let debugMatchers_: ((observable: Observable<any>, event: Event) => boolean)[] = [];
 let plugins_: Plugin[] = [];
+let undos_: { name: string, teardown: () => void }[] = [];
 let tick_ = 0;
 
 if (typeof window !== "undefined") {
+
+    /*tslint:disable:no-console no-invalid-this*/
+
     window["rxSpy"] = {
-        debug,
-        log,
-        patch,
-        show,
-        spy
+
+        debug(...args: any[]): void {
+
+            const teardown = debug.apply(null, args);
+            undos_.push({
+                name: "debug",
+                teardown(): void { teardown(); undos_ = undos_.filter((undo) => undo !== this); }
+            });
+        },
+
+        log(...args: any[]): void {
+
+            const teardown = log.apply(null, args);
+            undos_.push({
+                name: "log",
+                teardown(): void { teardown(); undos_ = undos_.filter((undo) => undo !== this); }
+            });
+        },
+
+        patch(...args: any[]): void {
+
+            const teardown = patch.apply(null, args);
+            undos_.push({
+                name: "patch",
+                teardown(): void { teardown(); undos_ = undos_.filter((undo) => undo !== this); }
+            });
+        },
+
+        show(...args: any[]): void {
+
+            show.apply(null, args);
+        },
+
+        spy(...args: any[]): void {
+
+            const teardown = spy.apply(null, args);
+            undos_.push({
+                name: "spy",
+                teardown: () => { teardown(); undos_ = []; }
+            });
+        },
+
+        undo(...args: any[]): void {
+
+            if (args.length === 0) {
+                console.group("Undo(s)");
+                undos_.forEach((undo, index) => {
+                    console.log(`${index + 1} ${undo.name}`);
+                });
+                console.groupEnd();
+            } else {
+                args
+                    .map((at) => undos_[at - 1])
+                    .forEach((undo) => { if (undo) { undo.teardown(); } });
+            }
+        }
     };
+
+    /*tslint:enable:no-console no-invalid-this*/
 }
 
 export function debug(match: string, ...events: Event[]): () => void;
@@ -42,7 +99,7 @@ export function debug(match: any, ...events: Event[]): () => void {
 
         const index = debugMatchers_.indexOf(matcher);
         if (index !== -1) {
-            debugMatchers_.slice(index, 1);
+            debugMatchers_.splice(index, 1);
         }
     };
 }
@@ -59,7 +116,7 @@ export function log(match: any, partialLogger: PartialLogger = defaultLogger): (
 
         const index = plugins_.indexOf(plugin);
         if (index !== -1) {
-            plugins_.slice(index, 1);
+            plugins_.splice(index, 1);
         }
     };
 }
@@ -82,7 +139,7 @@ export function patch(match: any, arg: any): () => void {
 
         const index = plugins_.indexOf(plugin);
         if (index !== -1) {
-            plugins_.slice(index, 1);
+            plugins_.splice(index, 1);
         }
     };
 }
@@ -130,6 +187,7 @@ export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
 
     return () => {
 
+        debugMatchers_ = [];
         plugins_ = [];
         Observable.prototype.subscribe = observableSubscribe;
     };
