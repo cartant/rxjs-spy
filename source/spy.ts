@@ -19,35 +19,23 @@ let tick_ = 0;
 
 if (typeof window !== "undefined") {
 
-    /*tslint:disable:no-console no-invalid-this*/
+    /*tslint:disable:no-console*/
 
     window["rxSpy"] = {
 
         debug(...args: any[]): void {
 
-            const teardown = debug.apply(null, args);
-            undos_.push({
-                name: "debug",
-                teardown(): void { teardown(); undos_ = undos_.filter((undo) => undo !== this); }
-            });
+            debug.apply(null, args);
         },
 
         log(...args: any[]): void {
 
-            const teardown = log.apply(null, args);
-            undos_.push({
-                name: "log",
-                teardown(): void { teardown(); undos_ = undos_.filter((undo) => undo !== this); }
-            });
+            log.apply(null, args);
         },
 
         patch(...args: any[]): void {
 
-            const teardown = patch.apply(null, args);
-            undos_.push({
-                name: "patch",
-                teardown(): void { teardown(); undos_ = undos_.filter((undo) => undo !== this); }
-            });
+            patch.apply(null, args);
         },
 
         show(...args: any[]): void {
@@ -57,11 +45,7 @@ if (typeof window !== "undefined") {
 
         spy(...args: any[]): void {
 
-            const teardown = spy.apply(null, args);
-            undos_.push({
-                name: "spy",
-                teardown: () => { teardown(); undos_ = []; }
-            });
+            spy.apply(null, args);
         },
 
         undo(...args: any[]): void {
@@ -80,7 +64,7 @@ if (typeof window !== "undefined") {
         }
     };
 
-    /*tslint:enable:no-console no-invalid-this*/
+    /*tslint:enable:no-console*/
 }
 
 export function debug(observable: Observable<any>, ...events: Event[]): () => void;
@@ -96,13 +80,17 @@ export function debug(match: any, ...events: Event[]): () => void {
     const matcher = (observable: Observable<any>, event: Event) => matches(observable, match) && (events.indexOf(event) !== -1);
     debugMatchers_.push(matcher);
 
-    return () => {
+    const teardown = () => {
 
         const index = debugMatchers_.indexOf(matcher);
         if (index !== -1) {
             debugMatchers_.splice(index, 1);
+            undos_ = undos_.filter((undo) => undo.teardown !== teardown);
         }
     };
+    undos_.push({ name: "debug", teardown });
+
+    return teardown;
 }
 
 export function log(observable: Observable<any>, partialLogger?: PartialLogger): () => void;
@@ -114,13 +102,17 @@ export function log(match: any, partialLogger: PartialLogger = defaultLogger): (
     const plugin = new LogPlugin(match, partialLogger);
     plugins_.push(plugin);
 
-    return () => {
+    const teardown = () => {
 
         const index = plugins_.indexOf(plugin);
         if (index !== -1) {
             plugins_.splice(index, 1);
+            undos_ = undos_.filter((undo) => undo.teardown !== teardown);
         }
     };
+    undos_.push({ name: "log", teardown });
+
+    return teardown;
 }
 
 export function patch(observable: Observable<any>, source: Observable<any>): () => void;
@@ -140,13 +132,17 @@ export function patch(match: any, arg: any): () => void {
     const plugin = new PatchPlugin(match, arg);
     plugins_.push(plugin);
 
-    return () => {
+    const teardown = () => {
 
         const index = plugins_.indexOf(plugin);
         if (index !== -1) {
             plugins_.splice(index, 1);
+            undos_ = undos_.filter((undo) => undo.teardown !== teardown);
         }
     };
+    undos_.push({ name: "patch", teardown });
+
+    return teardown;
 }
 
 export function show(observable: Observable<any>, partialLogger?: PartialLogger): void;
@@ -191,12 +187,16 @@ export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
         plugins_ = [new SnapshotPlugin()];
     }
 
-    return () => {
+    const teardown = () => {
 
         debugMatchers_ = [];
         plugins_ = [];
+        undos_ = [];
         Observable.prototype.subscribe = observableSubscribe;
     };
+    undos_.push({ name: "spy", teardown });
+
+    return teardown;
 }
 
 export function tick(): number {
