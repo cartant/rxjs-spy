@@ -4,6 +4,8 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import "./add/operator/tag";
+
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { BasePlugin, Plugin } from "./plugin";
 export { log, patch, show, spy } from "./spy";
