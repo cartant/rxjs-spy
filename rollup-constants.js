@@ -18,6 +18,7 @@ export const external = [
     "rxjs/add/operator/share",
     "rxjs/add/operator/skip",
     "rxjs/add/operator/startWith",
+    "rxjs/add/operator/switchMap",
     "rxjs/add/operator/take",
     "rxjs/add/operator/takeUntil",
     "rxjs/add/operator/takeWhile",

@@ -8,26 +8,29 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { Logger } from "./logger";
+import { LogPlugin } from "./log-plugin";
+import { spy } from "../spy";
 
-import "./add/operator/tag";
+import "../add/operator/tag";
 
-describe("logger", () => {
+describe("LogPlugin", () => {
 
     let calls: any[][];
-    let logger: Logger;
+    let teardown: () => void;
 
     afterEach(() => {
 
-        logger.detach();
+        if (teardown) {
+            teardown();
+        }
     });
 
     beforeEach(() => {
 
-        logger = new Logger("people");
-        logger.implementation = {
+        const plugin = new LogPlugin("people", {
             log(...args: any[]): void { calls.push(args); }
-        };
+        });
+        teardown = spy({ plugins: [plugin] });
         calls = [];
     });
 

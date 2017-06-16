@@ -5,8 +5,7 @@
  */
 
 import "./add/operator/tag-spec";
-import "./listener-spec";
-import "./logger-spec";
-import "./overrider-spec";
-import "./snapshotter-spec";
+import "./plugin/log-plugin-spec";
+import "./plugin/patch-plugin-spec";
+import "./plugin/snapshot-plugin-spec";
 import "./spy-spec";

@@ -3,71 +3,84 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
+/*tslint:disable:no-console no-invalid-this*/
 
-import { Observable } from "rxjs/Observable";
-import { Subscriber } from "rxjs/Subscriber";
-import { read, tagged } from "./operator/tag";
-import { empty, Plugin } from "./plugin";
-import { attach, detach } from "./spy";
-
-export interface LoggerImplementation {
-    readonly error?: (...args: any[]) => void;
-    readonly log: (...args: any[]) => void;
-    readonly warn?: (...args: any[]) => void;
+export interface PartialLogger {
+    readonly error?: (message?: any, ...args: any[]) => void;
+    readonly group?: (title?: string) => void;
+    readonly groupCollapsed?: (title?: string) => void;
+    readonly groupEnd?: () => void;
+    readonly log: (message?: any, ...args: any[]) => void;
+    readonly warn?: (message?: any, ...args: any[]) => void;
 }
 
-export class Logger {
+export interface Logger extends PartialLogger {
+    readonly error: (message?: any, ...args: any[]) => void;
+    readonly group: (title?: string) => void;
+    readonly groupCollapsed: (title?: string) => void;
+    readonly groupEnd: () => void;
+    readonly log: (message?: any, ...args: any[]) => void;
+    readonly warn: (message?: any, ...args: any[]) => void;
+}
 
-    private implementation_: LoggerImplementation = console;
-    private match_: any;
-    private plugin_: Plugin;
+export const defaultLogger = console;
 
-    constructor(match: string);
-    constructor(match: RegExp);
-    constructor(match: (tag: string) => boolean);
-    constructor(match: any) {
+export function toLogger(partialLogger: PartialLogger): Logger {
 
-        this.plugin_ = empty();
-        this.plugin_.beforeComplete = (observable, subscriber) => this.log_(observable, subscriber, "complete");
-        this.plugin_.beforeError = (observable, subscriber, error) => this.log_(observable, subscriber, "error", [error]);
-        this.plugin_.beforeNext = (observable, subscriber, value) => this.log_(observable, subscriber, "next", [value]);
-        this.plugin_.beforeSubscribe = (observable, subscriber) => this.log_(observable, subscriber, "subscribe");
-        this.plugin_.beforeUnsubscribe = (observable, subscriber) => this.log_(observable, subscriber, "unsubscribe");
-        this.attach(match);
+    if (partialLogger.error &&
+        partialLogger.group &&
+        partialLogger.groupCollapsed &&
+        partialLogger.groupEnd &&
+        partialLogger.warn) {
+
+        return partialLogger as Logger;
     }
 
-    set implementation(value: LoggerImplementation) {
+    const spaces = 2;
+    let indent = 0;
 
-        this.implementation_ = value;
-    }
+    return {
 
-    attach(match: string): void;
-    attach(match: RegExp): void;
-    attach(match: (tag: string) => boolean): void;
-    attach(match: any): void {
+        error(message?: any, ...args: any[]): void {
 
-        this.match_ = match;
-        attach(this.plugin_);
-    }
+            call("error", message, ...args);
+        },
 
-    detach(): void {
+        group(title?: string): void {
 
-        detach(this.plugin_);
-        this.match_ = null;
-    }
+            call("log", title);
+            indent += spaces;
+        },
 
-    private log_(
-        observable: Observable<any>,
-        subscriber: Subscriber<any>,
-        type: string,
-        params: any[] = []
-    ): void {
+        groupCollapsed(title?: string): void {
 
-        if (tagged(observable, this.match_)) {
-            const { implementation_ } = this;
-            const tag = read(observable);
-            const method = (type === "error") ? "error" : "log";
-            (implementation_[method] || implementation_.log).apply(implementation_, [`${type}: ${tag}`].concat(params));
+            call("log", title);
+        },
+
+        groupEnd(): void {
+
+            indent -= spaces;
+        },
+
+        log(message?: any, ...args: any[]): void {
+
+            call("log", message, ...args);
+        },
+
+        warn(message?: any, ...args: any[]): void {
+
+            call("warn", message, ...args);
         }
+    };
+
+    function call(method: string, message?: any, ...args: any[]): void {
+
+        const padding = " ".repeat(indent);
+        if (message) {
+            message = padding + message;
+        } else {
+            message = padding;
+        }
+        (partialLogger[method] || partialLogger.log).call(partialLogger, message, ...args);
     }
 }
