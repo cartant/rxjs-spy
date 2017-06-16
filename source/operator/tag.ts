@@ -10,6 +10,23 @@ import { Observable } from "rxjs/Observable";
 import { Operator } from "rxjs/Operator";
 import { Subscriber } from "rxjs/Subscriber";
 
+export function matches<T>(tag: string | null, match: string): boolean;
+export function matches<T>(tag: string | null, match: RegExp): boolean;
+export function matches<T>(tag: string | null, match: (tag: string) => boolean): boolean;
+export function matches<T>(tag: string | null, match: any): boolean {
+
+    if (tag === null) {
+        return false;
+    }
+
+    if (typeof match === "string") {
+        return match === tag;
+    } else if (typeof match === "function") {
+        return match(tag);
+    }
+    return match.test(tag);
+}
+
 export function read<T>(observable: Observable<T>): string | null {
 
     const operator = observable["operator"];
@@ -34,17 +51,7 @@ export function tagged<T>(observable: Observable<T>, match: RegExp): boolean;
 export function tagged<T>(observable: Observable<T>, match: (tag: string) => boolean): boolean;
 export function tagged<T>(observable: Observable<T>, match: any): boolean {
 
-    const tag = read(observable);
-    if (tag === null) {
-        return false;
-    }
-
-    if (typeof match === "string") {
-        return match === tag;
-    } else if (typeof match === "function") {
-        return match(tag);
-    }
-    return match.test(tag);
+    return matches(read(observable), match);
 }
 
 class TagOperator<T> implements Operator<T, T> {
