@@ -47,7 +47,7 @@ describe("LogPlugin", () => {
         subject.next("alice");
         expect(calls).to.not.be.empty;
         expect(calls[0]).to.deep.equal(["alice; tag = people; event = next"]);
-        expect(calls[1]).to.deep.equal(["  Value", "alice"]);
+        expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
 
         calls = [];
 
@@ -85,7 +85,7 @@ describe("LogPlugin", () => {
         subject.error(error);
         expect(calls).to.not.be.empty;
         expect(calls[0]).to.deep.equal(["Error: Boom!; tag = people; event = error"]);
-        expect(calls[1]).to.deep.equal(["  Error", error]);
+        expect(calls[1]).to.deep.equal(["  Error =", error]);
     });
 
     it("should ignore untagged observables", () => {

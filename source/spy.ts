@@ -165,8 +165,19 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     logger.group(`Snapshot(s) matching ${matchToString(match)}`);
     filtered.forEach((o) => {
 
-        logger[method].call(logger, `Tag = ${o.tag || "unknown"}`);
-        logger.log("Raw", o);
+        logger[method].call(logger, `Tag = ${o.tag}`);
+        logger.log("State =", o.complete ? "complete" : o.error ? "error" : "incomplete");
+        if (o.error) {
+            logger.error("Error =", o.error);
+        }
+        logger.log("Subscriber count =", o.subscriptions.length);
+        logger.log("Value count =", o.values.length);
+        if (o.values.length > 0) {
+            logger.log("Last value =", o.values[o.values.length - 1].value);
+        }
+        logger.groupCollapsed("Raw snapshot");
+        logger.log(o);
+        logger.groupEnd();
         logger.groupEnd();
     });
     logger.groupEnd();

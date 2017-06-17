@@ -66,18 +66,20 @@ export class LogPlugin extends BasePlugin {
             switch (event) {
             case "error":
                 logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; event = ${event}`);
-                logger_.log("Error", param);
+                logger_.error("Error =", param);
                 break;
             case "next":
                 logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; event = ${event}`);
-                logger_.log("Value", param);
+                logger_.log("Value =", param);
                 break;
             default:
                 logger_.groupCollapsed(`Tag = ${tag}; event = ${event}`);
                 break;
             }
             logger_.log("Matching", matchToString(match_));
-            logger_.log("Observable", observable);
+            logger_.groupCollapsed("Raw observable");
+            logger_.log(observable);
+            logger_.groupEnd();
             logger_.groupEnd();
         }
     }
