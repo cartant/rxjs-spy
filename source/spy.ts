@@ -19,11 +19,16 @@ let tick_ = 0;
 
 if (typeof window !== "undefined") {
 
-    window["rxSpy"] = {
+    const consoleApi = {
 
         debug(...args: any[]): void {
 
             debug.apply(null, args);
+        },
+
+        flush(): void {
+
+            flush();
         },
 
         log(...args: any[]): void {
@@ -63,6 +68,7 @@ if (typeof window !== "undefined") {
             }
         }
     };
+    window["rxSpy"] = consoleApi;
 }
 
 export function debug(observable: Observable<any>, ...events: Event[]): () => void;
@@ -89,6 +95,11 @@ export function debug(match: any, ...events: Event[]): () => void {
     undos_.push({ name: `debug(${matchToString(match)})`, teardown });
 
     return teardown;
+}
+
+export function flush(): void {
+
+    plugins_.forEach((plugin) => plugin.flush());
 }
 
 export function log(observable: Observable<any>, partialLogger?: PartialLogger): () => void;
