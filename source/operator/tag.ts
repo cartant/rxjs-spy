@@ -56,6 +56,20 @@ export function tag<T>(this: Observable<T>, tag: string): Observable<T> {
     return this.lift(new TagOperator(tag));
 }
 
+export function toString<T>(match: Observable<T>): string;
+export function toString(match: string): string;
+export function toString(match: RegExp): string;
+export function toString(match: MatchFunction): string;
+export function toString(match: any): string {
+
+    if (isObservable(match)) {
+        return "[Observable]";
+    } else if (typeof match === "function") {
+        return "[Function]";
+    }
+    return match.toString();
+}
+
 class TagOperator<T> implements Operator<T, T> {
 
     tag: string;

@@ -7,8 +7,8 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
-import { matches, MatchFunction, read } from "../operator/tag";
-import { BasePlugin } from "./plugin";
+import { matches, MatchFunction, read, toString as matchToString } from "../operator/tag";
+import { BasePlugin, Event } from "./plugin";
 
 export class LogPlugin extends BasePlugin {
 
@@ -34,12 +34,12 @@ export class LogPlugin extends BasePlugin {
 
     beforeError(observable: Observable<any>, subscriber: Subscriber<any>, error: any): void {
 
-        this.log_(observable, subscriber, "error", [error]);
+        this.log_(observable, subscriber, "error", error);
     }
 
     beforeNext(observable: Observable<any>, subscriber: Subscriber<any>, value: any): void {
 
-        this.log_(observable, subscriber, "next", [value]);
+        this.log_(observable, subscriber, "next", value);
     }
 
     beforeSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
@@ -55,16 +55,30 @@ export class LogPlugin extends BasePlugin {
     private log_(
         observable: Observable<any>,
         subscriber: Subscriber<any>,
-        type: string,
-        params: any[] = []
+        event: Event,
+        param: any = null
     ): void {
 
         const { logger_, match_ } = this;
 
         if (matches(observable, match_)) {
             const tag = read(observable);
-            const method = (type === "error") ? "error" : "log";
-            logger_[method].apply(logger_, [`${type}: ${tag}`].concat(params));
+            switch (event) {
+            case "error":
+                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; event = ${event}`);
+                logger_.log("Error", param);
+                break;
+            case "next":
+                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; event = ${event}`);
+                logger_.log("Value", param);
+                break;
+            default:
+                logger_.groupCollapsed(`Tag = ${tag}; event = ${event}`);
+                break;
+            }
+            logger_.log("Matching", matchToString(match_));
+            logger_.log("Observable", observable);
+            logger_.groupEnd();
         }
     }
 }

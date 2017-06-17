@@ -29,24 +29,28 @@ describe("spy", () => {
 
             teardown = spy({ plugins: [] });
 
-            const calls: any[][] = [];
             const subject = new Subject<string>();
+            let calls: any[][] = [];
 
             log("people", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
             const subscription = subject.tag("people").subscribe();
-            expect(calls).to.have.length(1);
-            expect(calls[0]).to.deep.equal(["subscribe: people"]);
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
+
+            calls = [];
 
             subject.next("alice");
-            expect(calls).to.have.length(2);
-            expect(calls[1]).to.deep.equal(["next: people", "alice"]);
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["alice; tag = people; event = next"]);
+
+            calls = [];
 
             subscription.unsubscribe();
-            expect(calls).to.have.length(3);
-            expect(calls[2]).to.deep.equal(["unsubscribe: people"]);
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; event = unsubscribe"]);
         });
     });
 
@@ -146,8 +150,9 @@ describe("spy", () => {
                 log(...args: any[]): void { calls.push(args); }
             });
 
-            expect(calls[0]).to.deep.equal(["Snapshot(s) for people"]);
-            expect(calls[1]).to.deep.equal(["  people"]);
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Snapshot(s) matching people"]);
+            expect(calls[1]).to.deep.equal(["  Tag = people"]);
         });
 
         it("should throw an error if snapshotting is not enabled", () => {

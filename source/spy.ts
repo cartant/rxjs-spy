@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
-import { matches, MatchFunction } from "./operator/tag";
+import { matches, MatchFunction, toString as matchToString } from "./operator/tag";
 import { Event, LogPlugin, PatchPlugin, Plugin, SnapshotObservable, SnapshotPlugin } from "./plugin";
 import { isObservable, toSubscriber } from "./util";
 
@@ -162,11 +162,11 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     const logger = toLogger(partialLogger);
     const tag = (typeof match === "function") ? "function" : match.toString();
 
-    logger.group(`Snapshot(s) for ${tag}`);
+    logger.group(`Snapshot(s) matching ${matchToString(match)}`);
     filtered.forEach((o) => {
 
-        logger[method].call(logger, o.tag || "unknown");
-        logger.log(o);
+        logger[method].call(logger, `Tag = ${o.tag || "unknown"}`);
+        logger.log("Raw", o);
         logger.groupEnd();
     });
     logger.groupEnd();

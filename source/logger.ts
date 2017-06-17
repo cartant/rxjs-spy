@@ -55,11 +55,12 @@ export function toLogger(partialLogger: PartialLogger): Logger {
         groupCollapsed(title?: string): void {
 
             call("log", title);
+            indent += spaces;
         },
 
         groupEnd(): void {
 
-            indent -= spaces;
+            indent = Math.max(0, indent - spaces);
         },
 
         log(message?: any, ...args: any[]): void {
