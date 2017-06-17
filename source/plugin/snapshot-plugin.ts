@@ -41,13 +41,14 @@ export interface SnapshotSubscription {
 export class SnapshotPlugin extends BasePlugin {
 
     private keptValues_: number;
-    private snapshotObservables_: SnapshotObservable[] = [];
+    private map_: Map<Observable<any>, SnapshotObservable>;
     private stack_: { event: Event, snapshotObservable: SnapshotObservable }[] = [];
 
     constructor({ keptValues = 4 }: { keptValues?: number } = {}) {
 
         super();
 
+        this.map_ = new Map<Observable<any>, SnapshotObservable>();
         this.keptValues_ = keptValues;
     }
 
@@ -83,9 +84,9 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
 
-        const { snapshotObservables_, stack_ } = this;
+        const { map_, stack_ } = this;
 
-        const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
+        const snapshotObservable = map_.get(observable);
         if (!snapshotObservable) {
             noSnapshot();
             return;
@@ -99,9 +100,9 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeError(observable: Observable<any>, subscriber: Subscriber<any>, error: any): void {
 
-        const { snapshotObservables_, stack_ } = this;
+        const { map_, stack_ } = this;
 
-        const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
+        const snapshotObservable = map_.get(observable);
         if (!snapshotObservable) {
             noSnapshot();
             return;
@@ -115,10 +116,10 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeNext(observable: Observable<any>, subscriber: Subscriber<any>, value: any): void {
 
-        const { snapshotObservables_, stack_ } = this;
+        const { map_, stack_ } = this;
         const timestamp = Date.now();
 
-        const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
+        const snapshotObservable = map_.get(observable);
         if (!snapshotObservable) {
             noSnapshot();
             return;
@@ -139,9 +140,9 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
 
-        const { snapshotObservables_, stack_ } = this;
+        const { map_, stack_ } = this;
 
-        let snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
+        let snapshotObservable = map_.get(observable);
         if (snapshotObservable) {
             snapshotObservable.tick = tick();
         } else {
@@ -160,7 +161,7 @@ export class SnapshotPlugin extends BasePlugin {
                 values: [],
                 valuesFlushed: 0
             };
-            snapshotObservables_.push(snapshotObservable);
+            map_.set(observable, snapshotObservable);
         }
 
         let explicit = true;
@@ -193,9 +194,9 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
 
-        const { snapshotObservables_, stack_ } = this;
+        const { map_, stack_ } = this;
 
-        const snapshotObservable = snapshotObservables_.find((o) => o.observable === observable);
+        const snapshotObservable = map_.get(observable);
         if (!snapshotObservable) {
             noSnapshot();
             return;
@@ -214,12 +215,16 @@ export class SnapshotPlugin extends BasePlugin {
             completed: true,
             errored: true
         };
-        const { keptValues_ } = this;
+        const { keptValues_, map_ } = this;
 
-        this.snapshotObservables_ = this.snapshotObservables_.filter((o) => !((completed && o.complete) || (errored && o.error)));
-        this.snapshotObservables_.forEach((o) => {
-            flushValues(o);
-            o.subscriptions.forEach(flushValues);
+        this.map_.forEach((o) => {
+
+            if ((completed && o.complete) || (errored && o.error)) {
+                this.map_.delete(o.observable);
+            } else {
+                flushValues(o);
+                o.subscriptions.forEach(flushValues);
+            }
         });
 
         function flushValues(entity: {
@@ -243,7 +248,7 @@ export class SnapshotPlugin extends BasePlugin {
         since?: Snapshot
     } = {}): Snapshot {
 
-        let observables = this.snapshotObservables_.map(clone);
+        let observables = Array.from(this.map_.values()).map(clone);
         observables.forEach((o) => {
             o.dependencies = o.dependencies.map(findClone);
             o.dependents = o.dependents.map(findClone);
