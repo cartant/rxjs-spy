@@ -86,7 +86,7 @@ export function debug(match: any, ...events: Event[]): () => void {
             undos_ = undos_.filter((undo) => undo.teardown !== teardown);
         }
     };
-    undos_.push({ name: "debug", teardown });
+    undos_.push({ name: `debug(${matchToString(match)})`, teardown });
 
     return teardown;
 }
@@ -108,7 +108,7 @@ export function log(match: any, partialLogger: PartialLogger = defaultLogger): (
             undos_ = undos_.filter((undo) => undo.teardown !== teardown);
         }
     };
-    undos_.push({ name: "log", teardown });
+    undos_.push({ name: `log(${matchToString(match)})`, teardown });
 
     return teardown;
 }
@@ -138,7 +138,7 @@ export function patch(match: any, arg: any): () => void {
             undos_ = undos_.filter((undo) => undo.teardown !== teardown);
         }
     };
-    undos_.push({ name: "patch", teardown });
+    undos_.push({ name: `patch(${matchToString(match)})`, teardown });
 
     return teardown;
 }
