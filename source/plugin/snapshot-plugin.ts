@@ -27,6 +27,7 @@ export interface SnapshotObservable {
     tick: number;
     type: string;
     values: { timestamp: number; value: any; }[];
+    valuesFlushed: number;
 }
 
 export interface SnapshotSubscription {
@@ -34,12 +35,21 @@ export interface SnapshotSubscription {
     subscriber: Subscriber<any>;
     timestamp: number;
     values: { timestamp: number; value: any; }[];
+    valuesFlushed: number;
 }
 
 export class SnapshotPlugin extends BasePlugin {
 
+    private keptValues_: number;
     private snapshotObservables_: SnapshotObservable[] = [];
     private stack_: { event: Event, snapshotObservable: SnapshotObservable }[] = [];
+
+    constructor({ keptValues = 4 }: { keptValues?: number } = {}) {
+
+        super();
+
+        this.keptValues_ = keptValues;
+    }
 
     afterComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
 
@@ -147,7 +157,8 @@ export class SnapshotPlugin extends BasePlugin {
                 tag,
                 tick: tick(),
                 type: getType(observable),
-                values: []
+                values: [],
+                valuesFlushed: 0
             };
             snapshotObservables_.push(snapshotObservable);
         }
@@ -174,7 +185,8 @@ export class SnapshotPlugin extends BasePlugin {
             explicit,
             subscriber,
             timestamp: Date.now(),
-            values: []
+            values: [],
+            valuesFlushed: 0
         };
         snapshotObservable.subscriptions.push(snapshotSubscription);
     }
@@ -202,8 +214,25 @@ export class SnapshotPlugin extends BasePlugin {
             completed: true,
             errored: true
         };
+        const { keptValues_ } = this;
 
         this.snapshotObservables_ = this.snapshotObservables_.filter((o) => !((completed && o.complete) || (errored && o.error)));
+        this.snapshotObservables_.forEach((o) => {
+            flushValues(o);
+            o.subscriptions.forEach(flushValues);
+        });
+
+        function flushValues(entity: {
+            values: { timestamp: number; value: any; }[],
+            valuesFlushed: number
+        }): void {
+
+            const count = entity.values.length - keptValues_;
+            if (count > 0) {
+                entity.values.splice(0, count);
+                entity.valuesFlushed += count;
+            }
+        }
     }
 
     snapshot({

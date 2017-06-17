@@ -173,7 +173,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             logger.error("Error =", o.error);
         }
         logger.log("Subscriber count =", o.subscriptions.length);
-        logger.log("Value count =", o.values.length);
+        logger.log("Value count =", o.values.length + o.valuesFlushed);
         if (o.values.length > 0) {
             logger.log("Last value =", o.values[o.values.length - 1].value);
         }

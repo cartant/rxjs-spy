@@ -20,6 +20,7 @@ import "../add/operator/tag";
 
 describe("SnapshotPlugin", () => {
 
+    const keptValues = 2;
     let plugin: SnapshotPlugin;
     let teardown: () => void;
 
@@ -32,7 +33,7 @@ describe("SnapshotPlugin", () => {
 
     beforeEach(() => {
 
-        plugin = new SnapshotPlugin();
+        plugin = new SnapshotPlugin({ keptValues });
         teardown = spy({ plugins: [plugin] });
     });
 
@@ -115,6 +116,33 @@ describe("SnapshotPlugin", () => {
 
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(0);
+        });
+
+        it("should flush excess values", () => {
+
+            const subject = new Subject<number>();
+            const subscription = subject.subscribe((value) => {}, (error) => {});
+
+            subject.next(1);
+            subject.next(2);
+            subject.next(3);
+            subject.next(4);
+
+            let snapshot = plugin.snapshot();
+            expect(snapshot.observables).to.have.length(1);
+
+            let snapshotObservable = snapshot.observables[0];
+            expect(snapshotObservable.values).to.have.length(4);
+            expect(snapshotObservable.valuesFlushed).to.equal(0);
+
+            plugin.flush();
+
+            snapshot = plugin.snapshot();
+            expect(snapshot.observables).to.have.length(1);
+
+            snapshotObservable = snapshot.observables[0];
+            expect(snapshotObservable.values).to.have.length(2);
+            expect(snapshotObservable.valuesFlushed).to.equal(2);
         });
     });
 
