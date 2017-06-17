@@ -86,11 +86,8 @@ export function debug(match: any, ...events: Event[]): () => void {
 
     const teardown = () => {
 
-        const index = debugMatchers_.indexOf(matcher);
-        if (index !== -1) {
-            debugMatchers_.splice(index, 1);
-            undos_ = undos_.filter((undo) => undo.teardown !== teardown);
-        }
+        debugMatchers_ = debugMatchers_.filter((m) => m !== matcher);
+        undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
     undos_.push({ name: `debug(${matchToString(match)})`, teardown });
 
@@ -113,11 +110,8 @@ export function log(match: any, partialLogger: PartialLogger = defaultLogger): (
 
     const teardown = () => {
 
-        const index = plugins_.indexOf(plugin);
-        if (index !== -1) {
-            plugins_.splice(index, 1);
-            undos_ = undos_.filter((undo) => undo.teardown !== teardown);
-        }
+        plugins_ = plugins_.filter((p) => p !== plugin);
+        undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
     undos_.push({ name: `log(${matchToString(match)})`, teardown });
 
@@ -143,11 +137,8 @@ export function patch(match: any, arg: any): () => void {
 
     const teardown = () => {
 
-        const index = plugins_.indexOf(plugin);
-        if (index !== -1) {
-            plugins_.splice(index, 1);
-            undos_ = undos_.filter((undo) => undo.teardown !== teardown);
-        }
+        plugins_ = plugins_.filter((p) => p !== plugin);
+        undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
     undos_.push({ name: `patch(${matchToString(match)})`, teardown });
 
