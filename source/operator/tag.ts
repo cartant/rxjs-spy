@@ -40,12 +40,12 @@ export function matches<T>(observable: Observable<T>, match: any): boolean {
 export function read<T>(observable: Observable<T>): string | null {
 
     const operator = observable["operator"];
-    if (operator === undefined) {
+    if (!operator) {
         return null;
     }
 
     const tag = operator["tag"];
-    if (tag === undefined) {
+    if (!tag) {
         return null;
     }
     return tag;
