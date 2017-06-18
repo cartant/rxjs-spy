@@ -4,6 +4,7 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+export * from "./debug-plugin";
 export * from "./log-plugin";
 export * from "./patch-plugin";
 export * from "./plugin";

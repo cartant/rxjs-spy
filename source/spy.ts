@@ -8,11 +8,10 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { matches, MatchFunction, toString as matchToString } from "./operator/tag";
-import { Event, LogPlugin, PatchPlugin, Plugin, SnapshotObservable, SnapshotPlugin } from "./plugin";
+import { DebugPlugin, Event, LogPlugin, PatchPlugin, Plugin, SnapshotObservable, SnapshotPlugin } from "./plugin";
 import { isObservable, toSubscriber } from "./util";
 
 const observableSubscribe = Observable.prototype.subscribe;
-let debugMatchers_: ((observable: Observable<any>, event: Event) => boolean)[] = [];
 let plugins_: Plugin[] = [];
 let undos_: { name: string, teardown: () => void }[] = [];
 let tick_ = 0;
@@ -80,12 +79,13 @@ export function debug(match: any, ...events: Event[]): () => void {
         events = ["complete", "error", "next", "subscribe", "unsubscribe"];
     }
 
-    const matcher = (observable: Observable<any>, event: Event) => matches(observable, match) && (events.indexOf(event) !== -1);
-    debugMatchers_.push(matcher);
+    const foundPlugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
+    const plugin = new DebugPlugin(match, events, foundPlugin ? foundPlugin as SnapshotPlugin : null);
+    plugins_.push(plugin);
 
     const teardown = () => {
 
-        debugMatchers_ = debugMatchers_.filter((m) => m !== matcher);
+        plugins_ = plugins_.filter((p) => p !== plugin);
         undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
     undos_.push({ name: `debug(${matchToString(match)})`, teardown });
@@ -199,7 +199,6 @@ export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
 
     const teardown = () => {
 
-        debugMatchers_ = [];
         plugins_ = [];
         undos_ = [];
         Observable.prototype.subscribe = observableSubscribe;
@@ -212,47 +211,6 @@ export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
 export function tick(): number {
 
     return tick_;
-}
-
-/*tslint:disable:no-debugger*/
-
-function debugComplete(snapshot: SnapshotObservable | null): void {
-
-    debugger;
-}
-
-function debugError(error: any, snapshot: SnapshotObservable | null): void {
-
-    debugger;
-}
-
-function debugNext(value: any, snapshot: SnapshotObservable | null): void {
-
-    debugger;
-}
-
-function debugSubscribe(snapshot: SnapshotObservable | null): void {
-
-    debugger;
-}
-
-function debugUnsubscribe(snapshot: SnapshotObservable | null): void {
-
-    debugger;
-}
-
-/*tslint:enable:no-debugger*/
-
-function getSnapshot(observable: Observable<any>): SnapshotObservable | null {
-
-    const plugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
-    if (!plugin) {
-        return null;
-    }
-
-    const snapshotPlugin = plugin as SnapshotPlugin;
-    const snapshot = snapshotPlugin.snapshot();
-    return snapshot.observables.find((o) => o.observable === observable) || null;
 }
 
 function patchSource(
@@ -295,11 +253,6 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
     ++tick_;
     plugins_.forEach((plugin) => plugin.beforeSubscribe(observable, subscriber));
 
-    debugMatchers_.forEach((matcher) => {
-        if (matcher(observable, "subscribe")) {
-            debugSubscribe(getSnapshot(observable));
-        }
-    });
     const subscription = observableSubscribe.call(patchSource(observable, subscriber),
         (value: any) => {
 
@@ -308,11 +261,6 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeNext(observable, subscriber, value));
 
-            debugMatchers_.forEach((matcher) => {
-                if (matcher(observable, "next")) {
-                    debugNext(value, getSnapshot(observable));
-                }
-            });
             subscriber.next(value);
 
             plugins_.forEach((plugin) => plugin.afterNext(observable, subscriber, value));
@@ -322,11 +270,6 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeError(observable, subscriber, error));
 
-            debugMatchers_.forEach((matcher) => {
-                if (matcher(observable, "error")) {
-                    debugError(error, getSnapshot(observable));
-                }
-            });
             subscriber.error(error);
 
             plugins_.forEach((plugin) => plugin.afterError(observable, subscriber, error));
@@ -336,11 +279,6 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeComplete(observable, subscriber));
 
-            debugMatchers_.forEach((matcher) => {
-                if (matcher(observable, "complete")) {
-                    debugComplete(getSnapshot(observable));
-                }
-            });
             subscriber.complete();
 
             plugins_.forEach((plugin) => plugin.afterComplete(observable, subscriber));
@@ -355,11 +293,6 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeUnsubscribe(observable, subscriber));
 
-            debugMatchers_.forEach((matcher) => {
-                if (matcher(observable, "unsubscribe")) {
-                    debugUnsubscribe(getSnapshot(observable));
-                }
-            });
             subscription.unsubscribe();
 
             plugins_.forEach((plugin) => plugin.afterUnsubscribe(observable, subscriber));
