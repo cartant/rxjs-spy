@@ -55,9 +55,13 @@ if (typeof window !== "undefined") {
             if (args.length === 0) {
                 const logger = toLogger(defaultLogger);
                 logger.group("Undo(s)");
-                undos_.forEach((undo, index) => {
-                    logger.log(`${index + 1} ${undo.name}`);
-                });
+                if (undos_.length) {
+                    undos_.forEach((undo, index) => {
+                        logger.log(`${index + 1} ${undo.name}`);
+                    });
+                } else {
+                    logger.log("Nothing to undo");
+                }
                 logger.groupEnd();
             } else {
                 args
