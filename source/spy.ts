@@ -54,13 +54,12 @@ if (typeof window !== "undefined") {
         undo(...args: any[]): void {
 
             if (args.length === 0) {
-                /*tslint:disable:no-console*/
-                console.group("Undo(s)");
+                const logger = toLogger(defaultLogger);
+                logger.group("Undo(s)");
                 undos_.forEach((undo, index) => {
-                    console.log(`${index + 1} ${undo.name}`);
+                    logger.log(`${index + 1} ${undo.name}`);
                 });
-                console.groupEnd();
-                /*tslint:enable:no-console*/
+                logger.groupEnd();
             } else {
                 args
                     .map((at) => undos_[at - 1])
