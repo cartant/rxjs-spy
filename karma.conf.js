@@ -11,7 +11,6 @@ exports = module.exports = function (config) {
         exclude: [],
         files: [
             "node_modules/core-js/client/core.js",
-            "node_modules/tslib/tslib.js",
             "node_modules/chai/chai.js",
             "node_modules/sinon/pkg/sinon.js",
             "node_modules/rxjs/bundles/Rx.js",

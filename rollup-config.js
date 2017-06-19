@@ -9,5 +9,9 @@ export default {
     format: "umd",
     globals: Object.assign({}, globals),
     moduleName: "RxSpy",
+    onwarn: (warning, next) => {
+        if (warning.code === "THIS_IS_UNDEFINED") return;
+        next(warning);
+    },
     plugins: [nodeResolve({})]
 }

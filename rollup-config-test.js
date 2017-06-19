@@ -14,5 +14,9 @@ export default {
         "chai": "chai",
         "sinon": "sinon"
     }, globals),
+    onwarn: (warning, next) => {
+        if (warning.code === "THIS_IS_UNDEFINED") return;
+        next(warning);
+    },
     plugins: [nodeResolve({})]
 }
