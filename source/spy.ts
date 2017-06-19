@@ -148,11 +148,20 @@ export function patch(match: any, arg: any): () => void {
     return teardown;
 }
 
+export function show(partialLogger?: PartialLogger): void;
 export function show(observable: Observable<any>, partialLogger?: PartialLogger): void;
 export function show(match: string, partialLogger?: PartialLogger): void;
 export function show(match: RegExp, partialLogger?: PartialLogger): void;
 export function show(match: (tag: string) => boolean, partialLogger?: PartialLogger): void;
 export function show(match: any, partialLogger: PartialLogger = defaultLogger): void {
+
+    const anyTagged = /.+/;
+    if (!match) {
+        match = anyTagged;
+    } else if (typeof match.log === "function") {
+        partialLogger = match;
+        match = anyTagged;
+    }
 
     const plugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
     if (!plugin) {
@@ -162,10 +171,8 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     const snapshotPlugin = plugin as SnapshotPlugin;
     const snapshot = snapshotPlugin.snapshot();
     const filtered = snapshot.observables.filter((o) => matches(o.observable, match));
-    const method = (filtered.length > 3) ? "groupCollapsed" : "group";
-
     const logger = toLogger(partialLogger);
-    const tag = (typeof match === "function") ? "function" : match.toString();
+    const method = (filtered.length > 3) ? "groupCollapsed" : "group";
 
     logger.group(`Snapshot(s) matching ${matchToString(match)}`);
     filtered.forEach((o) => {

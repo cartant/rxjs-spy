@@ -155,6 +155,23 @@ describe("spy", () => {
             expect(calls[1]).to.deep.equal(["  Tag = people"]);
         });
 
+        it("should show snapshotted information all/any tagged observables", () => {
+
+            teardown = spy();
+
+            const calls: any[][] = [];
+            const subject = new Subject<number>();
+            const subscription = subject.tag("people").subscribe();
+
+            show({
+                log(...args: any[]): void { calls.push(args); }
+            });
+
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Snapshot(s) matching /.+/"]);
+            expect(calls[1]).to.deep.equal(["  Tag = people"]);
+        });
+
         it("should throw an error if snapshotting is not enabled", () => {
 
             teardown = spy({ plugins: [] });
