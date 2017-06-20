@@ -10,7 +10,7 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
 import { Plugin } from "./plugin";
-import { log, patch, pause, show, spy, tick } from "./spy";
+import { flush, log, patch, pause, show, spy, tick } from "./spy";
 
 describe("spy", () => {
 
@@ -21,6 +21,23 @@ describe("spy", () => {
         if (teardown) {
             teardown();
         }
+    });
+
+    describe("flush", () => {
+
+        let plugin: Plugin;
+
+        beforeEach(() => {
+
+            plugin = stubPlugin();
+            teardown = spy({ plugins: [plugin] });
+        });
+
+        it("should call the plugin's flush method", () => {
+
+            flush();
+            expect(plugin.flush).to.have.property("called", true);
+        });
     });
 
     describe("log", () => {
@@ -95,21 +112,7 @@ describe("spy", () => {
 
         beforeEach(() => {
 
-            plugin = {
-                afterComplete: sinon.stub(),
-                afterError: sinon.stub(),
-                afterNext: sinon.stub(),
-                afterSubscribe: sinon.stub(),
-                afterUnsubscribe: sinon.stub(),
-                beforeComplete: sinon.stub(),
-                beforeError: sinon.stub(),
-                beforeNext: sinon.stub(),
-                beforeSubscribe: sinon.stub(),
-                beforeUnsubscribe: sinon.stub(),
-                patch: sinon.stub().returns(null),
-                pause: sinon.stub().returns(false),
-                teardown: sinon.stub()
-            } as any;
+            plugin = stubPlugin();
             teardown = spy({ plugins: [plugin] });
         });
 
@@ -226,3 +229,23 @@ describe("spy", () => {
         });
     });
 });
+
+function stubPlugin(): Plugin {
+
+    return {
+        afterComplete: sinon.stub(),
+        afterError: sinon.stub(),
+        afterNext: sinon.stub(),
+        afterSubscribe: sinon.stub(),
+        afterUnsubscribe: sinon.stub(),
+        beforeComplete: sinon.stub(),
+        beforeError: sinon.stub(),
+        beforeNext: sinon.stub(),
+        beforeSubscribe: sinon.stub(),
+        beforeUnsubscribe: sinon.stub(),
+        flush: sinon.stub(),
+        patch: sinon.stub().returns(null),
+        pause: sinon.stub().returns(false),
+        teardown: sinon.stub()
+    } as any;
+}
