@@ -72,6 +72,12 @@ The API's methods are tag-based and tags can be matched using explicit literals,
 ```js
 import { log } from "rxjs-spy";
 log("some-tag");
+
+// Or like this:
+log(/^some-tag$/);
+
+// Or like this:
+log(tag => tag === "some-tag");
 ```
 
 `rxjs-spy` exposes a module API intended to be called from code and a console API - via the `rxSpy` global - intended for interactive use via the browser's console.
