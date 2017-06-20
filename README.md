@@ -91,6 +91,7 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 * [log](#module-log)
 * [debug](#module-debug)
 * [patch](#module-patch)
+* [pause](#module-pause)
 
 <a name="module-spy"></a>
 
@@ -189,6 +190,35 @@ If a `source` observable is specified, subscribers to matching observables will 
 If either a `project` function or a `value` is specified, each value emitted by matching observables will be replaced with the projected or specified value.
 
 This method returns a teardown function.
+
+<a name="module-pause"></a>
+
+### pause
+
+```ts
+function pause(
+  match: string | RegExp | MatchPredicate | Observable<any>
+): Deck
+```
+
+Wires up an instance of the pause plugin for matching observables.
+
+All subscriptions to matching observables will be placed into a paused state and values that would otherwise be emitted will be buffered inside the plugin.
+
+This method returns a `Deck` instance that can be used to `resume` and `pause` the subscriptions.
+
+Calling `next` will release a single paused value to a single subscription.
+
+```ts
+interface Deck {
+  readonly paused: boolean;
+  clear(): void;
+  next(): void;
+  pause(): void;
+  resume(): void;
+  values(): any[];
+}
+```
 
 ## Console API
 
