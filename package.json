@@ -39,6 +39,7 @@
     "debugging",
     "log",
     "logging",
+    "observable",
     "rxjs",
     "spy"
   ],
