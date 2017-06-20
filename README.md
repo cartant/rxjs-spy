@@ -196,6 +196,8 @@ The methods in the console API are callable via the `rxSpy` global (note the low
 
 They are identical to the methods in the module API except for the fact that they do not return teardown functions. Instead, calls can be undone using the `undo` API method.
 
+<a name="console-undo"></a>
+
 ### undo
 
 ```ts
