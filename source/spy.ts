@@ -8,7 +8,19 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./operator/tag";
-import { DebugPlugin, Event, LogPlugin, PatchPlugin, Plugin, SnapshotObservable, SnapshotPlugin } from "./plugin";
+
+import {
+    DebugPlugin,
+    Deck,
+    Event,
+    LogPlugin,
+    PatchPlugin,
+    PausePlugin,
+    Plugin,
+    SnapshotObservable,
+    SnapshotPlugin
+} from "./plugin";
+
 import { isObservable, toSubscriber } from "./util";
 
 const observableSubscribe = Observable.prototype.subscribe;
@@ -134,6 +146,22 @@ export function patch(match: Match, arg: any): () => void {
     return teardown;
 }
 
+export function pause(match: Match): Deck {
+
+    const plugin = new PausePlugin(match);
+    plugins_.push(plugin);
+
+    const teardown = () => {
+
+        plugin.teardown();
+        plugins_ = plugins_.filter((p) => p !== plugin);
+        undos_ = undos_.filter((u) => u.teardown !== teardown);
+    };
+    undos_.push({ name: `pause(${matchToString(match)})`, teardown });
+
+    return plugin.deck();
+}
+
 export function show(partialLogger?: PartialLogger): void;
 export function show(match: Match, partialLogger?: PartialLogger): void;
 export function show(match: any, partialLogger: PartialLogger = defaultLogger): void {
@@ -239,11 +267,29 @@ function patchValue(
     return value;
 }
 
+function paused(
+    observable: Observable<any>,
+    subscriber: Subscriber<any>,
+    value: any,
+    resume: (value: any) => void
+): boolean {
+
+    for (let p = plugins_.length - 1; p > -1; --p) {
+        const plugin = plugins_[p];
+        const paused = plugin.pause(observable, subscriber, value, resume);
+        if (paused) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function spySubscribe(this: Observable<any>, ...args: any[]): any {
 
     /*tslint:disable-next-line:no-invalid-this*/
     const observable = this;
     const subscriber = toSubscriber.apply(null, args);
+    let subscribed = true;
 
     ++tick_;
     plugins_.forEach((plugin) => plugin.beforeSubscribe(observable, subscriber));
@@ -251,14 +297,24 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
     const subscription = observableSubscribe.call(patchSource(observable, subscriber),
         (value: any) => {
 
-            value = patchValue(observable, subscriber, value);
+            function next(value: any): void {
 
-            ++tick_;
-            plugins_.forEach((plugin) => plugin.beforeNext(observable, subscriber, value));
+                if (subscribed) {
 
-            subscriber.next(value);
+                    value = patchValue(observable, subscriber, value);
 
-            plugins_.forEach((plugin) => plugin.afterNext(observable, subscriber, value));
+                    ++tick_;
+                    plugins_.forEach((plugin) => plugin.beforeNext(observable, subscriber, value));
+
+                    subscriber.next(value);
+
+                    plugins_.forEach((plugin) => plugin.afterNext(observable, subscriber, value));
+                }
+            }
+
+            if (!paused(observable, subscriber, value, next)) {
+                next(value);
+            }
         },
         (error: any) => {
 
@@ -266,6 +322,7 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.beforeError(observable, subscriber, error));
 
             subscriber.error(error);
+            subscribed = false;
 
             plugins_.forEach((plugin) => plugin.afterError(observable, subscriber, error));
         },
@@ -275,6 +332,7 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.beforeComplete(observable, subscriber));
 
             subscriber.complete();
+            subscribed = false;
 
             plugins_.forEach((plugin) => plugin.afterComplete(observable, subscriber));
         }
@@ -289,6 +347,7 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.beforeUnsubscribe(observable, subscriber));
 
             subscription.unsubscribe();
+            subscribed = false;
 
             plugins_.forEach((plugin) => plugin.afterUnsubscribe(observable, subscriber));
         }

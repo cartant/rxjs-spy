@@ -10,7 +10,7 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
 import { Plugin } from "./plugin";
-import { log, patch, show, spy, tick } from "./spy";
+import { log, patch, pause, show, spy, tick } from "./spy";
 
 describe("spy", () => {
 
@@ -70,6 +70,25 @@ describe("spy", () => {
         });
     });
 
+    describe("pause", () => {
+
+        it("should pause the tagged observable's subscriptions", () => {
+
+            teardown = spy({ plugins: [] });
+            const deck = pause("people");
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            subject.next("alice");
+            subject.next("bob");
+            expect(values).to.deep.equal([]);
+            deck.resume();
+            expect(values).to.deep.equal(["alice", "bob"]);
+        });
+    });
+
     describe("plugin", () => {
 
         let plugin: Plugin;
@@ -88,6 +107,7 @@ describe("spy", () => {
                 beforeSubscribe: sinon.stub(),
                 beforeUnsubscribe: sinon.stub(),
                 patch: sinon.stub().returns(null),
+                pause: sinon.stub().returns(false),
                 teardown: sinon.stub()
             } as any;
             teardown = spy({ plugins: [plugin] });
