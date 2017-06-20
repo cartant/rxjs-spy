@@ -214,6 +214,7 @@ interface Deck {
   next(): void;
   pause(): void;
   resume(): void;
+  teardown(): void;
   values(): any[];
 }
 ```

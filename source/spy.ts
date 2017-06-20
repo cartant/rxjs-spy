@@ -184,7 +184,9 @@ export function pause(match: Match): Deck {
     };
     undos_.push({ name: `pause(${matchToString(match)})`, teardown });
 
-    return plugin.deck();
+    const deck = plugin.deck();
+    deck.teardown = () => { deck.clear(); teardown(); };
+    return deck;
 }
 
 export function show(partialLogger?: PartialLogger): void;

@@ -12,6 +12,7 @@ import { isObservable } from "../util";
 
 export class Deck {
 
+    public teardown: () => void;
     private paused_: boolean;
     private resumables_: { resume: (value: any) => void; value: any[]; }[];
 
