@@ -178,7 +178,7 @@ function patch(
 
 Wires up an instance of the patch plugin for matching observables.
 
-If an observable is specified, subscribers to matching observables will be subscribed to the specified observable instead.
+If a `source` observable is specified, subscribers to matching observables will be subscribed to the specified observable instead.
 
 If either a `project` function or a `value` is specified, each value emitted by matching observables will be replaced with the projected or specified value.
 
