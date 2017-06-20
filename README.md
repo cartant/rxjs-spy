@@ -24,7 +24,7 @@ Install the package using NPM:
 npm install rxjs-spy --save
 ```
 
-And import the functions for use with TypeScript and ES2015:
+And import the functions for use with TypeScript or ES2015:
 
 ```js
 import { spy } from "rxjs-spy";
@@ -92,6 +92,7 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 * [debug](#module-debug)
 * [patch](#module-patch)
 * [pause](#module-pause)
+* [flush](#module-flush)
 
 <a name="module-spy"></a>
 
@@ -220,6 +221,18 @@ interface Deck {
 ```
 
 Calling `next` will release a single paused value to a single subscription.
+
+<a name="module-flush"></a>
+
+### flush
+
+```ts
+function flush(): void
+```
+
+Calling `flush` will see `flush` called on each plugin.
+
+If snapshotting is enabled, calling `flush` will release excess values and completed or errored obervables from within snapshots.
 
 ## Console API
 
