@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+    <title>rxjs-spy Example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <style>
+        body { font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <h2><code>rxjs-spy</code> Example</h2>
+    <ol>
+        <li>
+            <p>Have a look at the source for this page:</p>
+            <p>Note that there are two <code>script</code> blocks. The first configures the spy and the second represents the application code that will be spied upon.</p>
+            <p>In addition to enabling spying, the first <code>script</code> block patches the observable tagged as <code>"source"</code>. Subscribers to <code>"source"</code> will subscribe to the patched observable instead - so they can be sent values from the console.</p>
+        </li>
+        <li>
+            <p>Open the DevTools console.</p>
+        </li>
+        <li>
+            <p>In the console, run:</p>
+            <code>rxSpy.show();</code>
+            <p>You'll see a listing of all tagged observables. There is only one - tagged as <code>"source"</code> - it has a single subscriber and has not yet emitted a value.</p>
+        </li>
+        <li>
+            <p>In the console, run:</p>
+            <code>rxSpy.log("source");</code>
+            <p>This will enable logging to the specified tag.</p>
+        </li>
+        <li>
+            <p>In the console, run:</p>
+            <code>patchedSource.next(1);</code>
+            <p>This will emit a value from the patched observable to the subscriber of the <code>"source"</code> observable and that emission will be logged to the console.</p>
+        </li>
+        <li>
+            <p>In the console, run:</p>
+            <code>rxSpy.undo();</code>
+            <p>This will show a list of the spy-related API calls that have been made. Calls can be undone by calling <code>undo</code>, passing the number(s) of the call(s) to be undone.</p>
+        </li>
+        <li>
+            <p>In the console, run:</p>
+            <code>rxSpy.undo(3);</code>
+            <p>This will disable the logging of the <code>"source"</code> observable</p>
+        </li>
+    </ol>
+    <script src="../node_modules/core-js/client/core.js"></script>
+    <script src="../node_modules/rxjs/bundles/Rx.js"></script>
+    <script src="../bundles/rxjs-spy.umd.js"></script>
+    <script>
+
+        window.patchedSource = new Rx.Subject();
+
+        rxSpy.spy();
+        rxSpy.patch("source", window.patchedSource);
+
+    </script>
+    <script>
+
+        var subject = new Rx.Subject();
+        var source = subject.tag("source").map(value => value);
+        source.subscribe();
+
+    </script>
+</body>
+</html>

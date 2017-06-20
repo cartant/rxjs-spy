@@ -60,7 +60,7 @@
     "dist": "npm run dist:build && npm run dist:uglify && npm run dist:copy",
     "dist:build": "npm run dist:clean && tsc -p tsconfig-dist.json && rollup -c rollup-config.js",
     "dist:clean": "rimraf dist && rimraf bundles/rxjs-spy.* && mkdirp bundles",
-    "dist:copy": "node scripts/pack.js && cpy bundles/rxjs-spy.* dist/bundles/ && cpy CHANGELOG.md LICENSE README.md dist/ && cpy **/package.json ../dist/ --cwd=source --parents",
+    "dist:copy": "node scripts/pack.js && cpy bundles/rxjs-spy.* dist/bundles/ && cpy example/*.* dist/example/ && cpy CHANGELOG.md LICENSE README.md dist/ && cpy **/package.json ../dist/ --cwd=source --parents",
     "dist:uglify": "uglifyjs -c --comments /license/ -m -o bundles/rxjs-spy.min.umd.js bundles/rxjs-spy.umd.js",
     "lint": "tslint --project tsconfig.json --type-check source/**/*.ts",
     "test": "npm run lint && npm run test:build && karma start",
