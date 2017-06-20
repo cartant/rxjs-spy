@@ -7,7 +7,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { matches, MatchFunction } from "../operator/tag";
+import { Match, matches } from "../operator/tag";
 import { BasePlugin, Event } from "./plugin";
 import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
 
@@ -17,10 +17,7 @@ export class DebugPlugin extends BasePlugin {
     private matcher_: (observable: Observable<any>, event: Event) => boolean;
     private snapshotPlugin_: SnapshotPlugin | null;
 
-    constructor(match: string, events: Event[], snapshotPlugin: SnapshotPlugin | null);
-    constructor(match: RegExp, events: Event[], snapshotPlugin: SnapshotPlugin | null);
-    constructor(match: MatchFunction, events: Event[], snapshotPlugin: SnapshotPlugin | null);
-    constructor(match: any, events: Event[], snapshotPlugin: SnapshotPlugin | null) {
+    constructor(match: Match, events: Event[], snapshotPlugin: SnapshotPlugin | null) {
 
         super();
 

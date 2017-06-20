@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
-import { matches, MatchFunction, toString as matchToString } from "./operator/tag";
+import { Match, matches, toString as matchToString } from "./operator/tag";
 import { DebugPlugin, Event, LogPlugin, PatchPlugin, Plugin, SnapshotObservable, SnapshotPlugin } from "./plugin";
 import { isObservable, toSubscriber } from "./util";
 
@@ -73,11 +73,7 @@ if (typeof window !== "undefined") {
     window["rxSpy"] = consoleApi;
 }
 
-export function debug(observable: Observable<any>, ...events: Event[]): () => void;
-export function debug(match: string, ...events: Event[]): () => void;
-export function debug(match: RegExp, ...events: Event[]): () => void;
-export function debug(match: MatchFunction, ...events: Event[]): () => void;
-export function debug(match: any, ...events: Event[]): () => void {
+export function debug(match: Match, ...events: Event[]): () => void {
 
     if (events.length === 0) {
         events = ["complete", "error", "next", "subscribe", "unsubscribe"];
@@ -102,11 +98,7 @@ export function flush(): void {
     plugins_.forEach((plugin) => plugin.flush());
 }
 
-export function log(observable: Observable<any>, partialLogger?: PartialLogger): () => void;
-export function log(match: string, partialLogger?: PartialLogger): () => void;
-export function log(match: RegExp, partialLogger?: PartialLogger): () => void;
-export function log(match: MatchFunction, partialLogger?: PartialLogger): () => void;
-export function log(match: any, partialLogger: PartialLogger = defaultLogger): () => void {
+export function log(match: Match, partialLogger?: PartialLogger): () => void {
 
     const plugin = new LogPlugin(match, partialLogger);
     plugins_.push(plugin);
@@ -121,19 +113,10 @@ export function log(match: any, partialLogger: PartialLogger = defaultLogger): (
     return teardown;
 }
 
-export function patch(observable: Observable<any>, source: Observable<any>): () => void;
-export function patch(observable: Observable<any>, project: (value: any) => any): () => void;
-export function patch(observable: Observable<any>, value: any): () => void;
-export function patch(match: string, source: Observable<any>): () => void;
-export function patch(match: string, project: (value: any) => any): () => void;
-export function patch(match: string, value: any): () => void;
-export function patch(match: RegExp, source: Observable<any>): () => void;
-export function patch(match: RegExp, project: (value: any) => any): () => void;
-export function patch(match: RegExp, value: any): () => void;
-export function patch(match: MatchFunction, source: Observable<any>): () => void;
-export function patch(match: MatchFunction, project: (value: any) => any): () => void;
-export function patch(match: MatchFunction, value: any): () => void;
-export function patch(match: any, arg: any): () => void {
+export function patch(match: Match, source: Observable<any>): () => void;
+export function patch(match: Match, project: (value: any) => any): () => void;
+export function patch(match: Match, value: any): () => void;
+export function patch(match: Match, arg: any): () => void {
 
     const plugin = new PatchPlugin(match, arg);
     plugins_.push(plugin);
@@ -149,10 +132,7 @@ export function patch(match: any, arg: any): () => void {
 }
 
 export function show(partialLogger?: PartialLogger): void;
-export function show(observable: Observable<any>, partialLogger?: PartialLogger): void;
-export function show(match: string, partialLogger?: PartialLogger): void;
-export function show(match: RegExp, partialLogger?: PartialLogger): void;
-export function show(match: (tag: string) => boolean, partialLogger?: PartialLogger): void;
+export function show(match: Match, partialLogger?: PartialLogger): void;
 export function show(match: any, partialLogger: PartialLogger = defaultLogger): void {
 
     const anyTagged = /.+/;

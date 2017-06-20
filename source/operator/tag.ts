@@ -11,13 +11,10 @@ import { Operator } from "rxjs/Operator";
 import { Subscriber } from "rxjs/Subscriber";
 import { isObservable } from "../util";
 
-export type MatchFunction = (tag: string, observable?: Observable<any>) => boolean;
+export type MatchPredicate = (tag: string | null, observable?: Observable<any>) => boolean;
+export type Match = Observable<any> | string | RegExp | MatchPredicate;
 
-export function matches<T>(observable: Observable<T>, match: Observable<T>): boolean;
-export function matches<T>(observable: Observable<T>, match: string): boolean;
-export function matches<T>(observable: Observable<T>, match: RegExp): boolean;
-export function matches<T>(observable: Observable<T>, match: MatchFunction): boolean;
-export function matches<T>(observable: Observable<T>, match: any): boolean {
+export function matches<T>(observable: Observable<T>, match: Match): boolean {
 
     if (isObservable(match)) {
         return observable === match;
@@ -56,11 +53,7 @@ export function tag<T>(this: Observable<T>, tag: string): Observable<T> {
     return this.lift(new TagOperator(tag));
 }
 
-export function toString<T>(match: Observable<T>): string;
-export function toString(match: string): string;
-export function toString(match: RegExp): string;
-export function toString(match: MatchFunction): string;
-export function toString(match: any): string {
+export function toString(match: Match): string {
 
     if (isObservable(match)) {
         return "[Observable]";

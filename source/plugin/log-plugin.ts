@@ -7,19 +7,15 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
-import { matches, MatchFunction, read, toString as matchToString } from "../operator/tag";
+import { Match, matches, read, toString as matchToString } from "../operator/tag";
 import { BasePlugin, Event } from "./plugin";
 
 export class LogPlugin extends BasePlugin {
 
     private logger_: Logger;
-    private match_: any;
+    private match_: Match;
 
-    constructor(observable: Observable<any>, partialLogger?: PartialLogger);
-    constructor(match: string, partialLogger?: PartialLogger);
-    constructor(match: RegExp, partialLogger?: PartialLogger);
-    constructor(match: MatchFunction, partialLogger?: PartialLogger);
-    constructor(match: any, partialLogger: PartialLogger = defaultLogger) {
+    constructor(match: Match, partialLogger: PartialLogger = defaultLogger) {
 
         super();
 
