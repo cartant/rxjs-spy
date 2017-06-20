@@ -30,7 +30,7 @@ describe("PausePlugin", () => {
     beforeEach(() => {
 
         plugin = new PausePlugin("people");
-        deck = plugin.deck();
+        deck = plugin.deck;
 
         teardown = spy({ plugins: [plugin] });
         calls = [];

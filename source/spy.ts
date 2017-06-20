@@ -48,7 +48,7 @@ if (typeof window !== "undefined") {
                 logger.groupEnd();
             } else {
                 const pausePlugin = pausePlugins[call - 1];
-                return pausePlugin ? pausePlugin.deck() : null;
+                return pausePlugin ? pausePlugin.deck : null;
             }
         },
 
@@ -184,7 +184,7 @@ export function pause(match: Match): Deck {
     };
     undos_.push({ name: `pause(${matchToString(match)})`, teardown });
 
-    const deck = plugin.deck();
+    const deck = plugin.deck;
     deck.teardown = () => { deck.clear(); teardown(); };
     return deck;
 }
