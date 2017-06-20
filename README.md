@@ -78,4 +78,147 @@ log("some-tag");
 
 ## Module API
 
+The methods in the module API are callable via imports, requires or the UMD `RxSpy` global. Most methods return a teardown function that will undo the API method's action when called.
+
+* [spy](#module-spy)
+* [show](#module-show)
+* [log](#module-log)
+* [debug](#module-debug)
+* [patch](#module-patch)
+
+<a name="module-spy"></a>
+
+### spy
+
+```ts
+function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void
+```
+
+<a name="module-show"></a>
+
+### show
+
+```ts
+function show(
+  match?: string | RegExp | MatchPredicate | Observable<any>
+): void
+```
+
+<a name="module-log"></a>
+
+### log
+
+```ts
+function log(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  partialLogger: PartialLogger = console
+): () => void
+```
+
+<a name="module-debug"></a>
+
+### debug
+
+```ts
+function debug(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  ...events: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
+): () => void
+```
+
+<a name="module-patch"></a>
+
+### patch
+
+```ts
+function patch(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  source: Observable<any>
+): () => void
+function patch(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  project: (value: any) => any
+): () => void
+function patch(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  value: any
+): () => void
+```
+
 ## Console API
+
+The methods in the console API are callable via the `rxSpy` global and are intended to be used interactively in the browser's console. Unlike the module API methods, they do not return teardown functions. Instead, calls can be undone using the `undo` API method.
+
+* [spy](#console-spy)
+* [undo](#console-undo)
+* [show](#console-show)
+* [log](#console-log)
+* [debug](#console-debug)
+* [patch](#console-patch)
+
+<a name="console-spy"></a>
+
+### spy
+
+```ts
+function spy({ plugins }: { plugins?: Plugin[] } = {}): void
+```
+
+<a name="console-undo"></a>
+
+### undo
+
+```ts
+function undo(...calls: number[]): void
+```
+
+<a name="console-show"></a>
+
+### show
+
+```ts
+function show(
+  match?: string | RegExp | MatchPredicate | Observable<any>
+): void
+```
+
+<a name="console-log"></a>
+
+### log
+
+```ts
+function log(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  partialLogger: PartialLogger = console
+): void
+```
+
+<a name="console-debug"></a>
+
+### debug
+
+```ts
+function debug(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  ...events: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
+): void
+```
+
+<a name="console-patch"></a>
+
+### patch
+
+```ts
+function patch(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  source: Observable<any>
+): void
+function patch(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  project: (value: any) => any
+): void
+function patch(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  value: any
+): void
+```
