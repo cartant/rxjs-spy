@@ -207,8 +207,6 @@ All subscriptions to matching observables will be placed into a paused state and
 
 This method returns a `Deck` instance that can be used to `resume` and `pause` the subscriptions.
 
-Calling `next` will release a single paused value to a single subscription.
-
 ```ts
 interface Deck {
   readonly paused: boolean;
@@ -219,6 +217,8 @@ interface Deck {
   values(): any[];
 }
 ```
+
+Calling `next` will release a single paused value to a single subscription.
 
 ## Console API
 
