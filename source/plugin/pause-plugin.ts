@@ -82,6 +82,11 @@ export class PausePlugin extends BasePlugin {
         this.match_ = match;
     }
 
+    get match(): Match {
+
+        return this.match_;
+    }
+
     pause(observable: Observable<any>, subscriber: Subscriber<any>, value: any, release: (value: any) => void): boolean {
 
         const { deck_, match_ } = this;

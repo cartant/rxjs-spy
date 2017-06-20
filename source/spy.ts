@@ -32,6 +32,26 @@ if (typeof window !== "undefined") {
 
     const consoleApi = {
 
+        deck(at?: number): any {
+
+            const pausePlugins = plugins_.filter((plugin) => plugin instanceof PausePlugin) as PausePlugin[];
+            if (at === undefined) {
+                const logger = toLogger(defaultLogger);
+                logger.group("Deck(s)");
+                if (pausePlugins.length) {
+                    pausePlugins.forEach((pausePlugin, index) => {
+                        logger.log(`${index + 1} ${matchToString(pausePlugin.match)}`);
+                    });
+                } else {
+                    logger.log("No decks");
+                }
+                logger.groupEnd();
+            } else {
+                const pausePlugin = pausePlugins[at - 1];
+                return pausePlugin ? pausePlugin.deck() : null;
+            }
+        },
+
         debug(...args: any[]): void {
 
             debug.apply(null, args);
@@ -50,6 +70,11 @@ if (typeof window !== "undefined") {
         patch(...args: any[]): void {
 
             patch.apply(null, args);
+        },
+
+        pause(...args: any[]): any {
+
+            return pause.apply(null, args);
         },
 
         show(...args: any[]): void {
