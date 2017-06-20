@@ -87,7 +87,8 @@ describe("spy", () => {
                 beforeNext: sinon.stub(),
                 beforeSubscribe: sinon.stub(),
                 beforeUnsubscribe: sinon.stub(),
-                patch: sinon.stub().returns(null)
+                patch: sinon.stub().returns(null),
+                teardown: sinon.stub()
             } as any;
             teardown = spy({ plugins: [plugin] });
         });

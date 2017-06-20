@@ -23,6 +23,7 @@ export interface Plugin {
     beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void;
     flush(): void;
     patch(observable: Observable<any>, subscriber: Subscriber<any>): Observable<any> | ((value: any) => any) | null;
+    teardown(): void;
 }
 
 export class BasePlugin implements Plugin {
@@ -39,4 +40,5 @@ export class BasePlugin implements Plugin {
     beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {}
     flush(): void {}
     patch(observable: Observable<any>, subscriber: Subscriber<any>): Observable<any> | ((value: any) => any) | null { return  null; }
+    teardown(): void {}
 }

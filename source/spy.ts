@@ -85,6 +85,7 @@ export function debug(match: Match, ...events: Event[]): () => void {
 
     const teardown = () => {
 
+        plugin.teardown();
         plugins_ = plugins_.filter((p) => p !== plugin);
         undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
@@ -105,6 +106,7 @@ export function log(match: Match, partialLogger?: PartialLogger): () => void {
 
     const teardown = () => {
 
+        plugin.teardown();
         plugins_ = plugins_.filter((p) => p !== plugin);
         undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
@@ -123,6 +125,7 @@ export function patch(match: Match, arg: any): () => void {
 
     const teardown = () => {
 
+        plugin.teardown();
         plugins_ = plugins_.filter((p) => p !== plugin);
         undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
@@ -190,6 +193,7 @@ export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
 
     const teardown = () => {
 
+        plugins_.forEach((plugin) => plugin.teardown());
         plugins_ = [];
         undos_ = [];
         Observable.prototype.subscribe = observableSubscribe;
