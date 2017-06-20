@@ -94,15 +94,30 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void
 ```
 
+Calling `spy` attaches the spy to `Observable.prototype.subscribe`.
+
+By default, `spy` will wire up the snapshotting plugin. However, if the `plugins` option is specified, only the plugins it contains will be wired up - so, to disable snapshotting, specify an empty array.
+
+This method returns a teardown function.
+
 <a name="module-show"></a>
 
 ### show
 
 ```ts
 function show(
-  match?: string | RegExp | MatchPredicate | Observable<any>
+  partialLogger?: PartialLogger = console
+): void
+
+function show(
+  match?: string | RegExp | MatchPredicate | Observable<any>,
+  partialLogger?: PartialLogger = console
 ): void
 ```
+
+Calling `show` will log information regarding the matching observables to the console or to the specified logger. If no `match` is specified, all tagged observables will be logged.
+
+The logged information is retrieved from the most recent snapshot, so if snapshotting is not enabled, an error will be thrown.
 
 <a name="module-log"></a>
 
@@ -115,6 +130,12 @@ function log(
 ): () => void
 ```
 
+Wires up an instance of the log plugin for matching observables.
+
+All `subscribe`, `next`, `complete`, `error` and `unsubscribe` events will be logged to the console or to the specified logger.
+
+This method returns a teardown function.
+
 <a name="module-debug"></a>
 
 ### debug
@@ -126,6 +147,14 @@ function debug(
 ): () => void
 ```
 
+Wires up an instance of the debug plugin for matching observables.
+
+Whenever one of the specified events occurs, a `debugger` statement in the plugin will pause execution. If no events are specified in the call, execution will be paused when any of the events occurs.
+
+Immediately above the `debugger` statement, there is a snapshot variable - so if snapshotting is enabled, a snapshot will be available for inspection within the debugger.
+
+This method returns a teardown function.
+
 <a name="module-patch"></a>
 
 ### patch
@@ -135,36 +164,31 @@ function patch(
   match: string | RegExp | MatchPredicate | Observable<any>,
   source: Observable<any>
 ): () => void
+
 function patch(
   match: string | RegExp | MatchPredicate | Observable<any>,
   project: (value: any) => any
 ): () => void
+
 function patch(
   match: string | RegExp | MatchPredicate | Observable<any>,
   value: any
 ): () => void
 ```
 
+Wires up an instance of the patch plugin for matching observables.
+
+If an observable is specified, subscribers to matching observables will be subscribed to the specified observable instead.
+
+If either a `project` function or a `value` is specified, each value emitted by matching observables will be replaced with the projected or specified value.
+
+This method returns a teardown function.
+
 ## Console API
 
-The methods in the console API are callable via the `rxSpy` global and are intended to be used interactively in the browser's console. Unlike the module API methods, they do not return teardown functions. Instead, calls can be undone using the `undo` API method.
+The methods in the console API are callable via the `rxSpy` global (note the lower-case `r`) and are intended to be used interactively in the browser's console.
 
-* [spy](#console-spy)
-* [undo](#console-undo)
-* [show](#console-show)
-* [log](#console-log)
-* [debug](#console-debug)
-* [patch](#console-patch)
-
-<a name="console-spy"></a>
-
-### spy
-
-```ts
-function spy({ plugins }: { plugins?: Plugin[] } = {}): void
-```
-
-<a name="console-undo"></a>
+They are identical to the methods in the module API except for the fact that they do not return teardown functions. Instead, calls can be undone using the `undo` API method.
 
 ### undo
 
@@ -172,53 +196,8 @@ function spy({ plugins }: { plugins?: Plugin[] } = {}): void
 function undo(...calls: number[]): void
 ```
 
-<a name="console-show"></a>
+When called without arguments, the `undo` method will display in the console a list of the `rxjs-spy` calls that can be undone.
 
-### show
+Calls are listed against a call number and one or more of those numbers can be passed to `undo` to undo specific calls.
 
-```ts
-function show(
-  match?: string | RegExp | MatchPredicate | Observable<any>
-): void
-```
-
-<a name="console-log"></a>
-
-### log
-
-```ts
-function log(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  partialLogger: PartialLogger = console
-): void
-```
-
-<a name="console-debug"></a>
-
-### debug
-
-```ts
-function debug(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  ...events: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
-): void
-```
-
-<a name="console-patch"></a>
-
-### patch
-
-```ts
-function patch(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  source: Observable<any>
-): void
-function patch(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  project: (value: any) => any
-): void
-function patch(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  value: any
-): void
-```
+Undoing a `spy` call will undo all calls.
