@@ -32,22 +32,22 @@ if (typeof window !== "undefined") {
 
     const consoleApi = {
 
-        deck(at?: number): any {
+        deck(call?: number): any {
 
             const pausePlugins = plugins_.filter((plugin) => plugin instanceof PausePlugin) as PausePlugin[];
-            if (at === undefined) {
+            if (call === undefined) {
                 const logger = toLogger(defaultLogger);
                 logger.group("Deck(s)");
                 if (pausePlugins.length) {
                     pausePlugins.forEach((pausePlugin, index) => {
-                        logger.log(`${index + 1} ${matchToString(pausePlugin.match)}`);
+                        logger.log(`${index + 1} pause(${matchToString(pausePlugin.match)})`);
                     });
                 } else {
                     logger.log("No decks");
                 }
                 logger.groupEnd();
             } else {
-                const pausePlugin = pausePlugins[at - 1];
+                const pausePlugin = pausePlugins[call - 1];
                 return pausePlugin ? pausePlugin.deck() : null;
             }
         },

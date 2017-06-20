@@ -226,6 +226,9 @@ The methods in the console API are callable via the `rxSpy` global (note the low
 
 They are identical to the methods in the module API except for the fact that they do not return teardown functions. Instead, calls can be undone using the `undo` API method.
 
+* [undo](#console-undo)
+* [deck](#console-deck)
+
 <a name="console-undo"></a>
 
 ### undo
@@ -239,3 +242,13 @@ When called without arguments, the `undo` method will display in the console a l
 Calls are listed against a call number and one or more of those numbers can be passed to `undo` to undo specific calls.
 
 Undoing a `spy` call will undo all calls.
+
+<a name="console-deck"></a>
+
+### deck
+
+```ts
+function deck(call?: number): Deck | null
+```
+
+In the console, it's easy to forget to use a variable to capture the `Deck` returned by a call to `pause`. In those situations, you can call the `deck` method without an argument to see a list of numbered `pause` calls. Calling `deck` again, passing a call number, will return the `Deck` associated with the specified `pause` call.
