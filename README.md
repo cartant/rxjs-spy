@@ -118,7 +118,7 @@ function show(
 ): void
 
 function show(
-  match?: string | RegExp | MatchPredicate | Observable<any>,
+  match: string | RegExp | MatchPredicate | Observable<any>,
   partialLogger?: PartialLogger = console
 ): void
 ```
