@@ -14,35 +14,49 @@
         <li>
             <p>Have a look at the source for this page.</p>
             <p>Note that there are two <code>script</code> blocks. The first configures the spy and the second represents the application code that will be spied upon.</p>
-            <p>In addition to enabling spying, the first <code>script</code> block patches the observable tagged as <code>"source"</code>. Subscribers to <code>"source"</code> will subscribe to the patched observable instead - so they can be sent values from the console.</p>
+            <p>The observables in the second snippet are enclosed in an IIFE, so they are not accessible from the console. However, they are tagged, so they can be manipulated using the spy's console API.</p>
         </li>
         <li>
             <p>Open the DevTools console.</p>
         </li>
         <li>
-            <p>In the console, run:</p>
+            <p>To inspect the current of all tagged observables, run the following in the console:</p>
             <code>rxSpy.show();</code>
-            <p>You'll see a listing of all tagged observables. There is only one - tagged as <code>"source"</code> - it has a single subscriber and has not yet emitted a value.</p>
+            <p>You'll see a listing of all tagged observables. There are two: an interval observable; and a composed observable that emits people's names.</p>
+            <p>To inspect a specific tagged observable, you can pass a string or a regular expression to <code>show</code>. For example:</p>
+            <code>rxSpy.show("people");</code>
         </li>
         <li>
-            <p>In the console, run:</p>
-            <code>rxSpy.log("source");</code>
-            <p>This will enable logging to the specified tag.</p>
+            <p>Logging can be enabled using the API's <code>log</code> method. For example:</p>
+            <code>rxSpy.log("people");</code>
+            <p>This will enable logging for the specified tag.</p>
+            <p>Run the following to log the interval observable's values, too:</p>
+            <code>rxSpy.log("interval");</code>
         </li>
         <li>
-            <p>In the console, run:</p>
-            <code>patchedSource.next(1);</code>
-            <p>This will emit a value from the patched observable to the subscriber of the <code>"source"</code> observable and that emission will be logged to the console.</p>
-        </li>
-        <li>
-            <p>In the console, run:</p>
+            <p>Calls made to the spy API can be undone using the <code>undo</code> method. To obtain a list of calls, run the following:</p>
             <code>rxSpy.undo();</code>
-            <p>This will show a list of the spy-related API calls that have been made. Calls can be undone by calling <code>undo</code>, passing the number(s) of the call(s) to be undone.</p>
+            <p>It will display a list of numbered calls. Undo the interval logging by passing the appropriate call number:</p>
+            <code>rxSpy.undo(3);</code>
         </li>
         <li>
-            <p>In the console, run:</p>
-            <code>rxSpy.undo(3);</code>
-            <p>This will disable the logging of the <code>"source"</code> observable</p>
+            <p>The spy API can modify the values that are emmitted by tagged observables using the <code>patch</code> method. For example, the following call with replace the value emitted from the people observable:</p>
+            <code>rxSpy.patch("people", "mallory");</code>
+        </li>
+        <li>
+            <p>The spy API can pause tagged observables using the <code>pause</code> method. For example, the following call pauses the people observable so that it's emissions can be controlled from the console:</p>
+            <code>rxSpy.pause("interval");</code>
+            <p><code>pause</code> returns a <code>Deck</code> instance that can be used to control the observable and return value should be assigned to a variable. It's easy to forget to do this, so there is a <code>deck</code> method that will display a numbered list of <code>pause</code> calls. Passing a call number to <code>deck</code> will return the instance associated with the call. For example:</p>
+            <code>rxSpy.deck();</code><br>
+            <code>var deck = rxSpy.deck(1);</code>
+            <p>The deck can be used to inspect and control the observable's emissions. For example, calling its <code>value</code> method will show the values that have been paused:</p>
+            <code>deck.values();</code>
+            <p>Its <code>next</code> method will release a single paused value to the appropriate subscriber:</p>
+            <code>deck.next();</code>
+            <p>And its <code>resume</code> method will release all paused values and will resume the observable's emissions:</p>
+            <code>deck.resume();</code>
+            <p>Calling its <code>pause</code> method will return the observable to a paused state:</p>
+            <code>deck.pause();</code>
         </li>
     </ol>
     <script src="../node_modules/core-js/client/core.js"></script>
@@ -50,17 +64,25 @@
     <script src="../bundles/rxjs-spy.umd.js"></script>
     <script>
 
-        window.patchedSource = new Rx.Subject();
-
         rxSpy.spy();
-        rxSpy.patch("source", window.patchedSource);
 
     </script>
     <script>
 
-        var subject = new Rx.Subject();
-        var source = subject.tag("source").map(value => value);
-        source.subscribe();
+        (function () {
+
+            var interval = new Rx.Observable
+                .interval(2000)
+                .tag("interval");
+
+            var people = interval
+                .map((value) => {
+                    const names = ["alice", "bob"];
+                    return names[value % names.length];
+                })
+                .tag("people")
+                .subscribe();
+        })();
 
     </script>
 </body>
