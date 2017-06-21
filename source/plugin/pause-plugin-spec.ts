@@ -127,7 +127,17 @@ describe("PausePlugin", () => {
             expect(values).to.deep.equal(["alice"]);
         });
 
-        it("should not emit values if unsubscribed whilst paused", () => {
+        it("should emit values if unsubscribed whilst paused", () => {
+
+            // From http://reactivex.io/documentation/contract.html
+            //
+            // "It is not guaranteed, however, that the Observable will issue
+            // no notifications to the observer after an observer issues it an
+            // Unsubscribe notification."
+            //
+            // So, in order for spying to not change any underlying behaviour,
+            // it's important to not guard against and prevent post-unsubscribe
+            // resumes.
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -137,6 +147,34 @@ describe("PausePlugin", () => {
             subject.next("alice");
             expect(values).to.deep.equal([]);
             subscription.unsubscribe();
+            deck.resume();
+            expect(values).to.deep.equal(["alice"]);
+        });
+
+        it("should not emit values if completed whilst paused", () => {
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            expect(deck).to.have.property("paused", true);
+            subject.next("alice");
+            expect(values).to.deep.equal([]);
+            subject.complete();
+            deck.resume();
+            expect(values).to.deep.equal([]);
+        });
+
+        it("should not emit values if errored whilst paused", () => {
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            expect(deck).to.have.property("paused", true);
+            subject.next("alice");
+            expect(values).to.deep.equal([]);
+            subject.error(new Error("Boom!"));
             deck.resume();
             expect(values).to.deep.equal([]);
         });

@@ -185,7 +185,7 @@ export function pause(match: Match): Deck {
     undos_.push({ name: `pause(${matchToString(match)})`, teardown });
 
     const deck = plugin.deck;
-    deck.teardown = () => { deck.clear(); teardown(); };
+    deck.teardown = () => { deck.resume(); teardown(); };
     return deck;
 }
 
@@ -316,7 +316,7 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
     /*tslint:disable-next-line:no-invalid-this*/
     const observable = this;
     const subscriber = toSubscriber.apply(null, args);
-    let subscribed = true;
+    let resumable = true;
 
     ++tick_;
     plugins_.forEach((plugin) => plugin.beforeSubscribe(observable, subscriber));
@@ -326,7 +326,7 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
 
             function next(value: any): void {
 
-                if (subscribed) {
+                if (resumable) {
 
                     value = patchValue(observable, subscriber, value);
 
@@ -349,7 +349,7 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.beforeError(observable, subscriber, error));
 
             subscriber.error(error);
-            subscribed = false;
+            resumable = false;
 
             plugins_.forEach((plugin) => plugin.afterError(observable, subscriber, error));
         },
@@ -359,7 +359,7 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.beforeComplete(observable, subscriber));
 
             subscriber.complete();
-            subscribed = false;
+            resumable = false;
 
             plugins_.forEach((plugin) => plugin.afterComplete(observable, subscriber));
         }
@@ -374,7 +374,6 @@ function spySubscribe(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.beforeUnsubscribe(observable, subscriber));
 
             subscription.unsubscribe();
-            subscribed = false;
 
             plugins_.forEach((plugin) => plugin.afterUnsubscribe(observable, subscriber));
         }
