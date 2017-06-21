@@ -166,6 +166,11 @@ export function plugin(plugin: Plugin, name: string): () => void {
     return teardown;
 }
 
+export function plugins(): Plugin[] {
+
+    return plugins_.slice();
+}
+
 export function show(partialLogger?: PartialLogger): void;
 export function show(match: Match, partialLogger?: PartialLogger): void;
 export function show(match: any, partialLogger: PartialLogger = defaultLogger): void {
