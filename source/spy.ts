@@ -117,18 +117,10 @@ export function debug(match: Match, ...events: Event[]): () => void {
     }
 
     const foundPlugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
-    const plugin = new DebugPlugin(match, events, foundPlugin ? foundPlugin as SnapshotPlugin : null);
-    plugins_.push(plugin);
-
-    const teardown = () => {
-
-        plugin.teardown();
-        plugins_ = plugins_.filter((p) => p !== plugin);
-        undos_ = undos_.filter((u) => u.teardown !== teardown);
-    };
-    undos_.push({ name: `debug(${matchToString(match)})`, teardown });
-
-    return teardown;
+    return plugin(
+        new DebugPlugin(match, events, foundPlugin ? foundPlugin as SnapshotPlugin : null),
+        `debug(${matchToString(match)})`
+    );
 }
 
 export function flush(): void {
@@ -138,18 +130,7 @@ export function flush(): void {
 
 export function log(match: Match, partialLogger?: PartialLogger): () => void {
 
-    const plugin = new LogPlugin(match, partialLogger);
-    plugins_.push(plugin);
-
-    const teardown = () => {
-
-        plugin.teardown();
-        plugins_ = plugins_.filter((p) => p !== plugin);
-        undos_ = undos_.filter((u) => u.teardown !== teardown);
-    };
-    undos_.push({ name: `log(${matchToString(match)})`, teardown });
-
-    return teardown;
+    return plugin(new LogPlugin(match, partialLogger), `log(${matchToString(match)})`);
 }
 
 export function patch(match: Match, source: Observable<any>): () => void;
@@ -157,23 +138,21 @@ export function patch(match: Match, project: (value: any) => any): () => void;
 export function patch(match: Match, value: any): () => void;
 export function patch(match: Match, arg: any): () => void {
 
-    const plugin = new PatchPlugin(match, arg);
-    plugins_.push(plugin);
-
-    const teardown = () => {
-
-        plugin.teardown();
-        plugins_ = plugins_.filter((p) => p !== plugin);
-        undos_ = undos_.filter((u) => u.teardown !== teardown);
-    };
-    undos_.push({ name: `patch(${matchToString(match)})`, teardown });
-
-    return teardown;
+    return plugin(new PatchPlugin(match, arg), `patch(${matchToString(match)})`);
 }
 
 export function pause(match: Match): Deck {
 
-    const plugin = new PausePlugin(match);
+    const pausePlugin = new PausePlugin(match);
+    const teardown = plugin(pausePlugin, `pause(${matchToString(match)})`);
+
+    const deck = pausePlugin.deck;
+    deck.teardown = () => { deck.resume(); teardown(); };
+    return deck;
+}
+
+export function plugin(plugin: Plugin, name: string): () => void {
+
     plugins_.push(plugin);
 
     const teardown = () => {
@@ -182,11 +161,9 @@ export function pause(match: Match): Deck {
         plugins_ = plugins_.filter((p) => p !== plugin);
         undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
-    undos_.push({ name: `pause(${matchToString(match)})`, teardown });
+    undos_.push({ name, teardown });
 
-    const deck = plugin.deck;
-    deck.teardown = () => { deck.resume(); teardown(); };
-    return deck;
+    return teardown;
 }
 
 export function show(partialLogger?: PartialLogger): void;

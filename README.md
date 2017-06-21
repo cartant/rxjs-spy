@@ -93,6 +93,7 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 * [patch](#module-patch)
 * [pause](#module-pause)
 * [flush](#module-flush)
+* [plugin](#module-plugin)
 
 <a name="module-spy"></a>
 
@@ -233,6 +234,16 @@ function flush(): void
 Calling `flush` will see `flush` called on each plugin.
 
 If snapshotting is enabled, calling `flush` will release excess values and completed or errored obervables from within snapshots.
+
+<a name="module-plugin"></a>
+
+### plugin
+
+```ts
+function plugin(plugin: Plugin, name: string): () => void
+```
+
+Wires up the specified plugin and returns a teardown function.
 
 ## Console API
 
