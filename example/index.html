@@ -57,6 +57,9 @@
             <code>deck.resume();</code>
             <p>Calling its <code>pause</code> method will return the observable to a paused state:</p>
             <code>deck.pause();</code>
+            <p>Like all API calls, <code>undo</code> can be used to undo the pausing of an observable. When undone, any paused values are resumed:</p>
+            <code>rxSpy.undo();</code><br>
+            <code>rxSpy.undo(4);</code>
         </li>
     </ol>
     <script src="../node_modules/core-js/client/core.js"></script>

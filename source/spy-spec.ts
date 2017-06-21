@@ -104,6 +104,22 @@ describe("spy", () => {
             deck.resume();
             expect(values).to.deep.equal(["alice", "bob"]);
         });
+
+        it("should resume upon teardown", () => {
+
+            teardown = spy({ plugins: [] });
+            const deck = pause("people");
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            subject.next("alice");
+            subject.next("bob");
+            expect(values).to.deep.equal([]);
+            teardown();
+            expect(values).to.deep.equal(["alice", "bob"]);
+        });
     });
 
     describe("plugin", () => {

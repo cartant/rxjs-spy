@@ -104,4 +104,15 @@ export class PausePlugin extends BasePlugin {
         }
         return false;
     }
+
+    teardown(): void {
+
+        const { deck_ } = this;
+
+        if (deck_ && deck_.teardown) {
+            const teardown = deck_.teardown;
+            deck_.teardown = () => {};
+            teardown.call(deck_);
+        }
+    }
 }
