@@ -8,7 +8,7 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { matches } from "../operator/tag";
+import { matches } from "../match";
 import { spy } from "../spy";
 import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
 

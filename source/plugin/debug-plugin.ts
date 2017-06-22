@@ -7,7 +7,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { Match, matches } from "../operator/tag";
+import { Match, matches } from "../match";
 import { BasePlugin, Event } from "./plugin";
 import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
 

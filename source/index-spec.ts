@@ -5,6 +5,7 @@
  */
 
 import "./add/operator/tag-spec";
+import "./match-spec";
 import "./plugin/log-plugin-spec";
 import "./plugin/patch-plugin-spec";
 import "./plugin/pause-plugin-spec";

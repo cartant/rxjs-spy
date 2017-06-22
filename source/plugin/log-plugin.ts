@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
-import { Match, matches, read, toString as matchToString } from "../operator/tag";
+import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Event } from "./plugin";
 
 export class LogPlugin extends BasePlugin {

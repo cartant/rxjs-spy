@@ -6,7 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { read } from "../operator/tag";
+import { read } from "../match";
 import { Event, BasePlugin } from "./plugin";
 import { tick } from "../spy";
 

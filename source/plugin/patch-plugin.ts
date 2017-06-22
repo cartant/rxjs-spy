@@ -6,7 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { Match, matches } from "../operator/tag";
+import { Match, matches } from "../match";
 import { BasePlugin } from "./plugin";
 import { isObservable } from "../util";
 
