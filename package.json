@@ -10,6 +10,8 @@
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.13",
     "@types/sinon": "^2.0.0",
+    "browserify": "^14.4.0",
+    "browserify-global-shim": "^1.0.3",
     "chai": "^3.5.0",
     "core-js": "^2.4.1",
     "cpy-cli": "^1.0.1",
@@ -24,8 +26,6 @@
     "rimraf": "^2.6.1",
     "rxjs": "^5.4.0",
     "rxjs-tslint-rules": "^1.0.0",
-    "rollup": "^0.41.6",
-    "rollup-plugin-node-resolve": "^3.0.0",
     "sinon": "^2.0.0",
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
@@ -33,7 +33,6 @@
     "uglify-js": "^3.0.10"
   },
   "homepage": "https://github.com/cartant/rxjs-spy",
-  "jsnext:main": "./dist/index.js",
   "keywords": [
     "debug",
     "debugging",
@@ -44,8 +43,7 @@
     "spy"
   ],
   "license": "MIT",
-  "main": "./bundles/rxjs-spy.umd.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
   "name": "rxjs-spy",
   "optionalDependencies": {},
   "peerDependencies": {
@@ -58,13 +56,13 @@
   },
   "scripts": {
     "dist": "npm run dist:build && npm run dist:uglify && npm run dist:copy",
-    "dist:build": "npm run dist:clean && tsc -p tsconfig-dist.json && rollup -c rollup-config.js",
+    "dist:build": "npm run dist:clean && tsc -p tsconfig-dist.json && node scripts/bundle-dist.js",
     "dist:clean": "rimraf dist && rimraf bundles/rxjs-spy.* && mkdirp bundles",
-    "dist:copy": "node scripts/pack.js && cpy bundles/rxjs-spy.* dist/bundles/ && cpy example/*.* dist/example/ && cpy CHANGELOG.md LICENSE README.md dist/ && cpy **/package.json ../dist/ --cwd=source --parents",
+    "dist:copy": "node scripts/pack.js && cpy bundles/rxjs-spy.* dist/bundles/ && cpy example/*.* dist/example/ && cpy CHANGELOG.md LICENSE README.md dist/",
     "dist:uglify": "uglifyjs -c --comments /license/ -m -o bundles/rxjs-spy.min.umd.js bundles/rxjs-spy.umd.js",
     "lint": "tslint --project tsconfig.json --type-check source/**/*.ts",
     "test": "npm run lint && npm run test:build && karma start",
-    "test:build": "npm run test:clean && tsc -p tsconfig.json && rollup -c rollup-config-test.js",
+    "test:build": "npm run test:clean && tsc -p tsconfig.json && node scripts/bundle-test.js",
     "test:clean": "rimraf build && rimraf bundles/rxjs-spy-test.* && mkdirp bundles"
   },
   "typings": "./dist/index.d.ts",

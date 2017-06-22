@@ -1,5 +1,5 @@
 import { Observable } from "rxjs/Observable";
-import { PartialObserver, empty as emptyObserver } from "rxjs/Observer";
+import { PartialObserver } from "rxjs/Observer";
 import { Subscriber } from "rxjs/Subscriber";
 import { rxSubscriber as rxSubscriberSymbol } from "rxjs/symbol/rxSubscriber";
 
@@ -7,6 +7,13 @@ export function isObservable(arg: any): arg is Observable<any> {
 
     return arg && arg.subscribe;
 }
+
+const empty = {
+    closed: true,
+    error(error: any): void { throw error; },
+    next(value: any): void { },
+    complete(): void { }
+};
 
 // https://github.com/ReactiveX/rxjs/blob/master/src/util/toSubscriber.ts
 //
@@ -31,7 +38,7 @@ export function toSubscriber<T>(
     }
 
     if (!nextOrObserver && !error && !complete) {
-        return new Subscriber(emptyObserver);
+        return new Subscriber(empty);
     }
     return new Subscriber(nextOrObserver, error, complete);
 }

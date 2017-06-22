@@ -1,8 +1,6 @@
 {
   "devDependencies": {},
-  "jsnext:main": "./index.js",
-  "main": "./bundles/rxjs-spy.umd.js",
-  "module": "./index.js",
+  "main": "./index.js",
   "private": false,
   "scripts": {},
   "typings": "./index.d.ts",
