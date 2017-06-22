@@ -8,11 +8,15 @@ export function isObservable(arg: any): arg is Observable<any> {
     return arg && arg.subscribe;
 }
 
+// This is included because - although there is an "rxjs/Observer.js" in the
+// RxJS NPM distribution - there is no "Rx.Observer" (and, therefore, no
+// "Rx.Observer.empty") in the bundle:
+
 const empty = {
     closed: true,
     error(error: any): void { throw error; },
-    next(value: any): void { },
-    complete(): void { }
+    next(value: any): void {},
+    complete(): void {}
 };
 
 // https://github.com/ReactiveX/rxjs/blob/master/src/util/toSubscriber.ts
