@@ -6,15 +6,8 @@
 
 "use strict";
 
-const browserify = require("browserify");
-const fs = require("fs");
-const shim = require("browserify-global-shim").configure(require("./bundle-config"));
-
-browserify({
-    entries: "./dist/index.js",
-    fullPaths: false,
-    standalone: "RxSpy"
-})
-.transform(shim)
-.bundle()
-.pipe(fs.createWriteStream("./bundles/rxjs-spy.umd.js"));
+require("./bundle-common")({
+    bundle: "./bundles/rxjs-spy.umd.js",
+    entry: "./dist/index.js",
+    name: "RxSpy"
+});

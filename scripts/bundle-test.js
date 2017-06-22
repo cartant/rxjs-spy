@@ -6,15 +6,8 @@
 
 "use strict";
 
-const browserify = require("browserify");
-const fs = require("fs");
-const shim = require("browserify-global-shim").configure(require("./bundle-config"));
-
-browserify({
-    entries: "./build/index-spec.js",
-    fullPaths: false,
-    standalone: "RxSpyTest"
-})
-.transform(shim)
-.bundle()
-.pipe(fs.createWriteStream("./bundles/rxjs-spy-test.umd.js"));
+require("./bundle-common")({
+    bundle: "./bundles/rxjs-spy-test.umd.js",
+    entry: "./build/index-spec.js",
+    name: "RxSpyTest"
+});

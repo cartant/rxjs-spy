@@ -6,7 +6,10 @@
 
 "use strict";
 
-module.exports = {
+const browserify = require("browserify");
+const fs = require("fs");
+
+const shims = {
     "rxjs/add/observable/combineLatest": "Rx.unused",
     "rxjs/add/observable/from": "Rx.unused",
     "rxjs/add/observable/of": "Rx.unused",
@@ -19,3 +22,30 @@ module.exports = {
     "rxjs/Subscriber": "Rx",
     "rxjs/symbol/rxSubscriber": "Rx.Symbol"
 };
+
+module.exports = function (options) {
+
+    const writeStream = fs.createWriteStream(options.bundle);
+
+    browserify({
+        entries: options.entry,
+        fullPaths: false,
+        standalone: options.name
+    })
+    .transform(require("browserify-global-shim").configure(shims))
+    .bundle()
+    .pipe(writeStream);
+
+    writeStream.on("close", () => {
+
+        verify(options.bundle);
+    });
+}
+
+function verify(path) {
+
+    const content = fs.readFileSync(path).toString();
+    if (/require\s*\(\s*['"]rxjs/.test(content)) {
+        throw new Error(`Found an unshimmed require in ${path}`);
+    }
+}
