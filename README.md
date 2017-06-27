@@ -115,12 +115,12 @@ This method returns a teardown function.
 
 ```ts
 function show(
-  partialLogger?: PartialLogger = console
+  partialLogger: PartialLogger = console
 ): void
 
 function show(
   match: string | RegExp | MatchPredicate | Observable<any>,
-  partialLogger?: PartialLogger = console
+  partialLogger: PartialLogger = console
 ): void
 ```
 
@@ -134,12 +134,16 @@ The logged information is retrieved from the most recent snapshot, so if snapsho
 
 ```ts
 function log(
+  partialLogger: PartialLogger = console
+): () => void
+
+function log(
   match: string | RegExp | MatchPredicate | Observable<any>,
   partialLogger: PartialLogger = console
 ): () => void
 ```
 
-Wires up an instance of the log plugin for matching observables.
+Wires up an instance of the log plugin for matching observables. If no `match` is specified, all tagged observables will be logged.
 
 All `subscribe`, `next`, `complete`, `error` and `unsubscribe` events will be logged to the console or to the specified logger.
 

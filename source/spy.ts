@@ -128,7 +128,17 @@ export function flush(): void {
     plugins_.forEach((plugin) => plugin.flush());
 }
 
-export function log(match: Match, partialLogger?: PartialLogger): () => void {
+export function log(partialLogger?: PartialLogger): () => void;
+export function log(match: Match, partialLogger?: PartialLogger): () => void;
+export function log(match: any, partialLogger?: PartialLogger): () => void {
+
+    const anyTagged = /.+/;
+    if (!match) {
+        match = anyTagged;
+    } else if (typeof match.log === "function") {
+        partialLogger = match;
+        match = anyTagged;
+    }
 
     return plugin(new LogPlugin(match, partialLogger), `log(${matchToString(match)})`);
 }

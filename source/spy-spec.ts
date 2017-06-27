@@ -69,6 +69,23 @@ describe("spy", () => {
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; event = unsubscribe"]);
         });
+
+        it("should log all/any tagged observables", () => {
+
+            teardown = spy({ plugins: [] });
+
+            const subject = new Subject<string>();
+            const calls: any[][] = [];
+
+            log({
+                log(...args: any[]): void { calls.push(args); }
+            });
+
+            const subscription = subject.tag("people").subscribe();
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
+            expect(calls[1]).to.deep.equal(["  Matching", "/.+/"]);
+        });
     });
 
     describe("patch", () => {
