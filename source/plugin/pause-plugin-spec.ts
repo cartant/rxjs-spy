@@ -8,8 +8,9 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { spy } from "../spy";
+import { PartialLogger } from "../logger";
 import { Deck, PausePlugin } from "./pause-plugin";
+import { spy } from "../spy";
 
 import "../add/operator/tag";
 
@@ -45,9 +46,9 @@ describe("PausePlugin", () => {
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
-            expect(deck.values()).to.deep.equal(["alice"]);
+            expect(values_(deck)).to.deep.equal(["alice"]);
             deck.clear();
-            expect(deck.values()).to.deep.equal([]);
+            expect(values_(deck)).to.deep.equal([]);
         });
 
         it("should not release paused values", () => {
@@ -63,9 +64,51 @@ describe("PausePlugin", () => {
         });
     });
 
-    describe("next", () => {
+    describe("log", () => {
 
-        it("should emit the next value", () => {
+        it("should log the subscription's paused values", () => {
+
+            const calls: any[][] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe();
+
+            expect(deck).to.have.property("paused", true);
+            subject.next("alice");
+            deck.log({
+                log(...args: any[]): void { calls.push(args); }
+            });
+            expect(calls).to.deep.equal([
+                ["Deck matching people"],
+                ["  Paused =", true],
+                ["  Observable; tag = people"],
+                ["    Values =", ["alice"]]
+            ]);
+        });
+
+        it("should not log released values", () => {
+
+            const calls: any[][] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe();
+
+            expect(deck).to.have.property("paused", true);
+            subject.next("alice");
+            deck.step();
+            deck.log({
+                log(...args: any[]): void { calls.push(args); }
+            });
+            expect(calls).to.deep.equal([
+                ["Deck matching people"],
+                ["  Paused =", true],
+                ["  Observable; tag = people"],
+                ["    Values =", []]
+            ]);
+        });
+    });
+
+    describe("skip", () => {
+
+        it("should skip a paused value", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -76,9 +119,50 @@ describe("PausePlugin", () => {
             subject.next("bob");
             subject.next("mallory");
             expect(values).to.deep.equal([]);
-            deck.next();
+            expect(values_(deck)).to.deep.equal(["alice", "bob", "mallory"]);
+            deck.skip();
+            expect(values).to.deep.equal([]);
+            expect(values_(deck)).to.deep.equal(["bob", "mallory"]);
+            deck.skip();
+            expect(values).to.deep.equal([]);
+            expect(values_(deck)).to.deep.equal(["mallory"]);
+        });
+
+        it("should do nothing if there are no paused values", () => {
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            expect(deck).to.have.property("paused", true);
+            subject.next("alice");
+            expect(values).to.deep.equal([]);
+            expect(values_(deck)).to.deep.equal(["alice"]);
+            deck.skip();
+            expect(values).to.deep.equal([]);
+            expect(values_(deck)).to.deep.equal([]);
+            deck.skip();
+            expect(values).to.deep.equal([]);
+            expect(values_(deck)).to.deep.equal([]);
+        });
+    });
+
+    describe("step", () => {
+
+        it("should emit a paused value", () => {
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            expect(deck).to.have.property("paused", true);
+            subject.next("alice");
+            subject.next("bob");
+            subject.next("mallory");
+            expect(values).to.deep.equal([]);
+            deck.step();
             expect(values).to.deep.equal(["alice"]);
-            deck.next();
+            deck.step();
             expect(values).to.deep.equal(["alice", "bob"]);
         });
 
@@ -91,9 +175,9 @@ describe("PausePlugin", () => {
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
             expect(values).to.deep.equal([]);
-            deck.next();
+            deck.step();
             expect(values).to.deep.equal(["alice"]);
-            deck.next();
+            deck.step();
             expect(values).to.deep.equal(["alice"]);
         });
     });
@@ -109,6 +193,40 @@ describe("PausePlugin", () => {
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
             expect(values).to.deep.equal([]);
+        });
+
+        it("should pause completions", () => {
+
+            let complete = false;
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe(
+                (value) => {},
+                (error) => {},
+                () => complete = true
+            );
+
+            expect(deck).to.have.property("paused", true);
+            subject.complete();
+            expect(complete).to.be.false;
+            deck.step();
+            expect(complete).to.be.true;
+        });
+
+        it("should pause errors", () => {
+
+            const errors: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe(
+                (value) => {},
+                (error) => errors.push(error)
+            );
+
+            expect(deck).to.have.property("paused", true);
+            subject.error(new Error("Boom!"));
+            expect(errors).to.deep.equal([]);
+            deck.step();
+            expect(errors).to.have.length(1);
+            expect(errors[0]).to.match(/Boom!/);
         });
     });
 
@@ -126,81 +244,20 @@ describe("PausePlugin", () => {
             deck.resume();
             expect(values).to.deep.equal(["alice"]);
         });
-
-        it("should emit values if unsubscribed whilst paused", () => {
-
-            // From http://reactivex.io/documentation/contract.html
-            //
-            // "It is not guaranteed, however, that the Observable will issue
-            // no notifications to the observer after an observer issues it an
-            // Unsubscribe notification."
-            //
-            // So, in order for spying to not change any underlying behaviour,
-            // it's important to not guard against and prevent post-unsubscribe
-            // resumes.
-
-            const values: any[] = [];
-            const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe((value) => values.push(value));
-
-            expect(deck).to.have.property("paused", true);
-            subject.next("alice");
-            expect(values).to.deep.equal([]);
-            subscription.unsubscribe();
-            deck.resume();
-            expect(values).to.deep.equal(["alice"]);
-        });
-
-        it("should not emit values if completed whilst paused", () => {
-
-            const values: any[] = [];
-            const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe((value) => values.push(value));
-
-            expect(deck).to.have.property("paused", true);
-            subject.next("alice");
-            expect(values).to.deep.equal([]);
-            subject.complete();
-            deck.resume();
-            expect(values).to.deep.equal([]);
-        });
-
-        it("should not emit values if errored whilst paused", () => {
-
-            const values: any[] = [];
-            const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe((value) => values.push(value));
-
-            expect(deck).to.have.property("paused", true);
-            subject.next("alice");
-            expect(values).to.deep.equal([]);
-            subject.error(new Error("Boom!"));
-            deck.resume();
-            expect(values).to.deep.equal([]);
-        });
-    });
-
-    describe("values", () => {
-
-        it("should return the subscription's paused values", () => {
-
-            const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe();
-
-            expect(deck).to.have.property("paused", true);
-            subject.next("alice");
-            expect(deck.values()).to.deep.equal(["alice"]);
-        });
-
-        it("should not include released values", () => {
-
-            const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe();
-
-            expect(deck).to.have.property("paused", true);
-            subject.next("alice");
-            deck.next();
-            expect(deck.values()).to.deep.equal([]);
-        });
     });
 });
+
+function values_(deck: Deck): any[] {
+
+    let calls = 0;
+    let values: any[] = [];
+
+    deck.log({
+        log(...args: any[]): void {
+            if (++calls === 4) {
+                values = args[1];
+            }
+        }
+    });
+    return values;
+}

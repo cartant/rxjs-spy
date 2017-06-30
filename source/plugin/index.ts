@@ -5,8 +5,8 @@
  */
 
 export * from "./debug-plugin";
+export * from "./let-plugin";
 export * from "./log-plugin";
-export * from "./patch-plugin";
 export * from "./pause-plugin";
 export * from "./plugin";
 export * from "./snapshot-plugin";

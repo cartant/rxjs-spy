@@ -4,8 +4,12 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
+import { PartialObserver } from "rxjs/Observer";
+import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
+import { Subscription } from "rxjs/Subscription";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
 
@@ -13,8 +17,8 @@ import {
     DebugPlugin,
     Deck,
     Event,
+    LetPlugin,
     LogPlugin,
-    PatchPlugin,
     PausePlugin,
     Plugin,
     SnapshotObservable,
@@ -23,8 +27,11 @@ import {
 
 import { isObservable, toSubscriber } from "./util";
 
-const observableSubscribe = Observable.prototype.subscribe;
+import "rxjs/add/operator/let";
+
+const subscribeBase = Observable.prototype.subscribe;
 let plugins_: Plugin[] = [];
+let pluginsSubject_ = new BehaviorSubject(plugins_);
 let undos_: { name: string, teardown: () => void }[] = [];
 let tick_ = 0;
 
@@ -62,14 +69,14 @@ if (typeof window !== "undefined") {
             flush();
         },
 
+        let(...args: any[]): void {
+
+            _let.apply(null, args);
+        },
+
         log(...args: any[]): void {
 
             log.apply(null, args);
-        },
-
-        patch(...args: any[]): void {
-
-            patch.apply(null, args);
         },
 
         pause(...args: any[]): any {
@@ -128,6 +135,11 @@ export function flush(): void {
     plugins_.forEach((plugin) => plugin.flush());
 }
 
+export function _let(match: Match, select: (source: Observable<any>) => Observable<any>): () => void {
+
+    return plugin(new LetPlugin(match, select), `let(${matchToString(match)})`);
+}
+
 export function log(partialLogger?: PartialLogger): () => void;
 export function log(match: Match, partialLogger?: PartialLogger): () => void;
 export function log(match: any, partialLogger?: PartialLogger): () => void {
@@ -143,32 +155,26 @@ export function log(match: any, partialLogger?: PartialLogger): () => void {
     return plugin(new LogPlugin(match, partialLogger), `log(${matchToString(match)})`);
 }
 
-export function patch(match: Match, source: Observable<any>): () => void;
-export function patch(match: Match, project: (value: any) => any): () => void;
-export function patch(match: Match, value: any): () => void;
-export function patch(match: Match, arg: any): () => void {
-
-    return plugin(new PatchPlugin(match, arg), `patch(${matchToString(match)})`);
-}
-
 export function pause(match: Match): Deck {
 
     const pausePlugin = new PausePlugin(match);
     const teardown = plugin(pausePlugin, `pause(${matchToString(match)})`);
 
     const deck = pausePlugin.deck;
-    deck.teardown = () => { deck.resume(); teardown(); };
+    deck.teardown = teardown;
     return deck;
 }
 
 export function plugin(plugin: Plugin, name: string): () => void {
 
     plugins_.push(plugin);
+    pluginsSubject_.next(plugins_);
 
     const teardown = () => {
 
         plugin.teardown();
         plugins_ = plugins_.filter((p) => p !== plugin);
+        pluginsSubject_.next(plugins_);
         undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
     undos_.push({ name, teardown });
@@ -227,23 +233,26 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
 
 export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
 
-    if (Observable.prototype.subscribe !== observableSubscribe) {
+    if (Observable.prototype.subscribe !== subscribeBase) {
         throw new Error("Already spying on Observable.prototype.subscribe.");
     }
-    Observable.prototype.subscribe = spySubscribe;
+    Observable.prototype.subscribe = subscribeWithSpy;
 
     if (plugins) {
         plugins_ = plugins;
     } else {
         plugins_ = [new SnapshotPlugin()];
     }
+    pluginsSubject_.next(plugins_);
 
     const teardown = () => {
 
         plugins_.forEach((plugin) => plugin.teardown());
         plugins_ = [];
+        pluginsSubject_.next(plugins_);
+        pluginsSubject_ = new BehaviorSubject(plugins_);
         undos_ = [];
-        Observable.prototype.subscribe = observableSubscribe;
+        Observable.prototype.subscribe = subscribeBase;
     };
     undos_.push({ name: "spy", teardown });
 
@@ -255,119 +264,177 @@ export function tick(): number {
     return tick_;
 }
 
-function patchSource(
-    observable: Observable<any>,
-    subscriber: Subscriber<any>
-): Observable<any> {
+export function subscribeWithoutSpy(this: Observable<any>, ...args: any[]): Subscription {
 
-    for (let p = plugins_.length - 1; p > -1; --p) {
-        const plugin = plugins_[p];
-        const patch = plugin.patch(observable, subscriber);
-        if (isObservable(patch)) {
-            return patch;
-        }
+    const subscribePrevious = Observable.prototype.subscribe;
+    Observable.prototype.subscribe = subscribeBase;
+
+    try {
+        /*tslint:disable-next-line:no-invalid-this*/
+        return Observable.prototype.subscribe.apply(this, args);
+    } finally {
+        Observable.prototype.subscribe = subscribePrevious;
     }
-    return observable;
 }
 
-function patchValue(
-    observable: Observable<any>,
-    subscriber: Subscriber<any>,
-    value: any
-): any {
-
-    for (let p = plugins_.length - 1; p > -1; --p) {
-        const plugin = plugins_[p];
-        const patch = plugin.patch(observable, subscriber);
-        if (typeof patch === "function") {
-            return patch(value);
-        }
-    }
-    return value;
-}
-
-function paused(
-    observable: Observable<any>,
-    subscriber: Subscriber<any>,
-    value: any,
-    resume: (value: any) => void
-): boolean {
-
-    for (let p = plugins_.length - 1; p > -1; --p) {
-        const plugin = plugins_[p];
-        const paused = plugin.pause(observable, subscriber, value, resume);
-        if (paused) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function spySubscribe(this: Observable<any>, ...args: any[]): any {
+function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
     /*tslint:disable-next-line:no-invalid-this*/
     const observable = this;
     const subscriber = toSubscriber.apply(null, args);
-    let resumable = true;
 
-    ++tick_;
-    plugins_.forEach((plugin) => plugin.beforeSubscribe(observable, subscriber));
+    const postLetSubscriber: {
+        complete: () => void;
+        error: (error: any) => void;
+        next: (value: any) => void;
+    } = {
 
-    const subscription = observableSubscribe.call(patchSource(observable, subscriber),
-        (value: any) => {
-
-            function next(value: any): void {
-
-                if (resumable) {
-
-                    value = patchValue(observable, subscriber, value);
-
-                    ++tick_;
-                    plugins_.forEach((plugin) => plugin.beforeNext(observable, subscriber, value));
-
-                    subscriber.next(value);
-
-                    plugins_.forEach((plugin) => plugin.afterNext(observable, subscriber, value));
-                }
-            }
-
-            if (!paused(observable, subscriber, value, next)) {
-                next(value);
-            }
-        },
-        (error: any) => {
-
-            ++tick_;
-            plugins_.forEach((plugin) => plugin.beforeError(observable, subscriber, error));
-
-            subscriber.error(error);
-            resumable = false;
-
-            plugins_.forEach((plugin) => plugin.afterError(observable, subscriber, error));
-        },
-        () => {
+        complete(): void {
 
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeComplete(observable, subscriber));
 
             subscriber.complete();
-            resumable = false;
 
             plugins_.forEach((plugin) => plugin.afterComplete(observable, subscriber));
+        },
+
+        error(error: any): void {
+
+            ++tick_;
+            plugins_.forEach((plugin) => plugin.beforeError(observable, subscriber, error));
+
+            subscriber.error(error);
+
+            plugins_.forEach((plugin) => plugin.afterError(observable, subscriber, error));
+        },
+
+        next(value: any): void {
+
+            ++tick_;
+            plugins_.forEach((plugin) => plugin.beforeNext(observable, subscriber, value));
+
+            subscriber.next(value);
+
+            plugins_.forEach((plugin) => plugin.afterNext(observable, subscriber, value));
         }
-    );
+    };
 
-    plugins_.forEach((plugin) => plugin.afterSubscribe(observable, subscriber));
+    /*tslint:disable:no-invalid-this*/
+    const preLetSubscriber: {
+        complete: () => void;
+        completed: boolean;
+        error: (error: any) => void;
+        errored: boolean;
+        let: (plugins: Plugin[]) => void;
+        next: (value: any) => void;
+        postLetSubscriber: Subscriber<any>;
+        postLetSubscription: Subscription | null;
+        preLetSubject: Subject<any> | null;
+        unsubscribe: () => void;
+    } = {
 
-    return {
+        complete(): void {
+
+            if (this.preLetSubject) {
+                this.preLetSubject.complete();
+            } else {
+                this.postLetSubscriber.complete();
+            }
+            this.completed = true;
+        },
+
+        completed: false,
+
+        error(error: any): void {
+
+            if (this.preLetSubject) {
+                this.preLetSubject.error(error);
+            } else {
+                this.postLetSubscriber.error(error);
+            }
+            this.errored = true;
+        },
+
+        errored: false,
+
+        let(plugins: Plugin[]): void {
+
+            const selectors = plugins.map((plugin) => plugin.select(observable, subscriber)).filter(Boolean);
+            if (selectors.length > 0) {
+
+                if (!this.preLetSubject) {
+                    this.preLetSubject = new Subject<any>();
+                }
+                if (this.postLetSubscription) {
+                    this.postLetSubscription.unsubscribe();
+                }
+
+                let source = this.preLetSubject.asObservable();
+                selectors.forEach((selector: (source: Observable<any>) => Observable<any>) => source = source.let(selector));
+                this.postLetSubscription = subscribeWithoutSpy.call(source, {
+                    complete: () => this.postLetSubscriber.complete(),
+                    error: (error: any) => this.postLetSubscriber.error(error),
+                    next: (value: any) => this.postLetSubscriber.next(value)
+                });
+
+            } else if (this.postLetSubscription) {
+
+                this.postLetSubscription.unsubscribe();
+                this.postLetSubscription = null;
+                this.preLetSubject = null;
+            }
+        },
+
+        next(value: any): void {
+
+            if (this.preLetSubject) {
+                this.preLetSubject.next(value);
+            } else {
+                this.postLetSubscriber.next(value);
+            }
+        },
+
+        postLetSubscriber: toSubscriber(postLetSubscriber),
+        postLetSubscription: null,
+        preLetSubject: null,
+
         unsubscribe(): void {
+
+            if (!this.completed && !this.errored) {
+                if (this.postLetSubscription) {
+                    this.postLetSubscription.unsubscribe();
+                    this.postLetSubscription = null;
+                }
+                this.postLetSubscriber.unsubscribe();
+            }
+        }
+    };
+    /*tslint:enable:no-invalid-this*/
+
+    const pluginsSubscription = subscribeWithoutSpy.call(pluginsSubject_, {
+        next: (plugins: any) => preLetSubscriber.let(plugins)
+    });
+
+    ++tick_;
+    plugins_.forEach((plugin) => plugin.beforeSubscribe(observable, subscriber));
+
+    const subscription = subscribeBase.call(observable, toSubscriber(preLetSubscriber));
+    const subscriptionSpy = {
+        unsubscribe: () => {
 
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeUnsubscribe(observable, subscriber));
 
             subscription.unsubscribe();
+            pluginsSubscription.unsubscribe();
+            preLetSubscriber.unsubscribe();
 
             plugins_.forEach((plugin) => plugin.afterUnsubscribe(observable, subscriber));
         }
     };
+
+    plugins_.forEach((plugin) => plugin.afterSubscribe(observable, subscriber));
+
+    return subscriptionSpy;
 }

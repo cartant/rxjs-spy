@@ -22,8 +22,7 @@ export interface Plugin {
     beforeSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void;
     beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void;
     flush(): void;
-    patch(observable: Observable<any>, subscriber: Subscriber<any>): Observable<any> | ((value: any) => any) | null;
-    pause(observable: Observable<any>, subscriber: Subscriber<any>, value: any, resume: (value: any) => void): boolean;
+    select(observable: Observable<any>, subscriber: Subscriber<any>): ((source: Observable<any>) => Observable<any>) | null;
     teardown(): void;
 }
 
@@ -40,7 +39,6 @@ export class BasePlugin implements Plugin {
     beforeSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {}
     beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {}
     flush(): void {}
-    patch(observable: Observable<any>, subscriber: Subscriber<any>): Observable<any> | ((value: any) => any) | null { return  null; }
-    pause(observable: Observable<any>, subscriber: Subscriber<any>, value: any, resume: (value: any) => void): boolean { return false; }
+    select(observable: Observable<any>, subscriber: Subscriber<any>): ((source: Observable<any>) => Observable<any>) | null { return null; }
     teardown(): void {}
 }

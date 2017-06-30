@@ -5,21 +5,32 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
-import { Match, matches } from "../match";
-import { BasePlugin } from "./plugin";
-import { isObservable } from "../util";
+import { Subscription } from "rxjs/Subscription";
+import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
+import { Match, matches, read, toString as matchToString } from "../match";
+import { BasePlugin, Event } from "./plugin";
+import { subscribeWithoutSpy } from "../spy";
+
+interface State {
+    events_: { error?: any; type: Event; value?: any; }[];
+    subject_: Subject<any>;
+    subscription_: Subscription | null;
+    tag_: string | null;
+}
 
 export class Deck {
 
     public teardown: () => void;
-    private paused_: boolean;
-    private resumables_: { resume: (value: any) => void; value: any[]; }[];
 
-    constructor() {
+    private match_: Match;
+    private paused_ = true;
+    private states_ = new Map<Observable<any>, State>();
 
-        this.paused_ = true;
-        this.resumables_ = [];
+    constructor(match: Match) {
+
+        this.match_ = match;
     }
 
     get paused(): boolean {
@@ -29,16 +40,23 @@ export class Deck {
 
     clear(): void {
 
-        this.resumables_ = [];
+        this.states_.forEach((state) => {
+            state.events_ = state.events_.filter((event) => event.type !== "next");
+        });
     }
 
-    next(): void {
+    log(partialLogger: PartialLogger = defaultLogger): void {
 
-        if (this.resumables_.length > 0) {
-            const [resumable, ...kept] = this.resumables_;
-            this.resumables_ = kept;
-            resumable.resume(resumable.value);
-        }
+        const logger = toLogger(partialLogger);
+
+        logger.group(`Deck matching ${matchToString(this.match_)}`);
+        logger.log("Paused =", this.paused_);
+        this.states_.forEach((state) => {
+            logger.group(`Observable; tag = ${state.tag_}`);
+            logger.log("Values =", values(state));
+            logger.groupEnd();
+        });
+        logger.groupEnd();
     }
 
     pause(): void {
@@ -46,27 +64,82 @@ export class Deck {
         this.paused_ = true;
     }
 
-    pause_(value: any, resume: (value: any) => void): boolean {
-
-        const { paused_, resumables_ } = this;
-
-        if (paused_) {
-            resumables_.push({ resume, value });
-            return true;
-        }
-        return false;
-    }
-
     resume(): void {
 
+        this.states_.forEach((state) => {
+            while (state.events_.length > 0) {
+                step(state);
+            }
+        });
         this.paused_ = false;
-        this.resumables_.forEach((resumable) => resumable.resume(resumable.value));
-        this.resumables_ = [];
     }
 
-    values(): any[] {
+    select(observable: Observable<any>, subscriber: Subscriber<any>): (source: Observable<any>) => Observable<any> {
 
-        return this.resumables_.map((resumable) => resumable.value);
+        return (source: Observable<any>) => {
+
+            let state = this.states_.get(observable);
+            if (state) {
+                state.subscription_!.unsubscribe();
+            } else {
+                state = {
+                    events_: [],
+                    subject_: new Subject<any>(),
+                    subscription_: null,
+                    tag_: read(observable)
+                };
+                this.states_.set(observable, state);
+            }
+
+            state.subscription_ = subscribeWithoutSpy.call(source, {
+                complete: () => {
+                    if (this.paused_) {
+                        state!.events_.push({ type: "complete" });
+                    } else {
+                        state!.subject_.complete();
+                    }
+                },
+                error: (error: any) => {
+                    if (this.paused_) {
+                        state!.events_.push({ error, type: "error" });
+                    } else {
+                        state!.subject_.error(error);
+                    }
+                },
+                next: (value: any) => {
+                    if (this.paused_) {
+                        state!.events_.push({ type: "next", value });
+                    } else {
+                        state!.subject_.next(value);
+                    }
+                }
+            });
+            return state!.subject_.asObservable();
+        };
+    }
+
+    skip(): void {
+
+        this.states_.forEach((state) => {
+            skip(state);
+        });
+    }
+
+    step(): void {
+
+        this.states_.forEach((state) => {
+            step(state);
+        });
+    }
+
+    unsubscribe(): void {
+
+        this.states_.forEach((state) => {
+            if (state.subscription_) {
+                state.subscription_.unsubscribe();
+                state.subscription_ = null;
+            }
+        });
     }
 }
 
@@ -79,7 +152,7 @@ export class PausePlugin extends BasePlugin {
 
         super();
 
-        this.deck_ = new Deck();
+        this.deck_ = new Deck(match);
         this.match_ = match;
     }
 
@@ -95,24 +168,61 @@ export class PausePlugin extends BasePlugin {
         return match_;
     }
 
-    pause(observable: Observable<any>, subscriber: Subscriber<any>, value: any, release: (value: any) => void): boolean {
+    select(observable: Observable<any>, subscriber: Subscriber<any>): ((source: Observable<any>) => Observable<any>) | null {
 
         const { deck_, match_ } = this;
 
         if (matches(observable, match_)) {
-            return deck_.pause_(value, release);
+            return deck_.select(observable, subscriber);
         }
-        return false;
+        return null;
     }
 
     teardown(): void {
 
         const { deck_ } = this;
 
-        if (deck_ && deck_.teardown) {
-            const teardown = deck_.teardown;
-            deck_.teardown = () => {};
-            teardown.call(deck_);
+        if (deck_) {
+            deck_.resume();
+            deck_.unsubscribe();
         }
     }
+}
+
+function skip(state: State): void {
+
+    if (state.events_.length > 0) {
+        const [event, ...rest] = state.events_;
+        if (event.type === "next") {
+            state.events_ = rest;
+        }
+    }
+}
+
+function step(state: State): void {
+
+    if (state.events_.length > 0) {
+        const [event, ...rest] = state.events_;
+        switch (event.type) {
+        case "complete":
+            state.subject_.complete();
+            break;
+        case "error":
+            state.subject_.error(event.error);
+            break;
+        case "next":
+            state.subject_.next(event.value);
+            break;
+        default:
+            throw new Error(`Unexpected event type (${event.type}).`);
+        }
+        state.events_ = rest;
+    }
+}
+
+function values(state: State): any[] {
+
+    return state.events_
+        .filter((event) => event.type === "next")
+        .map((event) => event.value);
 }

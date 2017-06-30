@@ -10,7 +10,9 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
 import { Plugin } from "./plugin";
-import { flush, log, patch, pause, show, spy, tick } from "./spy";
+import { flush, _let, log, pause, show, spy, tick } from "./spy";
+
+import "rxjs/add/operator/mapTo";
 
 describe("spy", () => {
 
@@ -37,6 +39,22 @@ describe("spy", () => {
 
             flush();
             expect(plugin.flush).to.have.property("called", true);
+        });
+    });
+
+    describe("let", () => {
+
+        it("should apply the selector to the tagged observable", () => {
+
+            teardown = spy({ plugins: [] });
+            _let("people", (source) => source.mapTo("bob"));
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            subject.next("alice");
+            expect(values).to.deep.equal(["bob"]);
         });
     });
 
@@ -85,22 +103,6 @@ describe("spy", () => {
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
             expect(calls[1]).to.deep.equal(["  Matching", "/.+/"]);
-        });
-    });
-
-    describe("patch", () => {
-
-        it("should patch the tagged observable", () => {
-
-            teardown = spy({ plugins: [] });
-            patch("people", "bob");
-
-            const values: any[] = [];
-            const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe((value) => values.push(value));
-
-            subject.next("alice");
-            expect(values).to.deep.equal(["bob"]);
         });
     });
 
@@ -277,8 +279,7 @@ function stubPlugin(): Plugin {
         beforeSubscribe: sinon.stub(),
         beforeUnsubscribe: sinon.stub(),
         flush: sinon.stub(),
-        patch: sinon.stub().returns(null),
-        pause: sinon.stub().returns(false),
+        select: sinon.stub().returns(null),
         teardown: sinon.stub()
     } as any;
 }

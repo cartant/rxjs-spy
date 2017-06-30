@@ -89,9 +89,9 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 * [spy](#module-spy)
 * [show](#module-show)
 * [log](#module-log)
-* [debug](#module-debug)
-* [patch](#module-patch)
 * [pause](#module-pause)
+* [_let](#module-let)
+* [debug](#module-debug)
 * [flush](#module-flush)
 * [plugin](#module-plugin)
 
@@ -149,54 +149,6 @@ All `subscribe`, `next`, `complete`, `error` and `unsubscribe` events will be lo
 
 This method returns a teardown function.
 
-<a name="module-debug"></a>
-
-### debug
-
-```ts
-function debug(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  ...events: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
-): () => void
-```
-
-Wires up an instance of the debug plugin for matching observables.
-
-Whenever one of the specified events occurs, a `debugger` statement in the plugin will pause execution. If no events are specified in the call, execution will be paused when any of the events occurs.
-
-Immediately above the `debugger` statement, there is a snapshot variable - so if snapshotting is enabled, a snapshot will be available for inspection within the debugger.
-
-This method returns a teardown function.
-
-<a name="module-patch"></a>
-
-### patch
-
-```ts
-function patch(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  source: Observable<any>
-): () => void
-
-function patch(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  project: (value: any) => any
-): () => void
-
-function patch(
-  match: string | RegExp | MatchPredicate | Observable<any>,
-  value: any
-): () => void
-```
-
-Wires up an instance of the patch plugin for matching observables.
-
-If a `source` observable is specified, subscribers to matching observables will be subscribed to the specified observable instead.
-
-If either a `project` function or a `value` is specified, each value emitted by matching observables will be replaced with the projected or specified value.
-
-This method returns a teardown function.
-
 <a name="module-pause"></a>
 
 ### pause
@@ -217,15 +169,52 @@ This method returns a `Deck` instance that can be used to `resume` and `pause` t
 interface Deck {
   readonly paused: boolean;
   clear(): void;
-  next(): void;
+  log(partialLogger: PartialLogger = console): void;
   pause(): void;
   resume(): void;
+  skip(): void;
+  step(): void;
   teardown(): void;
-  values(): any[];
 }
 ```
 
 Calling `next` will release a single paused value to a single subscription.
+
+<a name="module-let"></a>
+
+### let
+
+```ts
+function _let(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  select: (source: Observable<any>) => Observable<any>
+): () => void
+```
+
+Wires up an instance of the let plugin for matching observables.
+
+This is equivalent to the `let` operator. All subscriptions to matching observables will instead be made to the observable returned by the specified `select` function.
+
+This method returns a teardown function.
+
+<a name="module-debug"></a>
+
+### debug
+
+```ts
+function debug(
+  match: string | RegExp | MatchPredicate | Observable<any>,
+  ...events: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
+): () => void
+```
+
+Wires up an instance of the debug plugin for matching observables.
+
+Whenever one of the specified events occurs, a `debugger` statement in the plugin will pause execution. If no events are specified in the call, execution will be paused when any of the events occurs.
+
+Immediately above the `debugger` statement, there is a snapshot variable - so if snapshotting is enabled, a snapshot will be available for inspection within the debugger.
+
+This method returns a teardown function.
 
 <a name="module-flush"></a>
 

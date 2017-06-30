@@ -9,8 +9,8 @@ import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { matches } from "../match";
-import { spy } from "../spy";
 import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
+import { spy } from "../spy";
 
 import "rxjs/add/observable/combineLatest";
 import "rxjs/add/observable/of";

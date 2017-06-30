@@ -40,8 +40,8 @@
             <code>rxSpy.undo(3);</code>
         </li>
         <li>
-            <p>The spy API can modify the values that are emmitted by tagged observables using the <code>patch</code> method. For example, the following call with replace the value emitted from the people observable:</p>
-            <code>rxSpy.patch("people", "mallory");</code>
+            <p>The spy API can modify the values that are emmitted by tagged observables using the <code>let</code> method. For example, the following call with replace the value emitted from the people observable:</p>
+            <code>rxSpy.let("people", source => source.mapTo("mallory"));</code>
         </li>
         <li>
             <p>The spy API can pause tagged observables using the <code>pause</code> method. For example, the following call pauses the people observable so that it's emissions can be controlled from the console:</p>

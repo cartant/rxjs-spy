@@ -9,4 +9,4 @@ import "./add/operator/tag";
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugin";
-export { debug, flush, log, patch, pause, plugin, plugins, show, spy } from "./spy";
+export { debug, flush, _let, log, pause, plugin, plugins, show, spy } from "./spy";

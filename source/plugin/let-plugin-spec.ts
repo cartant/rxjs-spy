@@ -8,12 +8,12 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { spy } from "../spy";
-import { PatchPlugin } from "./patch-plugin";
+import { LetPlugin } from "./let-plugin";
+import { plugin, spy } from "../spy";
 
 import "../add/operator/tag";
 
-describe("PatchPlugin", () => {
+describe("LetPlugin", () => {
 
     let teardown: () => void;
 
@@ -24,36 +24,10 @@ describe("PatchPlugin", () => {
         }
     });
 
-    it("should patch the tag's value", () => {
+    it("should apply the selector to a tag's source", () => {
 
-        const plugin = new PatchPlugin("people", "bob");
-        teardown = spy({ plugins: [plugin] });
-
-        const values: any[] = [];
-        const subject = new Subject<string>();
-        const subscription = subject.tag("people").subscribe((value) => values.push(value));
-
-        subject.next("alice");
-        expect(values).to.deep.equal(["bob"]);
-    });
-
-    it("should patch the tag's values using a project function", () => {
-
-        const plugin = new PatchPlugin("people", (value: any) => `not ${value}`);
-        teardown = spy({ plugins: [plugin] });
-
-        const values: any[] = [];
-        const subject = new Subject<string>();
-        const subscription = subject.tag("people").subscribe((value) => values.push(value));
-
-        subject.next("alice");
-        expect(values).to.deep.equal(["not alice"]);
-    });
-
-    it("should patch the tag's source", () => {
-
-        const patch = new Subject<string>();
-        const plugin = new PatchPlugin("people", patch);
+        const selected = new Subject<string>();
+        const plugin = new LetPlugin("people", () => selected);
         teardown = spy({ plugins: [plugin] });
 
         const values: any[] = [];
@@ -63,7 +37,25 @@ describe("PatchPlugin", () => {
         subject.next("alice");
         expect(values).to.deep.equal([]);
 
-        patch.next("alice");
+        selected.next("alice");
+        expect(values).to.deep.equal(["alice"]);
+    });
+
+    it("should apply the selector to an already-subscribed tag's source", () => {
+
+        teardown = spy({ plugins: [] });
+
+        const values: any[] = [];
+        const subject = new Subject<string>();
+        const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+        const selected = new Subject<string>();
+        plugin(new LetPlugin("people", () => selected), "let");
+
+        subject.next("alice");
+        expect(values).to.deep.equal([]);
+
+        selected.next("alice");
         expect(values).to.deep.equal(["alice"]);
     });
 });
