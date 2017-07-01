@@ -161,9 +161,9 @@ function pause(
 
 Wires up an instance of the pause plugin for matching observables.
 
-All subscriptions to matching observables will be placed into a paused state and values that would otherwise be emitted will be buffered inside the plugin.
+All subscriptions to matching observables will be placed into a paused state and notifications that would otherwise be emitted will be buffered inside the plugin.
 
-This method returns a `Deck` instance that can be used to `resume` and `pause` the subscriptions.
+This method returns a `Deck` instance that can be used to `resume` and `pause` the observables.
 
 ```ts
 interface Deck {
@@ -178,7 +178,7 @@ interface Deck {
 }
 ```
 
-Calling `next` will release a single paused value to a single subscription.
+Calling `step` will release a single paused notification.
 
 <a name="module-let"></a>
 
