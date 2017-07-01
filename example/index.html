@@ -40,7 +40,7 @@
             <code>rxSpy.undo(3);</code>
         </li>
         <li>
-            <p>The spy API can modify the values that are emmitted by tagged observables using the <code>let</code> method. For example, the following call with replace the value emitted from the people observable:</p>
+            <p>The spy API can modify the a tagged observable using the <code>let</code> method. The method behaves in a similar manner to the RxJS <code>let</code> operator. For example, the following call will replace the value emitted from the people observable:</p>
             <code>rxSpy.let("people", source => source.mapTo("mallory"));</code>
         </li>
         <li>
@@ -49,10 +49,12 @@
             <p><code>pause</code> returns a <code>Deck</code> instance that can be used to control the observable and return value should be assigned to a variable. It's easy to forget to do this, so there is a <code>deck</code> method that will display a numbered list of <code>pause</code> calls. Passing a call number to <code>deck</code> will return the instance associated with the call. For example:</p>
             <code>rxSpy.deck();</code><br>
             <code>var deck = rxSpy.deck(1);</code>
-            <p>The deck can be used to inspect and control the observable's emissions. For example, calling its <code>value</code> method will show the values that have been paused:</p>
-            <code>deck.values();</code>
-            <p>Its <code>next</code> method will release a single paused value to the appropriate subscriber:</p>
-            <code>deck.next();</code>
+            <p>The deck can be used to inspect and control the observable's emissions. For example, calling its <code>log</code> method will show the values that have been paused:</p>
+            <code>deck.log();</code>
+            <p>Its <code>step</code> method will release a single paused value:</p>
+            <code>deck.step();</code>
+            <p>Its <code>skip</code> method will skip a single paused value:</p>
+            <code>deck.skip();</code>
             <p>And its <code>resume</code> method will release all paused values and will resume the observable's emissions:</p>
             <code>deck.resume();</code>
             <p>Calling its <code>pause</code> method will return the observable to a paused state:</p>
