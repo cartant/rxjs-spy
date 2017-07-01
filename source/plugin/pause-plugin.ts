@@ -42,10 +42,10 @@ export class Deck {
         return this.paused_;
     }
 
-    clear(): void {
+    clear(predicate: (notification: Notification<any>) => boolean = () => true): void {
 
         this.states_.forEach((state) => {
-            state.notifications_ = state.notifications_.filter((notification) => notification.kind !== "N");
+            state.notifications_ = state.notifications_.filter((notification) => !predicate(notification));
         });
     }
 
