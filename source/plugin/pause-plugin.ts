@@ -4,18 +4,22 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { Notification } from "rxjs/Notification";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, Event } from "./plugin";
+import { BasePlugin } from "./plugin";
 import { subscribeWithoutSpy } from "../spy";
 
+import "rxjs/add/operator/dematerialize";
+import "rxjs/add/operator/materialize";
+
 interface State {
-    events_: { error?: any; type: Event; value?: any; }[];
-    subject_: Subject<any>;
+    notifications_: Notification<any>[];
+    subject_: Subject<Notification<any>>;
     subscription_: Subscription | null;
     tag_: string | null;
 }
@@ -41,7 +45,7 @@ export class Deck {
     clear(): void {
 
         this.states_.forEach((state) => {
-            state.events_ = state.events_.filter((event) => event.type !== "next");
+            state.notifications_ = state.notifications_.filter((notification) => notification.kind !== "N");
         });
     }
 
@@ -53,7 +57,7 @@ export class Deck {
         logger.log("Paused =", this.paused_);
         this.states_.forEach((state) => {
             logger.group(`Observable; tag = ${state.tag_}`);
-            logger.log("Values =", values(state));
+            logger.log("Notifications =", state.notifications_);
             logger.groupEnd();
         });
         logger.groupEnd();
@@ -67,8 +71,8 @@ export class Deck {
     resume(): void {
 
         this.states_.forEach((state) => {
-            while (state.events_.length > 0) {
-                step(state);
+            while (state.notifications_.length > 0) {
+                state.subject_.next(state.notifications_.shift());
             }
         });
         this.paused_ = false;
@@ -83,52 +87,42 @@ export class Deck {
                 state.subscription_!.unsubscribe();
             } else {
                 state = {
-                    events_: [],
-                    subject_: new Subject<any>(),
+                    notifications_: [],
+                    subject_: new Subject<Notification<any>>(),
                     subscription_: null,
                     tag_: read(observable)
                 };
                 this.states_.set(observable, state);
             }
 
-            state.subscription_ = subscribeWithoutSpy.call(source, {
-                complete: () => {
+            state.subscription_ = subscribeWithoutSpy.call(source.materialize(), {
+                next: (notification: any) => {
                     if (this.paused_) {
-                        state!.events_.push({ type: "complete" });
+                        state!.notifications_.push(notification);
                     } else {
-                        state!.subject_.complete();
-                    }
-                },
-                error: (error: any) => {
-                    if (this.paused_) {
-                        state!.events_.push({ error, type: "error" });
-                    } else {
-                        state!.subject_.error(error);
-                    }
-                },
-                next: (value: any) => {
-                    if (this.paused_) {
-                        state!.events_.push({ type: "next", value });
-                    } else {
-                        state!.subject_.next(value);
+                        state!.subject_.next(notification);
                     }
                 }
             });
-            return state!.subject_.asObservable();
+            return state!.subject_.asObservable().dematerialize();
         };
     }
 
     skip(): void {
 
         this.states_.forEach((state) => {
-            skip(state);
+            if (state.notifications_.length > 0) {
+                state.notifications_.shift();
+            }
         });
     }
 
     step(): void {
 
         this.states_.forEach((state) => {
-            step(state);
+            if (state.notifications_.length > 0) {
+                state.subject_.next(state.notifications_.shift());
+            }
         });
     }
 
@@ -187,42 +181,4 @@ export class PausePlugin extends BasePlugin {
             deck_.unsubscribe();
         }
     }
-}
-
-function skip(state: State): void {
-
-    if (state.events_.length > 0) {
-        const [event, ...rest] = state.events_;
-        if (event.type === "next") {
-            state.events_ = rest;
-        }
-    }
-}
-
-function step(state: State): void {
-
-    if (state.events_.length > 0) {
-        const [event, ...rest] = state.events_;
-        switch (event.type) {
-        case "complete":
-            state.subject_.complete();
-            break;
-        case "error":
-            state.subject_.error(event.error);
-            break;
-        case "next":
-            state.subject_.next(event.value);
-            break;
-        default:
-            throw new Error(`Unexpected event type (${event.type}).`);
-        }
-        state.events_ = rest;
-    }
-}
-
-function values(state: State): any[] {
-
-    return state.events_
-        .filter((event) => event.type === "next")
-        .map((event) => event.value);
 }

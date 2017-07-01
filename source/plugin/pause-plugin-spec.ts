@@ -6,6 +6,7 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
+import { Notification } from "rxjs/Notification";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { PartialLogger } from "../logger";
@@ -39,19 +40,21 @@ describe("PausePlugin", () => {
 
     describe("clear", () => {
 
-        it("should clear the subscription's paused values", () => {
+        it("should clear the subscription's paused notification", () => {
 
             const subject = new Subject<string>();
             const subscription = subject.tag("people").subscribe();
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
-            expect(values_(deck)).to.deep.equal(["alice"]);
+            expect(notifications(deck)).to.deep.equal([
+                new Notification<any>("N", "alice")
+            ]);
             deck.clear();
-            expect(values_(deck)).to.deep.equal([]);
+            expect(notifications(deck)).to.deep.equal([]);
         });
 
-        it("should not release paused values", () => {
+        it("should not release paused notifications", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -66,7 +69,7 @@ describe("PausePlugin", () => {
 
     describe("log", () => {
 
-        it("should log the subscription's paused values", () => {
+        it("should log the subscription's paused notifications", () => {
 
             const calls: any[][] = [];
             const subject = new Subject<string>();
@@ -81,11 +84,11 @@ describe("PausePlugin", () => {
                 ["Deck matching people"],
                 ["  Paused =", true],
                 ["  Observable; tag = people"],
-                ["    Values =", ["alice"]]
+                ["    Notifications =", [new Notification<any>("N", "alice")]]
             ]);
         });
 
-        it("should not log released values", () => {
+        it("should not log released notifications", () => {
 
             const calls: any[][] = [];
             const subject = new Subject<string>();
@@ -101,14 +104,14 @@ describe("PausePlugin", () => {
                 ["Deck matching people"],
                 ["  Paused =", true],
                 ["  Observable; tag = people"],
-                ["    Values =", []]
+                ["    Notifications =", []]
             ]);
         });
     });
 
     describe("skip", () => {
 
-        it("should skip a paused value", () => {
+        it("should skip a paused notification", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -119,16 +122,25 @@ describe("PausePlugin", () => {
             subject.next("bob");
             subject.next("mallory");
             expect(values).to.deep.equal([]);
-            expect(values_(deck)).to.deep.equal(["alice", "bob", "mallory"]);
+            expect(notifications(deck)).to.deep.equal([
+                new Notification<any>("N", "alice"),
+                new Notification<any>("N", "bob"),
+                new Notification<any>("N", "mallory")
+            ]);
             deck.skip();
             expect(values).to.deep.equal([]);
-            expect(values_(deck)).to.deep.equal(["bob", "mallory"]);
+            expect(notifications(deck)).to.deep.equal([
+                new Notification<any>("N", "bob"),
+                new Notification<any>("N", "mallory")
+            ]);
             deck.skip();
             expect(values).to.deep.equal([]);
-            expect(values_(deck)).to.deep.equal(["mallory"]);
+            expect(notifications(deck)).to.deep.equal([
+                new Notification<any>("N", "mallory")
+            ]);
         });
 
-        it("should do nothing if there are no paused values", () => {
+        it("should do nothing if there are no paused notifications", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -137,19 +149,21 @@ describe("PausePlugin", () => {
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
             expect(values).to.deep.equal([]);
-            expect(values_(deck)).to.deep.equal(["alice"]);
+            expect(notifications(deck)).to.deep.equal([
+                new Notification<any>("N", "alice")
+            ]);
             deck.skip();
             expect(values).to.deep.equal([]);
-            expect(values_(deck)).to.deep.equal([]);
+            expect(notifications(deck)).to.deep.equal([]);
             deck.skip();
             expect(values).to.deep.equal([]);
-            expect(values_(deck)).to.deep.equal([]);
+            expect(notifications(deck)).to.deep.equal([]);
         });
     });
 
     describe("step", () => {
 
-        it("should emit a paused value", () => {
+        it("should emit a paused notification", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -166,7 +180,7 @@ describe("PausePlugin", () => {
             expect(values).to.deep.equal(["alice", "bob"]);
         });
 
-        it("should do nothing if there are no paused values", () => {
+        it("should do nothing if there are no paused notifications", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -247,17 +261,17 @@ describe("PausePlugin", () => {
     });
 });
 
-function values_(deck: Deck): any[] {
+function notifications(deck: Deck): any[] {
 
     let calls = 0;
-    let values: any[] = [];
+    let result: any[] = [];
 
     deck.log({
         log(...args: any[]): void {
             if (++calls === 4) {
-                values = args[1];
+                result = args[1];
             }
         }
     });
-    return values;
+    return result;
 }

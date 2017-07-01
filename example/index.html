@@ -49,17 +49,17 @@
             <p><code>pause</code> returns a <code>Deck</code> instance that can be used to control the observable and return value should be assigned to a variable. It's easy to forget to do this, so there is a <code>deck</code> method that will display a numbered list of <code>pause</code> calls. Passing a call number to <code>deck</code> will return the instance associated with the call. For example:</p>
             <code>rxSpy.deck();</code><br>
             <code>var deck = rxSpy.deck(1);</code>
-            <p>The deck can be used to inspect and control the observable's emissions. For example, calling its <code>log</code> method will show the values that have been paused:</p>
+            <p>The deck can be used to inspect and control the observable's emissions. For example, calling its <code>log</code> method will show the notifications that have been paused:</p>
             <code>deck.log();</code>
-            <p>Its <code>step</code> method will release a single paused value:</p>
+            <p>Its <code>step</code> method will release a single paused notification:</p>
             <code>deck.step();</code>
-            <p>Its <code>skip</code> method will skip a single paused value:</p>
+            <p>Its <code>skip</code> method will skip a single paused notification:</p>
             <code>deck.skip();</code>
-            <p>And its <code>resume</code> method will release all paused values and will resume the observable's emissions:</p>
+            <p>And its <code>resume</code> method will release all paused notifications and will resume the observable's emissions:</p>
             <code>deck.resume();</code>
             <p>Calling its <code>pause</code> method will return the observable to a paused state:</p>
             <code>deck.pause();</code>
-            <p>All API calls that manipulate observables can be undone, so <code>undo</code> can be used to undo the pausing of an observable. When undone, any paused values are resumed:</p>
+            <p>All API calls that manipulate observables can be undone, so <code>undo</code> can be used to undo the pausing of an observable. When undone, any paused notifications are resumed:</p>
             <code>rxSpy.undo();</code><br>
             <code>rxSpy.undo(4);</code>
         </li>
