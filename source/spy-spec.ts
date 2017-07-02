@@ -155,7 +155,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.subscribe();
+            const subscription = subject.tag("people").subscribe();
             expect(plugin.beforeSubscribe).to.have.property("called", true);
             expect(plugin.afterSubscribe).to.have.property("called", true);
 
@@ -166,6 +166,97 @@ describe("spy", () => {
             subscription.unsubscribe();
             expect(plugin.beforeUnsubscribe).to.have.property("called", true);
             expect(plugin.afterUnsubscribe).to.have.property("called", true);
+        });
+
+        it.skip("should call the plugin subscribe/next/unsubscribe methods for each observable", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.mapTo("mallory").subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
+
+            subject.next("alice");
+            expect(plugin.beforeNext).to.have.property("calledTwice", true);
+            expect(plugin.afterNext).to.have.property("calledTwice", true);
+
+            subscription.unsubscribe();
+            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
+            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+        });
+
+        it("should call the plugin unsubscribe methods on completion", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("called", true);
+            expect(plugin.afterSubscribe).to.have.property("called", true);
+
+            subject.complete();
+            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
+            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+        });
+
+        it("should call the plugin unsubscribe methods on error", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("called", true);
+            expect(plugin.afterSubscribe).to.have.property("called", true);
+
+            subject.error(new Error("Boom!"));
+            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
+            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+        });
+
+        it.skip("should call the plugin unsubscribe methods when paused for explicit unsubscribes", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.tag("people").subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
+
+            const deck = pause("people");
+            subscription.unsubscribe();
+            expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
+        });
+
+        it("should call the plugin unsubscribe methods on resumed completion", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.tag("people").subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
+
+            const deck = pause("people");
+            subject.complete();
+            expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
+            deck.resume();
+            expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
+        });
+
+        it("should call the plugin unsubscribe methods on resumed error", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.tag("people").subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
+
+            const deck = pause("people");
+            subject.error(new Error("Boom!"));
+            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
+            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+            deck.resume();
+            expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
         });
 
         it("should call the plugin complete methods", () => {
