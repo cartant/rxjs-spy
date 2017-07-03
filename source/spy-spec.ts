@@ -185,6 +185,23 @@ describe("spy", () => {
             expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
         });
 
+        it("should call the plugin unsubscribe methods only once", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
+
+            subscription.unsubscribe();
+            expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
+
+            subscription.unsubscribe();
+            expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
+        });
+
         it("should call the plugin unsubscribe methods on completion", () => {
 
             const subject = new Subject<string>();
