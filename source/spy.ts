@@ -428,6 +428,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
         }
         preLetUnsubscribe.call(preLetSubscriber);
     };
+    subscriber.add(preLetSubscriber);
 
     const postLetUnsubscribe = postLetSubscriber.unsubscribe;
     postLetSubscriber.unsubscribe = () => {

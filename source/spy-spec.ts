@@ -155,20 +155,20 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.tag("people").subscribe();
-            expect(plugin.beforeSubscribe).to.have.property("called", true);
-            expect(plugin.afterSubscribe).to.have.property("called", true);
+            const subscription = subject.subscribe();
+            expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
             subject.next("alice");
-            expect(plugin.beforeNext).to.have.property("called", true);
-            expect(plugin.afterNext).to.have.property("called", true);
+            expect(plugin.beforeNext).to.have.property("calledOnce", true);
+            expect(plugin.afterNext).to.have.property("calledOnce", true);
 
             subscription.unsubscribe();
-            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
-            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+            expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
         });
 
-        it.skip("should call the plugin subscribe/next/unsubscribe methods for each observable", () => {
+        it("should call the plugin subscribe/next/unsubscribe methods for each observable", () => {
 
             const subject = new Subject<string>();
 
@@ -181,8 +181,8 @@ describe("spy", () => {
             expect(plugin.afterNext).to.have.property("calledTwice", true);
 
             subscription.unsubscribe();
-            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
-            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+            expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
         });
 
         it("should call the plugin unsubscribe methods on completion", () => {
@@ -190,12 +190,12 @@ describe("spy", () => {
             const subject = new Subject<string>();
 
             const subscription = subject.subscribe();
-            expect(plugin.beforeSubscribe).to.have.property("called", true);
-            expect(plugin.afterSubscribe).to.have.property("called", true);
+            expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
             subject.complete();
-            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
-            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+            expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
         });
 
         it("should call the plugin unsubscribe methods on error", () => {
@@ -203,15 +203,15 @@ describe("spy", () => {
             const subject = new Subject<string>();
 
             const subscription = subject.subscribe();
-            expect(plugin.beforeSubscribe).to.have.property("called", true);
-            expect(plugin.afterSubscribe).to.have.property("called", true);
+            expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
             subject.error(new Error("Boom!"));
-            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
-            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+            expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
         });
 
-        it.skip("should call the plugin unsubscribe methods when paused for explicit unsubscribes", () => {
+        it("should call the plugin unsubscribe methods when paused for explicit unsubscribes", () => {
 
             const subject = new Subject<string>();
 
@@ -252,8 +252,8 @@ describe("spy", () => {
 
             const deck = pause("people");
             subject.error(new Error("Boom!"));
-            expect(plugin.beforeUnsubscribe).to.have.property("called", true);
-            expect(plugin.afterUnsubscribe).to.have.property("called", true);
+            expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
             deck.resume();
             expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
@@ -264,12 +264,12 @@ describe("spy", () => {
             const subject = new Subject<string>();
 
             const subscription = subject.subscribe();
-            expect(plugin.beforeSubscribe).to.have.property("called", true);
-            expect(plugin.afterSubscribe).to.have.property("called", true);
+            expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
             subject.complete();
-            expect(plugin.beforeComplete).to.have.property("called", true);
-            expect(plugin.afterComplete).to.have.property("called", true);
+            expect(plugin.beforeComplete).to.have.property("calledOnce", true);
+            expect(plugin.afterComplete).to.have.property("calledOnce", true);
         });
 
         it("should call the plugin error methods", () => {
@@ -277,12 +277,12 @@ describe("spy", () => {
             const subject = new Subject<string>();
 
             const subscription = subject.subscribe((value) => {}, (error) => {});
-            expect(plugin.beforeSubscribe).to.have.property("called", true);
-            expect(plugin.afterSubscribe).to.have.property("called", true);
+            expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
+            expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
             subject.error(new Error("Boom!"));
-            expect(plugin.beforeError).to.have.property("called", true);
-            expect(plugin.afterError).to.have.property("called", true);
+            expect(plugin.beforeError).to.have.property("calledOnce", true);
+            expect(plugin.afterError).to.have.property("calledOnce", true);
         });
     });
 
