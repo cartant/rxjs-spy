@@ -104,7 +104,7 @@ export class Deck {
                     }
                 }
             });
-            return state!.subject_.asObservable().dematerialize();
+            return state.subject_.asObservable().dematerialize();
         };
     }
 
