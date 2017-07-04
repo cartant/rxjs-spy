@@ -76,6 +76,12 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
         rxSpy.let("people", source => source.mapTo("mallory"));
 
+    Note that the changes will be seen by both current and future subscribers to the observable.
+
+    Undo the chage with an `undo` call:
+
+        rxSpy.undo(3);
+
 1. The spy API can pause tagged observables using the `pause` method. For example, the following call pauses the people observable so that it's emissions can be controlled from the console:
 
         rxSpy.pause("interval");
@@ -107,8 +113,7 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
 1. All API calls that manipulate observables can be undone, so `undo` can be used to undo the pausing of an observable. When undone, any paused notifications are resumed:
 
-        rxSpy.undo();
-        rxSpy.undo(4);
+        rxSpy.undo(3);
 
 <script src="https://unpkg.com/core-js/client/core.js"></script>
 <script src="https://unpkg.com/rxjs/bundles/Rx.js"></script>
