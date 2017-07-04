@@ -1,4 +1,4 @@
-## An example using the `rxjs-spy` console API
+## An example using the console API
 
 `rxjs-spy` exposes a module API intended to be called from code and a console API intended for interactive use via the browser's console.
 
