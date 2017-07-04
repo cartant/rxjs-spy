@@ -78,7 +78,7 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
     Note that the changes will be seen by both current and future subscribers to the observable.
 
-    Undo the chage with an `undo` call:
+    Undo the change with an `undo` call:
 
         rxSpy.undo(3);
 
