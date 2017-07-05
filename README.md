@@ -82,6 +82,11 @@ log(tag => tag === "some-tag");
 
 `rxjs-spy` exposes a module API intended to be called from code and a console API - via the `rxSpy` global - intended for interactive use via the browser's console.
 
+## More
+
+* There is an online example in this repo's [GitHub pages](https://cartant.github.io/rxjs-spy/).
+* [Debugging RxJS](https://medium.com/@cartant/debugging-rxjs-4f0340286dd3).
+
 ## Module API
 
 The methods in the module API are callable via imports, requires or the UMD `RxSpy` global. Most methods return a teardown function that will undo the API method's action when called.
@@ -90,7 +95,7 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 * [show](#module-show)
 * [log](#module-log)
 * [pause](#module-pause)
-* [_let](#module-let)
+* [let](#module-let)
 * [debug](#module-debug)
 * [flush](#module-flush)
 * [plugin](#module-plugin)
