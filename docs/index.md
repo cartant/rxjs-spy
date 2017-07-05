@@ -25,7 +25,7 @@ Have a look at the this page's source:
             .tag("interval");
 
         var people = interval
-            .map((value) => {
+            .map(function (value) {
                 const names = ["alice", "bob"];
                 return names[value % names.length];
             })
@@ -132,7 +132,7 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
             .tag("interval");
 
         var people = interval
-            .map((value) => {
+            .map(function (value) {
                 const names = ["alice", "bob"];
                 return names[value % names.length];
             })
