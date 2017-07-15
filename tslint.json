@@ -142,6 +142,7 @@
     "radix": { "severity": "error" },
     "return-undefined": { "severity": "error" },
     "rxjs-add": { "severity": "error" },
+    "rxjs-no-subject-unsubscribe": { "severity": "error" },
     "rxjs-no-unused-add": { "severity": "error" },
     "rxjs-prefer-add": { "severity": "error" },
     "semicolon": { "severity": "error" },
