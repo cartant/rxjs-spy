@@ -293,7 +293,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
     /*tslint:disable:no-invalid-this*/
     const postLetObserver: PostLetObserver = {
 
-        complete: function (this: PostLetObserver): void {
+        complete(this: PostLetObserver): void {
 
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeComplete(observable, subscriber));
@@ -303,7 +303,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.afterComplete(observable, subscriber));
         },
 
-        error: function (this: PostLetObserver, error: any): void {
+        error(this: PostLetObserver, error: any): void {
 
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeError(observable, subscriber, error));
@@ -313,7 +313,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
             plugins_.forEach((plugin) => plugin.afterError(observable, subscriber, error));
         },
 
-        next: function (this: PostLetObserver, value: any): void {
+        next(this: PostLetObserver, value: any): void {
 
             ++tick_;
             plugins_.forEach((plugin) => plugin.beforeNext(observable, subscriber, value));
@@ -348,7 +348,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
     /*tslint:disable:no-invalid-this*/
     const preLetObserver: PreLetObserver = {
 
-        complete: function (this: PreLetObserver): void {
+        complete(this: PreLetObserver): void {
 
             this.completed = true;
 
@@ -361,7 +361,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
         completed: false,
 
-        error: function (this: PreLetObserver, error: any): void {
+        error(this: PreLetObserver, error: any): void {
 
             this.errored = true;
 
@@ -374,7 +374,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
         errored: false,
 
-        let: function (this: PreLetObserver, plugins: Plugin[]): void {
+        let(this: PreLetObserver, plugins: Plugin[]): void {
 
             const selectors = plugins.map((plugin) => plugin.select(observable, subscriber)).filter(Boolean);
             if (selectors.length > 0) {
@@ -402,7 +402,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
             }
         },
 
-        next: function (this: PreLetObserver, value: any): void {
+        next(this: PreLetObserver, value: any): void {
 
             if (this.preLetSubject) {
                 this.preLetSubject.next(value);
