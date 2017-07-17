@@ -144,7 +144,7 @@
     "rxjs-add": { "severity": "error" },
     "rxjs-no-subject-unsubscribe": { "severity": "error" },
     "rxjs-no-unused-add": { "severity": "error" },
-    "rxjs-prefer-add": { "severity": "error" },
+    "rxjs-no-wholesale": { "severity": "error" },
     "semicolon": { "severity": "error" },
     "strict-boolean-expressions": { "severity": "off" },
     "switch-default": { "severity": "error" },
