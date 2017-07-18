@@ -8,7 +8,7 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, Event } from "./plugin";
+import { BasePlugin, Notification } from "./plugin";
 
 export class LogPlugin extends BasePlugin {
 
@@ -51,7 +51,7 @@ export class LogPlugin extends BasePlugin {
     private log_(
         observable: Observable<any>,
         subscriber: Subscriber<any>,
-        event: Event,
+        notification: Notification,
         param: any = null
     ): void {
 
@@ -59,17 +59,17 @@ export class LogPlugin extends BasePlugin {
 
         if (matches(observable, match_)) {
             const tag = read(observable);
-            switch (event) {
+            switch (notification) {
             case "error":
-                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; event = ${event}`);
+                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; notification = ${notification}`);
                 logger_.error("Error =", param);
                 break;
             case "next":
-                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; event = ${event}`);
+                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; notification = ${notification}`);
                 logger_.log("Value =", param);
                 break;
             default:
-                logger_.groupCollapsed(`Tag = ${tag}; event = ${event}`);
+                logger_.groupCollapsed(`Tag = ${tag}; notification = ${notification}`);
                 break;
             }
             logger_.log("Matching", matchToString(match_));

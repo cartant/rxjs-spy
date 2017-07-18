@@ -40,20 +40,20 @@ describe("LogPlugin", () => {
 
         const subscription = subject.tag("people").subscribe();
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
         calls = [];
 
         subject.next("alice");
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["alice; tag = people; event = next"]);
+        expect(calls[0]).to.deep.equal(["alice; tag = people; notification = next"]);
         expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
 
         calls = [];
 
         subscription.unsubscribe();
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; event = unsubscribe"]);
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = unsubscribe"]);
     });
 
     it("should log complete", () => {
@@ -62,13 +62,13 @@ describe("LogPlugin", () => {
 
         const subscription = subject.tag("people").subscribe();
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
         calls = [];
 
         subject.complete();
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; event = complete"]);
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = complete"]);
     });
 
     it("should log error", () => {
@@ -77,14 +77,14 @@ describe("LogPlugin", () => {
 
         const subscription = subject.tag("people").subscribe((value) => {}, (error) => {});
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
         calls = [];
 
         const error = new Error("Boom!");
         subject.error(error);
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Error: Boom!; tag = people; event = error"]);
+        expect(calls[0]).to.deep.equal(["Error: Boom!; tag = people; notification = error"]);
         expect(calls[1]).to.deep.equal(["  Error =", error]);
     });
 

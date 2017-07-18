@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { read } from "../match";
-import { Event, BasePlugin } from "./plugin";
+import { BasePlugin, Notification } from "./plugin";
 import { tick } from "../spy";
 
 export interface Snapshot {
@@ -42,7 +42,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     private keptValues_: number;
     private map_: Map<Observable<any>, SnapshotObservable>;
-    private stack_: { event: Event, snapshotObservable: SnapshotObservable }[] = [];
+    private stack_: { notification: Notification, snapshotObservable: SnapshotObservable }[] = [];
 
     constructor({ keptValues = 4 }: { keptValues?: number } = {}) {
 
@@ -91,7 +91,7 @@ export class SnapshotPlugin extends BasePlugin {
             noSnapshot();
             return;
         }
-        stack_.push({ event: "complete", snapshotObservable });
+        stack_.push({ notification: "complete", snapshotObservable });
 
         snapshotObservable.complete = true;
         snapshotObservable.subscriptions = [];
@@ -107,7 +107,7 @@ export class SnapshotPlugin extends BasePlugin {
             noSnapshot();
             return;
         }
-        stack_.push({ event: "error", snapshotObservable });
+        stack_.push({ notification: "error", snapshotObservable });
 
         snapshotObservable.error = error;
         snapshotObservable.subscriptions = [];
@@ -124,7 +124,7 @@ export class SnapshotPlugin extends BasePlugin {
             noSnapshot();
             return;
         }
-        stack_.push({ event: "next", snapshotObservable });
+        stack_.push({ notification: "next", snapshotObservable });
 
         const snapshotSubscription = snapshotObservable.subscriptions.find((s) => s.subscriber === subscriber);
         if (!snapshotSubscription) {
@@ -165,13 +165,13 @@ export class SnapshotPlugin extends BasePlugin {
         }
 
         let explicit = true;
-        if ((stack_.length > 0) && (stack_[stack_.length - 1].event === "next")) {
+        if ((stack_.length > 0) && (stack_[stack_.length - 1].notification === "next")) {
             explicit = false;
             const source = stack_[stack_.length - 1].snapshotObservable;
             addOnce(source.merges, snapshotObservable);
         } else {
             for (let s = stack_.length - 1; s > -1; --s) {
-                if (stack_[s].event === "subscribe") {
+                if (stack_[s].notification === "subscribe") {
                     explicit = false;
                     const dependent = stack_[s].snapshotObservable;
                     addOnce(dependent.dependencies, snapshotObservable);
@@ -180,7 +180,7 @@ export class SnapshotPlugin extends BasePlugin {
                 }
             }
         }
-        stack_.push({ event: "subscribe", snapshotObservable });
+        stack_.push({ notification: "subscribe", snapshotObservable });
 
         const snapshotSubscription: SnapshotSubscription = {
             explicit,
@@ -201,7 +201,7 @@ export class SnapshotPlugin extends BasePlugin {
             noSnapshot();
             return;
         }
-        stack_.push({ event: "unsubscribe", snapshotObservable });
+        stack_.push({ notification: "unsubscribe", snapshotObservable });
 
         snapshotObservable.subscriptions = snapshotObservable.subscriptions.filter((s) => s.subscriber !== subscriber);
     }

@@ -16,9 +16,9 @@ import { Match, matches, toString as matchToString } from "./match";
 import {
     DebugPlugin,
     Deck,
-    Event,
     LetPlugin,
     LogPlugin,
+    Notification,
     PausePlugin,
     Plugin,
     SnapshotObservable,
@@ -117,15 +117,15 @@ if (typeof window !== "undefined") {
     window["rxSpy"] = consoleApi;
 }
 
-export function debug(match: Match, ...events: Event[]): () => void {
+export function debug(match: Match, ...notifications: Notification[]): () => void {
 
-    if (events.length === 0) {
-        events = ["complete", "error", "next", "subscribe", "unsubscribe"];
+    if (notifications.length === 0) {
+        notifications = ["complete", "error", "next", "subscribe", "unsubscribe"];
     }
 
     const foundPlugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
     return plugin(
-        new DebugPlugin(match, events, foundPlugin ? foundPlugin as SnapshotPlugin : null),
+        new DebugPlugin(match, notifications, foundPlugin ? foundPlugin as SnapshotPlugin : null),
         `debug(${matchToString(match)})`
     );
 }

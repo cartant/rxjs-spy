@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 
-export type Event = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
+export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
 
 export interface Plugin {
 

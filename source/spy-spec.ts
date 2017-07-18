@@ -73,19 +73,19 @@ describe("spy", () => {
 
             const subscription = subject.tag("people").subscribe();
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
             calls = [];
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["alice; tag = people; event = next"]);
+            expect(calls[0]).to.deep.equal(["alice; tag = people; notification = next"]);
 
             calls = [];
 
             subscription.unsubscribe();
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; event = unsubscribe"]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = unsubscribe"]);
         });
 
         it("should log all/any tagged observables", () => {
@@ -101,7 +101,7 @@ describe("spy", () => {
 
             const subscription = subject.tag("people").subscribe();
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; event = subscribe"]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
             expect(calls[1]).to.deep.equal(["  Matching", "/.+/"]);
         });
     });

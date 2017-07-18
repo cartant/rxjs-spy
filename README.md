@@ -150,7 +150,7 @@ function log(
 
 Wires up an instance of the log plugin for matching observables. If no `match` is specified, all tagged observables will be logged.
 
-All `subscribe`, `next`, `complete`, `error` and `unsubscribe` events will be logged to the console or to the specified logger.
+All `subscribe`, `next`, `complete`, `error` and `unsubscribe` notifications will be logged to the console or to the specified logger.
 
 This method returns a teardown function.
 
@@ -209,13 +209,13 @@ This method returns a teardown function.
 ```ts
 function debug(
   match: string | RegExp | MatchPredicate | Observable<any>,
-  ...events: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
+  ...notifications: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
 ): () => void
 ```
 
 Wires up an instance of the debug plugin for matching observables.
 
-Whenever one of the specified events occurs, a `debugger` statement in the plugin will pause execution. If no events are specified in the call, execution will be paused when any of the events occurs.
+Whenever one of the specified notifications occurs, a `debugger` statement in the plugin will pause execution. If no notifications are specified in the call, execution will be paused when any of the notifications occurs.
 
 Immediately above the `debugger` statement, there is a snapshot variable - so if snapshotting is enabled, a snapshot will be available for inspection within the debugger.
 

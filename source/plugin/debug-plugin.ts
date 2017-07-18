@@ -8,21 +8,21 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Match, matches } from "../match";
-import { BasePlugin, Event } from "./plugin";
+import { BasePlugin, Notification } from "./plugin";
 import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
 
 export class DebugPlugin extends BasePlugin {
 
-    private events_: Event[];
-    private matcher_: (observable: Observable<any>, event: Event) => boolean;
+    private notifications_: Notification[];
+    private matcher_: (observable: Observable<any>, notification: Notification) => boolean;
     private snapshotPlugin_: SnapshotPlugin | null;
 
-    constructor(match: Match, events: Event[], snapshotPlugin: SnapshotPlugin | null) {
+    constructor(match: Match, notifications: Notification[], snapshotPlugin: SnapshotPlugin | null) {
 
         super();
 
-        this.events_ = events;
-        this.matcher_ = (observable: Observable<any>, event: Event) => matches(observable, match) && (this.events_.indexOf(event) !== -1);
+        this.notifications_ = notifications;
+        this.matcher_ = (observable: Observable<any>, notification: Notification) => matches(observable, match) && (this.notifications_.indexOf(notification) !== -1);
         this.snapshotPlugin_ = snapshotPlugin;
     }
 
