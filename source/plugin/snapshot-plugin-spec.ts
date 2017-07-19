@@ -132,8 +132,9 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.length(1);
 
             let snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.values).to.have.length(4);
-            expect(snapshotObservable.valuesFlushed).to.equal(0);
+            let snapshotSubscription = snapshotObservable.subscriptions[0];
+            expect(snapshotSubscription.values).to.have.length(4);
+            expect(snapshotSubscription.valuesFlushed).to.equal(0);
 
             plugin.flush();
 
@@ -141,8 +142,9 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.length(1);
 
             snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.values).to.have.length(2);
-            expect(snapshotObservable.valuesFlushed).to.equal(2);
+            snapshotSubscription = snapshotObservable.subscriptions[0];
+            expect(snapshotSubscription.values).to.have.length(2);
+            expect(snapshotSubscription.valuesFlushed).to.equal(2);
         });
     });
 
@@ -254,7 +256,6 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.length(1);
 
             let snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.values).to.deep.equal([]);
             expect(snapshotObservable.subscriptions).to.have.length(1);
 
             let snapshotSubscription = snapshotObservable.subscriptions[0];
@@ -266,7 +267,6 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.length(1);
 
             snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.values.map((t) => t.value)).to.deep.equal([1]);
             expect(snapshotObservable.subscriptions).to.have.length(1);
 
             snapshotSubscription = snapshotObservable.subscriptions[0];
@@ -278,7 +278,6 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.length(1);
 
             snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.values.map((t) => t.value)).to.deep.equal([1, -1]);
             expect(snapshotObservable.subscriptions).to.have.length(1);
 
             snapshotSubscription = snapshotObservable.subscriptions[0];

@@ -26,8 +26,6 @@ export interface SnapshotObservable {
     tag: string | null;
     tick: number;
     type: string;
-    values: { timestamp: number; value: any; }[];
-    valuesFlushed: number;
 }
 
 export interface SnapshotSubscription {
@@ -133,7 +131,6 @@ export class SnapshotPlugin extends BasePlugin {
         }
 
         snapshotObservable.tick = tick();
-        snapshotObservable.values.push({ timestamp, value });
         snapshotSubscription.timestamp = timestamp;
         snapshotSubscription.values.push({ timestamp, value });
     }
@@ -157,9 +154,7 @@ export class SnapshotPlugin extends BasePlugin {
                 subscriptions: [],
                 tag,
                 tick: tick(),
-                type: getType(observable),
-                values: [],
-                valuesFlushed: 0
+                type: getType(observable)
             };
             map_.set(observable, snapshotObservable);
         }
@@ -222,22 +217,15 @@ export class SnapshotPlugin extends BasePlugin {
             if ((completed && o.complete) || (errored && o.error)) {
                 this.map_.delete(o.observable);
             } else {
-                flushValues(o);
-                o.subscriptions.forEach(flushValues);
+                o.subscriptions.forEach((s) => {
+                    const count = s.values.length - keptValues_;
+                    if (count > 0) {
+                        s.values.splice(0, count);
+                        s.valuesFlushed += count;
+                    }
+                });
             }
         });
-
-        function flushValues(entity: {
-            values: { timestamp: number; value: any; }[],
-            valuesFlushed: number
-        }): void {
-
-            const count = entity.values.length - keptValues_;
-            if (count > 0) {
-                entity.values.splice(0, count);
-                entity.valuesFlushed += count;
-            }
-        }
     }
 
     snapshot({
