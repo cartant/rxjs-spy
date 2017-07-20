@@ -10,7 +10,7 @@
 
 `rxjs-spy` is a debugging library for RxJS.
 
-### Why might I need it?
+### Why might you need it?
 
 The compositional and sometimes-asynchronous nature of RxJS can make debugging something of a challenge. Often, the go-to debugging approach is to sprinkle `do` operators and logging throughout the codebase.
 
