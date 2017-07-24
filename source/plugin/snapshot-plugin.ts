@@ -6,6 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
+import { getSync, StackFrame } from "stacktrace-js";
 import { read } from "../match";
 import { BasePlugin, Notification } from "./plugin";
 import { tick } from "../spy";
@@ -30,6 +31,7 @@ export interface SnapshotObservable {
 
 export interface SnapshotSubscription {
     explicit: boolean;
+    stackTrace: StackFrame[];
     subscriber: Subscriber<any>;
     timestamp: number;
     values: { timestamp: number; value: any; }[];
@@ -179,6 +181,7 @@ export class SnapshotPlugin extends BasePlugin {
 
         const snapshotSubscription: SnapshotSubscription = {
             explicit,
+            stackTrace: getStackTrace(),
             subscriber,
             timestamp: Date.now(),
             values: [],
@@ -284,6 +287,21 @@ function addOnce<T>(array: T[], element: T): void {
     if (found === -1) {
         array.push(element);
     }
+}
+
+function getStackTrace(): StackFrame[] {
+
+    let internal = true;
+
+    return getSync({
+        filter: (stackFrame) => {
+            const result = !internal;
+            if (/subscribeWithSpy/.test(stackFrame.functionName)) {
+                internal = false;
+            }
+            return result;
+        }
+    });
 }
 
 function getType(observable: Observable<any>): string {
