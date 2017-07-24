@@ -82,8 +82,6 @@ export class DebugPlugin extends BasePlugin {
         if (!snapshotPlugin_) {
             return null;
         }
-
-        const snapshot = snapshotPlugin_.snapshot();
-        return snapshot.observables.find((o) => o.observable === observable) || null;
+        return snapshotPlugin_.peekAtObservable(observable);
     }
 }

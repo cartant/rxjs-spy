@@ -228,6 +228,23 @@ export class SnapshotPlugin extends BasePlugin {
         });
     }
 
+    peekAtObservable(observable: Observable<any>): SnapshotObservable | null {
+
+        const { map_ } = this;
+        return map_.get(observable) || null;
+    }
+
+    peekAtSubscription(observable: Observable<any>, subscriber: Subscriber<any>): SnapshotSubscription | null {
+
+        const { map_ } = this;
+
+        let snapshotObservable = map_.get(observable);
+        if (!snapshotObservable) {
+            return null;
+        }
+        return snapshotObservable.subscriptions.find((s) => s.subscriber === subscriber) || null;
+    }
+
     snapshot({
         filter,
         since
