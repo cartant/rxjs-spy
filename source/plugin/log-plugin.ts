@@ -9,18 +9,21 @@ import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Notification } from "./plugin";
+import { SnapshotSubscription, SnapshotPlugin } from "./snapshot-plugin";
 
 export class LogPlugin extends BasePlugin {
 
     private logger_: Logger;
     private match_: Match;
+    private snapshotPlugin_: SnapshotPlugin | null;
 
-    constructor(match: Match, partialLogger: PartialLogger = defaultLogger) {
+    constructor(match: Match, partialLogger: PartialLogger = defaultLogger, snapshotPlugin: SnapshotPlugin | null) {
 
         super();
 
         this.logger_ = toLogger(partialLogger);
         this.match_ = match;
+        this.snapshotPlugin_ = snapshotPlugin;
     }
 
     beforeComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
@@ -55,7 +58,7 @@ export class LogPlugin extends BasePlugin {
         param: any = null
     ): void {
 
-        const { logger_, match_ } = this;
+        const { logger_, match_, snapshotPlugin_ } = this;
 
         if (matches(observable, match_)) {
             const tag = read(observable);
@@ -73,6 +76,12 @@ export class LogPlugin extends BasePlugin {
                 break;
             }
             logger_.log("Matching", matchToString(match_));
+            if (snapshotPlugin_) {
+                const snapshot = snapshotPlugin_.peekAtSubscription(observable, subscriber);
+                if (snapshot) {
+                    logger_.log(`${snapshot.explicit ? "Ex" : "Im"}plicit subscribe =`, snapshot.stackTrace);
+                }
+            }
             logger_.groupCollapsed("Raw observable");
             logger_.log(observable);
             logger_.groupEnd();

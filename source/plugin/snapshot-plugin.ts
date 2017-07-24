@@ -291,13 +291,13 @@ function addOnce<T>(array: T[], element: T): void {
 
 function getStackTrace(): StackFrame[] {
 
-    let internal = true;
+    let preSubscribeWithSpy = false;
 
     return getSync({
         filter: (stackFrame) => {
-            const result = !internal;
+            const result = preSubscribeWithSpy;
             if (/subscribeWithSpy/.test(stackFrame.functionName)) {
-                internal = false;
+                preSubscribeWithSpy = true;
             }
             return result;
         }

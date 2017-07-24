@@ -152,7 +152,11 @@ export function log(match: any, partialLogger?: PartialLogger): () => void {
         match = anyTagged;
     }
 
-    return plugin(new LogPlugin(match, partialLogger), `log(${matchToString(match)})`);
+    const foundPlugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
+    return plugin(
+        new LogPlugin(match, partialLogger, foundPlugin ? foundPlugin as SnapshotPlugin : null),
+        `log(${matchToString(match)})`
+    );
 }
 
 export function pause(match: Match): Deck {
@@ -226,6 +230,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             if (s.values.length > 0) {
                 logger.log("Last value =", s.values[s.values.length - 1].value);
             }
+            logger.log(`${s.explicit ? "Ex" : "Im"}plicit subscribe =`, s.stackTrace);
             logger.groupEnd();
         });
         logger.groupEnd();
