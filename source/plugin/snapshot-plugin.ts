@@ -8,7 +8,7 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { getSync, StackFrame } from "stacktrace-js";
 import { read } from "../match";
-import { BasePlugin, Notification } from "./plugin";
+import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
 import { tick } from "../spy";
 
 export interface Snapshot {
@@ -58,7 +58,7 @@ export class SnapshotPlugin extends BasePlugin {
         this.keptValues_ = keptValues;
     }
 
-    afterComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    afterComplete(ref: SubscriptionRef): void {
 
         const { stack_ } = this;
 
@@ -74,7 +74,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    afterError(observable: Observable<any>, subscriber: Subscriber<any>, error: any): void {
+    afterError(ref: SubscriptionRef, error: any): void {
 
         const { stack_ } = this;
 
@@ -90,21 +90,22 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    afterNext(observable: Observable<any>, subscriber: Subscriber<any>, value: any): void {
+    afterNext(ref: SubscriptionRef, value: any): void {
 
         const { stack_ } = this;
         stack_.pop();
     }
 
-    afterSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    afterSubscribe(ref: SubscriptionRef): void {
 
         const { stack_ } = this;
         stack_.pop();
     }
 
-    afterUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    afterUnsubscribe(ref: SubscriptionRef): void {
 
         const { stack_ } = this;
+        const { subscriber } = ref;
 
         const notificationSnapshot = stack_.pop();
         if (notificationSnapshot) {
@@ -118,19 +119,19 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    beforeComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeComplete(ref: SubscriptionRef): void {
 
-        this.push("complete", observable, subscriber);
+        this.push("complete", ref);
     }
 
-    beforeError(observable: Observable<any>, subscriber: Subscriber<any>, error: any): void {
+    beforeError(ref: SubscriptionRef, error: any): void {
 
-        this.push("error", observable, subscriber);
+        this.push("error", ref);
     }
 
-    beforeNext(observable: Observable<any>, subscriber: Subscriber<any>, value: any): void {
+    beforeNext(ref: SubscriptionRef, value: any): void {
 
-        const { observableSnapshot, subscriberSnapshot } = this.push("next", observable, subscriber);
+        const { observableSnapshot, subscriberSnapshot } = this.push("next", ref);
         const timestamp = Date.now();
 
         if (observableSnapshot) {
@@ -142,9 +143,10 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    beforeSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         const { map_, stack_ } = this;
+        const { observable, subscriber } = ref;
 
         let observableSnapshot = map_.get(observable);
         if (observableSnapshot) {
@@ -200,9 +202,9 @@ export class SnapshotPlugin extends BasePlugin {
         stack_.push({ notification: "subscribe", observableSnapshot, subscriberSnapshot });
     }
 
-    beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeUnsubscribe(ref: SubscriptionRef): void {
 
-        this.push("unsubscribe", observable, subscriber);
+        this.push("unsubscribe", ref);
     }
 
     flush(options?: {
@@ -232,15 +234,18 @@ export class SnapshotPlugin extends BasePlugin {
         });
     }
 
-    peekAtObservable(observable: Observable<any>): ObservableSnapshot | null {
+    peekAtObservable(ref: SubscriptionRef): ObservableSnapshot | null {
 
         const { map_ } = this;
+        const { observable } = ref;
+
         return map_.get(observable) || null;
     }
 
-    peekAtSubscriber(observable: Observable<any>, subscriber: Subscriber<any>): SubscriberSnapshot | null {
+    peekAtSubscriber(ref: SubscriptionRef): SubscriberSnapshot | null {
 
         const { map_ } = this;
+        const { observable, subscriber } = ref;
 
         let observableSnapshot = map_.get(observable);
         if (!observableSnapshot) {
@@ -281,7 +286,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    private push(notification: Notification, observable: Observable<any>, subscriber: Subscriber<any>): NotificationSnapshot {
+    private push(notification: Notification, ref: SubscriptionRef): NotificationSnapshot {
 
         const notificationSnapshot: NotificationSnapshot = {
             notification,
@@ -289,6 +294,7 @@ export class SnapshotPlugin extends BasePlugin {
             subscriberSnapshot: null
         };
         const { map_, stack_ } = this;
+        const { observable, subscriber } = ref;
 
         notificationSnapshot.observableSnapshot = map_.get(observable) || null;
         if (notificationSnapshot.observableSnapshot) {

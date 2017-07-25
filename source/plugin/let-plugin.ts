@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Match, matches } from "../match";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, SubscriptionRef } from "./plugin";
 
 export class LetPlugin extends BasePlugin {
 
@@ -22,9 +22,10 @@ export class LetPlugin extends BasePlugin {
         this.select_ = select;
     }
 
-    select(observable: Observable<any>, subscriber: Subscriber<any>): ((source: Observable<any>) => Observable<any>) | null {
+    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
 
         const { match_, select_ } = this;
+        const { observable } = ref;
 
         if (matches(observable, match_)) {
             return select_;

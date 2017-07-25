@@ -8,7 +8,7 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, Notification } from "./plugin";
+import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
 
 export class LogPlugin extends BasePlugin {
@@ -26,39 +26,39 @@ export class LogPlugin extends BasePlugin {
         this.snapshotPlugin_ = snapshotPlugin;
     }
 
-    beforeComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeComplete(ref: SubscriptionRef): void {
 
-        this.log_(observable, subscriber, "complete");
+        this.log_(ref, "complete");
     }
 
-    beforeError(observable: Observable<any>, subscriber: Subscriber<any>, error: any): void {
+    beforeError(ref: SubscriptionRef, error: any): void {
 
-        this.log_(observable, subscriber, "error", error);
+        this.log_(ref, "error", error);
     }
 
-    beforeNext(observable: Observable<any>, subscriber: Subscriber<any>, value: any): void {
+    beforeNext(ref: SubscriptionRef, value: any): void {
 
-        this.log_(observable, subscriber, "next", value);
+        this.log_(ref, "next", value);
     }
 
-    beforeSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
-        this.log_(observable, subscriber, "subscribe");
+        this.log_(ref, "subscribe");
     }
 
-    beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeUnsubscribe(ref: SubscriptionRef): void {
 
-        this.log_(observable, subscriber, "unsubscribe");
+        this.log_(ref, "unsubscribe");
     }
 
     private log_(
-        observable: Observable<any>,
-        subscriber: Subscriber<any>,
+        ref: SubscriptionRef,
         notification: Notification,
         param: any = null
     ): void {
 
         const { logger_, match_, snapshotPlugin_ } = this;
+        const { observable, subscriber } = ref;
 
         if (matches(observable, match_)) {
             const tag = read(observable);
@@ -77,7 +77,7 @@ export class LogPlugin extends BasePlugin {
             }
             logger_.log("Matching", matchToString(match_));
             if (snapshotPlugin_) {
-                const snapshot = snapshotPlugin_.peekAtSubscriber(observable, subscriber);
+                const snapshot = snapshotPlugin_.peekAtSubscriber(ref);
                 if (snapshot) {
                     logger_.log(`${snapshot.explicit ? "Ex" : "Im"}plicit subscribe =`, snapshot.stackTrace);
                 }

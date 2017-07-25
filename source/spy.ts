@@ -21,7 +21,8 @@ import {
     Notification,
     PausePlugin,
     Plugin,
-    SnapshotPlugin
+    SnapshotPlugin,
+    SubscriptionRef
 } from "./plugin";
 
 import { isObservable, toSubscriber } from "./util";
@@ -293,6 +294,12 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
     const observable = this;
     const subscriber = toSubscriber.apply(null, args);
 
+    const ref: SubscriptionRef = {
+        observable,
+        subscriber,
+        subscription: null
+    };
+
     interface PostLetObserver {
         complete: () => void;
         error: (error: any) => void;
@@ -306,31 +313,31 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
         complete(this: PostLetObserver): void {
 
             ++tick_;
-            plugins_.forEach((plugin) => plugin.beforeComplete(observable, subscriber));
+            plugins_.forEach((plugin) => plugin.beforeComplete(ref));
 
             subscriber.complete();
 
-            plugins_.forEach((plugin) => plugin.afterComplete(observable, subscriber));
+            plugins_.forEach((plugin) => plugin.afterComplete(ref));
         },
 
         error(this: PostLetObserver, error: any): void {
 
             ++tick_;
-            plugins_.forEach((plugin) => plugin.beforeError(observable, subscriber, error));
+            plugins_.forEach((plugin) => plugin.beforeError(ref, error));
 
             subscriber.error(error);
 
-            plugins_.forEach((plugin) => plugin.afterError(observable, subscriber, error));
+            plugins_.forEach((plugin) => plugin.afterError(ref, error));
         },
 
         next(this: PostLetObserver, value: any): void {
 
             ++tick_;
-            plugins_.forEach((plugin) => plugin.beforeNext(observable, subscriber, value));
+            plugins_.forEach((plugin) => plugin.beforeNext(ref, value));
 
             subscriber.next(value);
 
-            plugins_.forEach((plugin) => plugin.afterNext(observable, subscriber, value));
+            plugins_.forEach((plugin) => plugin.afterNext(ref, value));
         },
 
         unsubscribed: false
@@ -386,7 +393,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
         let(this: PreLetObserver, plugins: Plugin[]): void {
 
-            const selectors = plugins.map((plugin) => plugin.select(observable, subscriber)).filter(Boolean);
+            const selectors = plugins.map((plugin) => plugin.select(ref)).filter(Boolean);
             if (selectors.length > 0) {
 
                 if (!this.preLetSubject) {
@@ -464,12 +471,12 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
             postLetObserver.unsubscribed = true;
 
             ++tick_;
-            plugins_.forEach((plugin) => plugin.beforeUnsubscribe(observable, subscriber));
+            plugins_.forEach((plugin) => plugin.beforeUnsubscribe(ref));
 
             postLetUnsubscribe.call(postLetSubscriber);
             pluginsSubscription.unsubscribe();
 
-            plugins_.forEach((plugin) => plugin.afterUnsubscribe(observable, subscriber));
+            plugins_.forEach((plugin) => plugin.afterUnsubscribe(ref));
 
         } else {
             postLetUnsubscribe.call(postLetSubscriber);
@@ -477,11 +484,12 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
     };
 
     ++tick_;
-    plugins_.forEach((plugin) => plugin.beforeSubscribe(observable, subscriber));
+    plugins_.forEach((plugin) => plugin.beforeSubscribe(ref));
 
     const subscription = subscribeBase.call(observable, preLetSubscriber);
+    ref.subscription = subscription;
 
-    plugins_.forEach((plugin) => plugin.afterSubscribe(observable, subscriber));
+    plugins_.forEach((plugin) => plugin.afterSubscribe(ref));
 
     return subscription;
 }

@@ -11,7 +11,7 @@ import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, SubscriptionRef } from "./plugin";
 import { subscribeWithoutSpy } from "../spy";
 
 import "rxjs/add/operator/dematerialize";
@@ -78,7 +78,9 @@ export class Deck {
         this.paused_ = false;
     }
 
-    select(observable: Observable<any>, subscriber: Subscriber<any>): (source: Observable<any>) => Observable<any> {
+    select(ref: SubscriptionRef): (source: Observable<any>) => Observable<any> {
+
+        const { observable } = ref;
 
         return (source: Observable<any>) => {
 
@@ -162,12 +164,13 @@ export class PausePlugin extends BasePlugin {
         return match_;
     }
 
-    select(observable: Observable<any>, subscriber: Subscriber<any>): ((source: Observable<any>) => Observable<any>) | null {
+    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
 
         const { deck_, match_ } = this;
+        const { observable } = ref;
 
         if (matches(observable, match_)) {
-            return deck_.select(observable, subscriber);
+            return deck_.select(ref);
         }
         return null;
     }

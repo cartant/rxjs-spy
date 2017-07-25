@@ -8,7 +8,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Match, matches } from "../match";
-import { BasePlugin, Notification } from "./plugin";
+import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
 import { ObservableSnapshot, SnapshotPlugin } from "./snapshot-plugin";
 
 export class DebugPlugin extends BasePlugin {
@@ -26,62 +26,68 @@ export class DebugPlugin extends BasePlugin {
         this.snapshotPlugin_ = snapshotPlugin;
     }
 
-    beforeComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeComplete(ref: SubscriptionRef): void {
 
         const { matcher_ } = this;
+        const { observable } = ref;
 
         if (matcher_(observable, "complete")) {
-            const snapshot = this.getSnapshot_(observable);
+            const snapshot = this.getSnapshot_(ref);
             debugger;
         }
     }
 
-    beforeError(observable: Observable<any>, subscriber: Subscriber<any>, error: any): void {
+    beforeError(ref: SubscriptionRef, error: any): void {
 
         const { matcher_ } = this;
+        const { observable } = ref;
 
         if (matcher_(observable, "error")) {
-            const snapshot = this.getSnapshot_(observable);
+            const snapshot = this.getSnapshot_(ref);
             debugger;
         }
     }
 
-    beforeNext(observable: Observable<any>, subscriber: Subscriber<any>, value: any): void {
+    beforeNext(ref: SubscriptionRef, value: any): void {
 
         const { matcher_ } = this;
+        const { observable } = ref;
 
         if (matcher_(observable, "next")) {
-            const snapshot = this.getSnapshot_(observable);
+            const snapshot = this.getSnapshot_(ref);
             debugger;
         }
     }
 
-    beforeSubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         const { matcher_ } = this;
+        const { observable } = ref;
 
         if (matcher_(observable, "subscribe")) {
-            const snapshot = this.getSnapshot_(observable);
+            const snapshot = this.getSnapshot_(ref);
             debugger;
         }
     }
 
-    beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
+    beforeUnsubscribe(ref: SubscriptionRef): void {
 
         const { matcher_ } = this;
+        const { observable } = ref;
 
         if (matcher_(observable, "unsubscribe")) {
-            const snapshot = this.getSnapshot_(observable);
+            const snapshot = this.getSnapshot_(ref);
             debugger;
         }
     }
 
-    private getSnapshot_(observable: Observable<any>): ObservableSnapshot | null {
+    private getSnapshot_(ref: SubscriptionRef): ObservableSnapshot | null {
 
         const { snapshotPlugin_ } = this;
+
         if (!snapshotPlugin_) {
             return null;
         }
-        return snapshotPlugin_.peekAtObservable(observable);
+        return snapshotPlugin_.peekAtObservable(ref);
     }
 }
