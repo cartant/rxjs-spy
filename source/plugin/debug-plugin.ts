@@ -9,7 +9,7 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Match, matches } from "../match";
 import { BasePlugin, Notification } from "./plugin";
-import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
+import { ObservableSnapshot, SnapshotPlugin } from "./snapshot-plugin";
 
 export class DebugPlugin extends BasePlugin {
 
@@ -76,7 +76,7 @@ export class DebugPlugin extends BasePlugin {
         }
     }
 
-    private getSnapshot_(observable: Observable<any>): SnapshotObservable | null {
+    private getSnapshot_(observable: Observable<any>): ObservableSnapshot | null {
 
         const { snapshotPlugin_ } = this;
         if (!snapshotPlugin_) {

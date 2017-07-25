@@ -9,7 +9,7 @@ import { Subscriber } from "rxjs/Subscriber";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Notification } from "./plugin";
-import { SnapshotSubscription, SnapshotPlugin } from "./snapshot-plugin";
+import { SnapshotPlugin } from "./snapshot-plugin";
 
 export class LogPlugin extends BasePlugin {
 
@@ -77,7 +77,7 @@ export class LogPlugin extends BasePlugin {
             }
             logger_.log("Matching", matchToString(match_));
             if (snapshotPlugin_) {
-                const snapshot = snapshotPlugin_.peekAtSubscription(observable, subscriber);
+                const snapshot = snapshotPlugin_.peekAtSubscriber(observable, subscriber);
                 if (snapshot) {
                     logger_.log(`${snapshot.explicit ? "Ex" : "Im"}plicit subscribe =`, snapshot.stackTrace);
                 }

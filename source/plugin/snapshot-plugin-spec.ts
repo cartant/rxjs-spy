@@ -9,7 +9,7 @@ import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { matches } from "../match";
-import { SnapshotObservable, SnapshotPlugin } from "./snapshot-plugin";
+import { ObservableSnapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { spy } from "../spy";
 
 import "rxjs/add/observable/combineLatest";
@@ -131,20 +131,20 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            let snapshotObservable = snapshot.observables[0];
-            let snapshotSubscription = snapshotObservable.subscriptions[0];
-            expect(snapshotSubscription.values).to.have.length(4);
-            expect(snapshotSubscription.valuesFlushed).to.equal(0);
+            let observableSnapshot = snapshot.observables[0];
+            let subscriberSnapshot = observableSnapshot.subscribers[0];
+            expect(subscriberSnapshot.values).to.have.length(4);
+            expect(subscriberSnapshot.valuesFlushed).to.equal(0);
 
             plugin.flush();
 
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            snapshotObservable = snapshot.observables[0];
-            snapshotSubscription = snapshotObservable.subscriptions[0];
-            expect(snapshotSubscription.values).to.have.length(2);
-            expect(snapshotSubscription.valuesFlushed).to.equal(2);
+            observableSnapshot = snapshot.observables[0];
+            subscriberSnapshot = observableSnapshot.subscribers[0];
+            expect(subscriberSnapshot.values).to.have.length(2);
+            expect(subscriberSnapshot.valuesFlushed).to.equal(2);
         });
     });
 
@@ -165,10 +165,10 @@ describe("SnapshotPlugin", () => {
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            const snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable).to.have.property("complete", false);
-            expect(snapshotObservable).to.have.property("error", null);
-            expect(snapshotObservable.subscriptions).to.have.length(1);
+            const observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot).to.have.property("complete", false);
+            expect(observableSnapshot).to.have.property("error", null);
+            expect(observableSnapshot.subscribers).to.have.length(1);
         });
 
         it("should clone the snapshot content", () => {
@@ -194,16 +194,16 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            let snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.subscriptions).to.have.length(1);
+            let observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot.subscribers).to.have.length(1);
 
             subscription.unsubscribe();
 
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.subscriptions).to.have.length(0);
+            observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot.subscribers).to.have.length(0);
         });
 
         it("should spy on completions", () => {
@@ -214,16 +214,16 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            let snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable).to.have.property("complete", false);
+            let observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot).to.have.property("complete", false);
 
             subject.complete();
 
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable).to.have.property("complete", true);
+            observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot).to.have.property("complete", true);
         });
 
         it("should spy on errors", () => {
@@ -234,8 +234,8 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            let snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable).to.have.property("error", null);
+            let observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot).to.have.property("error", null);
 
             const error = new Error("Boom!");
             subject.error(error);
@@ -243,8 +243,8 @@ describe("SnapshotPlugin", () => {
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable).to.have.property("error", error);
+            observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot).to.have.property("error", error);
         });
 
         it("should spy on values", () => {
@@ -255,33 +255,33 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            let snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.subscriptions).to.have.length(1);
+            let observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot.subscribers).to.have.length(1);
 
-            let snapshotSubscription = snapshotObservable.subscriptions[0];
-            expect(snapshotSubscription.values).to.deep.equal([]);
+            let subscriberSnapshot = observableSnapshot.subscribers[0];
+            expect(subscriberSnapshot.values).to.deep.equal([]);
 
             subject.next(1);
 
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.subscriptions).to.have.length(1);
+            observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot.subscribers).to.have.length(1);
 
-            snapshotSubscription = snapshotObservable.subscriptions[0];
-            expect(snapshotSubscription.values.map((t) => t.value)).to.deep.equal([1]);
+            subscriberSnapshot = observableSnapshot.subscribers[0];
+            expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1]);
 
             subject.next(-1);
 
             snapshot = plugin.snapshot();
             expect(snapshot.observables).to.have.length(1);
 
-            snapshotObservable = snapshot.observables[0];
-            expect(snapshotObservable.subscriptions).to.have.length(1);
+            observableSnapshot = snapshot.observables[0];
+            expect(observableSnapshot.subscribers).to.have.length(1);
 
-            snapshotSubscription = snapshotObservable.subscriptions[0];
-            expect(snapshotSubscription.values.map((t) => t.value)).to.deep.equal([1, -1]);
+            subscriberSnapshot = observableSnapshot.subscribers[0];
+            expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1, -1]);
         });
 
         it("should spy on changes since the specified snapshot", () => {
@@ -312,7 +312,7 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshot({ filter: (o) => matches(o.observable, "tagged") });
             expect(snapshot.observables).to.have.length(1);
 
-            snapshot = plugin.snapshot({ filter: (o) => o.subscriptions.some((s) => s.explicit) });
+            snapshot = plugin.snapshot({ filter: (o) => o.subscribers.some((s) => s.explicit) });
             expect(snapshot.observables).to.have.length(1);
         });
 
@@ -365,8 +365,8 @@ describe("SnapshotPlugin", () => {
             expect(hasDependency(snapshotCombined!, snapshotSubject2!)).to.be.true;
 
             function hasDependency(
-                observable: SnapshotObservable,
-                dependency: SnapshotObservable
+                observable: ObservableSnapshot,
+                dependency: ObservableSnapshot
             ): boolean {
 
                 if (observable.dependencies.indexOf(dependency) !== -1) {
@@ -414,11 +414,11 @@ describe("SnapshotPlugin", () => {
             const snapshotSubject = snapshot.observables.find((o) => o.observable === subject);
             const snapshotMapper = snapshot.observables.find((o) => o.observable === mapped);
 
-            expect(snapshotMapper!.subscriptions).to.have.length(1);
-            expect(snapshotMapper!.subscriptions[0]).to.have.property("explicit", true);
+            expect(snapshotMapper!.subscribers).to.have.length(1);
+            expect(snapshotMapper!.subscribers[0]).to.have.property("explicit", true);
 
-            expect(snapshotSubject!.subscriptions).to.have.length(1);
-            expect(snapshotSubject!.subscriptions[0]).to.have.property("explicit", false);
+            expect(snapshotSubject!.subscribers).to.have.length(1);
+            expect(snapshotSubject!.subscribers[0]).to.have.property("explicit", false);
         });
     });
 });

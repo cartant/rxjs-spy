@@ -21,7 +21,6 @@ import {
     Notification,
     PausePlugin,
     Plugin,
-    SnapshotObservable,
     SnapshotPlugin
 } from "./plugin";
 
@@ -222,10 +221,10 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
         if (o.error) {
             logger.error("Error =", o.error);
         }
-        const subscriptionGroupMethod = (o.subscriptions.length > 3) ? "groupCollapsed" : "group";
-        logger[snapshotGroupMethod].call(logger, `${o.subscriptions.length} Subscription(s)`);
-        o.subscriptions.forEach((s) => {
-            logger[snapshotGroupMethod].call(logger, "Subscription");
+        const subscriptionGroupMethod = (o.subscribers.length > 3) ? "groupCollapsed" : "group";
+        logger[snapshotGroupMethod].call(logger, `${o.subscribers.length} Subscriber(s)`);
+        o.subscribers.forEach((s) => {
+            logger[snapshotGroupMethod].call(logger, "Subscriber");
             logger.log("Value count =", s.values.length + s.valuesFlushed);
             if (s.values.length > 0) {
                 logger.log("Last value =", s.values[s.values.length - 1].value);

@@ -12,24 +12,24 @@ import { BasePlugin, Notification } from "./plugin";
 import { tick } from "../spy";
 
 export interface Snapshot {
-    observables: SnapshotObservable[];
+    observables: ObservableSnapshot[];
     tick: number;
 }
 
-export interface SnapshotObservable {
+export interface ObservableSnapshot {
     complete: boolean;
-    dependencies: SnapshotObservable[];
-    dependents: SnapshotObservable[];
+    dependencies: ObservableSnapshot[];
+    dependents: ObservableSnapshot[];
     error: any;
-    merges: SnapshotObservable[];
+    merges: ObservableSnapshot[];
     observable: Observable<any>;
-    subscriptions: SnapshotSubscription[];
+    subscribers: SubscriberSnapshot[];
     tag: string | null;
     tick: number;
     type: string;
 }
 
-export interface SnapshotSubscription {
+export interface SubscriberSnapshot {
     explicit: boolean;
     stackTrace: StackFrame[];
     subscriber: Subscriber<any>;
@@ -38,37 +38,38 @@ export interface SnapshotSubscription {
     valuesFlushed: number;
 }
 
-interface StackEntry {
+interface NotificationSnapshot {
     notification: Notification;
-    snapshotObservable: SnapshotObservable | null;
-    snapshotSubscription: SnapshotSubscription | null;
+    observableSnapshot: ObservableSnapshot | null;
+    subscriberSnapshot: SubscriberSnapshot | null;
 }
 
 export class SnapshotPlugin extends BasePlugin {
 
     private keptValues_: number;
-    private map_: Map<Observable<any>, SnapshotObservable>;
-    private stack_: StackEntry[] = [];
+    private map_: Map<Observable<any>, ObservableSnapshot>;
+    private stack_: NotificationSnapshot[] = [];
 
     constructor({ keptValues = 4 }: { keptValues?: number } = {}) {
 
         super();
 
-        this.map_ = new Map<Observable<any>, SnapshotObservable>();
+        this.map_ = new Map<Observable<any>, ObservableSnapshot>();
         this.keptValues_ = keptValues;
     }
 
     afterComplete(observable: Observable<any>, subscriber: Subscriber<any>): void {
 
         const { stack_ } = this;
-        const entry = stack_.pop();
-        if (entry) {
 
-            const { snapshotObservable } = entry;
-            if (snapshotObservable) {
-                snapshotObservable.complete = true;
-                snapshotObservable.subscriptions = [];
-                snapshotObservable.tick = tick();
+        const notificationSnapshot = stack_.pop();
+        if (notificationSnapshot) {
+
+            const { observableSnapshot } = notificationSnapshot;
+            if (observableSnapshot) {
+                observableSnapshot.complete = true;
+                observableSnapshot.subscribers = [];
+                observableSnapshot.tick = tick();
             }
         }
     }
@@ -76,14 +77,15 @@ export class SnapshotPlugin extends BasePlugin {
     afterError(observable: Observable<any>, subscriber: Subscriber<any>, error: any): void {
 
         const { stack_ } = this;
-        const entry = stack_.pop();
-        if (entry) {
 
-            const { snapshotObservable } = entry;
-            if (snapshotObservable) {
-                snapshotObservable.error = error;
-                snapshotObservable.subscriptions = [];
-                snapshotObservable.tick = tick();
+        const notificationSnapshot = stack_.pop();
+        if (notificationSnapshot) {
+
+            const { observableSnapshot } = notificationSnapshot;
+            if (observableSnapshot) {
+                observableSnapshot.error = error;
+                observableSnapshot.subscribers = [];
+                observableSnapshot.tick = tick();
             }
         }
     }
@@ -103,13 +105,14 @@ export class SnapshotPlugin extends BasePlugin {
     afterUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
 
         const { stack_ } = this;
-        const entry = stack_.pop();
-        if (entry) {
 
-            const { snapshotObservable } = entry;
-            if (snapshotObservable) {
-                snapshotObservable.subscriptions = snapshotObservable
-                    .subscriptions
+        const notificationSnapshot = stack_.pop();
+        if (notificationSnapshot) {
+
+            const { observableSnapshot } = notificationSnapshot;
+            if (observableSnapshot) {
+                observableSnapshot.subscribers = observableSnapshot
+                    .subscribers
                     .filter((s) => s.subscriber !== subscriber);
             }
         }
@@ -127,15 +130,15 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeNext(observable: Observable<any>, subscriber: Subscriber<any>, value: any): void {
 
-        const { snapshotObservable, snapshotSubscription } = this.push("next", observable, subscriber);
+        const { observableSnapshot, subscriberSnapshot } = this.push("next", observable, subscriber);
         const timestamp = Date.now();
 
-        if (snapshotObservable) {
-            snapshotObservable.tick = tick();
+        if (observableSnapshot) {
+            observableSnapshot.tick = tick();
         }
-        if (snapshotSubscription) {
-            snapshotSubscription.timestamp = timestamp;
-            snapshotSubscription.values.push({ timestamp, value });
+        if (subscriberSnapshot) {
+            subscriberSnapshot.timestamp = timestamp;
+            subscriberSnapshot.values.push({ timestamp, value });
         }
     }
 
@@ -143,48 +146,48 @@ export class SnapshotPlugin extends BasePlugin {
 
         const { map_, stack_ } = this;
 
-        let snapshotObservable = map_.get(observable);
-        if (snapshotObservable) {
-            snapshotObservable.tick = tick();
+        let observableSnapshot = map_.get(observable);
+        if (observableSnapshot) {
+            observableSnapshot.tick = tick();
         } else {
             const tag = read(observable);
-            snapshotObservable = {
+            observableSnapshot = {
                 complete: false,
                 dependencies: [],
                 dependents: [],
                 error: null,
                 merges: [],
                 observable,
-                subscriptions: [],
+                subscribers: [],
                 tag,
                 tick: tick(),
                 type: getType(observable)
             };
-            map_.set(observable, snapshotObservable);
+            map_.set(observable, observableSnapshot);
         }
 
         let explicit = true;
         if ((stack_.length > 0) && (stack_[stack_.length - 1].notification === "next")) {
             explicit = false;
-            const source = stack_[stack_.length - 1].snapshotObservable;
+            const source = stack_[stack_.length - 1].observableSnapshot;
             if (source) {
-                addOnce(source.merges, snapshotObservable);
+                addOnce(source.merges, observableSnapshot);
             }
         } else {
             for (let s = stack_.length - 1; s > -1; --s) {
                 if (stack_[s].notification === "subscribe") {
                     explicit = false;
-                    const dependent = stack_[s].snapshotObservable;
+                    const dependent = stack_[s].observableSnapshot;
                     if (dependent) {
-                        addOnce(dependent.dependencies, snapshotObservable);
-                        addOnce(snapshotObservable.dependents, dependent);
+                        addOnce(dependent.dependencies, observableSnapshot);
+                        addOnce(observableSnapshot.dependents, dependent);
                     }
                     break;
                 }
             }
         }
 
-        const snapshotSubscription: SnapshotSubscription = {
+        const subscriberSnapshot: SubscriberSnapshot = {
             explicit,
             stackTrace: getStackTrace(),
             subscriber,
@@ -192,9 +195,9 @@ export class SnapshotPlugin extends BasePlugin {
             values: [],
             valuesFlushed: 0
         };
-        snapshotObservable.subscriptions.push(snapshotSubscription);
+        observableSnapshot.subscribers.push(subscriberSnapshot);
 
-        stack_.push({ notification: "subscribe", snapshotObservable, snapshotSubscription });
+        stack_.push({ notification: "subscribe", observableSnapshot, subscriberSnapshot });
     }
 
     beforeUnsubscribe(observable: Observable<any>, subscriber: Subscriber<any>): void {
@@ -218,7 +221,7 @@ export class SnapshotPlugin extends BasePlugin {
             if ((completed && o.complete) || (errored && o.error)) {
                 this.map_.delete(o.observable);
             } else {
-                o.subscriptions.forEach((s) => {
+                o.subscribers.forEach((s) => {
                     const count = s.values.length - keptValues_;
                     if (count > 0) {
                         s.values.splice(0, count);
@@ -229,28 +232,28 @@ export class SnapshotPlugin extends BasePlugin {
         });
     }
 
-    peekAtObservable(observable: Observable<any>): SnapshotObservable | null {
+    peekAtObservable(observable: Observable<any>): ObservableSnapshot | null {
 
         const { map_ } = this;
         return map_.get(observable) || null;
     }
 
-    peekAtSubscription(observable: Observable<any>, subscriber: Subscriber<any>): SnapshotSubscription | null {
+    peekAtSubscriber(observable: Observable<any>, subscriber: Subscriber<any>): SubscriberSnapshot | null {
 
         const { map_ } = this;
 
-        let snapshotObservable = map_.get(observable);
-        if (!snapshotObservable) {
+        let observableSnapshot = map_.get(observable);
+        if (!observableSnapshot) {
             return null;
         }
-        return snapshotObservable.subscriptions.find((s) => s.subscriber === subscriber) || null;
+        return observableSnapshot.subscribers.find((s) => s.subscriber === subscriber) || null;
     }
 
     snapshot({
         filter,
         since
     }: {
-        filter?: (o: SnapshotObservable) => boolean,
+        filter?: (o: ObservableSnapshot) => boolean,
         since?: Snapshot
     } = {}): Snapshot {
 
@@ -269,36 +272,36 @@ export class SnapshotPlugin extends BasePlugin {
         }
         return { observables, tick: tick() };
 
-        function clone(o: SnapshotObservable): SnapshotObservable {
-            return { ...o, subscriptions: o.subscriptions.map((s) => ({ ...s })) };
+        function clone(o: ObservableSnapshot): ObservableSnapshot {
+            return { ...o, subscribers: o.subscribers.map((s) => ({ ...s })) };
         }
 
-        function findClone(o: SnapshotObservable): SnapshotObservable {
-            return observables.find((clone) => clone.observable === o.observable) as SnapshotObservable;
+        function findClone(o: ObservableSnapshot): ObservableSnapshot {
+            return observables.find((clone) => clone.observable === o.observable) as ObservableSnapshot;
         }
     }
 
-    private push(notification: Notification, observable: Observable<any>, subscriber: Subscriber<any>): StackEntry {
+    private push(notification: Notification, observable: Observable<any>, subscriber: Subscriber<any>): NotificationSnapshot {
 
-        const entry: StackEntry = {
+        const notificationSnapshot: NotificationSnapshot = {
             notification,
-            snapshotObservable: null,
-            snapshotSubscription: null
+            observableSnapshot: null,
+            subscriberSnapshot: null
         };
         const { map_, stack_ } = this;
 
-        entry.snapshotObservable = map_.get(observable) || null;
-        if (entry.snapshotObservable) {
-            entry.snapshotSubscription = entry.snapshotObservable
-                .subscriptions
+        notificationSnapshot.observableSnapshot = map_.get(observable) || null;
+        if (notificationSnapshot.observableSnapshot) {
+            notificationSnapshot.subscriberSnapshot = notificationSnapshot.observableSnapshot
+                .subscribers
                 .find((s) => s.subscriber === subscriber) || null;
         } else {
             /*tslint:disable-next-line:no-console*/
             console.warn("Observable snapshot not found; subscriptions made prior to calling 'spy' are not snapshotted.");
         }
 
-        stack_.push(entry);
-        return entry;
+        stack_.push(notificationSnapshot);
+        return notificationSnapshot;
     }
 }
 
