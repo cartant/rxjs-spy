@@ -44,14 +44,10 @@ if (typeof window !== "undefined") {
             const pausePlugins = plugins_.filter((plugin) => plugin instanceof PausePlugin) as PausePlugin[];
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
-                logger.group("Deck(s)");
-                if (pausePlugins.length) {
-                    pausePlugins.forEach((pausePlugin, index) => {
-                        logger.log(`${index + 1} pause(${matchToString(pausePlugin.match)})`);
-                    });
-                } else {
-                    logger.log("No decks");
-                }
+                logger.group(`${pausePlugins.length} Deck(s)`);
+                pausePlugins.forEach((pausePlugin, index) => {
+                    logger.log(`${index + 1} pause(${matchToString(pausePlugin.match)})`);
+                });
                 logger.groupEnd();
             } else {
                 const pausePlugin = pausePlugins[call - 1];
@@ -98,14 +94,10 @@ if (typeof window !== "undefined") {
 
             if (args.length === 0) {
                 const logger = toLogger(defaultLogger);
-                logger.group("Undo(s)");
-                if (undos_.length) {
-                    undos_.forEach((undo, index) => {
-                        logger.log(`${index + 1} ${undo.name}`);
-                    });
-                } else {
-                    logger.log("Nothing to undo");
-                }
+                logger.group(`${undos_.length} undo(s)`);
+                undos_.forEach((undo, index) => {
+                    logger.log(`${index + 1} ${undo.name}`);
+                });
                 logger.groupEnd();
             } else {
                 args
@@ -236,7 +228,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             }
 
             const { subscriptions } = subscriberSnapshot;
-            logger.group(`${subscriptions.length} subscription(s)`);
+            logger.groupCollapsed(`${subscriptions.length} subscription(s)`);
             subscriptions.forEach((subscriptionSnapshot) => {
 
                 const { finalDestination, stackTrace } = subscriptionSnapshot;

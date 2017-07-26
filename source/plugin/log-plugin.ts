@@ -89,7 +89,7 @@ export class LogPlugin extends BasePlugin {
                     }
 
                     const { subscriptions } = subscriberSnapshot;
-                    logger_.group(`${subscriptions.length} subscription(s)`);
+                    logger_.groupCollapsed(`${subscriptions.length} subscription(s)`);
                     subscriptions.forEach((subscriptionSnapshot) => {
 
                         const { finalDestination, stackTrace } = subscriptionSnapshot;
