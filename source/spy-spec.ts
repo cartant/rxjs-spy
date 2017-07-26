@@ -318,7 +318,7 @@ describe("spy", () => {
             });
 
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Snapshot(s) matching people"]);
+            expect(calls[0]).to.deep.equal(["1 snapshot(s) matching people"]);
             expect(calls[1]).to.deep.equal(["  Tag = people"]);
         });
 
@@ -335,7 +335,7 @@ describe("spy", () => {
             });
 
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Snapshot(s) matching /.+/"]);
+            expect(calls[0]).to.deep.equal(["1 snapshot(s) matching /.+/"]);
             expect(calls[1]).to.deep.equal(["  Tag = people"]);
         });
 
