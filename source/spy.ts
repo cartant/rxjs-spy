@@ -209,33 +209,45 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     }
 
     const snapshotPlugin = plugin as SnapshotPlugin;
-    const snapshot = snapshotPlugin.snapshot();
-    const filtered = snapshot.observables.filter((o) => matches(o.observable, match));
+    const snapshot = snapshotPlugin.snapshotAll();
+    const filtered = snapshot.observables.filter((observableSnapshot) => matches(observableSnapshot.observable, match));
     const logger = toLogger(partialLogger);
     const snapshotGroupMethod = (filtered.length > 3) ? "groupCollapsed" : "group";
 
-    logger.group(`Snapshot(s) matching ${matchToString(match)}`);
-    filtered.forEach((o) => {
+    logger.group(`${filtered.length} snapshot(s) matching ${matchToString(match)}`);
+    filtered.forEach((observableSnapshot) => {
 
-        logger[snapshotGroupMethod].call(logger, `Tag = ${o.tag}`);
-        logger.log("State =", o.complete ? "complete" : o.error ? "error" : "incomplete");
-        if (o.error) {
-            logger.error("Error =", o.error);
+        logger[snapshotGroupMethod].call(logger, `Tag = ${observableSnapshot.tag}`);
+        logger.log("State =", observableSnapshot.complete ? "complete" : observableSnapshot.error ? "error" : "incomplete");
+        if (observableSnapshot.error) {
+            logger.error("Error =", observableSnapshot.error);
         }
-        const subscriptionGroupMethod = (o.subscribers.length > 3) ? "groupCollapsed" : "group";
-        logger[snapshotGroupMethod].call(logger, `${o.subscribers.length} Subscriber(s)`);
-        o.subscribers.forEach((s) => {
-            logger[snapshotGroupMethod].call(logger, "Subscriber");
-            logger.log("Value count =", s.values.length + s.valuesFlushed);
-            if (s.values.length > 0) {
-                logger.log("Last value =", s.values[s.values.length - 1].value);
+
+        const { subscribers } = observableSnapshot;
+        const subscriberGroupMethod = (subscribers.length > 3) ? "groupCollapsed" : "group";
+        logger.group(`${subscribers.length} subscriber(s)`);
+        subscribers.forEach((subscriberSnapshot) => {
+
+            const { values, valuesFlushed } = subscriberSnapshot;
+            logger[subscriberGroupMethod].call(logger, "Subscriber");
+            logger.log("Value count =", values.length + valuesFlushed);
+            if (values.length > 0) {
+                logger.log("Last value =", values[values.length - 1].value);
             }
-            logger.log(`${s.explicit ? "Ex" : "Im"}plicit subscribe =`, s.stackTrace);
+
+            const { subscriptions } = subscriberSnapshot;
+            logger.group(`${subscriptions.length} subscription(s)`);
+            subscriptions.forEach((subscriptionSnapshot) => {
+
+                const { finalDestination, stackTrace } = subscriptionSnapshot;
+                logger.log("subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
+            });
+            logger.groupEnd();
             logger.groupEnd();
         });
         logger.groupEnd();
         logger.groupCollapsed("Raw snapshot");
-        logger.log(o);
+        logger.log(observableSnapshot);
         logger.groupEnd();
         logger.groupEnd();
     });

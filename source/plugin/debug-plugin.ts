@@ -88,6 +88,6 @@ export class DebugPlugin extends BasePlugin {
         if (!snapshotPlugin_) {
             return null;
         }
-        return snapshotPlugin_.peekAtObservable(ref);
+        return snapshotPlugin_.snapshotObservable(ref);
     }
 }

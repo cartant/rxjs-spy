@@ -18,11 +18,11 @@ export interface Snapshot {
 
 export interface ObservableSnapshot {
     complete: boolean;
-    dependencies: ObservableSnapshot[];
-    dependents: ObservableSnapshot[];
+    destinations: ObservableSnapshot[];
     error: any;
     merges: ObservableSnapshot[];
     observable: Observable<any>;
+    sources: ObservableSnapshot[];
     subscribers: SubscriberSnapshot[];
     tag: string | null;
     tick: number;
@@ -30,89 +30,126 @@ export interface ObservableSnapshot {
 }
 
 export interface SubscriberSnapshot {
-    explicit: boolean;
-    stackTrace: StackFrame[];
     subscriber: Subscriber<any>;
-    timestamp: number;
+    subscriptions: SubscriptionSnapshot[];
+    tick: number;
     values: { timestamp: number; value: any; }[];
     valuesFlushed: number;
 }
 
-interface NotificationSnapshot {
+export interface SubscriptionSnapshot {
+    destination: SubscriptionSnapshot | null;
+    finalDestination: SubscriptionSnapshot | null;
+    stackTrace: StackFrame[];
+    timestamp: number;
+}
+
+interface ObservableRecord {
+    complete: boolean;
+    destinations: ObservableRecord[];
+    error: any;
+    merges: ObservableRecord[];
+    observable: Observable<any>;
+    sources: ObservableRecord[];
+    subscribers: SubscriberRecord[];
+    tag: string | null;
+    tick: number;
+    type: string;
+}
+
+interface SubscriberRecord {
+    subscriber: Subscriber<any>;
+    subscriptions: SubscriptionRecord[];
+    tick: number;
+    values: { timestamp: number; value: any; }[];
+    valuesFlushed: number;
+}
+
+interface SubscriptionRecord {
+    destination: SubscriptionRecord | null;
+    ref: SubscriptionRef;
+    stackTrace: StackFrame[];
+    timestamp: number;
+}
+
+interface NotificationRecord {
     notification: Notification;
-    observableSnapshot: ObservableSnapshot | null;
-    subscriberSnapshot: SubscriberSnapshot | null;
+    observableRecord: ObservableRecord | null;
+    subscriberRecord: SubscriberRecord | null;
+    subscriptionRecord: SubscriptionRecord | null;
 }
 
 export class SnapshotPlugin extends BasePlugin {
 
     private keptValues_: number;
-    private map_: Map<Observable<any>, ObservableSnapshot>;
-    private stack_: NotificationSnapshot[] = [];
+    private observableRecordsMap_: Map<Observable<any>, ObservableRecord>;
+    private notificationRecordsStack_: NotificationRecord[] = [];
+    private subscriberRecordsMap_: Map<Subscriber<any>, SubscriberRecord>;
 
     constructor({ keptValues = 4 }: { keptValues?: number } = {}) {
 
         super();
 
-        this.map_ = new Map<Observable<any>, ObservableSnapshot>();
         this.keptValues_ = keptValues;
+        this.observableRecordsMap_ = new Map<Observable<any>, ObservableRecord>();
+        this.subscriberRecordsMap_ = new Map<Subscriber<any>, SubscriberRecord>();
     }
 
     afterComplete(ref: SubscriptionRef): void {
 
-        const { stack_ } = this;
+        const { notificationRecordsStack_ } = this;
 
-        const notificationSnapshot = stack_.pop();
-        if (notificationSnapshot) {
+        const notificationRecord = notificationRecordsStack_.pop();
+        if (notificationRecord) {
 
-            const { observableSnapshot } = notificationSnapshot;
-            if (observableSnapshot) {
-                observableSnapshot.complete = true;
-                observableSnapshot.subscribers = [];
-                observableSnapshot.tick = tick();
+            const { observableRecord } = notificationRecord;
+            if (observableRecord) {
+                observableRecord.complete = true;
+                observableRecord.subscribers = [];
+                observableRecord.tick = tick();
             }
         }
     }
 
     afterError(ref: SubscriptionRef, error: any): void {
 
-        const { stack_ } = this;
+        const { notificationRecordsStack_ } = this;
 
-        const notificationSnapshot = stack_.pop();
-        if (notificationSnapshot) {
+        const notificationRecord = notificationRecordsStack_.pop();
+        if (notificationRecord) {
 
-            const { observableSnapshot } = notificationSnapshot;
-            if (observableSnapshot) {
-                observableSnapshot.error = error;
-                observableSnapshot.subscribers = [];
-                observableSnapshot.tick = tick();
+            const { observableRecord } = notificationRecord;
+            if (observableRecord) {
+                observableRecord.error = error;
+                observableRecord.subscribers = [];
+                observableRecord.tick = tick();
             }
         }
     }
 
     afterNext(ref: SubscriptionRef, value: any): void {
 
-        const { stack_ } = this;
-        stack_.pop();
+        const { notificationRecordsStack_ } = this;
+        notificationRecordsStack_.pop();
     }
 
     afterSubscribe(ref: SubscriptionRef): void {
 
-        const { stack_ } = this;
-        stack_.pop();
+        const { notificationRecordsStack_ } = this;
+        notificationRecordsStack_.pop();
     }
 
     afterUnsubscribe(ref: SubscriptionRef): void {
 
-        const { stack_ } = this;
+        const { notificationRecordsStack_ } = this;
         const { subscriber } = ref;
 
-        const notificationSnapshot = stack_.pop();
-        if (notificationSnapshot) {
+        const notificationRecord = notificationRecordsStack_.pop();
+        if (notificationRecord) {
 
-            const { observableSnapshot } = notificationSnapshot;
-            if (observableSnapshot) {
-                observableSnapshot.subscribers = observableSnapshot
+            const { observableRecord } = notificationRecord;
+            if (observableRecord) {
+                observableRecord.subscribers = observableRecord
                     .subscribers
                     .filter((s) => s.subscriber !== subscriber);
             }
@@ -131,75 +168,98 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        const { observableSnapshot, subscriberSnapshot } = this.push("next", ref);
+        const { observableRecord, subscriberRecord } = this.push("next", ref);
         const timestamp = Date.now();
 
-        if (observableSnapshot) {
-            observableSnapshot.tick = tick();
+        if (observableRecord) {
+            observableRecord.tick = tick();
         }
-        if (subscriberSnapshot) {
-            subscriberSnapshot.timestamp = timestamp;
-            subscriberSnapshot.values.push({ timestamp, value });
+        if (subscriberRecord) {
+            subscriberRecord.values.push({ timestamp, value });
         }
     }
 
     beforeSubscribe(ref: SubscriptionRef): void {
 
-        const { map_, stack_ } = this;
+        const { observableRecordsMap_, notificationRecordsStack_, subscriberRecordsMap_ } = this;
         const { observable, subscriber } = ref;
 
-        let observableSnapshot = map_.get(observable);
-        if (observableSnapshot) {
-            observableSnapshot.tick = tick();
+        let observableRecord = observableRecordsMap_.get(observable);
+        if (observableRecord) {
+            observableRecord.tick = tick();
         } else {
             const tag = read(observable);
-            observableSnapshot = {
+            observableRecord = {
                 complete: false,
-                dependencies: [],
-                dependents: [],
+                destinations: [],
                 error: null,
                 merges: [],
                 observable,
+                sources: [],
                 subscribers: [],
                 tag,
                 tick: tick(),
                 type: getType(observable)
             };
-            map_.set(observable, observableSnapshot);
+            observableRecordsMap_.set(observable, observableRecord);
         }
 
-        let explicit = true;
-        if ((stack_.length > 0) && (stack_[stack_.length - 1].notification === "next")) {
-            explicit = false;
-            const source = stack_[stack_.length - 1].observableSnapshot;
-            if (source) {
-                addOnce(source.merges, observableSnapshot);
+        let subscriberRecord = subscriberRecordsMap_.get(subscriber);
+        if (subscriberRecord) {
+            subscriberRecord.tick = tick();
+        } else {
+            subscriberRecord = {
+                subscriber,
+                subscriptions: [],
+                tick: tick(),
+                values: [],
+                valuesFlushed: 0
+            };
+            subscriberRecordsMap_.set(subscriber, subscriberRecord);
+        }
+        observableRecord.subscribers.push(subscriberRecord);
+
+        const subscriptionRecord: SubscriptionRecord = {
+            destination: null,
+            ref,
+            stackTrace: getStackTrace(),
+            timestamp: Date.now()
+        };
+        subscriberRecord.subscriptions.push(subscriptionRecord);
+
+        const length = notificationRecordsStack_.length;
+        if ((length > 0) && (notificationRecordsStack_[length - 1].notification === "next")) {
+            const { observableRecord: sourceObservableRecord } = notificationRecordsStack_[length - 1];
+            if (sourceObservableRecord) {
+                addOnce(sourceObservableRecord.merges, observableRecord);
+            }
+            const { subscriptionRecord: destinationSubscriptionRecord } = notificationRecordsStack_[length - 1];
+            if (destinationSubscriptionRecord) {
+                subscriptionRecord.destination = destinationSubscriptionRecord;
             }
         } else {
-            for (let s = stack_.length - 1; s > -1; --s) {
-                if (stack_[s].notification === "subscribe") {
-                    explicit = false;
-                    const dependent = stack_[s].observableSnapshot;
-                    if (dependent) {
-                        addOnce(dependent.dependencies, observableSnapshot);
-                        addOnce(observableSnapshot.dependents, dependent);
+            for (let n = length - 1; n > -1; --n) {
+                if (notificationRecordsStack_[n].notification === "subscribe") {
+                    const { observableRecord: destinationObservableRecord } = notificationRecordsStack_[n];
+                    if (destinationObservableRecord) {
+                        addOnce(destinationObservableRecord.sources, observableRecord);
+                        addOnce(observableRecord.destinations, destinationObservableRecord);
+                    }
+                    const { subscriptionRecord: destinationSubscriptionRecord } = notificationRecordsStack_[n];
+                    if (destinationSubscriptionRecord) {
+                        subscriptionRecord.destination = destinationSubscriptionRecord;
                     }
                     break;
                 }
             }
         }
 
-        const subscriberSnapshot: SubscriberSnapshot = {
-            explicit,
-            stackTrace: getStackTrace(),
-            subscriber,
-            timestamp: Date.now(),
-            values: [],
-            valuesFlushed: 0
-        };
-        observableSnapshot.subscribers.push(subscriberSnapshot);
-
-        stack_.push({ notification: "subscribe", observableSnapshot, subscriberSnapshot });
+        notificationRecordsStack_.push({
+            notification: "subscribe",
+            observableRecord,
+            subscriberRecord,
+            subscriptionRecord
+        });
     }
 
     beforeUnsubscribe(ref: SubscriptionRef): void {
@@ -216,12 +276,12 @@ export class SnapshotPlugin extends BasePlugin {
             completed: true,
             errored: true
         };
-        const { keptValues_, map_ } = this;
+        const { keptValues_, observableRecordsMap_ } = this;
 
-        this.map_.forEach((o) => {
+        this.observableRecordsMap_.forEach((o) => {
 
             if ((completed && o.complete) || (errored && o.error)) {
-                this.map_.delete(o.observable);
+                this.observableRecordsMap_.delete(o.observable);
             } else {
                 o.subscribers.forEach((s) => {
                     const count = s.values.length - keptValues_;
@@ -234,27 +294,7 @@ export class SnapshotPlugin extends BasePlugin {
         });
     }
 
-    peekAtObservable(ref: SubscriptionRef): ObservableSnapshot | null {
-
-        const { map_ } = this;
-        const { observable } = ref;
-
-        return map_.get(observable) || null;
-    }
-
-    peekAtSubscriber(ref: SubscriptionRef): SubscriberSnapshot | null {
-
-        const { map_ } = this;
-        const { observable, subscriber } = ref;
-
-        let observableSnapshot = map_.get(observable);
-        if (!observableSnapshot) {
-            return null;
-        }
-        return observableSnapshot.subscribers.find((s) => s.subscriber === subscriber) || null;
-    }
-
-    snapshot({
+    snapshotAll({
         filter,
         since
     }: {
@@ -262,12 +302,119 @@ export class SnapshotPlugin extends BasePlugin {
         since?: Snapshot
     } = {}): Snapshot {
 
-        let observables = Array.from(this.map_.values()).map(clone);
-        observables.forEach((o) => {
-            o.dependencies = o.dependencies.map(findClone);
-            o.dependents = o.dependents.map(findClone);
-            o.merges = o.merges.map(findClone);
+        const { observableRecordsMap_, subscriberRecordsMap_ } = this;
+        const subscriptionsMap = new Map<SubscriptionRef, SubscriptionRecord>();
+
+        const observableSnapshotsMap = new Map<Observable<any>, ObservableSnapshot>();
+        const subscriberSnapshotsMap = new Map<Subscriber<any>, SubscriberSnapshot>();
+        const subscriptionSnapshotsMap = new Map<SubscriptionRef, SubscriptionSnapshot>();
+
+        observableRecordsMap_.forEach((observableRecord, observable) => {
+
+            const {
+                complete,
+                error,
+                tag,
+                tick,
+                type
+            } = observableRecord;
+
+            observableSnapshotsMap.set(observable, {
+                complete,
+                destinations: [],
+                error,
+                merges: [],
+                observable,
+                sources: [],
+                subscribers: [],
+                tag,
+                tick,
+                type
+            });
         });
+
+        subscriberRecordsMap_.forEach((subscriberRecord, subscriber) => {
+
+            const {
+                subscriptions,
+                tick,
+                values,
+                valuesFlushed
+            } = subscriberRecord;
+
+            subscriberSnapshotsMap.set(subscriber, {
+                subscriber,
+                subscriptions: [],
+                tick,
+                values,
+                valuesFlushed
+            });
+
+            subscriptions.forEach((subscriptionRecord) => {
+
+                const {
+                    ref,
+                    stackTrace,
+                    timestamp
+                } = subscriptionRecord;
+
+                subscriptionsMap.set(ref, subscriptionRecord);
+                subscriptionSnapshotsMap.set(ref, {
+                    destination : null,
+                    finalDestination: null,
+                    stackTrace,
+                    timestamp
+                });
+            });
+        });
+
+        observableSnapshotsMap.forEach((observableSnapshot, observable) => {
+
+            const {
+                destinations,
+                merges,
+                sources,
+                subscribers
+            } = observableRecordsMap_.get(observable)!;
+
+            observableSnapshot.destinations = destinations.map((observableRecord) => observableSnapshotsMap.get(observableRecord.observable)!);
+            observableSnapshot.merges = merges.map((observableRecord) => observableSnapshotsMap.get(observableRecord.observable)!);
+            observableSnapshot.sources = sources.map((observableRecord) => observableSnapshotsMap.get(observableRecord.observable)!);
+            observableSnapshot.subscribers = subscribers.map((subscriberRecord) => subscriberSnapshotsMap.get(subscriberRecord.subscriber)!);
+        });
+
+        subscriberSnapshotsMap.forEach((subscriberSnapshot, subscriber) => {
+
+            const { subscriptions } = subscriberRecordsMap_.get(subscriber)!;
+
+            subscriberSnapshot.subscriptions = subscriptions.map((subscription) => {
+
+                const { ref } = subscription;
+                const { destination } = subscriptionsMap.get(ref)!;
+
+                const subscriptionSnapshot = subscriptionSnapshotsMap.get(ref)!;
+                subscriptionSnapshot.destination = destination ? subscriptionSnapshotsMap.get(destination.ref)! : null;
+                return subscriptionSnapshot;
+            });
+        });
+
+        subscriptionSnapshotsMap.forEach((subscriptionSnapshot) => {
+
+            const { destination } = subscriptionSnapshot;
+            let d = destination;
+
+            while (d) {
+                subscriptionSnapshot.finalDestination = d;
+                d = d.destination;
+                if (d === destination) {
+                    /*tslint:disable-next-line:no-console*/
+                    console.warn("Circular subscribtion found.");
+                    break;
+                }
+            }
+        });
+
+        let observables = Array.from(observableSnapshotsMap.values());
 
         if (filter) {
             observables = observables.filter(filter);
@@ -276,38 +423,46 @@ export class SnapshotPlugin extends BasePlugin {
             observables = observables.filter((o) => o.tick > since.tick);
         }
         return { observables, tick: tick() };
-
-        function clone(o: ObservableSnapshot): ObservableSnapshot {
-            return { ...o, subscribers: o.subscribers.map((s) => ({ ...s })) };
-        }
-
-        function findClone(o: ObservableSnapshot): ObservableSnapshot {
-            return observables.find((clone) => clone.observable === o.observable) as ObservableSnapshot;
-        }
     }
 
-    private push(notification: Notification, ref: SubscriptionRef): NotificationSnapshot {
+    snapshotObservable(ref: SubscriptionRef): ObservableSnapshot | null {
 
-        const notificationSnapshot: NotificationSnapshot = {
+        const snapshot = this.snapshotAll();
+        return snapshot.observables.find((o) => o.observable === ref.observable) || null;
+    }
+
+    snapshotSubscriber(ref: SubscriptionRef): SubscriberSnapshot | null {
+
+        const observableSnapshot = this.snapshotObservable(ref);
+        if (!observableSnapshot) {
+            return null;
+        }
+        return observableSnapshot.subscribers.find((s) => s.subscriber === ref.subscriber) || null;
+    }
+
+    private push(notification: Notification, ref: SubscriptionRef): NotificationRecord {
+
+        const notificationRecord: NotificationRecord = {
             notification,
-            observableSnapshot: null,
-            subscriberSnapshot: null
+            observableRecord: null,
+            subscriberRecord: null,
+            subscriptionRecord: null
         };
-        const { map_, stack_ } = this;
+        const { observableRecordsMap_, notificationRecordsStack_ } = this;
         const { observable, subscriber } = ref;
 
-        notificationSnapshot.observableSnapshot = map_.get(observable) || null;
-        if (notificationSnapshot.observableSnapshot) {
-            notificationSnapshot.subscriberSnapshot = notificationSnapshot.observableSnapshot
+        notificationRecord.observableRecord = observableRecordsMap_.get(observable) || null;
+        if (notificationRecord.observableRecord) {
+            notificationRecord.subscriberRecord = notificationRecord.observableRecord
                 .subscribers
                 .find((s) => s.subscriber === subscriber) || null;
         } else {
             /*tslint:disable-next-line:no-console*/
-            console.warn("Observable snapshot not found; subscriptions made prior to calling 'spy' are not snapshotted.");
+            console.warn("Observable Record not found; subscriptions made prior to calling 'spy' are not snapshotted.");
         }
 
-        stack_.push(notificationSnapshot);
-        return notificationSnapshot;
+        notificationRecordsStack_.push(notificationRecord);
+        return notificationRecord;
     }
 }
 
@@ -341,10 +496,4 @@ function getType(observable: Observable<any>): string {
         return prototype.constructor.name;
     }
     return "Object";
-}
-
-function noSnapshot(): void {
-
-    /*tslint:disable-next-line:no-console*/
-    console.warn("Snapshot not found; subscriptions made prior to calling 'spy' are not snapshotted.");
 }

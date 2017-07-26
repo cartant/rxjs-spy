@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": false,
     "importHelpers": false,
-    "lib": ["dom", "es2015"],
+    "lib": ["dom", "es2017"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmitHelpers": false,

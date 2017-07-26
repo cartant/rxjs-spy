@@ -77,9 +77,26 @@ export class LogPlugin extends BasePlugin {
             }
             logger_.log("Matching", matchToString(match_));
             if (snapshotPlugin_) {
-                const snapshot = snapshotPlugin_.peekAtSubscriber(ref);
-                if (snapshot) {
-                    logger_.log(`${snapshot.explicit ? "Ex" : "Im"}plicit subscribe =`, snapshot.stackTrace);
+
+                const subscriberSnapshot = snapshotPlugin_.snapshotSubscriber(ref);
+                if (subscriberSnapshot) {
+
+                    const { values, valuesFlushed } = subscriberSnapshot;
+                    logger_.group("Subscriber");
+                    logger_.log("Value count =", values.length + valuesFlushed);
+                    if (values.length > 0) {
+                        logger_.log("Last value =", values[values.length - 1].value);
+                    }
+
+                    const { subscriptions } = subscriberSnapshot;
+                    logger_.group(`${subscriptions.length} subscription(s)`);
+                    subscriptions.forEach((subscriptionSnapshot) => {
+
+                        const { finalDestination, stackTrace } = subscriptionSnapshot;
+                        logger_.log("subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
+                    });
+                    logger_.groupEnd();
+                    logger_.groupEnd();
                 }
             }
             logger_.groupCollapsed("Raw observable");
