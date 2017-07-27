@@ -216,8 +216,8 @@ export class SnapshotPlugin extends BasePlugin {
                 valuesFlushed: 0
             };
             subscriberRecordsMap_.set(subscriber, subscriberRecord);
+            observableRecord.subscribers.push(subscriberRecord);
         }
-        observableRecord.subscribers.push(subscriberRecord);
 
         const subscriptionRecord: SubscriptionRecord = {
             destination: null,
@@ -229,23 +229,31 @@ export class SnapshotPlugin extends BasePlugin {
 
         const length = notificationRecordsStack_.length;
         if ((length > 0) && (notificationRecordsStack_[length - 1].notification === "next")) {
-            const { observableRecord: sourceObservableRecord } = notificationRecordsStack_[length - 1];
+
+            const {
+                observableRecord: sourceObservableRecord,
+                subscriptionRecord: destinationSubscriptionRecord
+            } = notificationRecordsStack_[length - 1];
+
             if (sourceObservableRecord) {
                 addOnce(sourceObservableRecord.merges, observableRecord);
             }
-            const { subscriptionRecord: destinationSubscriptionRecord } = notificationRecordsStack_[length - 1];
             if (destinationSubscriptionRecord) {
                 subscriptionRecord.destination = destinationSubscriptionRecord;
             }
         } else {
             for (let n = length - 1; n > -1; --n) {
                 if (notificationRecordsStack_[n].notification === "subscribe") {
-                    const { observableRecord: destinationObservableRecord } = notificationRecordsStack_[n];
+
+                    const {
+                        observableRecord: destinationObservableRecord,
+                        subscriptionRecord: destinationSubscriptionRecord
+                    } = notificationRecordsStack_[n];
+
                     if (destinationObservableRecord) {
                         addOnce(destinationObservableRecord.sources, observableRecord);
                         addOnce(observableRecord.destinations, destinationObservableRecord);
                     }
-                    const { subscriptionRecord: destinationSubscriptionRecord } = notificationRecordsStack_[n];
                     if (destinationSubscriptionRecord) {
                         subscriptionRecord.destination = destinationSubscriptionRecord;
                     }
@@ -456,6 +464,11 @@ export class SnapshotPlugin extends BasePlugin {
             notificationRecord.subscriberRecord = notificationRecord.observableRecord
                 .subscribers
                 .find((s) => s.subscriber === subscriber) || null;
+            if (notificationRecord.subscriberRecord) {
+                notificationRecord.subscriptionRecord = notificationRecord.subscriberRecord
+                    .subscriptions
+                    .find((s) => s.ref === ref) || null;
+            }
         } else {
             /*tslint:disable-next-line:no-console*/
             console.warn("Observable Record not found; subscriptions made prior to calling 'spy' are not snapshotted.");

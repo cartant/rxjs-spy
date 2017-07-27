@@ -11,6 +11,7 @@ import { Subject } from "rxjs/Subject";
 import { matches } from "../match";
 import { ObservableSnapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { spy } from "../spy";
+import { toSubscriber } from "../util";
 
 import "rxjs/add/observable/combineLatest";
 import "rxjs/add/observable/of";
@@ -148,7 +149,7 @@ describe("SnapshotPlugin", () => {
         });
     });
 
-    describe("snapshot", () => {
+    describe("snapshotAll", () => {
 
         it("should spy on subscriptions", () => {
 
@@ -406,7 +407,7 @@ describe("SnapshotPlugin", () => {
             expect(outerSnapshot.merges.some((o) => o.tag === "inner2")).to.be.true;
         });
 
-        it("should indicate a subscription's destination subscription", () => {
+        it("should determine a subscription's destination subscription", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -434,6 +435,160 @@ describe("SnapshotPlugin", () => {
             expect(subjectSubscription).to.have.property("finalDestination", mappedSubscription);
             expect(mappedSubscription).to.have.property("destination", null);
             expect(mappedSubscription).to.have.property("finalDestination", null);
+        });
+
+        it("should determine a subscription's final destination subscription", () => {
+
+            const subject = new Subject<number>();
+            const mapped = subject.map((value) => value);
+            const remapped = mapped.map((value) => value);
+            const subscription = remapped.subscribe();
+
+            const snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.have.length(3);
+
+            const subjectSnapshot = find(snapshot.observables, (o) => o.observable === subject);
+            const mappedSnapshot = find(snapshot.observables, (o) => o.observable === mapped);
+            const remappedSnapshot = find(snapshot.observables, (o) => o.observable === remapped);
+
+            expect(subjectSnapshot.subscribers).to.have.length(1);
+            expect(mappedSnapshot.subscribers).to.have.length(1);
+            expect(remappedSnapshot.subscribers).to.have.length(1);
+
+            const subjectSubscriber = subjectSnapshot.subscribers[0];
+            const mappedSubscriber = mappedSnapshot.subscribers[0];
+            const remappedSubscriber = remappedSnapshot.subscribers[0];
+
+            expect(subjectSubscriber.subscriptions).to.have.length(1);
+            expect(mappedSubscriber.subscriptions).to.have.length(1);
+            expect(remappedSubscriber.subscriptions).to.have.length(1);
+
+            const subjectSubscription = subjectSubscriber.subscriptions[0];
+            const mappedSubscription = mappedSubscriber.subscriptions[0];
+            const remappedSubscription = remappedSubscriber.subscriptions[0];
+
+            expect(subjectSubscription).to.have.property("destination", mappedSubscription);
+            expect(subjectSubscription).to.have.property("finalDestination", remappedSubscription);
+            expect(mappedSubscription).to.have.property("destination", remappedSubscription);
+            expect(mappedSubscription).to.have.property("finalDestination", remappedSubscription);
+            expect(remappedSubscription).to.have.property("destination", null);
+            expect(remappedSubscription).to.have.property("finalDestination", null);
+        });
+
+        it("should determine final destinations for array-based sources", () => {
+
+            const subject1 = new Subject<number>();
+            const subject2 = new Subject<number>();
+            const combined = Observable.combineLatest(subject1, subject2);
+            const subscription = combined.subscribe();
+
+            const snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.not.be.empty;
+
+            const subject1Snapshot = find(snapshot.observables, (o) => o.observable === subject1);
+            const subject2Snapshot = find(snapshot.observables, (o) => o.observable === subject2);
+            const combinedSnapshot = find(snapshot.observables, (o) => o.observable === combined);
+
+            expect(subject1Snapshot.subscribers).to.have.length(1);
+            expect(subject2Snapshot.subscribers).to.have.length(1);
+            expect(combinedSnapshot.subscribers).to.have.length(1);
+
+            const subject1Subscriber = subject1Snapshot.subscribers[0];
+            const subject2Subscriber = subject2Snapshot.subscribers[0];
+            const combinedSubscriber = combinedSnapshot.subscribers[0];
+
+            expect(subject1Subscriber.subscriptions).to.have.length(1);
+            expect(subject2Subscriber.subscriptions).to.have.length(1);
+            expect(combinedSubscriber.subscriptions).to.have.length(1);
+
+            const subject1Subscription = subject1Subscriber.subscriptions[0];
+            const subject2Subscription = subject2Subscriber.subscriptions[0];
+            const combinedSubscription = combinedSubscriber.subscriptions[0];
+
+            expect(subject1Subscription).to.have.property("destination");
+            expect(subject1Subscription).to.have.property("finalDestination", combinedSubscription);
+            expect(subject2Subscription).to.have.property("destination");
+            expect(subject2Subscription).to.have.property("finalDestination", combinedSubscription);
+            expect(combinedSubscription).to.have.property("destination", null);
+            expect(combinedSubscription).to.have.property("finalDestination", null);
+        });
+
+        it("should determine final destinations for merges", () => {
+
+            const outerSubject = new Subject<number>();
+            const innerSubject1 = new Subject<number>();
+            const innerSubject2 = new Subject<number>();
+            const composed1 = outerSubject.switchMap((value) => innerSubject1);
+            const composed2 = outerSubject.switchMap((value) => innerSubject2);
+            const subscription1 = composed1.subscribe();
+            const subscription2 = composed2.subscribe();
+
+            outerSubject.next(1);
+
+            const snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.not.be.empty;
+
+            const composed1Snapshot = find(snapshot.observables, (o) => o.observable === composed1);
+            const composed2Snapshot = find(snapshot.observables, (o) => o.observable === composed2);
+            const inner1Snapshot = find(snapshot.observables, (o) => o.observable === innerSubject1);
+            const inner2Snapshot = find(snapshot.observables, (o) => o.observable === innerSubject2);
+
+            expect(composed1Snapshot.subscribers).to.have.length(1);
+            expect(composed2Snapshot.subscribers).to.have.length(1);
+            expect(inner1Snapshot.subscribers).to.have.length(1);
+            expect(inner2Snapshot.subscribers).to.have.length(1);
+
+            const composed1Subscriber = composed1Snapshot.subscribers[0];
+            const composed2Subscriber = composed2Snapshot.subscribers[0];
+            const inner1Subscriber = inner1Snapshot.subscribers[0];
+            const inner2Subscriber = inner2Snapshot.subscribers[0];
+
+            expect(composed1Subscriber.subscriptions).to.have.length(1);
+            expect(composed2Subscriber.subscriptions).to.have.length(1);
+            expect(inner1Subscriber.subscriptions).to.have.length(1);
+            expect(inner2Subscriber.subscriptions).to.have.length(1);
+
+            const composed1Subscription = composed1Subscriber.subscriptions[0];
+            const composed2Subscription = composed2Subscriber.subscriptions[0];
+            const inner1Subscription = inner1Subscriber.subscriptions[0];
+            const inner2Subscription = inner2Subscriber.subscriptions[0];
+
+            expect(inner1Subscription).to.have.property("destination");
+            expect(inner1Subscription).to.have.property("finalDestination", composed1Subscription);
+            expect(inner2Subscription).to.have.property("destination");
+            expect(inner2Subscription).to.have.property("finalDestination", composed2Subscription);
+        });
+
+        it("should support multiple subscriptions", () => {
+
+            const source = new Subject<number>();
+            const subscriber = toSubscriber(() => {});
+
+            source.subscribe(subscriber);
+            source.subscribe(subscriber);
+
+            const snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.have.length(1);
+
+            const sourceSnapshot = find(snapshot.observables, (o) => o.observable === source);
+
+            expect(sourceSnapshot.subscribers).to.have.length(1);
+
+            const sourceSubscriber = sourceSnapshot.subscribers[0];
+
+            expect(sourceSubscriber.subscriptions).to.have.length(2);
+        });
+    });
+
+    describe("snapshotObservable", () => {
+
+        it.skip("should be tested", () => {
+        });
+    });
+
+    describe("snapshotSubscriber", () => {
+
+        it.skip("should be tested", () => {
         });
     });
 });
