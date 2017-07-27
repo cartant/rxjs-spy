@@ -582,13 +582,39 @@ describe("SnapshotPlugin", () => {
 
     describe("snapshotObservable", () => {
 
-        it.skip("should be tested", () => {
+        it("should snapshot the specified observable", () => {
+
+            const subject = new Subject<number>();
+            const subscriber = toSubscriber(() => {});
+            const subscription = subject.subscribe(subscriber);
+
+            let observableSnapshot = plugin.snapshotObservable({
+                observable: subject,
+                subscriber,
+                subscription
+            });
+
+            expect(observableSnapshot).to.exist;
+            expect(observableSnapshot).to.have.property("observable", subject);
         });
     });
 
     describe("snapshotSubscriber", () => {
 
-        it.skip("should be tested", () => {
+        it("should snapshot the specified subscriber", () => {
+
+            const subject = new Subject<number>();
+            const subscriber = toSubscriber(() => {});
+            const subscription = subject.subscribe(subscriber);
+
+            let subscriberSnapshot = plugin.snapshotSubscriber({
+                observable: subject,
+                subscriber,
+                subscription
+            });
+
+            expect(subscriberSnapshot).to.exist;
+            expect(subscriberSnapshot).to.have.property("subscriber", subscriber);
         });
     });
 });
