@@ -1,3 +1,15 @@
+<a name="3.0.0"></a>
+## [3.0.0](https://github.com/cartant/rxjs-spy/compare/v2.1.0...v3.0.0) (2017-07-27)
+
+### Breaking Changes
+
+No breaking changes to the module or console APIs, but the plugin interface and the snapshots have changed - the changes account for subscribers being able to have multiple subscriptions.
+
+**Snapshots**: Include subscription on stack. ([6a270e4](https://github.com/cartant/rxjs-spy/commit/6a270e4))
+**Snapshots**: Rename snapshots. ([f3d1992](https://github.com/cartant/rxjs-spy/commit/f3d1992))
+**Plugin**: Add SubscriptionRef. ([953260d](https://github.com/cartant/rxjs-spy/commit/953260d))
+**Snapshots**: Separate records/snapshots. ([fd04a76](https://github.com/cartant/rxjs-spy/commit/fd04a76))
+
 <a name="2.1.0"></a>
 ## [2.1.0](https://github.com/cartant/rxjs-spy/compare/v2.0.0...v2.1.0) (2017-07-24)
 
