@@ -6,7 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { getSync, StackFrame } from "stacktrace-js";
+import { get, getSync, StackFrame } from "stacktrace-js";
 import { read } from "../match";
 import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
 import { tick } from "../spy";
@@ -489,17 +489,28 @@ function addOnce<T>(array: T[], element: T): void {
 
 function getStackTrace(): StackFrame[] {
 
-    let preSubscribeWithSpy = false;
+    const options = () => {
 
-    return getSync({
-        filter: (stackFrame) => {
-            const result = preSubscribeWithSpy;
-            if (/subscribeWithSpy/.test(stackFrame.functionName)) {
-                preSubscribeWithSpy = true;
+        let preSubscribeWithSpy = false;
+        return {
+            filter: (stackFrame: StackFrame) => {
+                const result = preSubscribeWithSpy;
+                if (/subscribeWithSpy/.test(stackFrame.functionName)) {
+                    preSubscribeWithSpy = true;
+                }
+                return result;
             }
-            return result;
-        }
-    });
+        };
+    };
+
+    const result = getSync(options());
+
+    if (typeof document !== "undefined") {
+        get(options()).then((stackFrames) => {
+            result.splice(0, result.length, ...stackFrames);
+        });
+    }
+    return result;
 }
 
 function getType(observable: Observable<any>): string {
