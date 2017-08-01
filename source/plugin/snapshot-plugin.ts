@@ -84,14 +84,22 @@ export class SnapshotPlugin extends BasePlugin {
     private keptValues_: number;
     private observableRecordsMap_: Map<Observable<any>, ObservableRecord>;
     private notificationRecordsStack_: NotificationRecord[] = [];
+    private sourceMaps_: boolean;
     private subscriberRecordsMap_: Map<Subscriber<any>, SubscriberRecord>;
 
-    constructor({ keptValues = 4 }: { keptValues?: number } = {}) {
+    constructor({
+        keptValues = 4,
+        sourceMaps = false
+    }: {
+        keptValues?: number
+        sourceMaps?: boolean
+    } = {}) {
 
         super();
 
         this.keptValues_ = keptValues;
         this.observableRecordsMap_ = new Map<Observable<any>, ObservableRecord>();
+        this.sourceMaps_ = sourceMaps;
         this.subscriberRecordsMap_ = new Map<Subscriber<any>, SubscriberRecord>();
     }
 
@@ -181,7 +189,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriptionRef): void {
 
-        const { observableRecordsMap_, notificationRecordsStack_, subscriberRecordsMap_ } = this;
+        const { observableRecordsMap_, notificationRecordsStack_, sourceMaps_, subscriberRecordsMap_ } = this;
         const { observable, subscriber } = ref;
 
         let observableRecord = observableRecordsMap_.get(observable);
@@ -222,7 +230,7 @@ export class SnapshotPlugin extends BasePlugin {
         const subscriptionRecord: SubscriptionRecord = {
             destination: null,
             ref,
-            stackTrace: getStackTrace(),
+            stackTrace: getStackTrace(sourceMaps_),
             timestamp: Date.now()
         };
         subscriberRecord.subscriptions.push(subscriptionRecord);
@@ -487,7 +495,7 @@ function addOnce<T>(array: T[], element: T): void {
     }
 }
 
-function getStackTrace(): StackFrame[] {
+function getStackTrace(sourceMaps: boolean): StackFrame[] {
 
     const options = () => {
 
@@ -505,7 +513,7 @@ function getStackTrace(): StackFrame[] {
 
     const result = getSync(options());
 
-    if (typeof document !== "undefined") {
+    if (sourceMaps && (typeof document !== "undefined")) {
         get(options()).then((stackFrames) => {
             result.splice(0, result.length, ...stackFrames);
         });
