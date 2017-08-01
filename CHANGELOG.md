@@ -1,3 +1,14 @@
+<a name="3.1.0"></a>
+## [3.1.0](https://github.com/cartant/rxjs-spy/compare/v3.0.0...v3.1.0) (2017-08-01)
+
+### Features
+
+* **Stack traces:** Resolve source maps. ([78f2b56](https://github.com/cartant/rxjs-spy/commit/78f2b56))
+
+### Bug Fixes
+
+* **Dependencies:** `stacktrace-js` is a non-dev dependency. ([28988ef](https://github.com/cartant/rxjs-spy/commit/28988ef))
+
 <a name="3.0.0"></a>
 ## [3.0.0](https://github.com/cartant/rxjs-spy/compare/v2.1.0...v3.0.0) (2017-07-27)
 
