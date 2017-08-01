@@ -4,6 +4,7 @@
     "url": "https://github.com/cartant/rxjs-spy/issues"
   },
   "dependencies": {
+    "@types/stacktrace-js": "^0.0.32",
     "stacktrace-js": "^2.0.0"
   },
   "description": "A debugging library for RxJS",
@@ -12,7 +13,6 @@
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.0",
     "@types/sinon": "^2.0.0",
-    "@types/stacktrace-js": "^0.0.32",
     "browserify": "^14.4.0",
     "browserify-global-shim": "^1.0.3",
     "chai": "^4.0.0",
