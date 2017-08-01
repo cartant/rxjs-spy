@@ -3,7 +3,9 @@
   "bugs": {
     "url": "https://github.com/cartant/rxjs-spy/issues"
   },
-  "dependencies": {},
+  "dependencies": {
+    "stacktrace-js": "^2.0.0"
+  },
   "description": "A debugging library for RxJS",
   "devDependencies": {
     "@types/chai": "^4.0.0",
@@ -28,7 +30,6 @@
     "rxjs": "^5.4.2",
     "rxjs-tslint-rules": "^2.0.0",
     "sinon": "^2.0.0",
-    "stacktrace-js": "^2.0.0",
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
     "typescript": "^2.4.0",
