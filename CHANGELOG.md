@@ -1,3 +1,10 @@
+<a name="3.1.2"></a>
+## [3.1.2](https://github.com/cartant/rxjs-spy/compare/v3.1.1...v3.1.2) (2017-08-01)
+
+### Features
+
+* **Stack traces:** Default to no source maps. ([20dbeaa](https://github.com/cartant/rxjs-spy/commit/20dbeaa))
+
 <a name="3.1.1"></a>
 ## [3.1.1](https://github.com/cartant/rxjs-spy/compare/v3.1.0...v3.1.1) (2017-08-01)
 
