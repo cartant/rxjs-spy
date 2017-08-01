@@ -1,3 +1,10 @@
+<a name="3.1.1"></a>
+## [3.1.1](https://github.com/cartant/rxjs-spy/compare/v3.1.0...v3.1.1) (2017-08-01)
+
+### Bug Fixes
+
+* **Dependencies:** `@types/stacktrace-js` is a non-dev dependency. ([2597fb0](https://github.com/cartant/rxjs-spy/commit/2597fb0))
+
 <a name="3.1.0"></a>
 ## [3.1.0](https://github.com/cartant/rxjs-spy/compare/v3.0.0...v3.1.0) (2017-08-01)
 
