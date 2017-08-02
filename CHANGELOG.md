@@ -1,3 +1,10 @@
+<a name="3.1.3"></a>
+## [3.1.3](https://github.com/cartant/rxjs-spy/compare/v3.1.2...v3.1.3) (2017-08-02)
+
+### Bug Fixes
+
+* **Logging:** Don't call `toString` on `null`, etc. and don't include the value in the group name. ([6000e24](https://github.com/cartant/rxjs-spy/commit/6000e24))
+
 <a name="3.1.2"></a>
 ## [3.1.2](https://github.com/cartant/rxjs-spy/compare/v3.1.1...v3.1.2) (2017-08-01)
 
