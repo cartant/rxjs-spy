@@ -251,6 +251,9 @@ export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
     if (Observable.prototype.subscribe !== subscribeBase) {
         throw new Error("Already spying on Observable.prototype.subscribe.");
     }
+    /*tslint:disable-next-line:no-console*/
+    console.warn("Spying on Observable.prototype.subscribe.");
+
     Observable.prototype.subscribe = subscribeWithSpy;
 
     if (plugins) {
