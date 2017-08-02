@@ -54,7 +54,7 @@ export class LogPlugin extends BasePlugin {
     private log_(
         ref: SubscriptionRef,
         notification: Notification,
-        param: any = null
+        param?: any
     ): void {
 
         const { logger_, match_, snapshotPlugin_ } = this;
@@ -62,27 +62,27 @@ export class LogPlugin extends BasePlugin {
 
         if (matches(observable, match_)) {
             const tag = read(observable);
+            const matching = (typeof match_ === "string") ? "" : `; matching ${matchToString(match_)}`;
             switch (notification) {
             case "error":
-                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; notification = ${notification}`);
+                logger_.group(`Tag = ${tag}; notification = ${notification}${matching}`);
                 logger_.error("Error =", param);
                 break;
             case "next":
-                logger_.groupCollapsed(`${param.toString()}; tag = ${tag}; notification = ${notification}`);
+                logger_.group(`Tag = ${tag}; notification = ${notification}${matching}`);
                 logger_.log("Value =", param);
                 break;
             default:
-                logger_.groupCollapsed(`Tag = ${tag}; notification = ${notification}`);
+                logger_.groupCollapsed(`Tag = ${tag}; notification = ${notification}${matching}`);
                 break;
             }
-            logger_.log("Matching", matchToString(match_));
             if (snapshotPlugin_) {
 
                 const subscriberSnapshot = snapshotPlugin_.snapshotSubscriber(ref);
                 if (subscriberSnapshot) {
 
                     const { values, valuesFlushed } = subscriberSnapshot;
-                    logger_.group("Subscriber");
+                    logger_.groupCollapsed("Subscriber");
                     logger_.log("Value count =", values.length + valuesFlushed);
                     if (values.length > 0) {
                         logger_.log("Last value =", values[values.length - 1].value);

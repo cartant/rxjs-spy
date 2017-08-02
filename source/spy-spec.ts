@@ -79,7 +79,8 @@ describe("spy", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["alice; tag = people; notification = next"]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
+            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
 
             calls = [];
 
@@ -101,8 +102,7 @@ describe("spy", () => {
 
             const subscription = subject.tag("people").subscribe();
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
-            expect(calls[1]).to.deep.equal(["  Matching", "/.+/"]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe; matching /.+/"]);
         });
     });
 

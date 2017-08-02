@@ -46,7 +46,7 @@ describe("LogPlugin", () => {
 
         subject.next("alice");
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["alice; tag = people; notification = next"]);
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
         expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
 
         calls = [];
@@ -54,6 +54,38 @@ describe("LogPlugin", () => {
         subscription.unsubscribe();
         expect(calls).to.not.be.empty;
         expect(calls[0]).to.deep.equal(["Tag = people; notification = unsubscribe"]);
+    });
+
+    it("should log null values", () => {
+
+        const subject = new Subject<string | null>();
+
+        const subscription = subject.tag("people").subscribe();
+
+        calls = [];
+
+        subject.next(null);
+        expect(calls).to.not.be.empty;
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
+        expect(calls[1]).to.deep.equal(["  Value =", null]);
+
+        subscription.unsubscribe();
+    });
+
+    it("should log undefined values", () => {
+
+        const subject = new Subject<string | undefined>();
+
+        const subscription = subject.tag("people").subscribe();
+
+        calls = [];
+
+        subject.next(undefined);
+        expect(calls).to.not.be.empty;
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
+        expect(calls[1]).to.deep.equal(["  Value =", undefined]);
+
+        subscription.unsubscribe();
     });
 
     it("should log complete", () => {
@@ -84,7 +116,7 @@ describe("LogPlugin", () => {
         const error = new Error("Boom!");
         subject.error(error);
         expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Error: Boom!; tag = people; notification = error"]);
+        expect(calls[0]).to.deep.equal(["Tag = people; notification = error"]);
         expect(calls[1]).to.deep.equal(["  Error =", error]);
     });
 
