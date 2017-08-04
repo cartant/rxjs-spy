@@ -85,7 +85,8 @@ log(tag => tag === "some-tag");
 ## More
 
 * There is an online example in this repo's [GitHub pages](https://cartant.github.io/rxjs-spy/).
-* [Debugging RxJS](https://medium.com/@cartant/debugging-rxjs-4f0340286dd3).
+* [Debugging RxJS, Part 1: Tooling](https://medium.com/@cartant/debugging-rxjs-4f0340286dd3).
+* [Debugging RxJS, Part 2: Logging](https://medium.com/@cartant/debugging-rxjs-part-2-logging-56904459f144).
 
 ## Module API
 
