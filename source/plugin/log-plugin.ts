@@ -58,7 +58,7 @@ export class LogPlugin extends BasePlugin {
     ): void {
 
         const { logger_, match_, snapshotPlugin_ } = this;
-        const { observable, subscriber } = ref;
+        const { observable, subscriber, subscription } = ref;
 
         if (matches(observable, match_)) {
             const tag = read(observable);
@@ -89,11 +89,13 @@ export class LogPlugin extends BasePlugin {
                     }
 
                     const { subscriptions } = subscriberSnapshot;
-                    logger_.groupCollapsed(`${subscriptions.length} subscription(s)`);
+                    logger_.groupCollapsed("Subscription");
                     subscriptions.forEach((subscriptionSnapshot) => {
 
-                        const { finalDestination, stackTrace } = subscriptionSnapshot;
-                        logger_.log("subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
+                        if (subscriptionSnapshot.subscription === subscription) {
+                            const { finalDestination, stackTrace } = subscriptionSnapshot;
+                            logger_.log("Root subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
+                        }
                     });
                     logger_.groupEnd();
                     logger_.groupEnd();

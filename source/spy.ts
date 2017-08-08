@@ -232,7 +232,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             subscriptions.forEach((subscriptionSnapshot) => {
 
                 const { finalDestination, stackTrace } = subscriptionSnapshot;
-                logger.log("subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
+                logger.log("Root subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
             });
             logger.groupEnd();
             logger.groupEnd();
