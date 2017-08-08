@@ -1,3 +1,10 @@
+<a name="3.1.4"></a>
+## [3.1.4](https://github.com/cartant/rxjs-spy/compare/v3.1.3...v3.1.4) (2017-08-08)
+
+### Minor Changes
+
+* **Logging:** Only `show` subscribers can have multiple relevant subscriptions; `log` subscribers will have only one relevant subscription. ([38d792c](https://github.com/cartant/rxjs-spy/commit/38d792c))
+
 <a name="3.1.3"></a>
 ## [3.1.3](https://github.com/cartant/rxjs-spy/compare/v3.1.2...v3.1.3) (2017-08-02)
 
