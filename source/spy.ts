@@ -254,13 +254,21 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     logger.groupEnd();
 }
 
-export function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void {
+export function spy({
+    plugins,
+    warning = true
+}: {
+    plugins?: Plugin[]
+    warning?: boolean
+} = {}): () => void {
 
     if (Observable.prototype.subscribe !== subscribeBase) {
         throw new Error("Already spying on Observable.prototype.subscribe.");
     }
-    /*tslint:disable-next-line:no-console*/
-    console.warn("Spying on Observable.prototype.subscribe.");
+    if (warning) {
+        /*tslint:disable-next-line:no-console*/
+        console.warn("Spying on Observable.prototype.subscribe.");
+    }
 
     Observable.prototype.subscribe = subscribeWithSpy;
 

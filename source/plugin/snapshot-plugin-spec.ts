@@ -35,7 +35,7 @@ describe("SnapshotPlugin", () => {
     beforeEach(() => {
 
         plugin = new SnapshotPlugin({ keptValues });
-        teardown = spy({ plugins: [plugin] });
+        teardown = spy({ plugins: [plugin], warning: false });
     });
 
     describe("flush", () => {

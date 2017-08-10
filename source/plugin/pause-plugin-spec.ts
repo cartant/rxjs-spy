@@ -34,7 +34,7 @@ describe("PausePlugin", () => {
         plugin = new PausePlugin("people");
         deck = plugin.deck;
 
-        teardown = spy({ plugins: [plugin] });
+        teardown = spy({ plugins: [plugin], warning: false });
         calls = [];
     });
 

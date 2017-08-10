@@ -32,7 +32,7 @@ describe("spy", () => {
         beforeEach(() => {
 
             plugin = stubPlugin();
-            teardown = spy({ plugins: [plugin] });
+            teardown = spy({ plugins: [plugin], warning: false });
         });
 
         it("should call the plugin's flush method", () => {
@@ -46,7 +46,7 @@ describe("spy", () => {
 
         it("should apply the selector to the tagged observable", () => {
 
-            teardown = spy({ plugins: [] });
+            teardown = spy({ plugins: [], warning: false });
             _let("people", (source) => source.mapTo("bob"));
 
             const values: any[] = [];
@@ -62,7 +62,7 @@ describe("spy", () => {
 
         it("should log the tagged observable", () => {
 
-            teardown = spy({ plugins: [] });
+            teardown = spy({ plugins: [], warning: false });
 
             const subject = new Subject<string>();
             let calls: any[][] = [];
@@ -91,7 +91,7 @@ describe("spy", () => {
 
         it("should log all/any tagged observables", () => {
 
-            teardown = spy({ plugins: [] });
+            teardown = spy({ plugins: [], warning: false });
 
             const subject = new Subject<string>();
             const calls: any[][] = [];
@@ -110,7 +110,7 @@ describe("spy", () => {
 
         it("should pause the tagged observable's subscriptions", () => {
 
-            teardown = spy({ plugins: [] });
+            teardown = spy({ plugins: [], warning: false });
             const deck = pause("people");
 
             const values: any[] = [];
@@ -126,7 +126,7 @@ describe("spy", () => {
 
         it("should resume upon teardown", () => {
 
-            teardown = spy({ plugins: [] });
+            teardown = spy({ plugins: [], warning: false });
             const deck = pause("people");
 
             const values: any[] = [];
@@ -148,7 +148,7 @@ describe("spy", () => {
         beforeEach(() => {
 
             plugin = stubPlugin();
-            teardown = spy({ plugins: [plugin] });
+            teardown = spy({ plugins: [plugin], warning: false });
         });
 
         it("should call the plugin subscribe/next/unsubscribe methods", () => {
@@ -307,7 +307,7 @@ describe("spy", () => {
 
         it("should show snapshotted information for the tagged observable", () => {
 
-            teardown = spy();
+            teardown = spy({ warning: false });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
@@ -324,7 +324,7 @@ describe("spy", () => {
 
         it("should show snapshotted information all/any tagged observables", () => {
 
-            teardown = spy();
+            teardown = spy({ warning: false });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
@@ -341,7 +341,7 @@ describe("spy", () => {
 
         it("should throw an error if snapshotting is not enabled", () => {
 
-            teardown = spy({ plugins: [] });
+            teardown = spy({ plugins: [], warning: false });
 
             const subject = new Subject<number>();
             const subscription = subject.tag("people").subscribe();
@@ -354,7 +354,7 @@ describe("spy", () => {
 
         it("should increment with each subscription and value, etc.", () => {
 
-            teardown = spy({ plugins: [] });
+            teardown = spy({ plugins: [], warning: false });
 
             const subject = new Subject<string>();
 

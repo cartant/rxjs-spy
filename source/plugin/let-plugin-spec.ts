@@ -28,7 +28,7 @@ describe("LetPlugin", () => {
 
         const selected = new Subject<string>();
         const plugin = new LetPlugin("people", () => selected);
-        teardown = spy({ plugins: [plugin] });
+        teardown = spy({ plugins: [plugin], warning: false });
 
         const values: any[] = [];
         const subject = new Subject<string>();
@@ -43,7 +43,7 @@ describe("LetPlugin", () => {
 
     it("should apply the selector to an already-subscribed tag's source", () => {
 
-        teardown = spy({ plugins: [] });
+        teardown = spy({ plugins: [], warning: false });
 
         const values: any[] = [];
         const subject = new Subject<string>();
