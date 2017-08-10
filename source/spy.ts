@@ -41,7 +41,7 @@ if (typeof window !== "undefined") {
 
         deck(call?: number): any {
 
-            const pausePlugins = plugins_.filter((plugin) => plugin instanceof PausePlugin) as PausePlugin[];
+            const pausePlugins = findAll(PausePlugin);
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
                 logger.group(`${pausePlugins.length} Deck(s)`);
@@ -115,11 +115,21 @@ export function debug(match: Match, ...notifications: Notification[]): () => voi
         notifications = ["complete", "error", "next", "subscribe", "unsubscribe"];
     }
 
-    const foundPlugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
     return plugin(
-        new DebugPlugin(match, notifications, foundPlugin ? foundPlugin as SnapshotPlugin : null),
+        new DebugPlugin(match, notifications, find(SnapshotPlugin)),
         `debug(${matchToString(match)})`
     );
+}
+
+export function find<T extends Plugin>(constructor: { new (...args: any[]): T }): T | null {
+
+    const found = plugins_.find((plugin) => plugin instanceof constructor);
+    return found ? found as T : null;
+}
+
+export function findAll<T extends Plugin>(constructor: { new (...args: any[]): T }): T[] {
+
+    return plugins_.filter((plugin) => plugin instanceof constructor) as T[];
 }
 
 export function flush(): void {
@@ -144,9 +154,8 @@ export function log(match: any, partialLogger?: PartialLogger): () => void {
         match = anyTagged;
     }
 
-    const foundPlugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
     return plugin(
-        new LogPlugin(match, partialLogger, foundPlugin ? foundPlugin as SnapshotPlugin : null),
+        new LogPlugin(match, partialLogger, find(SnapshotPlugin)),
         `log(${matchToString(match)})`
     );
 }
@@ -195,12 +204,11 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
         match = anyTagged;
     }
 
-    const plugin = plugins_.find((plugin) => plugin instanceof SnapshotPlugin);
-    if (!plugin) {
+    const snapshotPlugin = find(SnapshotPlugin);
+    if (!snapshotPlugin) {
         throw new Error("Snapshotting is not enabled.");
     }
 
-    const snapshotPlugin = plugin as SnapshotPlugin;
     const snapshot = snapshotPlugin.snapshotAll();
     const filtered = snapshot.observables.filter((observableSnapshot) => matches(observableSnapshot.observable, match));
     const logger = toLogger(partialLogger);
