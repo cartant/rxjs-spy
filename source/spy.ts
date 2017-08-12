@@ -210,7 +210,9 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     }
 
     const snapshot = snapshotPlugin.snapshotAll();
-    const filtered = snapshot.observables.filter((observableSnapshot) => matches(observableSnapshot.observable, match));
+    const filtered = Array
+        .from(snapshot.observables.values())
+        .filter((observableSnapshot) => matches(observableSnapshot.observable, match));
     const logger = toLogger(partialLogger);
     const snapshotGroupMethod = (filtered.length > 3) ? "groupCollapsed" : "group";
 
@@ -224,8 +226,8 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
         }
 
         const { subscribers } = observableSnapshot;
-        const subscriberGroupMethod = (subscribers.length > 3) ? "groupCollapsed" : "group";
-        logger.group(`${subscribers.length} subscriber(s)`);
+        const subscriberGroupMethod = (subscribers.size > 3) ? "groupCollapsed" : "group";
+        logger.group(`${subscribers.size} subscriber(s)`);
         subscribers.forEach((subscriberSnapshot) => {
 
             const { values, valuesFlushed } = subscriberSnapshot;
@@ -236,7 +238,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             }
 
             const { subscriptions } = subscriberSnapshot;
-            logger.groupCollapsed(`${subscriptions.length} subscription(s)`);
+            logger.groupCollapsed(`${subscriptions.size} subscription(s)`);
             subscriptions.forEach((subscriptionSnapshot) => {
 
                 const { finalDestination, stackTrace } = subscriptionSnapshot;

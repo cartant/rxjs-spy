@@ -89,15 +89,13 @@ export class LogPlugin extends BasePlugin {
                     }
 
                     const { subscriptions } = subscriberSnapshot;
-                    logger_.groupCollapsed("Subscription");
-                    subscriptions.forEach((subscriptionSnapshot) => {
-
-                        if (subscriptionSnapshot.subscription === subscription) {
-                            const { finalDestination, stackTrace } = subscriptionSnapshot;
-                            logger_.log("Root subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
-                        }
-                    });
-                    logger_.groupEnd();
+                    const subscriptionSnapshot = subscriptions.get(ref);
+                    if (subscriptionSnapshot) {
+                        logger_.groupCollapsed("Subscription");
+                        const { finalDestination, stackTrace } = subscriptionSnapshot;
+                        logger_.log("Root subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
+                        logger_.groupEnd();
+                    }
                     logger_.groupEnd();
                 }
             }

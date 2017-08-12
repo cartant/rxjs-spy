@@ -18,6 +18,7 @@ const shims = {
     "rxjs/add/operator/map": "Rx.unused",
     "rxjs/add/operator/mapTo": "Rx.unused",
     "rxjs/add/operator/materialize": "Rx.unused",
+    "rxjs/add/operator/mergeMap": "Rx.unused",
     "rxjs/add/operator/switchMap": "Rx.unused",
     "rxjs/add/operator/toArray": "Rx.unused",
     "rxjs/add/operator/toPromise": "Rx.unused",
