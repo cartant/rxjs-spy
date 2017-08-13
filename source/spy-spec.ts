@@ -10,7 +10,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
 import { Plugin } from "./plugin";
-import { flush, _let, log, pause, show, spy, tick } from "./spy";
+import { flush, _let, log, pause, show, spy } from "./spy";
+import { tick } from "./tick";
 
 import "rxjs/add/operator/mapTo";
 

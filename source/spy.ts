@@ -10,6 +10,8 @@ import { PartialObserver } from "rxjs/Observer";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
+import { detect, hook } from "./detect";
+import { Detector } from "./detector";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
 
@@ -22,9 +24,11 @@ import {
     PausePlugin,
     Plugin,
     SnapshotPlugin,
-    SubscriptionRef
+    SubscriptionRef,
+    SubscriptionSnapshot
 } from "./plugin";
 
+import { increment } from "./tick";
 import { isObservable, toSubscriber } from "./util";
 
 import "rxjs/add/operator/let";
@@ -33,7 +37,6 @@ const subscribeBase = Observable.prototype.subscribe;
 let plugins_: Plugin[] = [];
 let pluginsSubject_ = new BehaviorSubject(plugins_);
 let undos_: { name: string, teardown: () => void }[] = [];
-let tick_ = 0;
 
 if (typeof window !== "undefined") {
 
@@ -58,6 +61,11 @@ if (typeof window !== "undefined") {
         debug(...args: any[]): void {
 
             debug.apply(null, args);
+        },
+
+        detect(id: string = ""): void {
+
+            detect(id);
         },
 
         flush(): void {
@@ -281,8 +289,12 @@ export function spy({
     }
     pluginsSubject_.next(plugins_);
 
+    const detector = new Detector(find(SnapshotPlugin));
+    hook((id) => detectWithLog(id, detector));
+
     const teardown = () => {
 
+        hook(null);
         plugins_.forEach((plugin) => plugin.teardown());
         plugins_ = [];
         pluginsSubject_.next(plugins_);
@@ -295,11 +307,6 @@ export function spy({
     return teardown;
 }
 
-export function tick(): number {
-
-    return tick_;
-}
-
 export function subscribeWithoutSpy(this: Observable<any>, ...args: any[]): Subscription {
 
     const subscribePrevious = Observable.prototype.subscribe;
@@ -310,6 +317,47 @@ export function subscribeWithoutSpy(this: Observable<any>, ...args: any[]): Subs
         return Observable.prototype.subscribe.apply(this, args);
     } finally {
         Observable.prototype.subscribe = subscribePrevious;
+    }
+}
+
+function detectWithLog(id: string, detector: Detector): void {
+
+    const detected = detector.detect(id);
+    if (detected) {
+        const logger = toLogger(defaultLogger);
+        logger.group(`Possible leak detected; id = '${id}'`);
+        if (detected.subscriptions.length > detected.unsubscriptions.length) {
+            logger.group("Unbalanced subscriptions");
+            detected.subscriptions.forEach((s) => {
+                logSubscription(logger, "Subscription", s);
+            });
+            detected.unsubscriptions.forEach((s) => {
+                logSubscription(logger, "Unsubscription", s);
+            });
+            logger.groupEnd();
+        }
+        if (detected.mergeSubscriptions.length > detected.mergeUnsubscriptions.length) {
+            logger.group("Unbalanced merge subscriptions");
+            detected.mergeSubscriptions.forEach((s) => {
+                logSubscription(logger, "Subscription", s);
+            });
+            detected.mergeUnsubscriptions.forEach((s) => {
+                logSubscription(logger, "Unsubscription", s);
+            });
+            logger.groupEnd();
+        }
+        logger.groupEnd();
+    }
+
+    function logSubscription(logger: Logger, name: string, subscription: SubscriptionSnapshot): void {
+
+        logger.group("Unsubscription");
+        logger.log("Root subscribe", subscription.finalDestination ?
+            subscription.finalDestination.stackTrace :
+            subscription.stackTrace
+        );
+        logger.log("Subscribe", subscription.stackTrace);
+        logger.groupEnd();
     }
 }
 
@@ -337,7 +385,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
         complete(this: PostLetObserver): void {
 
-            ++tick_;
+            increment();
             plugins_.forEach((plugin) => plugin.beforeComplete(ref));
 
             subscriber.complete();
@@ -347,7 +395,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
         error(this: PostLetObserver, error: any): void {
 
-            ++tick_;
+            increment();
             plugins_.forEach((plugin) => plugin.beforeError(ref, error));
 
             subscriber.error(error);
@@ -357,7 +405,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
         next(this: PostLetObserver, value: any): void {
 
-            ++tick_;
+            increment();
             plugins_.forEach((plugin) => plugin.beforeNext(ref, value));
 
             subscriber.next(value);
@@ -495,7 +543,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
             postLetObserver.unsubscribed = true;
 
-            ++tick_;
+            increment();
             plugins_.forEach((plugin) => plugin.beforeUnsubscribe(ref));
 
             postLetUnsubscribe.call(postLetSubscriber);
@@ -508,7 +556,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
         }
     };
 
-    ++tick_;
+    increment();
     plugins_.forEach((plugin) => plugin.beforeSubscribe(ref));
 
     const subscription = subscribeBase.call(observable, preLetSubscriber);

@@ -6,6 +6,7 @@
 
 import "./add/operator/tag";
 
+export { detect } from "./detect";
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugin";

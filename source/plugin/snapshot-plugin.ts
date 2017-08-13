@@ -10,7 +10,7 @@ import { Subscription } from "rxjs/Subscription";
 import { get, getSync, StackFrame } from "stacktrace-js";
 import { read } from "../match";
 import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
-import { tick } from "../spy";
+import { tick } from "../tick";
 
 export { SubscriptionRef };
 
