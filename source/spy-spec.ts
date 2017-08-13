@@ -339,16 +339,6 @@ describe("spy", () => {
             expect(calls[0]).to.deep.equal(["1 snapshot(s) matching /.+/"]);
             expect(calls[1]).to.deep.equal(["  Tag = people"]);
         });
-
-        it("should throw an error if snapshotting is not enabled", () => {
-
-            teardown = spy({ plugins: [], warning: false });
-
-            const subject = new Subject<number>();
-            const subscription = subject.tag("people").subscribe();
-
-            expect(() => show("people")).to.throw(/not enabled/);
-        });
     });
 
     describe("tick", () => {

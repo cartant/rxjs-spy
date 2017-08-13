@@ -214,7 +214,9 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
 
     const snapshotPlugin = find(SnapshotPlugin);
     if (!snapshotPlugin) {
-        throw new Error("Snapshotting is not enabled.");
+        /*tslint:disable-next-line:no-console*/
+        console.warn("Snapshotting is not enabled.");
+        return;
     }
 
     const snapshot = snapshotPlugin.snapshotAll();
