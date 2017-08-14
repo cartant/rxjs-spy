@@ -69,7 +69,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     constructor({
         keptValues = 4,
-        sourceMaps = false
+        sourceMaps = true
     }: {
         keptValues?: number
         sourceMaps?: boolean
@@ -462,7 +462,7 @@ function getStackTrace(sourceMaps: boolean): StackFrame[] {
 
     const result = getSync(options());
 
-    if (sourceMaps && (typeof document !== "undefined")) {
+    if (sourceMaps && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
         get(options()).then((stackFrames) => {
             result.splice(0, result.length, ...stackFrames);
         });
