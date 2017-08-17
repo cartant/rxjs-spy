@@ -32,7 +32,7 @@
     "sinon": "^3.0.0",
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
-    "typescript": "^2.4.0",
+    "typescript": "^2.4.1 <2.5.0",
     "uglify-js": "^3.0.10"
   },
   "homepage": "https://github.com/cartant/rxjs-spy",
