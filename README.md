@@ -12,9 +12,15 @@
 
 ### Why might you need it?
 
-The compositional and sometimes-asynchronous nature of RxJS can make debugging something of a challenge. Often, the go-to debugging approach is to sprinkle `do` operators and logging throughout the codebase.
+The usual approach to debugging RxJS-based code involves sprinkling `do` operators and logging throughout composed observables. That's something that I find tedious, so I wrote this library and implemented an unobtrusive mechanism for identifying observables and logging and inspecting observable subscriptions.
 
-`rxjs-spy` seeks to address this by implementing a unobtrusive mechanism for identifying observables and by providing an API for logging and inspecting observable subscriptions.
+If you, too, are looking for a less painful RxJS debugging experience, you might find this library useful.
+
+For more detail regarding how the library works and what it can do, you can have a look at:
+
+* [Debugging RxJS, Part 1: Tooling](https://medium.com/@cartant/debugging-rxjs-4f0340286dd3).
+* [Debugging RxJS, Part 2: Logging](https://medium.com/@cartant/debugging-rxjs-part-2-logging-56904459f144).
+* There is an online example in this repo's [GitHub pages](https://cartant.github.io/rxjs-spy/).
 
 ## Install
 
@@ -81,12 +87,6 @@ log(tag => tag === "some-tag");
 ```
 
 `rxjs-spy` exposes a module API intended to be called from code and a console API - via the `rxSpy` global - intended for interactive use via the browser's console.
-
-## More
-
-* There is an online example in this repo's [GitHub pages](https://cartant.github.io/rxjs-spy/).
-* [Debugging RxJS, Part 1: Tooling](https://medium.com/@cartant/debugging-rxjs-4f0340286dd3).
-* [Debugging RxJS, Part 2: Logging](https://medium.com/@cartant/debugging-rxjs-part-2-logging-56904459f144).
 
 ## Module API
 
