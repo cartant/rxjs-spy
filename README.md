@@ -6,8 +6,6 @@
 [![devDependency Status](https://img.shields.io/david/dev/cartant/rxjs-spy.svg)](https://david-dm.org/cartant/rxjs-spy#info=devDependencies)
 [![peerDependency Status](https://img.shields.io/david/peer/cartant/rxjs-spy.svg)](https://david-dm.org/cartant/rxjs-spy#info=peerDependencies)
 
-<a target='_blank' rel='nofollow' href='https://app.codesponsor.io/link/jZB4ja6SvwGUN4ibgYVgUVYV/cartant/rxjs-spy'>  <img alt='Sponsor' width='888' height='68' src='https://app.codesponsor.io/embed/jZB4ja6SvwGUN4ibgYVgUVYV/cartant/rxjs-spy.svg' /></a>
-
 ### What is it?
 
 `rxjs-spy` is a debugging library for RxJS.
@@ -278,3 +276,5 @@ function deck(call?: number): Deck | null
 ```
 
 In the console, it's easy to forget to use a variable to capture the `Deck` returned by a call to `pause`. In those situations, you can call the `deck` method without an argument to see a list of numbered `pause` calls. Calling `deck` again, passing a call number, will return the `Deck` associated with the specified `pause` call.
+
+<a target='_blank' rel='nofollow' href='https://app.codesponsor.io/link/jZB4ja6SvwGUN4ibgYVgUVYV/cartant/rxjs-spy'>  <img alt='Sponsor' width='888' height='68' src='https://app.codesponsor.io/embed/jZB4ja6SvwGUN4ibgYVgUVYV/cartant/rxjs-spy.svg' /></a>
