@@ -17,7 +17,7 @@ export class DebugPlugin extends BasePlugin {
     private matcher_: (observable: Observable<any>, notification: Notification) => boolean;
     private snapshotPlugin_: SnapshotPlugin | null;
 
-    constructor(match: Match, notifications: Notification[], snapshotPlugin: SnapshotPlugin | null) {
+    constructor(match: Match, notifications: Notification[], snapshotPlugin: SnapshotPlugin | null = null) {
 
         super();
 
