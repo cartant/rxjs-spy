@@ -17,7 +17,7 @@ export class LogPlugin extends BasePlugin {
     private match_: Match;
     private snapshotPlugin_: SnapshotPlugin | null;
 
-    constructor(match: Match, partialLogger: PartialLogger = defaultLogger, snapshotPlugin: SnapshotPlugin | null) {
+    constructor(match: Match, partialLogger: PartialLogger = defaultLogger, snapshotPlugin: SnapshotPlugin | null = null) {
 
         super();
 
