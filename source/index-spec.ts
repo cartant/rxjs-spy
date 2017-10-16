@@ -13,4 +13,5 @@ import "./plugin/let-plugin-spec";
 import "./plugin/log-plugin-spec";
 import "./plugin/pause-plugin-spec";
 import "./plugin/snapshot-plugin-spec";
+import "./plugin/stack-trace-plugin-spec";
 import "./spy-spec";

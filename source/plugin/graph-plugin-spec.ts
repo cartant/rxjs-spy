@@ -9,7 +9,7 @@ import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import { Subject } from "rxjs/Subject";
-import { get as getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
+import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
 import { BasePlugin, SubscriptionRef } from "./plugin";
 import { spy } from "../spy";
 

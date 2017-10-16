@@ -11,3 +11,4 @@ export * from "./log-plugin";
 export * from "./pause-plugin";
 export * from "./plugin";
 export * from "./snapshot-plugin";
+export * from "./stack-trace-plugin";

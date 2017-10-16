@@ -5,7 +5,6 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { Subscriber } from "rxjs/Subscriber";
 import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
 
 const graphRefSymbol = Symbol("graphRef");
@@ -17,12 +16,12 @@ export interface GraphRef {
     sources: SubscriptionRef[];
 }
 
-export function get(ref: SubscriptionRef): GraphRef {
+export function getGraphRef(ref: SubscriptionRef): GraphRef {
 
     return ref[graphRefSymbol];
 }
 
-export function set(ref: SubscriptionRef, value: GraphRef): GraphRef {
+function setGraphRef(ref: SubscriptionRef, value: GraphRef): GraphRef {
 
     ref[graphRefSymbol] = value;
     return value;
@@ -55,7 +54,7 @@ export class GraphPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriptionRef): void {
 
-        const graphRef = set(ref, {
+        const graphRef = setGraphRef(ref, {
             destination: null,
             finalDestination: null,
             merges: [],
@@ -68,7 +67,7 @@ export class GraphPlugin extends BasePlugin {
         if ((length > 0) && (notifications_[length - 1].notification === "next")) {
 
             const { ref: destinationRef } = notifications_[length - 1];
-            const destinationGraphRef = get(destinationRef);
+            const destinationGraphRef = getGraphRef(destinationRef);
             destinationGraphRef.merges.push(ref);
             graphRef.destination = destinationRef;
             graphRef.finalDestination = destinationGraphRef.finalDestination || destinationRef;
@@ -78,7 +77,7 @@ export class GraphPlugin extends BasePlugin {
                 if (notifications_[n].notification === "subscribe") {
 
                     const { ref: destinationRef } = notifications_[length - 1];
-                    const destinationGraphRef = get(destinationRef);
+                    const destinationGraphRef = getGraphRef(destinationRef);
                     destinationGraphRef.sources.push(ref);
                     graphRef.destination = destinationRef;
                     graphRef.finalDestination = destinationGraphRef.finalDestination || destinationRef;
