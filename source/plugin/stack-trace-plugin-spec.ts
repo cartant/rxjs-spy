@@ -8,16 +8,17 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
 import { BasePlugin, SubscriptionRef } from "./plugin";
+import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
+import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 import { spy } from "../spy";
 
 import "rxjs/add/operator/map";
 
 describe("StackTracePlugin", () => {
 
-    let plugin: StackTracePlugin;
-    let subscriptionRefs: Map<Observable<any>, SubscriptionRef>;
+    let stackTracePlugin: StackTracePlugin;
+    let subscriptionRefsPlugin: SubscriptionRefsPlugin;
     let teardown: () => void;
 
     afterEach(() => {
@@ -29,13 +30,9 @@ describe("StackTracePlugin", () => {
 
     beforeEach(() => {
 
-        class SubscriptionRefsPlugin extends BasePlugin {
-            beforeSubscribe(ref: SubscriptionRef): void { subscriptionRefs.set(ref.observable, ref); }
-        }
-        subscriptionRefs = new Map<Observable<any>, SubscriptionRef>();
-
-        plugin = new StackTracePlugin();
-        teardown = spy({ plugins: [plugin, new SubscriptionRefsPlugin()], warning: false });
+        stackTracePlugin = new StackTracePlugin();
+        subscriptionRefsPlugin = new SubscriptionRefsPlugin();
+        teardown = spy({ plugins: [stackTracePlugin, subscriptionRefsPlugin], warning: false });
     });
 
     it("should determine the stack traces", () => {
@@ -44,8 +41,8 @@ describe("StackTracePlugin", () => {
         const mapped = subject.map((value) => value);
         const subscription = mapped.subscribe();
 
-        const subjectSubscriptionRef = subscriptionRefs.get(subject)!;
-        const mappedSubscriptionRef = subscriptionRefs.get(mapped)!;
+        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+        const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
 
         const subjectStackTrace = getStackTrace(subjectSubscriptionRef);
         const mappedStackTrace = getStackTrace(mappedSubscriptionRef);

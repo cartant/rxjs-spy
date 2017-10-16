@@ -11,6 +11,7 @@ import { Observer } from "rxjs/Observer";
 import { Subject } from "rxjs/Subject";
 import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
 import { BasePlugin, SubscriptionRef } from "./plugin";
+import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 import { spy } from "../spy";
 
 import "rxjs/add/observable/combineLatest";
@@ -22,8 +23,8 @@ import "../add/operator/tag";
 
 describe("GraphPlugin", () => {
 
-    let plugin: GraphPlugin;
-    let subscriptionRefs: Map<Observable<any>, SubscriptionRef>;
+    let graphPlugin: GraphPlugin;
+    let subscriptionRefsPlugin: SubscriptionRefsPlugin;
     let teardown: () => void;
 
     afterEach(() => {
@@ -35,13 +36,9 @@ describe("GraphPlugin", () => {
 
     beforeEach(() => {
 
-        class SubscriptionRefsPlugin extends BasePlugin {
-            beforeSubscribe(ref: SubscriptionRef): void { subscriptionRefs.set(ref.observable, ref); }
-        }
-        subscriptionRefs = new Map<Observable<any>, SubscriptionRef>();
-
-        plugin = new GraphPlugin();
-        teardown = spy({ plugins: [plugin, new SubscriptionRefsPlugin()], warning: false });
+        graphPlugin = new GraphPlugin();
+        subscriptionRefsPlugin = new SubscriptionRefsPlugin();
+        teardown = spy({ plugins: [graphPlugin, subscriptionRefsPlugin], warning: false });
     });
 
     it("should graph sources and destinations", () => {
@@ -50,8 +47,8 @@ describe("GraphPlugin", () => {
         const mapped = subject.map((value) => value);
         const subscription = mapped.subscribe();
 
-        const subjectSubscriptionRef = subscriptionRefs.get(subject)!;
-        const mappedSubscriptionRef = subscriptionRefs.get(mapped)!;
+        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+        const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
 
         const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
         const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
@@ -74,9 +71,9 @@ describe("GraphPlugin", () => {
         const combined = Observable.combineLatest(subject1, subject2);
         const subscription = combined.subscribe();
 
-        const subject1SubscriptionRef = subscriptionRefs.get(subject1)!;
-        const subject2SubscriptionRef = subscriptionRefs.get(subject2)!;
-        const combinedSubscriptionRef = subscriptionRefs.get(combined)!;
+        const subject1SubscriptionRef = subscriptionRefsPlugin.get(subject1);
+        const subject2SubscriptionRef = subscriptionRefsPlugin.get(subject2);
+        const combinedSubscriptionRef = subscriptionRefsPlugin.get(combined);
 
         const subject1GraphRef = getGraphRef(subject1SubscriptionRef);
         const subject2GraphRef = getGraphRef(subject2SubscriptionRef);
@@ -112,9 +109,9 @@ describe("GraphPlugin", () => {
         });
         const subscription = composed.subscribe();
 
-        const subjectSubscriptionRef = subscriptionRefs.get(subject)!;
-        const outerSubscriptionRef = subscriptionRefs.get(outer)!;
-        const composedSubscriptionRef = subscriptionRefs.get(composed)!;
+        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+        const outerSubscriptionRef = subscriptionRefsPlugin.get(outer);
+        const composedSubscriptionRef = subscriptionRefsPlugin.get(composed);
 
         const composedGraphRef = getGraphRef(composedSubscriptionRef);
         expect(composedGraphRef).to.have.property("destination", null);
@@ -127,13 +124,13 @@ describe("GraphPlugin", () => {
         subject.next(0);
 
         expect(hasNoMerges(composedGraphRef)).to.be.false;
-        expect(hasMerge(composedGraphRef, subscriptionRefs.get(merges[0])!)).to.be.true;
+        expect(hasMerge(composedGraphRef, subscriptionRefsPlugin.get(merges[0]))).to.be.true;
 
         subject.next(1);
 
         expect(hasNoMerges(composedGraphRef)).to.be.false;
-        expect(hasMerge(composedGraphRef, subscriptionRefs.get(merges[0])!)).to.be.true;
-        expect(hasMerge(composedGraphRef, subscriptionRefs.get(merges[1])!)).to.be.true;
+        expect(hasMerge(composedGraphRef, subscriptionRefsPlugin.get(merges[0]))).to.be.true;
+        expect(hasMerge(composedGraphRef, subscriptionRefsPlugin.get(merges[1]))).to.be.true;
     });
 
     it("should graph custom observables", () => {
@@ -150,9 +147,9 @@ describe("GraphPlugin", () => {
         });
         const subscription = custom.subscribe();
 
-        const inner1SubscriptionRef = subscriptionRefs.get(inner1)!;
-        const inner2SubscriptionRef = subscriptionRefs.get(inner2)!;
-        const customSubscriptionRef = subscriptionRefs.get(custom)!;
+        const inner1SubscriptionRef = subscriptionRefsPlugin.get(inner1);
+        const inner2SubscriptionRef = subscriptionRefsPlugin.get(inner2);
+        const customSubscriptionRef = subscriptionRefsPlugin.get(custom);
 
         const inner1GraphRef = getGraphRef(inner1SubscriptionRef);
         const inner2GraphRef = getGraphRef(inner2SubscriptionRef);
@@ -182,8 +179,8 @@ describe("GraphPlugin", () => {
         const mapped = subject.map((value) => value);
         const subscription = mapped.subscribe();
 
-        const subjectSubscriptionRef = subscriptionRefs.get(subject)!;
-        const mappedSubscriptionRef = subscriptionRefs.get(mapped)!;
+        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+        const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
 
         const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
         const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
@@ -201,9 +198,9 @@ describe("GraphPlugin", () => {
         const remapped = mapped.map((value) => value);
         const subscription = remapped.subscribe();
 
-        const subjectSubscriptionRef = subscriptionRefs.get(subject)!;
-        const mappedSubscriptionRef = subscriptionRefs.get(mapped)!;
-        const remappedSubscriptionRef = subscriptionRefs.get(remapped)!;
+        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+        const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+        const remappedSubscriptionRef = subscriptionRefsPlugin.get(remapped);
 
         const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
         const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
@@ -224,9 +221,9 @@ describe("GraphPlugin", () => {
         const combined = Observable.combineLatest(subject1, subject2);
         const subscription = combined.subscribe();
 
-        const subject1SubscriptionRef = subscriptionRefs.get(subject1)!;
-        const subject2SubscriptionRef = subscriptionRefs.get(subject2)!;
-        const combinedSubscriptionRef = subscriptionRefs.get(combined)!;
+        const subject1SubscriptionRef = subscriptionRefsPlugin.get(subject1);
+        const subject2SubscriptionRef = subscriptionRefsPlugin.get(subject2);
+        const combinedSubscriptionRef = subscriptionRefsPlugin.get(combined);
 
         const subject1GraphRef = getGraphRef(subject1SubscriptionRef);
         const subject2GraphRef = getGraphRef(subject2SubscriptionRef);
@@ -252,10 +249,10 @@ describe("GraphPlugin", () => {
 
         outerSubject.next(0);
 
-        const innerSubject1SubscriptionRef = subscriptionRefs.get(innerSubject1)!;
-        const innerSubject2SubscriptionRef = subscriptionRefs.get(innerSubject2)!;
-        const composed1SubscriptionRef = subscriptionRefs.get(composed1)!;
-        const composed2SubscriptionRef = subscriptionRefs.get(composed2)!;
+        const innerSubject1SubscriptionRef = subscriptionRefsPlugin.get(innerSubject1);
+        const innerSubject2SubscriptionRef = subscriptionRefsPlugin.get(innerSubject2);
+        const composed1SubscriptionRef = subscriptionRefsPlugin.get(composed1);
+        const composed2SubscriptionRef = subscriptionRefsPlugin.get(composed2);
 
         const innerSubject1GraphRef = getGraphRef(innerSubject1SubscriptionRef);
         const innerSubject2GraphRef = getGraphRef(innerSubject2SubscriptionRef);
