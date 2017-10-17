@@ -360,7 +360,7 @@ function detectWithLog(id: string, detector: Detector): void {
 
     function logSubscription(logger: Logger, name: string, subscription: SubscriptionSnapshot): void {
 
-        logger.group("Unsubscription");
+        logger.group(name);
         logger.log("Root subscribe", subscription.finalDestination ?
             subscription.finalDestination.stackTrace :
             subscription.stackTrace
