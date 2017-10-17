@@ -118,18 +118,21 @@ export class Detector {
             }
         });
 
-        const hasSubscriptions = subscriptions.length > unsubscriptions.length;
-        const hasMergeSubscriptions = mergeSubscriptions.length > mergeUnsubscriptions.length;
-
-        if (hasSubscriptions || hasMergeSubscriptions) {
-            return {
-                mergeSubscriptions,
-                mergeUnsubscriptions,
-                subscriptions: subscriptions.map((s) => s.subscriptionSnapshot),
-                unsubscriptions: unsubscriptions.map((s) => s.subscriptionSnapshot)
-            };
+        if (
+            mergeSubscriptions.length === 0 &&
+            mergeUnsubscriptions.length === 0 &&
+            subscriptions.length === 0 &&
+            unsubscriptions.length === 0
+        ) {
+            return null;
         }
-        return null;
+
+        return {
+            mergeSubscriptions,
+            mergeUnsubscriptions,
+            subscriptions: subscriptions.map((s) => s.subscriptionSnapshot),
+            unsubscriptions: unsubscriptions.map((s) => s.subscriptionSnapshot)
+        };
     }
 
     private findMergedSubscriptions_(
@@ -160,7 +163,7 @@ export class Detector {
             observableSnapshot.subscribers.forEach((subscriberSnapshot) => {
                 subscriberSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
                     const { complete, destination, error, ref } = subscriptionSnapshot;
-                    if (!complete && !error && !destination && ref.subscription) {
+                    if (!complete && !error && !destination && ref.subscription && !ref.subscription.closed) {
                         const subscriptionRecord = {
                             merges: new Map<SubscriptionRef, SubscriptionSnapshot>(),
                             subscriptionSnapshot

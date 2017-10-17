@@ -33,7 +33,7 @@ describe("detector", () => {
         detector = new Detector(find(SnapshotPlugin));
     });
 
-    it("should detect unbalanced subscriptions", () => {
+    it("should detect subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
         const source = subject.tag("source");
@@ -47,18 +47,19 @@ describe("detector", () => {
         const subscription = source.subscribe();
         subject.next();
 
-        detected = detector.detect(id);
-        expect(detected).to.not.be.null;
-        expect(detected!.subscriptions).to.have.length(1);
+        detected = detector.detect(id)!;
+        expect(detected.subscriptions).to.have.length(1);
+        expect(detected.unsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
         subject.next();
 
-        detected = detector.detect(id);
-        expect(detected).to.be.null;
+        detected = detector.detect(id)!;
+        expect(detected.subscriptions).to.be.empty;
+        expect(detected.unsubscriptions).to.have.length(1);
     });
 
-    it("should detect unbalanced merged subscriptions", () => {
+    it("should detect merged subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
         const source = subject.tag("source");
@@ -73,15 +74,16 @@ describe("detector", () => {
 
         subject.next();
 
-        detected = detector.detect(id);
-        expect(detected).to.not.be.null;
-        expect(detected!.mergeSubscriptions).to.have.length(1);
+        detected = detector.detect(id)!;
+        expect(detected.mergeSubscriptions).to.have.length(1);
+        expect(detected.mergeUnsubscriptions).to.be.empty;
 
         subject.next();
 
-        detected = detector.detect(id);
+        detected = detector.detect(id)!;
         expect(detected).to.not.be.null;
-        expect(detected!.mergeSubscriptions).to.have.length(1);
+        expect(detected.mergeSubscriptions).to.have.length(1);
+        expect(detected.mergeUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
     });

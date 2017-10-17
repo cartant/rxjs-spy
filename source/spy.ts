@@ -332,29 +332,22 @@ export function subscribeWithoutSpy(this: Observable<any>, ...args: any[]): Subs
 function detectWithLog(id: string, detector: Detector): void {
 
     const detected = detector.detect(id);
+    const logger = toLogger(defaultLogger);
+
     if (detected) {
-        const logger = toLogger(defaultLogger);
-        logger.group(`Possible leak detected; id = '${id}'`);
-        if (detected.subscriptions.length > detected.unsubscriptions.length) {
-            logger.group("Unbalanced subscriptions");
-            detected.subscriptions.forEach((s) => {
-                logSubscription(logger, "Subscription", s);
-            });
-            detected.unsubscriptions.forEach((s) => {
-                logSubscription(logger, "Unsubscription", s);
-            });
-            logger.groupEnd();
-        }
-        if (detected.mergeSubscriptions.length > detected.mergeUnsubscriptions.length) {
-            logger.group("Unbalanced merge subscriptions");
-            detected.mergeSubscriptions.forEach((s) => {
-                logSubscription(logger, "Subscription", s);
-            });
-            detected.mergeUnsubscriptions.forEach((s) => {
-                logSubscription(logger, "Unsubscription", s);
-            });
-            logger.groupEnd();
-        }
+        logger.group(`Subscription changes detected; id = '${id}'`);
+        detected.subscriptions.forEach((s) => {
+            logSubscription(logger, "Subscription", s);
+        });
+        detected.unsubscriptions.forEach((s) => {
+            logSubscription(logger, "Unsubscription", s);
+        });
+        detected.mergeSubscriptions.forEach((s) => {
+            logSubscription(logger, "Merge subscription", s);
+        });
+        detected.mergeUnsubscriptions.forEach((s) => {
+            logSubscription(logger, "Merge unsubscription", s);
+        });
         logger.groupEnd();
     }
 
