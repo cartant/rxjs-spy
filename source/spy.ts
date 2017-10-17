@@ -37,6 +37,7 @@ import { isObservable, toSubscriber } from "./util";
 import "rxjs/add/operator/let";
 
 const subscribeBase = Observable.prototype.subscribe;
+let lastSubscriptionRefId = 0;
 let plugins_: Plugin[] = [];
 let pluginsSubject_ = new BehaviorSubject(plugins_);
 let undos_: { name: string, teardown: () => void }[] = [];
@@ -376,6 +377,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
     const subscriber = toSubscriber.apply(null, args);
 
     const ref: SubscriptionRef = {
+        id: ++lastSubscriptionRefId,
         observable,
         subscriber,
         subscription: null
