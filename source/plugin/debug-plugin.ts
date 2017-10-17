@@ -8,7 +8,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Match, matches } from "../match";
-import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 
 export class DebugPlugin extends BasePlugin {
 
@@ -53,7 +53,7 @@ export class DebugPlugin extends BasePlugin {
         }
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(ref: SubscriberRef): void {
 
         const { matcher_ } = this;
         const { observable } = ref;

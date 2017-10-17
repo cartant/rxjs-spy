@@ -10,7 +10,7 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { BasePlugin, SubscriptionRef } from "./plugin";
 import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
-import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
+import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 import { spy } from "../spy";
 
 import "rxjs/add/operator/map";
@@ -18,7 +18,7 @@ import "rxjs/add/operator/map";
 describe("StackTracePlugin", () => {
 
     let stackTracePlugin: StackTracePlugin;
-    let subscriptionRefsPlugin: SubscriptionRefsPlugin;
+    let subscriberRefsPlugin: SubscriberRefsPlugin;
     let teardown: () => void;
 
     afterEach(() => {
@@ -31,8 +31,8 @@ describe("StackTracePlugin", () => {
     beforeEach(() => {
 
         stackTracePlugin = new StackTracePlugin();
-        subscriptionRefsPlugin = new SubscriptionRefsPlugin();
-        teardown = spy({ plugins: [stackTracePlugin, subscriptionRefsPlugin], warning: false });
+        subscriberRefsPlugin = new SubscriberRefsPlugin();
+        teardown = spy({ plugins: [stackTracePlugin, subscriberRefsPlugin], warning: false });
     });
 
     it("should determine the stack traces", () => {
@@ -41,8 +41,8 @@ describe("StackTracePlugin", () => {
         const mapped = subject.map((value) => value);
         const subscription = mapped.subscribe();
 
-        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
-        const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+        const subjectSubscriptionRef = subscriberRefsPlugin.get(subject);
+        const mappedSubscriptionRef = subscriberRefsPlugin.get(mapped);
 
         const subjectStackTrace = getStackTrace(subjectSubscriptionRef);
         const mappedStackTrace = getStackTrace(mappedSubscriptionRef);

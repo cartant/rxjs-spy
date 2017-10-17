@@ -9,7 +9,7 @@ import { Subscriber } from "rxjs/Subscriber";
 import { getGraphRef } from "./graph-plugin";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
 import { getStackTrace } from "./stack-trace-plugin";
 
@@ -41,7 +41,7 @@ export class LogPlugin extends BasePlugin {
         this.log_(ref, "next", value);
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(ref: SubscriberRef): void {
 
         this.log_(ref, "subscribe");
     }
@@ -52,13 +52,13 @@ export class LogPlugin extends BasePlugin {
     }
 
     private log_(
-        ref: SubscriptionRef,
+        ref: SubscriberRef,
         notification: Notification,
         param?: any
     ): void {
 
         const { logger_, match_ } = this;
-        const { observable, subscriber, subscription } = ref;
+        const { observable, subscriber } = ref;
 
         if (matches(observable, match_)) {
             const tag = read(observable);

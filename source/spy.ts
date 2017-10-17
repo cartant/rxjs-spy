@@ -373,7 +373,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
         id: ++lastSubscriptionRefId,
         observable,
         subscriber,
-        subscription: null
+        subscription: null!
     };
 
     interface PostLetObserver {

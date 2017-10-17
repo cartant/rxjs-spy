@@ -6,16 +6,16 @@
 
 import { Observable } from "rxjs/Observable";
 import { get, getSync, StackFrame } from "stacktrace-js";
-import { BasePlugin, SubscriptionRef } from "./plugin";
+import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
 
 const stackTraceSymbol = Symbol("stackTrace");
 
-export function getStackTrace(ref: SubscriptionRef): StackFrame[] {
+export function getStackTrace(ref: SubscriberRef): StackFrame[] {
 
     return ref[stackTraceSymbol];
 }
 
-function setStackTrace(ref: SubscriptionRef, value: StackFrame[]): StackFrame[] {
+function setStackTrace(ref: SubscriberRef, value: StackFrame[]): StackFrame[] {
 
     ref[stackTraceSymbol] = value;
     return value;
@@ -23,7 +23,7 @@ function setStackTrace(ref: SubscriptionRef, value: StackFrame[]): StackFrame[] 
 
 export class StackTracePlugin extends BasePlugin {
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(ref: SubscriberRef): void {
 
         const stackFrames = getSync(options());
         setStackTrace(ref, stackFrames);

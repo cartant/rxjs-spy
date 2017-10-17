@@ -5,7 +5,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 
 const graphRefSymbol = Symbol("graphRef");
 
@@ -16,12 +16,12 @@ export interface GraphRef {
     sources: SubscriptionRef[];
 }
 
-export function getGraphRef(ref: SubscriptionRef): GraphRef {
+export function getGraphRef(ref: SubscriberRef): GraphRef {
 
     return ref[graphRefSymbol];
 }
 
-function setGraphRef(ref: SubscriptionRef, value: GraphRef): GraphRef {
+function setGraphRef(ref: SubscriberRef, value: GraphRef): GraphRef {
 
     ref[graphRefSymbol] = value;
     return value;
@@ -31,7 +31,7 @@ export class GraphPlugin extends BasePlugin {
 
     private notifications_: {
         notification: Notification;
-        ref: SubscriptionRef;
+        ref: SubscriberRef;
     }[] = [];
 
     afterNext(ref: SubscriptionRef, value: any): void {
@@ -52,7 +52,7 @@ export class GraphPlugin extends BasePlugin {
         notifications_.push({ notification: "next", ref });
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(ref: SubscriberRef): void {
 
         const graphRef = setGraphRef(ref, {
             destination: null,
@@ -68,9 +68,9 @@ export class GraphPlugin extends BasePlugin {
 
             const { ref: destinationRef } = notifications_[length - 1];
             const destinationGraphRef = getGraphRef(destinationRef);
-            destinationGraphRef.merges.push(ref);
-            graphRef.destination = destinationRef;
-            graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef;
+            destinationGraphRef.merges.push(ref as SubscriptionRef);
+            graphRef.destination = destinationRef as SubscriptionRef;
+            graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef as SubscriptionRef;
 
         } else {
             for (let n = length - 1; n > -1; --n) {
@@ -78,9 +78,9 @@ export class GraphPlugin extends BasePlugin {
 
                     const { ref: destinationRef } = notifications_[length - 1];
                     const destinationGraphRef = getGraphRef(destinationRef);
-                    destinationGraphRef.sources.push(ref);
-                    graphRef.destination = destinationRef;
-                    graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef;
+                    destinationGraphRef.sources.push(ref as SubscriptionRef);
+                    graphRef.destination = destinationRef as SubscriptionRef;
+                    graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef as SubscriptionRef;
 
                     break;
                 }

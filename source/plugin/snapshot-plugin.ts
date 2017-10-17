@@ -10,7 +10,7 @@ import { Subscription } from "rxjs/Subscription";
 import { StackFrame } from "stacktrace-js";
 import { read } from "../match";
 import { getGraphRef } from "./graph-plugin";
-import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 import { getStackTrace } from "./stack-trace-plugin";
 import { tick } from "../tick";
 
@@ -26,12 +26,12 @@ export interface SnapshotRef {
     valuesFlushed: number;
 }
 
-export function getSnapshotRef(ref: SubscriptionRef): SnapshotRef {
+export function getSnapshotRef(ref: SubscriberRef): SnapshotRef {
 
     return ref[snapshotRefSymbol];
 }
 
-function setSnapshotRef(ref: SubscriptionRef, value: SnapshotRef): SnapshotRef {
+function setSnapshotRef(ref: SubscriberRef, value: SnapshotRef): SnapshotRef {
 
     ref[snapshotRefSymbol] = value;
     return value;
@@ -129,7 +129,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(ref: SubscriberRef): void {
 
         const { rootSubscriptionRefs_ } = this;
 
@@ -150,7 +150,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
 
         if (graphRef && !graphRef.rootDestination) {
-            rootSubscriptionRefs_.set(ref, true);
+            rootSubscriptionRefs_.set(ref as SubscriptionRef, true);
         }
     }
 
@@ -205,12 +205,12 @@ export class SnapshotPlugin extends BasePlugin {
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 stackTrace: getStackTrace(ref),
                 subscriber,
-                subscription: subscription!,
+                subscription,
                 tick,
                 timestamp,
                 unsubscribed
             };
-            subscriptions.set(subscription!, subscriptionSnapshot);
+            subscriptions.set(subscription, subscriptionSnapshot);
 
             let subscriberSnapshot = subscribers.get(subscriber);
             if (!subscriberSnapshot) {
@@ -223,7 +223,7 @@ export class SnapshotPlugin extends BasePlugin {
                 };
                 subscribers.set(subscriber, subscriberSnapshot);
             }
-            subscriberSnapshot.subscriptions.set(subscription!, subscriptionSnapshot);
+            subscriberSnapshot.subscriptions.set(subscription, subscriptionSnapshot);
             subscriberSnapshot.tick = Math.max(subscriberSnapshot.tick, tick);
             subscriberSnapshot.values.push(...values);
             subscriberSnapshot.valuesFlushed += valuesFlushed;
@@ -245,16 +245,16 @@ export class SnapshotPlugin extends BasePlugin {
         subscriptionRefs.forEach((unused, ref) => {
 
             const graphRef = getGraphRef(ref);
-            const subscriptionSnapshot = subscriptions.get(ref.subscription!)!;
+            const subscriptionSnapshot = subscriptions.get(ref.subscription)!;
 
             if (graphRef.destination) {
-                subscriptionSnapshot.destination = subscriptions.get(graphRef.destination.subscription!)!;
+                subscriptionSnapshot.destination = subscriptions.get(graphRef.destination.subscription)!;
             }
             if (graphRef.rootDestination) {
-                subscriptionSnapshot.rootDestination = subscriptions.get(graphRef.rootDestination.subscription!)!;
+                subscriptionSnapshot.rootDestination = subscriptions.get(graphRef.rootDestination.subscription)!;
             }
-            graphRef.merges.forEach((m) => subscriptionSnapshot.merges.set(m.subscription!, subscriptions.get(m.subscription!)!));
-            graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s.subscription!, subscriptions.get(s.subscription!)!));
+            graphRef.merges.forEach((m) => subscriptionSnapshot.merges.set(m.subscription, subscriptions.get(m.subscription)!));
+            graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s.subscription, subscriptions.get(s.subscription)!));
         });
 
         subscribers.forEach((subscriberSnapshot) => {
