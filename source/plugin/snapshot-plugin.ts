@@ -63,6 +63,7 @@ export interface SubscriptionSnapshot {
     complete: boolean;
     destination: SubscriptionSnapshot | null;
     error: any;
+    id: number;
     merges: Map<Subscription, SubscriptionSnapshot>;
     observable: Observable<any>;
     rootDestination: SubscriptionSnapshot | null;
@@ -189,7 +190,7 @@ export class SnapshotPlugin extends BasePlugin {
         const subscriptionRefs = this.getSubscriptionRefs_();
         subscriptionRefs.forEach((unused, ref) => {
 
-            const { observable, subscriber, subscription } = ref;
+            const { id, observable, subscriber, subscription } = ref;
             const snapshotRef = getSnapshotRef(ref);
             const { complete, error, tick, timestamp, unsubscribed, values, valuesFlushed } = snapshotRef;
 
@@ -197,6 +198,7 @@ export class SnapshotPlugin extends BasePlugin {
                 complete,
                 destination: null,
                 error,
+                id,
                 merges: new Map<Subscription, SubscriptionSnapshot>(),
                 observable,
                 rootDestination: null,
