@@ -113,24 +113,30 @@ describe("GraphPlugin", () => {
         const outerSubscriptionRef = subscriptionRefsPlugin.get(outer);
         const composedSubscriptionRef = subscriptionRefsPlugin.get(composed);
 
+        const outerGraphRef = getGraphRef(outerSubscriptionRef);
+        expect(outerGraphRef).to.have.property("destination", composedSubscriptionRef);
+        expect(outerGraphRef).to.have.property("sources");
+        expect(outerGraphRef.merges).to.be.empty;
+        expect(outerGraphRef.sources).to.not.be.empty;
+        expect(hasSource(outerGraphRef, subjectSubscriptionRef)).to.be.true;
+
         const composedGraphRef = getGraphRef(composedSubscriptionRef);
         expect(composedGraphRef).to.have.property("destination", null);
         expect(composedGraphRef).to.have.property("sources");
         expect(composedGraphRef.sources).to.not.be.empty;
         expect(hasSource(composedGraphRef, subjectSubscriptionRef)).to.be.true;
         expect(hasSource(composedGraphRef, outerSubscriptionRef)).to.be.true;
-        expect(hasNoMerges(composedGraphRef)).to.be.true;
 
         subject.next(0);
 
-        expect(hasNoMerges(composedGraphRef)).to.be.false;
-        expect(hasMerge(composedGraphRef, subscriptionRefsPlugin.get(merges[0]))).to.be.true;
+        expect(outerGraphRef.merges).to.not.be.empty;
+        expect(outerGraphRef.merges).to.contain(subscriptionRefsPlugin.get(merges[0]));
 
         subject.next(1);
 
-        expect(hasNoMerges(composedGraphRef)).to.be.false;
-        expect(hasMerge(composedGraphRef, subscriptionRefsPlugin.get(merges[0]))).to.be.true;
-        expect(hasMerge(composedGraphRef, subscriptionRefsPlugin.get(merges[1]))).to.be.true;
+        expect(outerGraphRef.merges).to.not.be.empty;
+        expect(outerGraphRef.merges).to.contain(subscriptionRefsPlugin.get(merges[0]));
+        expect(outerGraphRef.merges).to.contain(subscriptionRefsPlugin.get(merges[1]));
     });
 
     it("should graph custom observables", () => {
@@ -272,22 +278,6 @@ function hasDestination(graphRef: GraphRef, destinationRef: SubscriptionRef): bo
         return true;
     }
     return hasDestination(getGraphRef(graphRef.destination), destinationRef);
-}
-
-function hasMerge(graphRef: GraphRef, mergeRef: SubscriptionRef): boolean {
-
-    if (graphRef.merges.indexOf(mergeRef) !== -1) {
-        return true;
-    }
-    return graphRef.sources.some((s) => hasMerge(getGraphRef(s), mergeRef));
-}
-
-function hasNoMerges(graphRef: GraphRef): boolean {
-
-    if (graphRef.merges.length > 0) {
-        return false;
-    }
-    return graphRef.sources.every((s) => hasNoMerges(getGraphRef(s)));
 }
 
 function hasSource(graphRef: GraphRef, sourceRef: SubscriptionRef): boolean {
