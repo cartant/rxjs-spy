@@ -8,8 +8,9 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
+import { GraphPlugin } from "./graph-plugin";
 import { matches } from "../match";
-import { ObservableSnapshot, SnapshotPlugin } from "./snapshot-plugin";
+import { SnapshotPlugin, SubscriptionSnapshot } from "./snapshot-plugin";
 import { spy } from "../spy";
 import { toSubscriber } from "../util";
 
@@ -36,7 +37,7 @@ describe("SnapshotPlugin", () => {
     beforeEach(() => {
 
         plugin = new SnapshotPlugin({ keptValues });
-        teardown = spy({ plugins: [plugin], warning: false });
+        teardown = spy({ plugins: [new GraphPlugin(), plugin], warning: false });
     });
 
     describe("flush", () => {
@@ -120,7 +121,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 0);
         });
 
-        it("should flush excess values", () => {
+        it("should automatically flush excess values", () => {
 
             const subject = new Subject<number>();
             const subscription = subject.subscribe((value) => {}, (error) => {});
@@ -133,53 +134,10 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            let observableSnapshot = snapshot.observables.get(subject)!;
-            let subscriberSnapshot = get(observableSnapshot.subscribers, 0);
-            expect(subscriberSnapshot.values).to.have.length(4);
-            expect(subscriberSnapshot.valuesFlushed).to.equal(0);
-
-            plugin.flush();
-
-            snapshot = plugin.snapshotAll();
-            expect(snapshot.observables).to.have.property("size", 1);
-
-            observableSnapshot = snapshot.observables.get(subject)!;
-            subscriberSnapshot = get(observableSnapshot.subscribers, 0);
-            expect(subscriberSnapshot.values).to.have.length(keptValues);
-            expect(subscriberSnapshot.valuesFlushed).to.equal(4 - keptValues);
-        });
-
-        it("should flush unsubscribed merges", () => {
-
-            const subject = new Subject<number>();
-            const outer = subject.tag("outer");
-            const composed = outer.mergeMap((value) => Observable.of(value).tag("inner"));
-            const subscription = composed.subscribe();
-
-            let snapshot = plugin.snapshotAll();
-            let outerSnapshot = snapshot.observables.get(outer)!;
-            let outerSubscriber = get(outerSnapshot.subscribers, 0);
-            let outerSubscription = get(outerSubscriber.subscriptions, 0);
-
-            expect(outerSubscription.merges).to.have.property("size", 0);
-
-            subject.next(0);
-
-            snapshot = plugin.snapshotAll();
-            outerSnapshot = snapshot.observables.get(outer)!;
-            outerSubscriber = get(outerSnapshot.subscribers, 0);
-            outerSubscription = get(outerSubscriber.subscriptions, 0);
-
-            expect(outerSubscription.merges).to.have.property("size", 1);
-
-            plugin.flush();
-
-            snapshot = plugin.snapshotAll();
-            outerSnapshot = snapshot.observables.get(outer)!;
-            outerSubscriber = get(outerSnapshot.subscribers, 0);
-            outerSubscription = get(outerSubscriber.subscriptions, 0);
-
-            expect(outerSubscription.merges).to.have.property("size", 0);
+            let observableSnapshot = get(snapshot.observables, subject);
+            let subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
+            expect(subscriberSnapshot.values).to.have.length(2);
+            expect(subscriberSnapshot.valuesFlushed).to.equal(2);
         });
     });
 
@@ -206,25 +164,16 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.subscribers).to.have.property("size", 1);
             expect(snapshot.subscriptions).to.have.property("size", 1);
 
-            const observableSnapshot = snapshot.observables.get(subject)!;
-            expect(observableSnapshot).to.have.property("complete", false);
-            expect(observableSnapshot).to.have.property("error", null);
+            const observableSnapshot = get(snapshot.observables, subject);
             expect(observableSnapshot.subscribers).to.have.property("size", 1);
-        });
 
-        it("should clone the snapshot content", () => {
+            const subscriberSnapshot = getAt(snapshot.subscribers, 0);
+            expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
-            const subject = new Subject<number>();
-            const subscription = subject.subscribe();
-
-            const snapshot1 = plugin.snapshotAll();
-            expect(snapshot1.observables).to.have.property("size", 1);
-
-            subscription.unsubscribe();
-
-            const snapshot2 = plugin.snapshotAll();
-            expect(snapshot2.observables).to.have.property("size", 1);
-            expect(snapshot2.observables.get(subject)).to.not.equal(snapshot1.observables.get(subject));
+            const subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
+            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
         });
 
         it("should spy on unsubscriptions", () => {
@@ -235,16 +184,32 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            let observableSnapshot = snapshot.observables.get(subject)!;
+            let observableSnapshot = get(snapshot.observables, subject);
             expect(observableSnapshot.subscribers).to.have.property("size", 1);
+
+            let subscriberSnapshot = getAt(snapshot.subscribers, 0);
+            expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
+
+            let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
+            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
 
             subscription.unsubscribe();
 
             snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            observableSnapshot = snapshot.observables.get(subject)!;
-            expect(observableSnapshot.subscribers).to.have.property("size", 0);
+            observableSnapshot = get(snapshot.observables, subject);
+            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+
+            subscriberSnapshot = getAt(snapshot.subscribers, 0);
+            expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
+
+            subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
+            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
         });
 
         it("should spy on completions", () => {
@@ -255,16 +220,32 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            let observableSnapshot = snapshot.observables.get(subject)!;
-            expect(observableSnapshot).to.have.property("complete", false);
+            let observableSnapshot = get(snapshot.observables, subject);
+            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+
+            let subscriberSnapshot = getAt(snapshot.subscribers, 0);
+            expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
+
+            let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
+            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
 
             subject.complete();
 
             snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            observableSnapshot = snapshot.observables.get(subject)!;
-            expect(observableSnapshot).to.have.property("complete", true);
+            observableSnapshot = get(snapshot.observables, subject);
+            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+
+            subscriberSnapshot = getAt(snapshot.subscribers, 0);
+            expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
+
+            subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
+            expect(subscriptionSnapshot).to.have.property("complete", true);
+            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
         });
 
         it("should spy on errors", () => {
@@ -275,8 +256,16 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            let observableSnapshot = snapshot.observables.get(subject)!;
-            expect(observableSnapshot).to.have.property("error", null);
+            let observableSnapshot = get(snapshot.observables, subject);
+            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+
+            let subscriberSnapshot = getAt(snapshot.subscribers, 0);
+            expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
+
+            let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
+            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
 
             const error = new Error("Boom!");
             subject.error(error);
@@ -284,8 +273,16 @@ describe("SnapshotPlugin", () => {
             snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            observableSnapshot = snapshot.observables.get(subject)!;
-            expect(observableSnapshot).to.have.property("error", error);
+            observableSnapshot = get(snapshot.observables, subject);
+            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+
+            subscriberSnapshot = getAt(snapshot.subscribers, 0);
+            expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
+
+            subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
+            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("error", error);
+            expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
         });
 
         it("should spy on values", () => {
@@ -296,10 +293,10 @@ describe("SnapshotPlugin", () => {
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            let observableSnapshot = snapshot.observables.get(subject)!;
+            let observableSnapshot = get(snapshot.observables, subject);
             expect(observableSnapshot.subscribers).to.have.property("size", 1);
 
-            let subscriberSnapshot = get(observableSnapshot.subscribers, 0);
+            let subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
             expect(subscriberSnapshot.values).to.deep.equal([]);
 
             subject.next(1);
@@ -307,10 +304,10 @@ describe("SnapshotPlugin", () => {
             snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            observableSnapshot = snapshot.observables.get(subject)!;
+            observableSnapshot = get(snapshot.observables, subject);
             expect(observableSnapshot.subscribers).to.have.property("size", 1);
 
-            subscriberSnapshot = get(observableSnapshot.subscribers, 0);
+            subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
             expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1]);
 
             subject.next(-1);
@@ -318,10 +315,10 @@ describe("SnapshotPlugin", () => {
             snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
-            observableSnapshot = snapshot.observables.get(subject)!;
+            observableSnapshot = get(snapshot.observables, subject);
             expect(observableSnapshot.subscribers).to.have.property("size", 1);
 
-            subscriberSnapshot = get(observableSnapshot.subscribers, 0);
+            subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
             expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1, -1]);
         });
 
@@ -357,18 +354,18 @@ describe("SnapshotPlugin", () => {
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 2);
 
-            const subjectSnapshot = snapshot.observables.get(subject)!;
-            const mappedSnapshot = snapshot.observables.get(mapped)!;
+            const subjectSnapshot = get(snapshot.observables, subject);
+            const mappedSnapshot = get(snapshot.observables, mapped);
 
-            expect(subjectSnapshot).to.exist;
-            expect(subjectSnapshot.destinations).to.have.property("size", 1);
-            expect(get(subjectSnapshot.destinations, 0)).to.equal(mappedSnapshot);
-            expect(subjectSnapshot.sources).to.have.property("size", 0);
+            const subjectSubscriptionSnapshot = getAt(getAt(subjectSnapshot.subscribers, 0).subscriptions, 0);
+            const mappedSubscriptionSnapshot = getAt(getAt(mappedSnapshot.subscribers, 0).subscriptions, 0);
 
-            expect(mappedSnapshot).to.exist;
-            expect(mappedSnapshot.destinations).to.have.property("size", 0);
-            expect(mappedSnapshot.sources).to.have.property("size", 1);
-            expect(get(mappedSnapshot.sources, 0)).to.equal(subjectSnapshot);
+            expect(subjectSubscriptionSnapshot.destination).to.equal(mappedSubscriptionSnapshot);
+            expect(subjectSubscriptionSnapshot.sources).to.have.property("size", 0);
+
+            expect(mappedSubscriptionSnapshot.destination).to.equal(null);
+            expect(mappedSubscriptionSnapshot.sources).to.have.property("size", 1);
+            expect(getAt(mappedSubscriptionSnapshot.sources, 0)).to.equal(subjectSubscriptionSnapshot);
         });
 
         it("should spy on array-based sources", () => {
@@ -381,20 +378,20 @@ describe("SnapshotPlugin", () => {
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
 
-            const subject1Snapshot = snapshot.observables.get(subject1)!;
-            const subject2Snapshot = snapshot.observables.get(subject2)!;
-            const combinedSnapshot = snapshot.observables.get(combined)!;
+            const subject1Snapshot = get(snapshot.observables, subject1);
+            const subject2Snapshot = get(snapshot.observables, subject2);
+            const combinedSnapshot = get(snapshot.observables, combined);
 
-            expect(subject1Snapshot).to.exist;
-            expect(subject1Snapshot.sources).to.have.property("size", 0);
+            const subject1SubscriptionSnapshot = getAt(getAt(subject1Snapshot.subscribers, 0).subscriptions, 0);
+            const subject2SubscriptionSnapshot = getAt(getAt(subject2Snapshot.subscribers, 0).subscriptions, 0);
+            const combinedSubscriptionSnapshot = getAt(getAt(combinedSnapshot.subscribers, 0).subscriptions, 0);
 
-            expect(subject2Snapshot).to.exist;
-            expect(subject2Snapshot.sources).to.have.property("size", 0);
+            expect(subject1SubscriptionSnapshot.sources).to.have.property("size", 0);
+            expect(subject1SubscriptionSnapshot.sources).to.have.property("size", 0);
 
-            expect(combinedSnapshot).to.exist;
-            expect(combinedSnapshot.sources).to.not.have.property("size", 0);
-            expect(hasSource(combinedSnapshot, subject1)).to.be.true;
-            expect(hasSource(combinedSnapshot, subject2)).to.be.true;
+            expect(combinedSubscriptionSnapshot.sources).to.not.have.property("size", 0);
+            expect(hasSource(combinedSubscriptionSnapshot, subject1SubscriptionSnapshot)).to.be.true;
+            expect(hasSource(combinedSubscriptionSnapshot, subject2SubscriptionSnapshot)).to.be.true;
         });
 
         it("should spy on merges", () => {
@@ -405,27 +402,27 @@ describe("SnapshotPlugin", () => {
             const subscription = composed.subscribe();
 
             let snapshot = plugin.snapshotAll();
-            let outerSnapshot = snapshot.observables.get(outer)!;
-            let outerSubscriber = get(outerSnapshot.subscribers, 0);
-            let outerSubscription = get(outerSubscriber.subscriptions, 0);
+            let outerSnapshot = get(snapshot.observables, outer);
+            let outerSubscriber = getAt(outerSnapshot.subscribers, 0);
+            let outerSubscription = getAt(outerSubscriber.subscriptions, 0);
 
             expect(outerSubscription.merges).to.have.property("size", 0);
 
             subject.next(0);
 
             snapshot = plugin.snapshotAll();
-            outerSnapshot = snapshot.observables.get(outer)!;
-            outerSubscriber = get(outerSnapshot.subscribers, 0);
-            outerSubscription = get(outerSubscriber.subscriptions, 0);
+            outerSnapshot = get(snapshot.observables, outer);
+            outerSubscriber = getAt(outerSnapshot.subscribers, 0);
+            outerSubscription = getAt(outerSubscriber.subscriptions, 0);
 
             expect(outerSubscription.merges).to.have.property("size", 1);
 
             subject.next(0);
 
             snapshot = plugin.snapshotAll();
-            outerSnapshot = snapshot.observables.get(outer)!;
-            outerSubscriber = get(outerSnapshot.subscribers, 0);
-            outerSubscription = get(outerSubscriber.subscriptions, 0);
+            outerSnapshot = get(snapshot.observables, outer);
+            outerSubscriber = getAt(outerSnapshot.subscribers, 0);
+            outerSubscription = getAt(outerSubscriber.subscriptions, 0);
 
             expect(outerSubscription.merges).to.have.property("size", 2);
         });
@@ -439,20 +436,20 @@ describe("SnapshotPlugin", () => {
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 2);
 
-            const subjectSnapshot = snapshot.observables.get(subject)!;
-            const mappedSnapshot = snapshot.observables.get(mapped)!;
+            const subjectSnapshot = get(snapshot.observables, subject);
+            const mappedSnapshot = get(snapshot.observables, mapped);
 
             expect(subjectSnapshot.subscribers).to.have.property("size", 1);
             expect(mappedSnapshot.subscribers).to.have.property("size", 1);
 
-            const subjectSubscriber = get(subjectSnapshot.subscribers, 0);
-            const mappedSubscriber = get(mappedSnapshot.subscribers, 0);
+            const subjectSubscriber = getAt(subjectSnapshot.subscribers, 0);
+            const mappedSubscriber = getAt(mappedSnapshot.subscribers, 0);
 
             expect(subjectSubscriber.subscriptions).to.have.property("size", 1);
             expect(mappedSubscriber.subscriptions).to.have.property("size", 1);
 
-            const subjectSubscription = get(subjectSubscriber.subscriptions, 0);
-            const mappedSubscription = get(mappedSubscriber.subscriptions, 0);
+            const subjectSubscription = getAt(subjectSubscriber.subscriptions, 0);
+            const mappedSubscription = getAt(mappedSubscriber.subscriptions, 0);
 
             expect(subjectSubscription).to.have.property("destination", mappedSubscription);
             expect(subjectSubscription).to.have.property("finalDestination", mappedSubscription);
@@ -470,25 +467,25 @@ describe("SnapshotPlugin", () => {
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 3);
 
-            const subjectSnapshot = snapshot.observables.get(subject)!;
-            const mappedSnapshot = snapshot.observables.get(mapped)!;
-            const remappedSnapshot = snapshot.observables.get(remapped)!;
+            const subjectSnapshot = get(snapshot.observables, subject);
+            const mappedSnapshot = get(snapshot.observables, mapped);
+            const remappedSnapshot = get(snapshot.observables, remapped);
 
             expect(subjectSnapshot.subscribers).to.have.property("size", 1);
             expect(mappedSnapshot.subscribers).to.have.property("size", 1);
             expect(remappedSnapshot.subscribers).to.have.property("size", 1);
 
-            const subjectSubscriber = get(subjectSnapshot.subscribers, 0);
-            const mappedSubscriber = get(mappedSnapshot.subscribers, 0);
-            const remappedSubscriber = get(remappedSnapshot.subscribers, 0);
+            const subjectSubscriber = getAt(subjectSnapshot.subscribers, 0);
+            const mappedSubscriber = getAt(mappedSnapshot.subscribers, 0);
+            const remappedSubscriber = getAt(remappedSnapshot.subscribers, 0);
 
             expect(subjectSubscriber.subscriptions).to.have.property("size", 1);
             expect(mappedSubscriber.subscriptions).to.have.property("size", 1);
             expect(remappedSubscriber.subscriptions).to.have.property("size", 1);
 
-            const subjectSubscription = get(subjectSubscriber.subscriptions, 0);
-            const mappedSubscription = get(mappedSubscriber.subscriptions, 0);
-            const remappedSubscription = get(remappedSubscriber.subscriptions, 0);
+            const subjectSubscription = getAt(subjectSubscriber.subscriptions, 0);
+            const mappedSubscription = getAt(mappedSubscriber.subscriptions, 0);
+            const remappedSubscription = getAt(remappedSubscriber.subscriptions, 0);
 
             expect(subjectSubscription).to.have.property("destination", mappedSubscription);
             expect(subjectSubscription).to.have.property("finalDestination", remappedSubscription);
@@ -508,25 +505,25 @@ describe("SnapshotPlugin", () => {
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
 
-            const subject1Snapshot = snapshot.observables.get(subject1)!;
-            const subject2Snapshot = snapshot.observables.get(subject2)!;
-            const combinedSnapshot = snapshot.observables.get(combined)!;
+            const subject1Snapshot = get(snapshot.observables, subject1);
+            const subject2Snapshot = get(snapshot.observables, subject2);
+            const combinedSnapshot = get(snapshot.observables, combined);
 
             expect(subject1Snapshot.subscribers).to.have.property("size", 1);
             expect(subject2Snapshot.subscribers).to.have.property("size", 1);
             expect(combinedSnapshot.subscribers).to.have.property("size", 1);
 
-            const subject1Subscriber = get(subject1Snapshot.subscribers, 0);
-            const subject2Subscriber = get(subject2Snapshot.subscribers, 0);
-            const combinedSubscriber = get(combinedSnapshot.subscribers, 0);
+            const subject1Subscriber = getAt(subject1Snapshot.subscribers, 0);
+            const subject2Subscriber = getAt(subject2Snapshot.subscribers, 0);
+            const combinedSubscriber = getAt(combinedSnapshot.subscribers, 0);
 
             expect(subject1Subscriber.subscriptions).to.have.property("size", 1);
             expect(subject2Subscriber.subscriptions).to.have.property("size", 1);
             expect(combinedSubscriber.subscriptions).to.have.property("size", 1);
 
-            const subject1Subscription = get(subject1Subscriber.subscriptions, 0);
-            const subject2Subscription = get(subject2Subscriber.subscriptions, 0);
-            const combinedSubscription = get(combinedSubscriber.subscriptions, 0);
+            const subject1Subscription = getAt(subject1Subscriber.subscriptions, 0);
+            const subject2Subscription = getAt(subject2Subscriber.subscriptions, 0);
+            const combinedSubscription = getAt(combinedSubscriber.subscriptions, 0);
 
             expect(subject1Subscription).to.have.property("destination");
             expect(subject1Subscription).to.have.property("finalDestination", combinedSubscription);
@@ -551,30 +548,30 @@ describe("SnapshotPlugin", () => {
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
 
-            const composed1Snapshot = snapshot.observables.get(composed1)!;
-            const composed2Snapshot = snapshot.observables.get(composed2)!;
-            const inner1Snapshot = snapshot.observables.get(innerSubject1)!;
-            const inner2Snapshot = snapshot.observables.get(innerSubject2)!;
+            const composed1Snapshot = get(snapshot.observables, composed1);
+            const composed2Snapshot = get(snapshot.observables, composed2);
+            const inner1Snapshot = get(snapshot.observables, innerSubject1);
+            const inner2Snapshot = get(snapshot.observables, innerSubject2);
 
             expect(composed1Snapshot.subscribers).to.have.property("size", 1);
             expect(composed2Snapshot.subscribers).to.have.property("size", 1);
             expect(inner1Snapshot.subscribers).to.have.property("size", 1);
             expect(inner2Snapshot.subscribers).to.have.property("size", 1);
 
-            const composed1Subscriber = get(composed1Snapshot.subscribers, 0);
-            const composed2Subscriber = get(composed2Snapshot.subscribers, 0);
-            const inner1Subscriber = get(inner1Snapshot.subscribers, 0);
-            const inner2Subscriber = get(inner2Snapshot.subscribers, 0);
+            const composed1Subscriber = getAt(composed1Snapshot.subscribers, 0);
+            const composed2Subscriber = getAt(composed2Snapshot.subscribers, 0);
+            const inner1Subscriber = getAt(inner1Snapshot.subscribers, 0);
+            const inner2Subscriber = getAt(inner2Snapshot.subscribers, 0);
 
             expect(composed1Subscriber.subscriptions).to.have.property("size", 1);
             expect(composed2Subscriber.subscriptions).to.have.property("size", 1);
             expect(inner1Subscriber.subscriptions).to.have.property("size", 1);
             expect(inner2Subscriber.subscriptions).to.have.property("size", 1);
 
-            const composed1Subscription = get(composed1Subscriber.subscriptions, 0);
-            const composed2Subscription = get(composed2Subscriber.subscriptions, 0);
-            const inner1Subscription = get(inner1Subscriber.subscriptions, 0);
-            const inner2Subscription = get(inner2Subscriber.subscriptions, 0);
+            const composed1Subscription = getAt(composed1Subscriber.subscriptions, 0);
+            const composed2Subscription = getAt(composed2Subscriber.subscriptions, 0);
+            const inner1Subscription = getAt(inner1Subscriber.subscriptions, 0);
+            const inner2Subscription = getAt(inner2Subscriber.subscriptions, 0);
 
             expect(inner1Subscription).to.have.property("destination");
             expect(inner1Subscription).to.have.property("finalDestination", composed1Subscription);
@@ -595,10 +592,10 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.subscribers).to.have.property("size", 1);
             expect(snapshot.subscriptions).to.have.property("size", 2);
 
-            const sourceSnapshot = snapshot.observables.get(source)!;
+            const sourceSnapshot = get(snapshot.observables, source);
             expect(sourceSnapshot.subscribers).to.have.property("size", 1);
 
-            const sourceSubscriber = snapshot.subscribers.get(subscriber)!;
+            const sourceSubscriber = get(snapshot.subscribers, subscriber);
             expect(sourceSubscriber.subscriptions).to.have.property("size", 2);
         });
     });
@@ -644,19 +641,31 @@ describe("SnapshotPlugin", () => {
     });
 });
 
-function get<K, V>(map: Map<K, V>, index: number): V {
+function get<K, V>(map: Map<K, V>, key: K): V {
+
+    return map.get(key)!;
+}
+
+function getAt<K, V>(map: Map<K, V>, index: number): V {
 
     return Array.from(map.values())[index];
 }
 
-function hasSource(observableSnapshot: ObservableSnapshot, source: Observable<any>): boolean {
+function hasSource(subscriptionSnapshot: SubscriptionSnapshot, source: SubscriptionSnapshot): boolean {
 
-    if (observableSnapshot.sources.has(source)) {
+    let result = false;
+    subscriptionSnapshot.sources.forEach((s) => {
+        if (s === source) {
+            result = true;
+        }
+    });
+
+    if (result) {
         return true;
     }
-    let result = false;
-    observableSnapshot.sources.forEach((o) => {
-        if (hasSource(o, source)) {
+
+    subscriptionSnapshot.sources.forEach((s) => {
+        if (hasSource(s, source)) {
             result = true;
         }
     });

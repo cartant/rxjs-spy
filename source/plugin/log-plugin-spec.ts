@@ -29,7 +29,7 @@ describe("LogPlugin", () => {
 
         const plugin = new LogPlugin("people", {
             log(...args: any[]): void { calls.push(args); }
-        }, null);
+        });
         teardown = spy({ plugins: [plugin], warning: false });
         calls = [];
     });

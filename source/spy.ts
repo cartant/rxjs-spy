@@ -18,12 +18,15 @@ import { Match, matches, toString as matchToString } from "./match";
 import {
     DebugPlugin,
     Deck,
+    GraphPlugin,
     LetPlugin,
     LogPlugin,
     Notification,
     PausePlugin,
     Plugin,
     SnapshotPlugin,
+    StackTracePlugin,
+    SubscriberSnapshot,
     SubscriptionRef,
     SubscriptionSnapshot
 } from "./plugin";
@@ -124,7 +127,7 @@ export function debug(match: Match, ...notifications: Notification[]): () => voi
     }
 
     return plugin(
-        new DebugPlugin(match, notifications, find(SnapshotPlugin)),
+        new DebugPlugin(match, notifications),
         `debug(${matchToString(match)})`
     );
 }
@@ -163,7 +166,7 @@ export function log(match: any, partialLogger?: PartialLogger): () => void {
     }
 
     return plugin(
-        new LogPlugin(match, partialLogger, find(SnapshotPlugin)),
+        new LogPlugin(match, partialLogger),
         `log(${matchToString(match)})`
     );
 }
@@ -229,13 +232,9 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     logger.group(`${filtered.length} snapshot(s) matching ${matchToString(match)}`);
     filtered.forEach((observableSnapshot) => {
 
-        logger[snapshotGroupMethod].call(logger, `Tag = ${observableSnapshot.tag}`);
-        logger.log("State =", observableSnapshot.complete ? "complete" : observableSnapshot.error ? "error" : "incomplete");
-        if (observableSnapshot.error) {
-            logger.error("Error =", observableSnapshot.error);
-        }
-
         const { subscribers } = observableSnapshot;
+        logger[snapshotGroupMethod].call(logger, `Tag = ${observableSnapshot.tag}`);
+
         const subscriberGroupMethod = (subscribers.size > 3) ? "groupCollapsed" : "group";
         logger.group(`${subscribers.size} subscriber(s)`);
         subscribers.forEach((subscriberSnapshot) => {
@@ -251,7 +250,14 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             logger.groupCollapsed(`${subscriptions.size} subscription(s)`);
             subscriptions.forEach((subscriptionSnapshot) => {
 
-                const { finalDestination, stackTrace } = subscriptionSnapshot;
+                const { complete, error, finalDestination, stackTrace, unsubscribed } = subscriptionSnapshot;
+                logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
+                if (error) {
+                    logger.error("Error =", error);
+                }
+                if (unsubscribed) {
+                    logger.error("Unsubscribed =", true);
+                }
                 logger.log("Root subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
             });
             logger.groupEnd();
@@ -287,7 +293,7 @@ export function spy({
     if (plugins) {
         plugins_ = plugins;
     } else {
-        plugins_ = [new SnapshotPlugin()];
+        plugins_ = [new StackTracePlugin(), new GraphPlugin(), new SnapshotPlugin()];
     }
     pluginsSubject_.next(plugins_);
 

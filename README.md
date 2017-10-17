@@ -219,8 +219,6 @@ Wires up an instance of the debug plugin for matching observables.
 
 Whenever one of the specified notifications occurs, a `debugger` statement in the plugin will pause execution. If no notifications are specified in the call, execution will be paused when any of the notifications occurs.
 
-Immediately above the `debugger` statement, there is a snapshot variable - so if snapshotting is enabled, a snapshot will be available for inspection within the debugger.
-
 This method returns a teardown function.
 
 <a name="module-flush"></a>

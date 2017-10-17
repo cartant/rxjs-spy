@@ -6,24 +6,24 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
+import { getGraphRef } from "./graph-plugin";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
-import { SnapshotPlugin } from "./snapshot-plugin";
+import { getSnapshotRef } from "./snapshot-plugin";
+import { getStackTrace } from "./stack-trace-plugin";
 
 export class LogPlugin extends BasePlugin {
 
     private logger_: Logger;
     private match_: Match;
-    private snapshotPlugin_: SnapshotPlugin | null;
 
-    constructor(match: Match, partialLogger: PartialLogger = defaultLogger, snapshotPlugin: SnapshotPlugin | null = null) {
+    constructor(match: Match, partialLogger: PartialLogger = defaultLogger) {
 
         super();
 
         this.logger_ = toLogger(partialLogger);
         this.match_ = match;
-        this.snapshotPlugin_ = snapshotPlugin;
     }
 
     beforeComplete(ref: SubscriptionRef): void {
@@ -57,7 +57,7 @@ export class LogPlugin extends BasePlugin {
         param?: any
     ): void {
 
-        const { logger_, match_, snapshotPlugin_ } = this;
+        const { logger_, match_ } = this;
         const { observable, subscriber, subscription } = ref;
 
         if (matches(observable, match_)) {
@@ -76,29 +76,28 @@ export class LogPlugin extends BasePlugin {
                 logger_.groupCollapsed(`Tag = ${tag}; notification = ${notification}${matching}`);
                 break;
             }
-            if (snapshotPlugin_) {
 
-                const subscriberSnapshot = snapshotPlugin_.snapshotSubscriber(ref);
-                if (subscriberSnapshot) {
+            const graphRef = getGraphRef(ref);
+            const snapshotRef = getSnapshotRef(ref);
 
-                    const { values, valuesFlushed } = subscriberSnapshot;
-                    logger_.groupCollapsed("Subscriber");
+            if (graphRef || snapshotRef) {
+                const { values, valuesFlushed } = snapshotRef;
+                logger_.groupCollapsed("Subscriber");
+                if (snapshotRef) {
                     logger_.log("Value count =", values.length + valuesFlushed);
                     if (values.length > 0) {
                         logger_.log("Last value =", values[values.length - 1].value);
                     }
-
-                    const { subscriptions } = subscriberSnapshot;
-                    const subscriptionSnapshot = subscriptions.get(ref);
-                    if (subscriptionSnapshot) {
-                        logger_.groupCollapsed("Subscription");
-                        const { finalDestination, stackTrace } = subscriptionSnapshot;
-                        logger_.log("Root subscribe", finalDestination ? finalDestination.stackTrace : stackTrace);
-                        logger_.groupEnd();
-                    }
+                }
+                if (graphRef) {
+                    logger_.groupCollapsed("Subscription");
+                    const { finalDestination } = graphRef;
+                    logger_.log("Root subscribe", finalDestination ? getStackTrace(finalDestination) : getStackTrace(ref));
                     logger_.groupEnd();
                 }
+                logger_.groupEnd();
             }
+
             logger_.groupCollapsed("Raw observable");
             logger_.log(observable);
             logger_.groupEnd();

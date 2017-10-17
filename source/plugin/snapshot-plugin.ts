@@ -7,12 +7,37 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { get, getSync, StackFrame } from "stacktrace-js";
+import { StackFrame } from "stacktrace-js";
 import { read } from "../match";
+import { getGraphRef } from "./graph-plugin";
 import { BasePlugin, Notification, SubscriptionRef } from "./plugin";
+import { getStackTrace } from "./stack-trace-plugin";
 import { tick } from "../tick";
 
 export { SubscriptionRef };
+
+const snapshotRefSymbol = Symbol("snapshotRef");
+
+export interface SnapshotRef {
+    complete: boolean;
+    error: any;
+    tick: number;
+    timestamp: number;
+    unsubscribed: boolean;
+    values: { tick: number; timestamp: number; value: any; }[];
+    valuesFlushed: number;
+}
+
+export function getSnapshotRef(ref: SubscriptionRef): SnapshotRef {
+
+    return ref[snapshotRefSymbol];
+}
+
+function setSnapshotRef(ref: SubscriptionRef, value: SnapshotRef): SnapshotRef {
+
+    ref[snapshotRefSymbol] = value;
+    return value;
+}
 
 export interface Snapshot {
     observables: Map<Observable<any>, ObservableSnapshot>;
@@ -22,250 +47,112 @@ export interface Snapshot {
 }
 
 export interface ObservableSnapshot {
-    complete: boolean;
-    destinations: Map<Observable<any>, ObservableSnapshot>;
-    error: any;
     observable: Observable<any>;
-    sources: Map<Observable<any>, ObservableSnapshot>;
     subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
     tag: string | null;
     tick: number;
-    type: string;
 }
 
 export interface SubscriberSnapshot {
     subscriber: Subscriber<any>;
     subscriptions: Map<SubscriptionRef, SubscriptionSnapshot>;
     tick: number;
-    values: { timestamp: number; value: any; }[];
+    values: { tick: number; timestamp: number; value: any; }[];
     valuesFlushed: number;
 }
 
 export interface SubscriptionSnapshot {
+    complete: boolean;
     destination: SubscriptionSnapshot | null;
+    error: any;
     finalDestination: SubscriptionSnapshot | null;
     merges: Map<SubscriptionRef, SubscriptionSnapshot>;
+    observable: Observable<any>;
     ref: SubscriptionRef;
+    sources: Map<SubscriptionRef, SubscriptionSnapshot>;
     stackTrace: StackFrame[];
+    subscriber: Subscriber<any>;
     tick: number;
     timestamp: number;
-}
-
-interface NotificationSnapshot {
-    notification: Notification;
-    observable: ObservableSnapshot | null;
-    subscriber: SubscriberSnapshot | null;
-    subscription: SubscriptionSnapshot | null;
+    unsubscribed: any;
 }
 
 export class SnapshotPlugin extends BasePlugin {
 
+    private finalSubscriptionRefs_: Map<SubscriptionRef, boolean>;
     private keptValues_: number;
-    private observables_: Map<Observable<any>, ObservableSnapshot>;
-    private notifications_: NotificationSnapshot[];
-    private sourceMaps_: boolean;
-    private subscribers_: Map<Subscriber<any>, SubscriberSnapshot>;
-    private subscriptions_: Map<SubscriptionRef, SubscriptionSnapshot>;
 
     constructor({
-        keptValues = 4,
-        sourceMaps = true
+        keptValues = 4
     }: {
         keptValues?: number
-        sourceMaps?: boolean
     } = {}) {
 
         super();
 
+        this.finalSubscriptionRefs_ = new Map<SubscriptionRef, boolean>();
         this.keptValues_ = keptValues;
-        this.observables_ = new Map<Observable<any>, ObservableSnapshot>();
-        this.notifications_ = [];
-        this.sourceMaps_ = sourceMaps;
-        this.subscribers_ = new Map<Subscriber<any>, SubscriberSnapshot>();
-        this.subscriptions_ = new Map<SubscriptionRef, SubscriptionSnapshot>();
-    }
-
-    afterComplete(ref: SubscriptionRef): void {
-
-        const { notifications_ } = this;
-
-        const notification = notifications_.pop();
-        if (notification) {
-
-            const { observable } = notification;
-            if (observable) {
-                observable.complete = true;
-                observable.subscribers.clear();
-            }
-        }
-    }
-
-    afterError(ref: SubscriptionRef, error: any): void {
-
-        const { notifications_ } = this;
-
-        const notification = notifications_.pop();
-        if (notification) {
-
-            const { observable } = notification;
-            if (observable) {
-                observable.error = error;
-                observable.subscribers.clear();
-            }
-        }
-    }
-
-    afterNext(ref: SubscriptionRef, value: any): void {
-
-        const { notifications_ } = this;
-        notifications_.pop();
-    }
-
-    afterSubscribe(ref: SubscriptionRef): void {
-
-        const { notifications_ } = this;
-        notifications_.pop();
     }
 
     afterUnsubscribe(ref: SubscriptionRef): void {
 
-        const { notifications_ } = this;
-        const { subscriber } = ref;
-
-        const notification = notifications_.pop();
-        if (notification) {
-
-            const { observable } = notification;
-            if (observable) {
-                observable.subscribers.delete(subscriber);
-            }
-        }
+        const snapshotRef = getSnapshotRef(ref);
+        snapshotRef.tick = tick();
+        snapshotRef.unsubscribed = true;
     }
 
     beforeComplete(ref: SubscriptionRef): void {
 
-        this.push("complete", ref);
+        const snapshotRef = getSnapshotRef(ref);
+        snapshotRef.tick = tick();
+        snapshotRef.complete = true;
     }
 
     beforeError(ref: SubscriptionRef, error: any): void {
 
-        this.push("error", ref);
+        const snapshotRef = getSnapshotRef(ref);
+        snapshotRef.tick = tick();
+        snapshotRef.error = error;
     }
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        const { subscriber } = this.push("next", ref);
-        const timestamp = Date.now();
+        const t = tick();
+        const snapshotRef = getSnapshotRef(ref);
+        snapshotRef.tick = t;
+        snapshotRef.values.push({ tick: t, timestamp: Date.now(), value });
 
-        if (subscriber) {
-            subscriber.values.push({ timestamp, value });
+        const { keptValues_ } = this;
+        const count = snapshotRef.values.length - keptValues_;
+        if (count > 0) {
+            snapshotRef.values.splice(0, count);
+            snapshotRef.valuesFlushed += count;
         }
     }
 
     beforeSubscribe(ref: SubscriptionRef): void {
 
-        const { observables_, notifications_, sourceMaps_, subscribers_, subscriptions_ } = this;
-        const { observable, subscriber } = ref;
+        const { finalSubscriptionRefs_ } = this;
 
-        let observableSnapshot = observables_.get(observable);
-        if (observableSnapshot) {
-            observableSnapshot.tick = tick();
-        } else {
-            const tag = read(observable);
-            observableSnapshot = {
-                complete: false,
-                destinations: new Map<Observable<any>, ObservableSnapshot>(),
-                error: null,
-                observable,
-                sources: new Map<Observable<any>, ObservableSnapshot>(),
-                subscribers: new Map<Subscriber<any>, SubscriberSnapshot>(),
-                tag,
-                tick: tick(),
-                type: getType(observable)
-            };
-            observables_.set(observable, observableSnapshot);
-        }
-
-        let subscriberSnapshot = subscribers_.get(subscriber);
-        if (subscriberSnapshot) {
-            subscriberSnapshot.tick = tick();
-        } else {
-            subscriberSnapshot = {
-                subscriber,
-                subscriptions: new Map<SubscriptionRef, SubscriptionSnapshot>(),
-                tick: tick(),
-                values: [],
-                valuesFlushed: 0
-            };
-            subscribers_.set(subscriber, subscriberSnapshot);
-            observableSnapshot.subscribers.set(subscriber, subscriberSnapshot);
-        }
-
-        const subscriptionSnapshot: SubscriptionSnapshot = {
-            destination: null,
-            finalDestination: null,
-            merges: new Map<SubscriptionRef, SubscriptionSnapshot>(),
-            ref,
-            stackTrace: getStackTrace(sourceMaps_),
+        const snapshotRef = setSnapshotRef(ref, {
+            complete: false,
+            error: null,
             tick: tick(),
-            timestamp: Date.now()
-        };
-        subscriptions_.set(ref, subscriptionSnapshot);
-        subscriberSnapshot.subscriptions.set(ref, subscriptionSnapshot);
+            timestamp: Date.now(),
+            unsubscribed: false,
+            values: [],
+            valuesFlushed: 0
+        });
+        const graphRef = getGraphRef(ref);
 
-        const length = notifications_.length;
-        if ((length > 0) && (notifications_[length - 1].notification === "next")) {
-
-            const {
-                subscription: destinationSubscriptionSnapshot
-            } = notifications_[length - 1];
-
-            if (destinationSubscriptionSnapshot) {
-                destinationSubscriptionSnapshot.merges.set(ref, subscriptionSnapshot);
-                subscriptionSnapshot.destination = destinationSubscriptionSnapshot;
-                subscriptionSnapshot.finalDestination =
-                    destinationSubscriptionSnapshot.finalDestination || destinationSubscriptionSnapshot;
-            }
-        } else {
-            for (let n = length - 1; n > -1; --n) {
-                if (notifications_[n].notification === "subscribe") {
-
-                    const {
-                        observable: destinationObservableSnapshot,
-                        subscription: destinationSubscriptionSnapshot
-                    } = notifications_[n];
-
-                    if (destinationObservableSnapshot) {
-                        destinationObservableSnapshot.sources.set(
-                            observable,
-                            observableSnapshot
-                        );
-                        observableSnapshot.destinations.set(
-                            destinationObservableSnapshot.observable,
-                            destinationObservableSnapshot
-                        );
-                    }
-                    if (destinationSubscriptionSnapshot) {
-                        subscriptionSnapshot.destination = destinationSubscriptionSnapshot;
-                        subscriptionSnapshot.finalDestination =
-                            destinationSubscriptionSnapshot.finalDestination || destinationSubscriptionSnapshot;
-                    }
-                    break;
-                }
-            }
+        if (!graphRef) {
+            /*tslint:disable-next-line:no-console*/
+            console.warn("Graphing is not enabled.");
         }
 
-        notifications_.push({
-            notification: "subscribe",
-            observable: observableSnapshot,
-            subscriber: subscriberSnapshot,
-            subscription: subscriptionSnapshot
-        });
-    }
-
-    beforeUnsubscribe(ref: SubscriptionRef): void {
-
-        this.push("unsubscribe", ref);
+        if (graphRef && !graphRef.finalDestination) {
+            finalSubscriptionRefs_.set(ref, true);
+        }
     }
 
     flush(options?: {
@@ -277,56 +164,18 @@ export class SnapshotPlugin extends BasePlugin {
             completed: true,
             errored: true
         };
-        const { keptValues_, observables_ } = this;
+        const { finalSubscriptionRefs_ } = this;
 
-        flushObservables(this.observables_);
-        flushSubscribers(this.subscribers_);
-        flushSubscriptions(this.subscriptions_);
+        finalSubscriptionRefs_.forEach((unused, ref) => {
 
-        function flushObservables(observables: Map<Observable<any>, ObservableSnapshot>): void {
-
-            observables.forEach((o) => {
-
-                if ((completed && o.complete) || (errored && o.error)) {
-                    observables.delete(o.observable);
-                } else {
-                    flushSubscribers(o.subscribers);
-                }
-            });
-        }
-
-        function flushSubscribers(subscribers: Map<Subscriber<any>, SubscriberSnapshot>): void {
-
-            subscribers.forEach((s) => {
-
-                flushSubscriptions(s.subscriptions);
-
-                if (s.subscriptions.size === 0) {
-                    subscribers.delete(s.subscriber);
-                } else {
-                    const count = s.values.length - keptValues_;
-                    if (count > 0) {
-                        s.values.splice(0, count);
-                        s.valuesFlushed += count;
-                    }
-                }
-            });
-        }
-
-        function flushSubscriptions(subscriptions: Map<SubscriptionRef, SubscriptionSnapshot>): void {
-
-            subscriptions.forEach((s) => {
-
-                flushSubscriptions(s.merges);
-
-                const { ref } = s;
-                const { subscription } = ref;
-
-                if (subscription && subscription.closed) {
-                    subscriptions.delete(ref);
-                }
-            });
-        }
+            const snapshotRef = getSnapshotRef(ref);
+            if (completed && snapshotRef.complete) {
+                finalSubscriptionRefs_.delete(ref);
+            }
+            if (errored && snapshotRef.error) {
+                finalSubscriptionRefs_.delete(ref);
+            }
+        });
     }
 
     snapshotAll({
@@ -335,41 +184,83 @@ export class SnapshotPlugin extends BasePlugin {
         since?: Snapshot
     } = {}): Snapshot {
 
-        const { observables_, subscribers_, subscriptions_ } = this;
         const observables = new Map<Observable<any>, ObservableSnapshot>();
         const subscribers = new Map<Subscriber<any>, SubscriberSnapshot>();
         const subscriptions = new Map<SubscriptionRef, SubscriptionSnapshot>();
 
-        observables_.forEach((value, key) => {
-            observables.set(key, { ...value });
-        });
+        const subscriptionRefs = this.getSubscriptionRefs_();
+        subscriptionRefs.forEach((unused, ref) => {
 
-        subscribers_.forEach((value, key) => {
-            subscribers.set(key, { ...value, values: [...value.values] });
-        });
+            const { observable, subscriber } = ref;
 
-        subscriptions_.forEach((value, key) => {
-            subscriptions.set(key, { ...value });
-        });
+            const snapshotRef = getSnapshotRef(ref);
+            const { complete, error, tick, timestamp, unsubscribed, values, valuesFlushed } = snapshotRef;
 
-        observables.forEach((value, key) => {
-            value.destinations = map(value.destinations, observables);
-            value.sources = map(value.sources, observables);
-            value.subscribers = map(value.subscribers, subscribers);
-        });
+            const subscriptionSnapshot: SubscriptionSnapshot = {
+                complete,
+                destination: null,
+                error,
+                finalDestination: null,
+                merges: new Map<SubscriptionRef, SubscriptionSnapshot>(),
+                observable,
+                ref,
+                sources: new Map<SubscriptionRef, SubscriptionSnapshot>(),
+                stackTrace: getStackTrace(ref),
+                subscriber,
+                tick,
+                timestamp,
+                unsubscribed
+            };
+            subscriptions.set(ref, subscriptionSnapshot);
 
-        subscribers.forEach((value, key) => {
-            value.subscriptions = map(value.subscriptions, subscriptions);
-        });
-
-        subscriptions.forEach((value, key) => {
-            if (value.destination) {
-                value.destination = subscriptions.get(value.destination.ref)!;
+            let subscriberSnapshot = subscribers.get(subscriber);
+            if (!subscriberSnapshot) {
+                subscriberSnapshot = {
+                    subscriber,
+                    subscriptions: new Map<SubscriptionRef, SubscriptionSnapshot>(),
+                    tick,
+                    values: [],
+                    valuesFlushed: 0
+                };
+                subscribers.set(subscriber, subscriberSnapshot);
             }
-            if (value.finalDestination) {
-                value.finalDestination = subscriptions.get(value.finalDestination.ref)!;
+            subscriberSnapshot.subscriptions.set(ref, subscriptionSnapshot);
+            subscriberSnapshot.tick = Math.max(subscriberSnapshot.tick, tick);
+            subscriberSnapshot.values.push(...values);
+            subscriberSnapshot.valuesFlushed += valuesFlushed;
+
+            let observableSnapshot = observables.get(observable);
+            if (!observableSnapshot) {
+                observableSnapshot = {
+                    observable,
+                    subscribers: new Map<Subscriber<any>, SubscriberSnapshot>(),
+                    tag: read(observable),
+                    tick
+                };
+                observables.set(observable, observableSnapshot);
             }
-            value.merges = map(value.merges, subscriptions);
+            observableSnapshot.subscribers.set(subscriber, subscriberSnapshot);
+            observableSnapshot.tick = Math.max(observableSnapshot.tick, tick);
+        });
+
+        subscriptionRefs.forEach((unused, ref) => {
+
+            const graphRef = getGraphRef(ref);
+            const subscriptionSnapshot = subscriptions.get(ref)!;
+
+            if (graphRef.destination) {
+                subscriptionSnapshot.destination = subscriptions.get(graphRef.destination)!;
+            }
+            if (graphRef.finalDestination) {
+                subscriptionSnapshot.finalDestination = subscriptions.get(graphRef.finalDestination)!;
+            }
+            graphRef.merges.forEach((m) => subscriptionSnapshot.merges.set(m, subscriptions.get(m)!));
+            graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s, subscriptions.get(s)!));
+        });
+
+        subscribers.forEach((subscriberSnapshot) => {
+
+            subscriberSnapshot.values.sort((a, b) => a.tick - b.tick);
         });
 
         if (since !== undefined) {
@@ -413,70 +304,22 @@ export class SnapshotPlugin extends BasePlugin {
         return snapshot.subscribers.get(ref.subscriber) || null;
     }
 
-    private push(notification: Notification, ref: SubscriptionRef): NotificationSnapshot {
+    private addSubscriptionRefs_(ref: SubscriptionRef, map: Map<SubscriptionRef, boolean>): void {
 
-        const notificationSnapshot: NotificationSnapshot = {
-            notification,
-            observable: null,
-            subscriber: null,
-            subscription: null
-        };
-        const { observables_, notifications_, subscribers_, subscriptions_ } = this;
-        const { observable, subscriber } = ref;
+        map.set(ref, true);
 
-        notificationSnapshot.observable = observables_.get(observable) || null;
-        if (notificationSnapshot.observable) {
-            notificationSnapshot.observable.tick = tick();
-        }
-
-        notificationSnapshot.subscriber = subscribers_.get(subscriber) || null;
-        if (notificationSnapshot.subscriber) {
-            notificationSnapshot.subscriber.tick = tick();
-        }
-
-        notificationSnapshot.subscription = subscriptions_.get(ref) || null;
-        if (notificationSnapshot.subscription) {
-            notificationSnapshot.subscription.tick = tick();
-        }
-
-        notifications_.push(notificationSnapshot);
-        return notificationSnapshot;
+        const graphRef = getGraphRef(ref);
+        graphRef.merges.forEach((m) => this.addSubscriptionRefs_(m, map));
+        graphRef.sources.forEach((s) => this.addSubscriptionRefs_(s, map));
     }
-}
 
-function getStackTrace(sourceMaps: boolean): StackFrame[] {
+    private getSubscriptionRefs_(): Map<SubscriptionRef, boolean> {
 
-    const options = () => {
-
-        let preSubscribeWithSpy = false;
-        return {
-            filter: (stackFrame: StackFrame) => {
-                const result = preSubscribeWithSpy;
-                if (/subscribeWithSpy/.test(stackFrame.functionName)) {
-                    preSubscribeWithSpy = true;
-                }
-                return result;
-            }
-        };
-    };
-
-    const result = getSync(options());
-
-    if (sourceMaps && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-        get(options()).then((stackFrames) => {
-            result.splice(0, result.length, ...stackFrames);
-        });
+        const { finalSubscriptionRefs_ } = this;
+        const map = new Map<SubscriptionRef, boolean>();
+        finalSubscriptionRefs_.forEach((unused, ref) => this.addSubscriptionRefs_(ref, map));
+        return map;
     }
-    return result;
-}
-
-function getType(observable: Observable<any>): string {
-
-    const prototype = Object.getPrototypeOf(observable);
-    if (prototype.constructor && prototype.constructor.name) {
-        return prototype.constructor.name;
-    }
-    return "Object";
 }
 
 function map<K, V>(from: Map<K, V>, to: Map<K, V>): Map<K, V> {
