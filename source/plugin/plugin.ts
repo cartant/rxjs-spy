@@ -24,7 +24,6 @@ export interface Plugin {
 
     afterComplete(ref: SubscriptionRef): void;
     afterError(ref: SubscriptionRef, error: any): void;
-    afterError(ref: SubscriptionRef, error: any): void;
     afterNext(ref: SubscriptionRef, value: any): void;
     afterSubscribe(ref: SubscriptionRef): void;
     afterUnsubscribe(ref: SubscriptionRef): void;
