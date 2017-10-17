@@ -140,7 +140,7 @@ export class Detector {
         const { merges, subscriptionSnapshot } = subscriptionRecord;
 
         snapshot.subscriptions.forEach((s) => {
-            if (s.finalDestination === subscriptionSnapshot) {
+            if (s.rootDestination === subscriptionSnapshot) {
                 s.merges.forEach((m) => {
                     const { subscription } = m.ref;
                     if (subscription && !subscription.closed) {

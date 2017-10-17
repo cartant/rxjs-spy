@@ -11,8 +11,8 @@ const graphRefSymbol = Symbol("graphRef");
 
 export interface GraphRef {
     destination: SubscriptionRef | null;
-    finalDestination: SubscriptionRef | null;
     merges: SubscriptionRef[];
+    rootDestination: SubscriptionRef | null;
     sources: SubscriptionRef[];
 }
 
@@ -56,8 +56,8 @@ export class GraphPlugin extends BasePlugin {
 
         const graphRef = setGraphRef(ref, {
             destination: null,
-            finalDestination: null,
             merges: [],
+            rootDestination: null,
             sources: []
         });
 
@@ -70,7 +70,7 @@ export class GraphPlugin extends BasePlugin {
             const destinationGraphRef = getGraphRef(destinationRef);
             destinationGraphRef.merges.push(ref);
             graphRef.destination = destinationRef;
-            graphRef.finalDestination = destinationGraphRef.finalDestination || destinationRef;
+            graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef;
 
         } else {
             for (let n = length - 1; n > -1; --n) {
@@ -80,7 +80,7 @@ export class GraphPlugin extends BasePlugin {
                     const destinationGraphRef = getGraphRef(destinationRef);
                     destinationGraphRef.sources.push(ref);
                     graphRef.destination = destinationRef;
-                    graphRef.finalDestination = destinationGraphRef.finalDestination || destinationRef;
+                    graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef;
 
                     break;
                 }

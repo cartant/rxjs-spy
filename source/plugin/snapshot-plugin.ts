@@ -65,10 +65,10 @@ export interface SubscriptionSnapshot {
     complete: boolean;
     destination: SubscriptionSnapshot | null;
     error: any;
-    finalDestination: SubscriptionSnapshot | null;
     merges: Map<SubscriptionRef, SubscriptionSnapshot>;
     observable: Observable<any>;
     ref: SubscriptionRef;
+    rootDestination: SubscriptionSnapshot | null;
     sources: Map<SubscriptionRef, SubscriptionSnapshot>;
     stackTrace: StackFrame[];
     subscriber: Subscriber<any>;
@@ -150,7 +150,7 @@ export class SnapshotPlugin extends BasePlugin {
             console.warn("Graphing is not enabled.");
         }
 
-        if (graphRef && !graphRef.finalDestination) {
+        if (graphRef && !graphRef.rootDestination) {
             rootSubscriptionRefs_.set(ref, true);
         }
     }
@@ -200,10 +200,10 @@ export class SnapshotPlugin extends BasePlugin {
                 complete,
                 destination: null,
                 error,
-                finalDestination: null,
                 merges: new Map<SubscriptionRef, SubscriptionSnapshot>(),
                 observable,
                 ref,
+                rootDestination: null,
                 sources: new Map<SubscriptionRef, SubscriptionSnapshot>(),
                 stackTrace: getStackTrace(ref),
                 subscriber,
@@ -251,8 +251,8 @@ export class SnapshotPlugin extends BasePlugin {
             if (graphRef.destination) {
                 subscriptionSnapshot.destination = subscriptions.get(graphRef.destination)!;
             }
-            if (graphRef.finalDestination) {
-                subscriptionSnapshot.finalDestination = subscriptions.get(graphRef.finalDestination)!;
+            if (graphRef.rootDestination) {
+                subscriptionSnapshot.rootDestination = subscriptions.get(graphRef.rootDestination)!;
             }
             graphRef.merges.forEach((m) => subscriptionSnapshot.merges.set(m, subscriptions.get(m)!));
             graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s, subscriptions.get(s)!));

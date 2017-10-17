@@ -452,12 +452,12 @@ describe("SnapshotPlugin", () => {
             const mappedSubscription = getAt(mappedSubscriber.subscriptions, 0);
 
             expect(subjectSubscription).to.have.property("destination", mappedSubscription);
-            expect(subjectSubscription).to.have.property("finalDestination", mappedSubscription);
+            expect(subjectSubscription).to.have.property("rootDestination", mappedSubscription);
             expect(mappedSubscription).to.have.property("destination", null);
-            expect(mappedSubscription).to.have.property("finalDestination", null);
+            expect(mappedSubscription).to.have.property("rootDestination", null);
         });
 
-        it("should determine a subscription's final destination subscription", () => {
+        it("should determine a subscription's root destination subscription", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -488,14 +488,14 @@ describe("SnapshotPlugin", () => {
             const remappedSubscription = getAt(remappedSubscriber.subscriptions, 0);
 
             expect(subjectSubscription).to.have.property("destination", mappedSubscription);
-            expect(subjectSubscription).to.have.property("finalDestination", remappedSubscription);
+            expect(subjectSubscription).to.have.property("rootDestination", remappedSubscription);
             expect(mappedSubscription).to.have.property("destination", remappedSubscription);
-            expect(mappedSubscription).to.have.property("finalDestination", remappedSubscription);
+            expect(mappedSubscription).to.have.property("rootDestination", remappedSubscription);
             expect(remappedSubscription).to.have.property("destination", null);
-            expect(remappedSubscription).to.have.property("finalDestination", null);
+            expect(remappedSubscription).to.have.property("rootDestination", null);
         });
 
-        it("should determine final destinations for array-based sources", () => {
+        it("should determine root destinations for array-based sources", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
@@ -526,14 +526,14 @@ describe("SnapshotPlugin", () => {
             const combinedSubscription = getAt(combinedSubscriber.subscriptions, 0);
 
             expect(subject1Subscription).to.have.property("destination");
-            expect(subject1Subscription).to.have.property("finalDestination", combinedSubscription);
+            expect(subject1Subscription).to.have.property("rootDestination", combinedSubscription);
             expect(subject2Subscription).to.have.property("destination");
-            expect(subject2Subscription).to.have.property("finalDestination", combinedSubscription);
+            expect(subject2Subscription).to.have.property("rootDestination", combinedSubscription);
             expect(combinedSubscription).to.have.property("destination", null);
-            expect(combinedSubscription).to.have.property("finalDestination", null);
+            expect(combinedSubscription).to.have.property("rootDestination", null);
         });
 
-        it("should determine final destinations for merges", () => {
+        it("should determine root destinations for merges", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
@@ -574,9 +574,9 @@ describe("SnapshotPlugin", () => {
             const inner2Subscription = getAt(inner2Subscriber.subscriptions, 0);
 
             expect(inner1Subscription).to.have.property("destination");
-            expect(inner1Subscription).to.have.property("finalDestination", composed1Subscription);
+            expect(inner1Subscription).to.have.property("rootDestination", composed1Subscription);
             expect(inner2Subscription).to.have.property("destination");
-            expect(inner2Subscription).to.have.property("finalDestination", composed2Subscription);
+            expect(inner2Subscription).to.have.property("rootDestination", composed2Subscription);
         });
 
         it("should support multiple subscriptions", () => {

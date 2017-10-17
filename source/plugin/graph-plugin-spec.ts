@@ -192,12 +192,12 @@ describe("GraphPlugin", () => {
         const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
 
         expect(subjectGraphRef).to.have.property("destination", mappedSubscriptionRef);
-        expect(subjectGraphRef).to.have.property("finalDestination", mappedSubscriptionRef);
+        expect(subjectGraphRef).to.have.property("rootDestination", mappedSubscriptionRef);
         expect(mappedGraphRef).to.have.property("destination", null);
-        expect(mappedGraphRef).to.have.property("finalDestination", null);
+        expect(mappedGraphRef).to.have.property("rootDestination", null);
     });
 
-    it("should determine final destinations", () => {
+    it("should determine root destinations", () => {
 
         const subject = new Subject<number>();
         const mapped = subject.map((value) => value);
@@ -213,14 +213,14 @@ describe("GraphPlugin", () => {
         const remappedGraphRef = getGraphRef(remappedSubscriptionRef);
 
         expect(subjectGraphRef).to.have.property("destination", mappedSubscriptionRef);
-        expect(subjectGraphRef).to.have.property("finalDestination", remappedSubscriptionRef);
+        expect(subjectGraphRef).to.have.property("rootDestination", remappedSubscriptionRef);
         expect(mappedGraphRef).to.have.property("destination", remappedSubscriptionRef);
-        expect(mappedGraphRef).to.have.property("finalDestination", remappedSubscriptionRef);
+        expect(mappedGraphRef).to.have.property("rootDestination", remappedSubscriptionRef);
         expect(remappedGraphRef).to.have.property("destination", null);
-        expect(remappedGraphRef).to.have.property("finalDestination", null);
+        expect(remappedGraphRef).to.have.property("rootDestination", null);
     });
 
-    it("should determine final destinations for array-based sources", () => {
+    it("should determine root destinations for array-based sources", () => {
 
         const subject1 = new Subject<number>();
         const subject2 = new Subject<number>();
@@ -236,14 +236,14 @@ describe("GraphPlugin", () => {
         const combinedGraphRef = getGraphRef(combinedSubscriptionRef);
 
         expect(subject1GraphRef).to.have.property("destination");
-        expect(subject1GraphRef).to.have.property("finalDestination", combinedSubscriptionRef);
+        expect(subject1GraphRef).to.have.property("rootDestination", combinedSubscriptionRef);
         expect(subject2GraphRef).to.have.property("destination");
-        expect(subject2GraphRef).to.have.property("finalDestination", combinedSubscriptionRef);
+        expect(subject2GraphRef).to.have.property("rootDestination", combinedSubscriptionRef);
         expect(combinedGraphRef).to.have.property("destination", null);
-        expect(combinedGraphRef).to.have.property("finalDestination", null);
+        expect(combinedGraphRef).to.have.property("rootDestination", null);
     });
 
-    it("should determine final destinations for merges", () => {
+    it("should determine root destinations for merges", () => {
 
         const outerSubject = new Subject<number>();
         const innerSubject1 = new Subject<number>();
@@ -264,9 +264,9 @@ describe("GraphPlugin", () => {
         const innerSubject2GraphRef = getGraphRef(innerSubject2SubscriptionRef);
 
         expect(innerSubject1GraphRef).to.have.property("destination");
-        expect(innerSubject1GraphRef).to.have.property("finalDestination", composed1SubscriptionRef);
+        expect(innerSubject1GraphRef).to.have.property("rootDestination", composed1SubscriptionRef);
         expect(innerSubject2GraphRef).to.have.property("destination");
-        expect(innerSubject2GraphRef).to.have.property("finalDestination", composed2SubscriptionRef);
+        expect(innerSubject2GraphRef).to.have.property("rootDestination", composed2SubscriptionRef);
     });
 });
 
