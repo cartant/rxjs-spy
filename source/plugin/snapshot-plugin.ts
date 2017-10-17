@@ -73,7 +73,7 @@ export interface SubscriptionSnapshot {
     subscription: Subscription;
     tick: number;
     timestamp: number;
-    unsubscribed: any;
+    unsubscribed: boolean;
 }
 
 export class SnapshotPlugin extends BasePlugin {
