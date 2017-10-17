@@ -79,7 +79,7 @@ export interface SubscriptionSnapshot {
 
 export class SnapshotPlugin extends BasePlugin {
 
-    private finalSubscriptionRefs_: Map<SubscriptionRef, boolean>;
+    private rootSubscriptionRefs_: Map<SubscriptionRef, boolean>;
     private keptValues_: number;
 
     constructor({
@@ -90,7 +90,7 @@ export class SnapshotPlugin extends BasePlugin {
 
         super();
 
-        this.finalSubscriptionRefs_ = new Map<SubscriptionRef, boolean>();
+        this.rootSubscriptionRefs_ = new Map<SubscriptionRef, boolean>();
         this.keptValues_ = keptValues;
     }
 
@@ -132,7 +132,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriptionRef): void {
 
-        const { finalSubscriptionRefs_ } = this;
+        const { rootSubscriptionRefs_ } = this;
 
         const snapshotRef = setSnapshotRef(ref, {
             complete: false,
@@ -151,7 +151,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
 
         if (graphRef && !graphRef.finalDestination) {
-            finalSubscriptionRefs_.set(ref, true);
+            rootSubscriptionRefs_.set(ref, true);
         }
     }
 
@@ -164,16 +164,16 @@ export class SnapshotPlugin extends BasePlugin {
             completed: true,
             errored: true
         };
-        const { finalSubscriptionRefs_ } = this;
+        const { rootSubscriptionRefs_ } = this;
 
-        finalSubscriptionRefs_.forEach((unused, ref) => {
+        rootSubscriptionRefs_.forEach((unused, ref) => {
 
             const snapshotRef = getSnapshotRef(ref);
             if (completed && snapshotRef.complete) {
-                finalSubscriptionRefs_.delete(ref);
+                rootSubscriptionRefs_.delete(ref);
             }
             if (errored && snapshotRef.error) {
-                finalSubscriptionRefs_.delete(ref);
+                rootSubscriptionRefs_.delete(ref);
             }
         });
     }
@@ -315,9 +315,9 @@ export class SnapshotPlugin extends BasePlugin {
 
     private getSubscriptionRefs_(): Map<SubscriptionRef, boolean> {
 
-        const { finalSubscriptionRefs_ } = this;
+        const { rootSubscriptionRefs_ } = this;
         const map = new Map<SubscriptionRef, boolean>();
-        finalSubscriptionRefs_.forEach((unused, ref) => this.addSubscriptionRefs_(ref, map));
+        rootSubscriptionRefs_.forEach((unused, ref) => this.addSubscriptionRefs_(ref, map));
         return map;
     }
 }
