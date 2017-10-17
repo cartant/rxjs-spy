@@ -11,7 +11,6 @@ import {
     Snapshot,
     SnapshotPlugin,
     SubscriberSnapshot,
-    SubscriptionRef,
     SubscriptionSnapshot
 } from "./plugin/snapshot-plugin";
 
@@ -27,12 +26,12 @@ interface DetectorRecord {
 }
 
 interface SnapshotRecord {
-    rootSubscriptions: Map<SubscriptionRef, SubscriptionRecord>;
+    rootSubscriptions: Map<Subscription, SubscriptionRecord>;
     snapshot: Snapshot;
 }
 
 interface SubscriptionRecord {
-    merges: Map<SubscriptionRef, SubscriptionSnapshot>;
+    merges: Map<Subscription, SubscriptionSnapshot>;
     subscriptionSnapshot: SubscriptionSnapshot;
 }
 
@@ -145,9 +144,9 @@ export class Detector {
         snapshot.subscriptions.forEach((s) => {
             if (s.rootDestination === subscriptionSnapshot) {
                 s.merges.forEach((m) => {
-                    const { subscription } = m.ref;
-                    if (subscription && !subscription.closed) {
-                        merges.set(m.ref, m);
+                    const { subscription } = m;
+                    if (!subscription.closed) {
+                        merges.set(subscription, m);
                     }
                 });
             }
@@ -156,20 +155,20 @@ export class Detector {
 
     private findRootSubscriptions_(
         snapshot: Snapshot,
-        rootSubscriptions: Map<SubscriptionRef, SubscriptionRecord>
+        rootSubscriptions: Map<Subscription, SubscriptionRecord>
     ): void {
 
         snapshot.observables.forEach((observableSnapshot) => {
             observableSnapshot.subscribers.forEach((subscriberSnapshot) => {
                 subscriberSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
-                    const { complete, destination, error, ref } = subscriptionSnapshot;
-                    if (!complete && !error && !destination && ref.subscription && !ref.subscription.closed) {
+                    const { complete, destination, error, subscription } = subscriptionSnapshot;
+                    if (!complete && !error && !destination && !subscription.closed) {
                         const subscriptionRecord = {
-                            merges: new Map<SubscriptionRef, SubscriptionSnapshot>(),
+                            merges: new Map<Subscription, SubscriptionSnapshot>(),
                             subscriptionSnapshot
                         };
                         this.findMergedSubscriptions_(snapshot, subscriptionRecord);
-                        rootSubscriptions.set(ref, subscriptionRecord);
+                        rootSubscriptions.set(subscription, subscriptionRecord);
                     }
                 });
             });
@@ -178,7 +177,7 @@ export class Detector {
 
     private record_(snapshot: Snapshot): SnapshotRecord {
 
-        const rootSubscriptions = new Map<SubscriptionRef, SubscriptionRecord>();
+        const rootSubscriptions = new Map<Subscription, SubscriptionRecord>();
         this.findRootSubscriptions_(snapshot, rootSubscriptions);
 
         return { rootSubscriptions, snapshot };
