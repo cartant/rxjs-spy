@@ -11,8 +11,8 @@
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-2.2.43.tgz#03c54589c43ad048cbcbfd63999b55d0424eec27"
 
 "@types/node@^8.0.0":
-  version "8.0.40"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.40.tgz#260f0440db0643f034c9103bba0be777ce25317c"
+  version "8.0.41"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.41.tgz#b88d23b454fdbcfd170f61de88a33ec9cd98960a"
 
 "@types/sinon@^2.0.0":
   version "2.3.6"
