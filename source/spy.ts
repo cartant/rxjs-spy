@@ -18,6 +18,7 @@ import { Match, matches, toString as matchToString } from "./match";
 import {
     DebugPlugin,
     Deck,
+    DevToolsPlugin,
     GraphPlugin,
     LetPlugin,
     LogPlugin,
@@ -294,7 +295,12 @@ export function spy({
     if (plugins) {
         plugins_ = plugins;
     } else {
-        plugins_ = [new StackTracePlugin(), new GraphPlugin(), new SnapshotPlugin()];
+        plugins_ = [
+            new StackTracePlugin(),
+            new GraphPlugin(),
+            new SnapshotPlugin(),
+            new DevToolsPlugin()
+        ];
     }
     pluginsSubject_.next(plugins_);
 
