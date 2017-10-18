@@ -103,6 +103,16 @@ function toMessage(messageRef: MessageRef): any {
         notification,
         stackTrace: getStackTrace(ref) || null,
         tag: read(observable) || null,
+        type: toType(observable),
         value
     };
+}
+
+function toType(observable: Observable<any>): string {
+
+    const prototype = Object.getPrototypeOf(observable);
+    if (prototype.constructor && prototype.constructor.name) {
+        return prototype.constructor.name;
+    }
+    return "Object";
 }
