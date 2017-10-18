@@ -23,7 +23,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeComplete(ref: SubscriptionRef): void {
 
-        sendMessage({
+        postMessage({
             notification: "complete",
             ref
         });
@@ -31,7 +31,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeError(ref: SubscriptionRef, error: any): void {
 
-        sendMessage({
+        postMessage({
             error,
             notification: "error",
             ref
@@ -40,7 +40,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        sendMessage({
+        postMessage({
             notification: "next",
             ref,
             value
@@ -49,7 +49,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        sendMessage({
+        postMessage({
             notification: "subscribe",
             ref
         });
@@ -57,14 +57,14 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeUnsubscribe(ref: SubscriptionRef): void {
 
-        sendMessage({
+        postMessage({
             notification: "unsubscribe",
             ref
         });
     }
 }
 
-function sendMessage(messageRef: MessageRef): void {
+function postMessage(messageRef: MessageRef): void {
 
     if ((typeof window !== "undefined") && (typeof window.postMessage === "function")) {
         window.postMessage({
