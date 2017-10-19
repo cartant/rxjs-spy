@@ -91,10 +91,7 @@ export class DevToolsPlugin extends BasePlugin {
 function postMessage(messageRef: MessageRef): void {
 
     if ((typeof window !== "undefined") && (typeof window.postMessage === "function")) {
-        window.postMessage({
-            message: toMessage(messageRef),
-            source: "rxjs-spy"
-        }, "*");
+        window.postMessage(toMessage(messageRef), "*");
     }
 }
 
@@ -125,6 +122,7 @@ function toMessage(messageRef: MessageRef): any {
         graph: toGraph(ref),
         id,
         notification: `${prefix}-${notification}`,
+        source: "rxjs-spy",
         stackTrace: getStackTrace(ref) || null,
         tag: read(observable) || null,
         type: toType(observable),
