@@ -15,16 +15,36 @@ import { getStackTrace } from "./stack-trace-plugin";
 interface MessageRef {
     error?: any;
     notification: Notification;
+    prefix: "after" | "before";
     ref: SubscriberRef;
     value?: any;
 }
 
 export class DevToolsPlugin extends BasePlugin {
 
+    afterSubscribe(ref: SubscriptionRef): void {
+
+        postMessage({
+            notification: "subscribe",
+            prefix: "after",
+            ref
+        });
+    }
+
+    afterUnsubscribe(ref: SubscriptionRef): void {
+
+        postMessage({
+            notification: "unsubscribe",
+            prefix: "after",
+            ref
+        });
+    }
+
     beforeComplete(ref: SubscriptionRef): void {
 
         postMessage({
             notification: "complete",
+            prefix: "before",
             ref
         });
     }
@@ -34,6 +54,7 @@ export class DevToolsPlugin extends BasePlugin {
         postMessage({
             error,
             notification: "error",
+            prefix: "before",
             ref
         });
     }
@@ -42,6 +63,7 @@ export class DevToolsPlugin extends BasePlugin {
 
         postMessage({
             notification: "next",
+            prefix: "before",
             ref,
             value
         });
@@ -51,6 +73,7 @@ export class DevToolsPlugin extends BasePlugin {
 
         postMessage({
             notification: "subscribe",
+            prefix: "before",
             ref
         });
     }
@@ -59,6 +82,7 @@ export class DevToolsPlugin extends BasePlugin {
 
         postMessage({
             notification: "unsubscribe",
+            prefix: "before",
             ref
         });
     }
@@ -93,14 +117,14 @@ function toGraph(subscriberRef: SubscriberRef): any {
 
 function toMessage(messageRef: MessageRef): any {
 
-    const { error, notification, ref, value } = messageRef;
+    const { error, notification, prefix, ref, value } = messageRef;
     const { id, observable } = ref;
 
     return {
         error,
         graph: toGraph(ref),
         id,
-        notification,
+        notification: `${prefix}-${notification}`,
         stackTrace: getStackTrace(ref) || null,
         tag: read(observable) || null,
         type: toType(observable),
