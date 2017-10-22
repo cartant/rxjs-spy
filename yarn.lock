@@ -80,8 +80,8 @@ ajv@^4.9.1:
     json-stable-stringify "^1.0.1"
 
 ajv@^5.2.0, ajv@^5.2.3:
-  version "5.2.3"
-  resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.2.3.tgz#c06f598778c44c6b161abafe3466b81ad1814ed2"
+  version "5.2.4"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.2.4.tgz#3daf9a8b67221299fdae8d82d117ed8e6c80244b"
   dependencies:
     co "^4.6.0"
     fast-deep-equal "^1.0.0"
@@ -1621,8 +1621,8 @@ ieee754@^1.1.4:
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.1.8.tgz#be33d40ac10ef1926701f6f08a2d86fbfd1ad3e4"
 
 ignore@^3.3.3:
-  version "3.3.5"
-  resolved "https://registry.yarnpkg.com/ignore/-/ignore-3.3.5.tgz#c4e715455f6073a8d7e5dae72d2fc9d71663dba6"
+  version "3.3.6"
+  resolved "https://registry.yarnpkg.com/ignore/-/ignore-3.3.6.tgz#b6f3196b38ed92f0c86e52f6f79b7fc4c8266c8d"
 
 imurmurhash@^0.1.4:
   version "0.1.4"
@@ -1903,9 +1903,9 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
-just-extend@1.1.22, just-extend@^1.1.22:
-  version "1.1.22"
-  resolved "https://registry.yarnpkg.com/just-extend/-/just-extend-1.1.22.tgz#3330af756cab6a542700c64b2e4e4aa062d52fff"
+just-extend@^1.1.22:
+  version "1.1.26"
+  resolved "https://registry.yarnpkg.com/just-extend/-/just-extend-1.1.26.tgz#dba4ad2786d319f1d10afab106e004b5a0851ac2"
 
 karma-chrome-launcher@^2.0.0:
   version "2.2.0"

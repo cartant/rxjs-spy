@@ -57,9 +57,7 @@
     "type": "git",
     "url": "https://github.com/cartant/rxjs-spy.git"
   },
-  "resolutions": {
-    "just-extend": "1.1.22"
-  },
+  "resolutions": {},
   "scripts": {
     "dist": "yarn run dist:build && yarn run dist:uglify && yarn run dist:copy",
     "dist:build": "yarn run dist:clean && tsc -p tsconfig-dist.json && node scripts/bundle-dist.js",
