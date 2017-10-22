@@ -5,7 +5,6 @@
   },
   "dependencies": {
     "@types/stacktrace-js": "^0.0.32",
-    "puppeteer": "^0.12.0",
     "stacktrace-js": "^2.0.0"
   },
   "description": "A debugging library for RxJS",
@@ -26,6 +25,7 @@
     "karma-spec-reporter": "^0.0.31",
     "mkdirp": "^0.5.1",
     "mocha": "^4.0.0",
+    "puppeteer": "^0.12.0",
     "rimraf": "^2.6.1",
     "rxjs": "^5.4.2",
     "rxjs-tslint-rules": "^3.0.0",
