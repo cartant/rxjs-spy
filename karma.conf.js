@@ -1,11 +1,13 @@
 "use strict";
 
+process.env.CHROME_BIN = require("puppeteer").executablePath();
+
 exports = module.exports = function (config) {
 
     config.set({
         autoWatch: false,
         basePath: "",
-        browsers: ["PhantomJS"],
+        browsers: ["ChromeHeadless"],
         colors: true,
         concurrency: Infinity,
         exclude: [],

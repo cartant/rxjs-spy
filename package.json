@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "@types/stacktrace-js": "^0.0.32",
+    "puppeteer": "^0.12.0",
     "stacktrace-js": "^2.0.0"
   },
   "description": "A debugging library for RxJS",
@@ -22,7 +23,6 @@
     "karma": "^1.6.0",
     "karma-chrome-launcher": "^2.0.0",
     "karma-mocha": "^1.3.0",
-    "karma-phantomjs-launcher": "^1.0.4",
     "karma-spec-reporter": "^0.0.31",
     "mkdirp": "^0.5.1",
     "mocha": "^4.0.0",
@@ -56,6 +56,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/cartant/rxjs-spy.git"
+  },
+  "resolutions": {
+    "just-extend": "1.1.22"
   },
   "scripts": {
     "dist": "yarn run dist:build && yarn run dist:uglify && yarn run dist:copy",
