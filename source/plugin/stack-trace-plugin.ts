@@ -8,16 +8,27 @@ import { Observable } from "rxjs/Observable";
 import { get, getSync, StackFrame } from "stacktrace-js";
 import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
 
-const stackTraceSymbol = Symbol("stackTrace");
+const stackTraceRefSymbol = Symbol("stackTraceRef");
+
+export interface StackTraceRef {
+    sourceMapsResolved: Promise<void>;
+    stackTrace: StackFrame[];
+}
 
 export function getStackTrace(ref: SubscriberRef): StackFrame[] {
 
-    return ref[stackTraceSymbol];
+    const stackTraceRef = getStackTraceRef(ref);
+    return stackTraceRef ? stackTraceRef.stackTrace : [];
 }
 
-function setStackTrace(ref: SubscriberRef, value: StackFrame[]): StackFrame[] {
+export function getStackTraceRef(ref: SubscriberRef): StackTraceRef {
 
-    ref[stackTraceSymbol] = value;
+    return ref[stackTraceRefSymbol];
+}
+
+function setStackTraceRef(ref: SubscriberRef, value: StackTraceRef): StackTraceRef {
+
+    ref[stackTraceRefSymbol] = value;
     return value;
 }
 
@@ -25,12 +36,16 @@ export class StackTracePlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        const stackFrames = getSync(options());
-        setStackTrace(ref, stackFrames);
+        const stackTraceRef: StackTraceRef = {
+            sourceMapsResolved: Promise.resolve(),
+            stackTrace: getSync(options())
+        };
+        setStackTraceRef(ref, stackTraceRef);
 
         if ((typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            get(options()).then((sourceMappedFrames) => {
-                stackFrames.splice(0, stackFrames.length, ...sourceMappedFrames);
+            stackTraceRef.sourceMapsResolved = get(options()).then((stackFrames) => {
+                const { stackTrace } = stackTraceRef;
+                stackTrace.splice(0, stackTrace.length, ...stackFrames);
             });
         }
     }

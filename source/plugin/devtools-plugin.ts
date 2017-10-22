@@ -10,7 +10,7 @@ import { Subscriber } from "rxjs/Subscriber";
 import { getGraphRef } from "./graph-plugin";
 import { read } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
-import { getStackTrace } from "./stack-trace-plugin";
+import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 
 interface MessageRef {
     error?: any;
@@ -91,7 +91,16 @@ export class DevToolsPlugin extends BasePlugin {
 function postMessage(messageRef: MessageRef): void {
 
     if ((typeof window !== "undefined") && (typeof window.postMessage === "function")) {
-        window.postMessage(toMessage(messageRef), "*");
+
+        const post = () => window.postMessage(toMessage(messageRef), "*");
+        const { ref } = messageRef;
+        const stackTraceRef = getStackTraceRef(ref);
+
+        if (stackTraceRef) {
+            stackTraceRef.sourceMapsResolved.then(post);
+        } else {
+            post();
+        }
     }
 }
 
