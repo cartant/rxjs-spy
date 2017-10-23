@@ -101,6 +101,9 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 * [debug](#module-debug)
 * [flush](#module-flush)
 * [plugin](#module-plugin)
+* [find](#module-find)
+* [findAll](#module-findAll)
+* [detect](#module-detect)
 
 <a name="module-spy"></a>
 
@@ -242,6 +245,42 @@ function plugin(plugin: Plugin, name: string): () => void
 ```
 
 Wires up the specified plugin and returns a teardown function.
+
+<a name="module-find"></a>
+
+### find
+
+```ts
+function find<T extends Plugin>(constructor: { new (...args: any[]): T }): T | null
+```
+
+Returns the first plugin matching the specified constructor/class.
+
+<a name="module-findAll"></a>
+
+### findAll
+
+```ts
+function findAll<T extends Plugin>(constructor: { new (...args: any[]): T }): T[]
+```
+
+Returns all plugins matching the specified constructor/class.
+
+<a name="module-detect"></a>
+
+### detect
+
+```ts
+function detect(id: string): void
+```
+
+Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `detect` call with the specified `id`.
+
+The `detect` method is implemented so that it can be imported and called regardless of whether or not the spy is configured. That is, calls can be left in production code, as they become no-ops. It should be imported like this:
+
+```ts
+import { detect } from "rxjs-spy/detect";
+```
 
 ## Console API
 
