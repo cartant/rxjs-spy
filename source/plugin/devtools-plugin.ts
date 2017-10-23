@@ -93,8 +93,7 @@ function postMessage(messageRef: MessageRef): void {
     if ((typeof window !== "undefined") && (typeof window.postMessage === "function")) {
 
         const post = () => window.postMessage(toMessage(messageRef), "*");
-        const { ref } = messageRef;
-        const stackTraceRef = getStackTraceRef(ref);
+        const stackTraceRef = getStackTraceRef(messageRef.ref);
 
         if (stackTraceRef) {
             stackTraceRef.sourceMapsResolved.then(post);
