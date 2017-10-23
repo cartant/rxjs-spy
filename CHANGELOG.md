@@ -1,3 +1,20 @@
+<a name="4.0.0"></a>
+## [4.0.0](https://github.com/cartant/rxjs-spy/compare/v3.1.4...v4.0.0) (2017-10-23)
+
+### Features
+
+* A lettable/pipeable `tag` operator has been added (under the `operators` directory);
+* `find`, `findAll` and `detect` methods have been added; and
+* source maps are now used when obtaining stack traces.
+
+### Breaking Changes
+
+No breaking changes to the module or console APIs, but the `Plugin` interface and the snapshots have changed. In particular:
+
+* `complete` and `error` have been moved from the observable snapshot to the subscription snapshot;
+* snapshots no longer include the `ref`; and
+* `finalDestination` has been renamed to `rootDestination`.
+
 <a name="3.1.4"></a>
 ## [3.1.4](https://github.com/cartant/rxjs-spy/compare/v3.1.3...v3.1.4) (2017-08-08)
 
