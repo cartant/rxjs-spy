@@ -22,6 +22,24 @@ interface MessageRef {
 
 export class DevToolsPlugin extends BasePlugin {
 
+    private listener_: ((event: MessageEvent) => void) | null;
+
+    constructor() {
+
+        super();
+
+        if ((typeof window !== "undefined") && (typeof window.postMessage === "function")) {
+            this.listener_ = event => {
+                const { data, source } = event;
+                if ((source === window) && (typeof data === "object") && data && (data.source === "rxjs-spy-devtools")) {
+                    /*tslint:disable-next-line:no-console*/
+                    console.log("Received a DevTools message", data);
+                }
+            };
+            window.addEventListener("message", this.listener_);
+        }
+    }
+
     afterSubscribe(ref: SubscriptionRef): void {
 
         postMessage({
@@ -85,6 +103,14 @@ export class DevToolsPlugin extends BasePlugin {
             prefix: "before",
             ref
         });
+    }
+
+    teardown(): void {
+
+        if (this.listener_) {
+            window.removeEventListener("message", this.listener_);
+            this.listener_ = null;
+        }
     }
 }
 
