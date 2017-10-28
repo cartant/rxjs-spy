@@ -153,7 +153,7 @@ function toMessage(messageRef: MessageRef): any {
 
     return {
         error,
-        graph: toGraph(ref),
+        graph: toGraph(ref) || null,
         id,
         notification: `${prefix}-${notification}`,
         source: "rxjs-spy",
