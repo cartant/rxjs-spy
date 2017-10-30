@@ -612,7 +612,8 @@ describe("SnapshotPlugin", () => {
                 id: 0,
                 observable: subject,
                 subscriber,
-                subscription
+                subscription,
+                timestamp: Date.now()
             });
 
             expect(observableSnapshot).to.exist;
@@ -633,7 +634,8 @@ describe("SnapshotPlugin", () => {
                 id: 0,
                 observable: subject,
                 subscriber,
-                subscription
+                subscription,
+                timestamp: Date.now()
             });
 
             expect(subscriberSnapshot).to.exist;

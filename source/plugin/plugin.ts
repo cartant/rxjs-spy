@@ -12,6 +12,7 @@ export interface SubscriberRef {
     id: number;
     observable: Observable<any>;
     subscriber: Subscriber<any>;
+    timestamp: number;
 }
 
 export interface SubscriptionRef extends SubscriberRef {
