@@ -320,12 +320,3 @@ export class SnapshotPlugin extends BasePlugin {
         return map;
     }
 }
-
-function map<K, V>(from: Map<K, V>, to: Map<K, V>): Map<K, V> {
-
-    const mapped = new Map<K, V>();
-    from.forEach((value, key) => {
-        mapped.set(key, to.get(key)!);
-    });
-    return mapped;
-}
