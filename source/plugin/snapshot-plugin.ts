@@ -106,7 +106,7 @@ export class SnapshotPlugin extends BasePlugin {
         snapshotRef.unsubscribed = true;
 
         const { keptDuration_, rootSubscriptionRefs_ } = this;
-        if ((keptDuration_ >= 0) && rootSubscriptionRefs_.has(ref)) {
+        if ((keptDuration_ >= 0) && (keptDuration_ < Infinity) && rootSubscriptionRefs_.has(ref)) {
             setTimeout(() => rootSubscriptionRefs_.delete(ref), keptDuration_);
         }
     }
