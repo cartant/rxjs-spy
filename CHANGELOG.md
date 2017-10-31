@@ -1,3 +1,12 @@
+<a name="4.1.0"></a>
+## [4.1.0](https://github.com/cartant/rxjs-spy/compare/v4.0.0...v4.1.0) (2017-10-31)
+
+### Features
+
+* Allow plugin options to be passed to [`spy`](https://github.com/cartant/rxjs-spy#spy).
+* Add the `sourceMaps` option for the `StackTracePlugin`. ([3bd322e](https://github.com/cartant/rxjs-spy/commit/3bd322e))
+* Add the `keptDuration` option for the `SnapshotPlugin`. ([723de5b](https://github.com/cartant/rxjs-spy/commit/723de5b))
+
 <a name="4.0.0"></a>
 ## [4.0.0](https://github.com/cartant/rxjs-spy/compare/v3.1.4...v4.0.0) (2017-10-23)
 
