@@ -487,7 +487,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
                 }
 
                 let source = this.preLetSubject.asObservable();
-                selectors.forEach((selector: (source: Observable<any>) => Observable<any>) => source = source.let(selector));
+                selectors.forEach(selector => source = source.let(selector!));
                 this.postLetSubscription = subscribeWithoutSpy.call(source, {
                     complete: () => this.postLetSubscriber.complete(),
                     error: (error: any) => this.postLetSubscriber.error(error),
