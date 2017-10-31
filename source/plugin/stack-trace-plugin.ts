@@ -34,6 +34,14 @@ function setStackTraceRef(ref: SubscriberRef, value: StackTraceRef): StackTraceR
 
 export class StackTracePlugin extends BasePlugin {
 
+    private sourceMaps_: boolean;
+
+    constructor({ sourceMaps = true }: { sourceMaps?: boolean } = {}) {
+
+        super();
+        this.sourceMaps_ = sourceMaps;
+    }
+
     beforeSubscribe(ref: SubscriberRef): void {
 
         const stackTraceRef: StackTraceRef = {
@@ -42,7 +50,7 @@ export class StackTracePlugin extends BasePlugin {
         };
         setStackTraceRef(ref, stackTraceRef);
 
-        if ((typeof window !== "undefined") && (window.location.protocol !== "file:")) {
+        if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
             stackTraceRef.sourceMapsResolved = get(options()).then((stackFrames) => {
                 const { stackTrace } = stackTraceRef;
                 stackTrace.splice(0, stackTrace.length, ...stackFrames);
