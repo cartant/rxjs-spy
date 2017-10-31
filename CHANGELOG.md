@@ -1,3 +1,12 @@
+<a name="4.1.1"></a>
+## [4.1.1](https://github.com/cartant/rxjs-spy/compare/v4.1.0...v4.1.1) (2017-10-31)
+
+### Fixes
+
+* Add support for the `keptDuration` option to the `GraphPlugin`. ([b048d38](https://github.com/cartant/rxjs-spy/commit/b048d38))
+
+    Now, when source or merged subscriptions complete or error, they should be removed from the destination subscription's graph and counters should be incremented to indicate that flushing has occurred. In short, `rxjs-spy` should no longer contintually consume memory (unless `keptDuration` is set to `-1`).
+
 <a name="4.1.0"></a>
 ## [4.1.0](https://github.com/cartant/rxjs-spy/compare/v4.0.0...v4.1.0) (2017-10-31)
 
