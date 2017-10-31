@@ -123,11 +123,11 @@ By default, `spy` will wire up the snapshotting plugin. However, if the `plugins
 
 Options passed to `spy` are forwarded to the plugins, so the following can be specified:
 
-| Option | Description | Default |
-| --- | --- | --- |
-| `sourceMaps: boolean` | Whether or not the `StackTracePlugin` should use source maps. | `true` |
-| `keptDuration: number` | The number of milliseconds for which snapshots should be kept after unsubscription occurs. | 30000 |
-| `keptValues: number` | The maximum number of values that should be kept in a snapshot. | 4 |
+| Option | Type | Description | Default |
+| --- | --- | --- | --- |
+| `sourceMaps` | `boolean` | Whether or not the `StackTracePlugin` should use source maps. | `true` |
+| `keptDuration` | `number` | The number of milliseconds for which snapshots should be kept after unsubscription occurs. | 30000 |
+| `keptValues` | `number` | The maximum number of values that should be kept in a snapshot. | 4 |
 
 This method returns a teardown function.
 
