@@ -141,7 +141,7 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.valuesFlushed).to.equal(2);
         });
 
-        it("should automatically flush old, unsubscribed snapshots", (callback) => {
+        it("should automatically flush old, unsubscribed root snapshots", (callback) => {
 
             const subject = new Subject<number>();
             const subscription = subject.subscribe((value) => {}, (error) => {});
@@ -157,6 +157,29 @@ describe("SnapshotPlugin", () => {
 
                 snapshot = plugin.snapshotAll();
                 expect(snapshot.observables).to.have.property("size", 0);
+                callback();
+
+            }, keptDuration + 10);
+        });
+
+        it("should automatically flush old, unsubscribed inner snapshots", (callback) => {
+
+            const subject = new Subject<number>();
+            const root = new Subject<number>();
+            const composed = root.switchMap(() => subject);
+            const subscription = composed.subscribe((value) => {}, (error) => {});
+
+            root.next(1);
+
+            let snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.have.property("size", 3);
+
+            subject.complete();
+
+            setTimeout(() => {
+
+                snapshot = plugin.snapshotAll();
+                expect(snapshot.observables).to.have.property("size", 2);
                 callback();
 
             }, keptDuration + 10);
