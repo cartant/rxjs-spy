@@ -23,6 +23,7 @@ import "../add/operator/tag";
 
 describe("SnapshotPlugin", () => {
 
+    const keptDuration = 10;
     const keptValues = 2;
     let plugin: SnapshotPlugin;
     let teardown: () => void;
@@ -36,7 +37,7 @@ describe("SnapshotPlugin", () => {
 
     beforeEach(() => {
 
-        plugin = new SnapshotPlugin({ keptValues });
+        plugin = new SnapshotPlugin({ keptDuration, keptValues });
         teardown = spy({ plugins: [new GraphPlugin(), plugin], warning: false });
     });
 
@@ -138,6 +139,27 @@ describe("SnapshotPlugin", () => {
             let subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
             expect(subscriberSnapshot.values).to.have.length(2);
             expect(subscriberSnapshot.valuesFlushed).to.equal(2);
+        });
+
+        it("should automatically flush old, unsubscribed snapshots", (callback) => {
+
+            const subject = new Subject<number>();
+            const subscription = subject.subscribe((value) => {}, (error) => {});
+
+            subject.next(1);
+
+            let snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.have.property("size", 1);
+
+            subject.complete();
+
+            setTimeout(() => {
+
+                snapshot = plugin.snapshotAll();
+                expect(snapshot.observables).to.have.property("size", 0);
+                callback();
+
+            }, keptDuration + 10);
         });
     });
 

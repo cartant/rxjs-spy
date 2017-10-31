@@ -274,13 +274,13 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     logger.groupEnd();
 }
 
-export function spy({
-    plugins,
-    warning = true
-}: {
+export function spy(options: {
+    [key: string]: any,
     plugins?: Plugin[]
     warning?: boolean
 } = {}): () => void {
+
+    const { plugins, warning } = options;
 
     if (Observable.prototype.subscribe !== subscribeBase) {
         throw new Error("Already spying on Observable.prototype.subscribe.");
@@ -298,7 +298,7 @@ export function spy({
         plugins_ = [
             new StackTracePlugin(),
             new GraphPlugin(),
-            new SnapshotPlugin(),
+            new SnapshotPlugin(options as { [key: string]: any }),
             new DevToolsPlugin()
         ];
     }

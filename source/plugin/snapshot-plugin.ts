@@ -78,19 +78,25 @@ export interface SubscriptionSnapshot {
 
 export class SnapshotPlugin extends BasePlugin {
 
-    private rootSubscriptionRefs_: Map<SubscriptionRef, boolean>;
+    private keptDuration_: number;
     private keptValues_: number;
+    private lastFlush_: number;
+    private rootSubscriptionRefs_: Map<SubscriptionRef, boolean>;
 
     constructor({
+        keptDuration = 30000,
         keptValues = 4
     }: {
+        keptDuration?: number,
         keptValues?: number
     } = {}) {
 
         super();
 
-        this.rootSubscriptionRefs_ = new Map<SubscriptionRef, boolean>();
+        this.keptDuration_ = keptDuration;
         this.keptValues_ = keptValues;
+        this.lastFlush_ = Date.now();
+        this.rootSubscriptionRefs_ = new Map<SubscriptionRef, boolean>();
     }
 
     afterUnsubscribe(ref: SubscriptionRef): void {
@@ -98,6 +104,11 @@ export class SnapshotPlugin extends BasePlugin {
         const snapshotRef = getSnapshotRef(ref);
         snapshotRef.tick = tick();
         snapshotRef.unsubscribed = true;
+
+        const { keptDuration_, rootSubscriptionRefs_ } = this;
+        if ((keptDuration_ >= 0) && rootSubscriptionRefs_.has(ref)) {
+            setTimeout(() => rootSubscriptionRefs_.delete(ref), keptDuration_);
+        }
     }
 
     beforeComplete(ref: SubscriptionRef): void {
@@ -175,6 +186,7 @@ export class SnapshotPlugin extends BasePlugin {
                 rootSubscriptionRefs_.delete(ref);
             }
         });
+        this.lastFlush_ = Date.now();
     }
 
     snapshotAll({

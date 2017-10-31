@@ -15,6 +15,12 @@ import { find, spy } from "./spy";
 
 import "rxjs/add/operator/mergeMap";
 
+const options = {
+    keptDuration: -1,
+    keptValues: 4,
+    warning: false
+};
+
 describe("detector", () => {
 
     let detector: Detector;
@@ -29,7 +35,7 @@ describe("detector", () => {
 
     beforeEach(() => {
 
-        teardown = spy({ warning: false });
+        teardown = spy({ ...options });
         detector = new Detector(find(SnapshotPlugin));
     });
 
