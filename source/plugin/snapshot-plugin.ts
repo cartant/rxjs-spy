@@ -8,6 +8,7 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { StackFrame } from "stacktrace-js";
+import { defaultKeptDuration, defaultKeptValues, flushAfterDuration } from "./kept";
 import { read } from "../match";
 import { getGraphRef } from "./graph-plugin";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
@@ -65,9 +66,11 @@ export interface SubscriptionSnapshot {
     error: any;
     id: number;
     merges: Map<Subscription, SubscriptionSnapshot>;
+    mergesFlushed: number;
     observable: Observable<any>;
     rootDestination: SubscriptionSnapshot | null;
     sources: Map<Subscription, SubscriptionSnapshot>;
+    sourcesFlushed: number;
     stackTrace: StackFrame[];
     subscriber: Subscriber<any>;
     subscription: Subscription;
@@ -80,12 +83,11 @@ export class SnapshotPlugin extends BasePlugin {
 
     private keptDuration_: number;
     private keptValues_: number;
-    private lastFlush_: number;
     private rootSubscriptionRefs_: Map<SubscriptionRef, boolean>;
 
     constructor({
-        keptDuration = 30000,
-        keptValues = 4
+        keptDuration = defaultKeptDuration,
+        keptValues = defaultKeptValues
     }: {
         keptDuration?: number,
         keptValues?: number
@@ -95,7 +97,6 @@ export class SnapshotPlugin extends BasePlugin {
 
         this.keptDuration_ = keptDuration;
         this.keptValues_ = keptValues;
-        this.lastFlush_ = Date.now();
         this.rootSubscriptionRefs_ = new Map<SubscriptionRef, boolean>();
     }
 
@@ -105,9 +106,10 @@ export class SnapshotPlugin extends BasePlugin {
         snapshotRef.tick = tick();
         snapshotRef.unsubscribed = true;
 
-        const { keptDuration_, rootSubscriptionRefs_ } = this;
-        if ((keptDuration_ >= 0) && (keptDuration_ < Infinity) && rootSubscriptionRefs_.has(ref)) {
-            setTimeout(() => rootSubscriptionRefs_.delete(ref), keptDuration_);
+        const { rootSubscriptionRefs_ } = this;
+        if (rootSubscriptionRefs_.has(ref)) {
+            const { keptDuration_ } = this;
+            flushAfterDuration(keptDuration_, () => rootSubscriptionRefs_.delete(ref));
         }
     }
 
@@ -186,7 +188,6 @@ export class SnapshotPlugin extends BasePlugin {
                 rootSubscriptionRefs_.delete(ref);
             }
         });
-        this.lastFlush_ = Date.now();
     }
 
     snapshotAll({
@@ -203,8 +204,20 @@ export class SnapshotPlugin extends BasePlugin {
         subscriptionRefs.forEach((unused, ref) => {
 
             const { id, observable, subscriber, subscription } = ref;
+
+            const graphRef = getGraphRef(ref);
+            const { mergesFlushed, sourcesFlushed } = graphRef;
+
             const snapshotRef = getSnapshotRef(ref);
-            const { complete, error, tick, timestamp, unsubscribed, values, valuesFlushed } = snapshotRef;
+            const {
+                complete,
+                error,
+                tick,
+                timestamp,
+                unsubscribed,
+                values,
+                valuesFlushed
+            } = snapshotRef;
 
             const subscriptionSnapshot: SubscriptionSnapshot = {
                 complete,
@@ -212,9 +225,11 @@ export class SnapshotPlugin extends BasePlugin {
                 error,
                 id,
                 merges: new Map<Subscription, SubscriptionSnapshot>(),
+                mergesFlushed,
                 observable,
                 rootDestination: null,
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
+                sourcesFlushed,
                 stackTrace: getStackTrace(ref),
                 subscriber,
                 subscription,

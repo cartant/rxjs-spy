@@ -19,6 +19,7 @@ import "rxjs/add/observable/of";
 import "rxjs/add/operator/map";
 import "rxjs/add/operator/mergeMap";
 import "rxjs/add/operator/switchMap";
+import "rxjs/add/operator/withLatestFrom";
 import "../add/operator/tag";
 
 describe("SnapshotPlugin", () => {
@@ -38,7 +39,7 @@ describe("SnapshotPlugin", () => {
     beforeEach(() => {
 
         plugin = new SnapshotPlugin({ keptDuration, keptValues });
-        teardown = spy({ plugins: [new GraphPlugin(), plugin], warning: false });
+        teardown = spy({ plugins: [new GraphPlugin({ keptDuration }), plugin], warning: false });
     });
 
     describe("flush", () => {
@@ -162,24 +163,71 @@ describe("SnapshotPlugin", () => {
             }, keptDuration + 10);
         });
 
-        it("should automatically flush old, unsubscribed inner snapshots", (callback) => {
+        it("should automatically flush old, unsubscribed source snapshots", (callback) => {
 
-            const subject = new Subject<number>();
+            const source = new Subject<number>();
             const root = new Subject<number>();
-            const composed = root.switchMap(() => subject);
+            const composed = root.withLatestFrom(source);
             const subscription = composed.subscribe((value) => {}, (error) => {});
 
             root.next(1);
 
-            let snapshot = plugin.snapshotAll();
+            const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 3);
 
-            subject.complete();
+            const sourceSnapshot = get(snapshot.observables, source);
+            const sourceSubscriptionSnapshot = getAt(getAt(sourceSnapshot.subscribers, 0).subscriptions, 0);
+
+            const destinationSubscriptionSnapshot = sourceSubscriptionSnapshot.destination!;
+            const destinationObservable =  destinationSubscriptionSnapshot.observable!;
+            expect(destinationSubscriptionSnapshot).to.have.property("sourcesFlushed", 0);
+
+            source.complete();
 
             setTimeout(() => {
 
-                snapshot = plugin.snapshotAll();
+                const snapshot = plugin.snapshotAll();
                 expect(snapshot.observables).to.have.property("size", 2);
+
+                const destinationSnapshot = get(snapshot.observables, destinationObservable);
+                const destinationSubscriptionSnapshot = getAt(getAt(destinationSnapshot.subscribers, 0).subscriptions, 0);
+                expect(destinationSubscriptionSnapshot).to.have.property("sourcesFlushed", 1);
+
+                callback();
+
+            }, keptDuration + 10);
+        });
+
+        it("should automatically flush old, unsubscribed merged snapshots", (callback) => {
+
+            const merged = new Subject<number>();
+            const root = new Subject<number>();
+            const composed = root.switchMap(() => merged);
+            const subscription = composed.subscribe((value) => {}, (error) => {});
+
+            root.next(1);
+
+            const snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.have.property("size", 3);
+
+            const mergedSnapshot = get(snapshot.observables, merged);
+            const mergedSubscriptionSnapshot = getAt(getAt(mergedSnapshot.subscribers, 0).subscriptions, 0);
+
+            const destinationSubscriptionSnapshot = mergedSubscriptionSnapshot.destination!;
+            const destinationObservable =  destinationSubscriptionSnapshot.observable!;
+            expect(destinationSubscriptionSnapshot).to.have.property("mergesFlushed", 0);
+
+            merged.complete();
+
+            setTimeout(() => {
+
+                const snapshot = plugin.snapshotAll();
+                expect(snapshot.observables).to.have.property("size", 2);
+
+                const destinationSnapshot = get(snapshot.observables, destinationObservable);
+                const destinationSubscriptionSnapshot = getAt(getAt(destinationSnapshot.subscribers, 0).subscriptions, 0);
+                expect(destinationSubscriptionSnapshot).to.have.property("mergesFlushed", 1);
+
                 callback();
 
             }, keptDuration + 10);

@@ -137,12 +137,21 @@ function toGraph(subscriberRef: SubscriberRef): any {
         return null;
     }
 
-    const { destination, merges, rootDestination, sources } = graphRef;
+    const {
+        destination,
+        merges,
+        mergesFlushed,
+        rootDestination,
+        sources,
+        sourcesFlushed
+    } = graphRef;
     return {
         destination: destination ? destination.id : null,
         merges: merges.map((m) => m.id),
+        mergesFlushed,
         rootDestination: rootDestination ? rootDestination.id : null,
-        sources: merges.map((s) => s.id)
+        sources: merges.map((s) => s.id),
+        sourcesFlushed
     };
 }
 

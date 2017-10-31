@@ -23,6 +23,7 @@ import "../add/operator/tag";
 
 describe("GraphPlugin", () => {
 
+    const keptDuration = 10;
     let graphPlugin: GraphPlugin;
     let subscriberRefsPlugin: SubscriberRefsPlugin;
     let teardown: () => void;
@@ -36,7 +37,7 @@ describe("GraphPlugin", () => {
 
     beforeEach(() => {
 
-        graphPlugin = new GraphPlugin();
+        graphPlugin = new GraphPlugin({ keptDuration });
         subscriberRefsPlugin = new SubscriberRefsPlugin();
         teardown = spy({ plugins: [graphPlugin, subscriberRefsPlugin], warning: false });
     });

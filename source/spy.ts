@@ -297,7 +297,7 @@ export function spy(options: {
     } else {
         plugins_ = [
             new StackTracePlugin(options as { [key: string]: any }),
-            new GraphPlugin(),
+            new GraphPlugin(options as { [key: string]: any }),
             new SnapshotPlugin(options as { [key: string]: any }),
             new DevToolsPlugin()
         ];

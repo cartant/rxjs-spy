@@ -5,6 +5,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { defaultKeptDuration, flushAfterDuration } from "./kept";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 
 const graphRefSymbol = Symbol("graphRef");
@@ -12,8 +13,10 @@ const graphRefSymbol = Symbol("graphRef");
 export interface GraphRef {
     destination: SubscriptionRef | null;
     merges: SubscriptionRef[];
+    mergesFlushed: number;
     rootDestination: SubscriptionRef | null;
     sources: SubscriptionRef[];
+    sourcesFlushed: number;
 }
 
 export function getGraphRef(ref: SubscriberRef): GraphRef {
@@ -29,10 +32,21 @@ function setGraphRef(ref: SubscriberRef, value: GraphRef): GraphRef {
 
 export class GraphPlugin extends BasePlugin {
 
+    private keptDuration_: number;
     private notifications_: {
         notification: Notification;
         ref: SubscriberRef;
     }[] = [];
+
+    constructor({
+        keptDuration = defaultKeptDuration
+    }: {
+        keptDuration?: number
+    } = {}) {
+
+        super();
+        this.keptDuration_ = keptDuration;
+    }
 
     afterNext(ref: SubscriptionRef, value: any): void {
 
@@ -46,6 +60,33 @@ export class GraphPlugin extends BasePlugin {
         notifications_.pop();
     }
 
+    afterUnsubscribe(ref: SubscriptionRef): void {
+
+        const graphRef = getGraphRef(ref);
+        if (graphRef) {
+            const { destination } = graphRef;
+            if (destination) {
+                const { keptDuration_ } = this;
+                flushAfterDuration(keptDuration_, () => {
+                    const destinationGraphRef = getGraphRef(destination);
+                    if (destinationGraphRef) {
+                        const { merges, sources } = destinationGraphRef;
+                        const mergeIndex = merges.indexOf(ref);
+                        if (mergeIndex !== -1) {
+                            merges.splice(mergeIndex, 1);
+                            ++destinationGraphRef.mergesFlushed;
+                        }
+                        const sourceIndex = sources.indexOf(ref);
+                        if (sourceIndex !== -1) {
+                            sources.splice(sourceIndex, 1);
+                            ++destinationGraphRef.sourcesFlushed;
+                        }
+                    }
+                });
+            }
+        }
+    }
+
     beforeNext(ref: SubscriptionRef, value: any): void {
 
         const { notifications_ } = this;
@@ -57,8 +98,10 @@ export class GraphPlugin extends BasePlugin {
         const graphRef = setGraphRef(ref, {
             destination: null,
             merges: [],
+            mergesFlushed: 0,
             rootDestination: null,
-            sources: []
+            sources: [],
+            sourcesFlushed: 0
         });
 
         const { notifications_ } = this;

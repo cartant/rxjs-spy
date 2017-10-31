@@ -24,6 +24,7 @@ const shims = {
     "rxjs/add/operator/switchMap": "Rx.unused",
     "rxjs/add/operator/toArray": "Rx.unused",
     "rxjs/add/operator/toPromise": "Rx.unused",
+    "rxjs/add/operator/withLatestFrom": "Rx.unused",
     "rxjs/BehaviorSubject": "Rx",
     "rxjs/Notification": "Rx",
     "rxjs/Observable": "Rx",
