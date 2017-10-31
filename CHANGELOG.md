@@ -1,3 +1,10 @@
+<a name="4.1.2"></a>
+## [4.1.2](https://github.com/cartant/rxjs-spy/compare/v4.1.1...v4.1.2) (2017-11-01)
+
+### Fixes
+
+* Upgrade to TypeScript 2.6. ([570b915](https://github.com/cartant/rxjs-spy/commit/570b915))
+
 <a name="4.1.1"></a>
 ## [4.1.1](https://github.com/cartant/rxjs-spy/compare/v4.1.0...v4.1.1) (2017-10-31)
 
