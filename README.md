@@ -110,12 +110,24 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 ### spy
 
 ```ts
-function spy({ plugins }: { plugins?: Plugin[] } = {}): () => void
+function spy(options: {
+    [key: string]: any,
+    plugins?: Plugin[]
+    warning?: boolean
+} = {}): () => void
 ```
 
 Calling `spy` attaches the spy to `Observable.prototype.subscribe`.
 
 By default, `spy` will wire up the snapshotting plugin. However, if the `plugins` option is specified, only the plugins it contains will be wired up - so, to disable snapshotting, specify an empty array.
+
+Options passed to `spy` are forwarded to the plugins, so the following can be specified:
+
+| Option | Description | Default |
+| --- | --- | --- |
+| `sourceMaps: boolean` | Whether or not the `StackTracePlugin` should use source maps. | `true` |
+| `keptDuration: number` | The number of milliseconds for which snapshots should be kept after unsubscription occurs. | 30000 |
+| `keptValues: number` | The maximum number of values that should be kept in a snapshot. | 4 |
 
 This method returns a teardown function.
 
