@@ -187,6 +187,9 @@ export class SnapshotPlugin extends BasePlugin {
             if (errored && snapshotRef.error) {
                 rootSubscriptionRefs_.delete(ref);
             }
+            if (snapshotRef.unsubscribed && !snapshotRef.complete && !snapshotRef.error) {
+                rootSubscriptionRefs_.delete(ref);
+            }
         });
     }
 
