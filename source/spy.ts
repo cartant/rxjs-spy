@@ -405,6 +405,11 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
         error(this: PostLetObserver, error: any): void {
 
+            if (!(error instanceof Error)) {
+                /*tslint:disable-next-line:no-console*/
+                console.warn("Value passed as error notification is not an Error instance =", error);
+            }
+
             increment();
             plugins_.forEach((plugin) => plugin.beforeError(ref, error));
 
