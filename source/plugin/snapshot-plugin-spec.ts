@@ -104,6 +104,21 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
         });
 
+        it("should flush explicitly unsubscribed observables", () => {
+
+            const subject = new Subject<number>();
+            const subscription = subject.subscribe();
+
+            let snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.have.property("size", 1);
+
+            subscription.unsubscribe();
+            plugin.flush({ completed: false, errored: false });
+
+            snapshot = plugin.snapshotAll();
+            expect(snapshot.observables).to.have.property("size", 0);
+        });
+
         it("should flush completed and errored observables by default", () => {
 
             const subject1 = new Subject<number>();
