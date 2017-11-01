@@ -5,6 +5,7 @@
  */
 
 export * from "./debug-plugin";
+export * from "./devtools-plugin";
 export * from "./graph-plugin";
 export * from "./let-plugin";
 export * from "./log-plugin";
