@@ -15,7 +15,9 @@
 
 The usual approach to debugging RxJS-based code involves sprinkling `do` operators and logging throughout composed observables. That's something that I find tedious, so I wrote this library and implemented an unobtrusive mechanism for identifying observables and logging and inspecting observable subscriptions.
 
-If you, too, are looking for a less painful RxJS debugging experience, you might find this library useful.
+If you, too, are looking for a less painful RxJS debugging experience, you might find this library useful. The engineers at Slack have adopted `rxjs-spy` and have [this to say](https://slack.engineering/growing-pains-migrating-slacks-desktop-app-to-browserview-2759690d9c7b) about it:
+
+> You might be like, "[...] but aren't Observables impossible to debug?" And you'd have been mostly right less than a year ago. But this is JavaScript and in JavaScript, the only `const` is change. `rxjs-spy` makes debugging (i.e. logging and visualizing) streams as simple as adding a `tag`. A tagged stream can be monitored, paused, and replayed, right from the console.
 
 For more detail regarding how the library works and what it can do, you can have a look at:
 
