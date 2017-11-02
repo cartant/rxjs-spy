@@ -127,7 +127,7 @@ Options passed to `spy` are forwarded to the plugins, so the following can be sp
 
 | Option | Type | Description | Default |
 | --- | --- | --- | --- |
-| `keptDuration` | `number` | The number of milliseconds for which snapshots should be kept after unsubscription occurs. | 30000 |
+| `keptDuration` | `number` | The number of milliseconds for which the subscription graph and snapshots should be kept after unsubscription occurs. | 30000 |
 | `keptValues` | `number` | The maximum number of values that should be kept in a snapshot. | 4 |
 | `sourceMaps` | `boolean` | Whether or not the `StackTracePlugin` should use source maps. | `true` |
 
