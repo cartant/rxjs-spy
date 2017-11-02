@@ -13,6 +13,7 @@ export interface SubscriberRef {
     observable: Observable<any>;
     subscriber: Subscriber<any>;
     timestamp: number;
+    unsubscribed: boolean;
 }
 
 export interface SubscriptionRef extends SubscriberRef {

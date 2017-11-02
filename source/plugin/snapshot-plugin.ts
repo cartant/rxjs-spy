@@ -8,9 +8,8 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { StackFrame } from "stacktrace-js";
-import { defaultKeptDuration, defaultKeptValues, flushAfterDuration } from "./kept";
 import { read } from "../match";
-import { getGraphRef } from "./graph-plugin";
+import { getGraphRef, GraphRef } from "./graph-plugin";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 import { getStackTrace } from "./stack-trace-plugin";
 import { tick } from "../tick";
@@ -81,23 +80,19 @@ export interface SubscriptionSnapshot {
 
 export class SnapshotPlugin extends BasePlugin {
 
-    private keptDuration_: number;
     private keptValues_: number;
-    private rootSubscriptionRefs_: Map<SubscriptionRef, boolean>;
+    private sentinel_: GraphRef | null;
 
     constructor({
-        keptDuration = defaultKeptDuration,
-        keptValues = defaultKeptValues
+        keptValues = 4
     }: {
-        keptDuration?: number,
         keptValues?: number
     } = {}) {
 
         super();
 
-        this.keptDuration_ = keptDuration;
         this.keptValues_ = keptValues;
-        this.rootSubscriptionRefs_ = new Map<SubscriptionRef, boolean>();
+        this.sentinel_ = null;
     }
 
     afterUnsubscribe(ref: SubscriptionRef): void {
@@ -105,12 +100,6 @@ export class SnapshotPlugin extends BasePlugin {
         const snapshotRef = getSnapshotRef(ref);
         snapshotRef.tick = tick();
         snapshotRef.unsubscribed = true;
-
-        const { rootSubscriptionRefs_ } = this;
-        if (rootSubscriptionRefs_.has(ref)) {
-            const { keptDuration_ } = this;
-            flushAfterDuration(keptDuration_, () => rootSubscriptionRefs_.delete(ref));
-        }
     }
 
     beforeComplete(ref: SubscriptionRef): void {
@@ -144,8 +133,6 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        const { rootSubscriptionRefs_ } = this;
-
         const snapshotRef = setSnapshotRef(ref, {
             complete: false,
             error: null,
@@ -155,42 +142,14 @@ export class SnapshotPlugin extends BasePlugin {
             values: [],
             valuesFlushed: 0
         });
-        const graphRef = getGraphRef(ref);
 
-        if (!graphRef) {
+        const graphRef = getGraphRef(ref);
+        if (graphRef) {
+            this.sentinel_ = graphRef.sentinel;
+        } else {
             /*tslint:disable-next-line:no-console*/
             console.warn("Graphing is not enabled.");
         }
-
-        if (graphRef && !graphRef.rootDestination) {
-            rootSubscriptionRefs_.set(ref as SubscriptionRef, true);
-        }
-    }
-
-    flush(options?: {
-        completed?: boolean,
-        errored?: boolean
-    }): void {
-
-        const { completed, errored } = options || {
-            completed: true,
-            errored: true
-        };
-        const { rootSubscriptionRefs_ } = this;
-
-        rootSubscriptionRefs_.forEach((unused, ref) => {
-
-            const snapshotRef = getSnapshotRef(ref);
-            if (completed && snapshotRef.complete) {
-                rootSubscriptionRefs_.delete(ref);
-            }
-            if (errored && snapshotRef.error) {
-                rootSubscriptionRefs_.delete(ref);
-            }
-            if (snapshotRef.unsubscribed && !snapshotRef.complete && !snapshotRef.error) {
-                rootSubscriptionRefs_.delete(ref);
-            }
-        });
     }
 
     snapshotAll({
@@ -344,9 +303,12 @@ export class SnapshotPlugin extends BasePlugin {
 
     private getSubscriptionRefs_(): Map<SubscriptionRef, boolean> {
 
-        const { rootSubscriptionRefs_ } = this;
+        const { sentinel_ } = this;
         const map = new Map<SubscriptionRef, boolean>();
-        rootSubscriptionRefs_.forEach((unused, ref) => this.addSubscriptionRefs_(ref, map));
+
+        if (sentinel_) {
+            sentinel_.sources.forEach(ref => this.addSubscriptionRefs_(ref, map));
+        }
         return map;
     }
 }

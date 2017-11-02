@@ -13,6 +13,7 @@ const shims = {
     "rxjs/add/observable/combineLatest": "Rx.unused",
     "rxjs/add/observable/from": "Rx.unused",
     "rxjs/add/observable/interval": "Rx.unused",
+    "rxjs/add/observable/never": "Rx.unused",
     "rxjs/add/observable/of": "Rx.unused",
     "rxjs/add/operator/dematerialize": "Rx.unused",
     "rxjs/add/operator/let": "Rx.unused",

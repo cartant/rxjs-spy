@@ -378,7 +378,8 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
         observable,
         subscriber,
         subscription: null!,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        unsubscribed: false
     };
 
     interface PostLetObserver {
@@ -561,6 +562,7 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
 
             postLetUnsubscribe.call(postLetSubscriber);
             pluginsSubscription.unsubscribe();
+            ref.unsubscribed = true;
 
             plugins_.forEach((plugin) => plugin.afterUnsubscribe(ref));
 
