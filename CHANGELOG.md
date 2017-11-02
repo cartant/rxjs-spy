@@ -10,7 +10,7 @@
 No breaking changes to the module or console APIs, but the `SnapshotPlugin` and the snapshots have changed. In particular:
 
 * `flush` has been removed from `SnapshotPlugin`. The flushing mechanism has been simplified and delegated entirely to the `GraphPlugin`. Flushing is now fully automatic and is controlled by the `keptDuration` option that can be passed to `spy`.
-* `destination` and `rootDestination` has been renamed to `sink` and `rootSink`.
+* `destination` and `rootDestination` have been renamed to `sink` and `rootSink`.
 
 Also, the `DevToolsPlugin` has been removed and moved to the `next` branch, as it is a work in progress.
 
