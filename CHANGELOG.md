@@ -1,3 +1,19 @@
+<a name="5.0.0"></a>
+## [5.0.0](https://github.com/cartant/rxjs-spy/compare/v4.1.2...v5.0.0) (2017-11-02)
+
+### Features
+
+* If non-`Error` instance values are passed in an `error` notification, a warning is logged to the console.
+
+### Breaking Changes
+
+No breaking changes to the module or console APIs, but the `SnapshotPlugin` and the snapshots have changed. In particular:
+
+* `flush` has been removed from `SnapshotPlugin`. The flushing mechanism has been simplified and delegated entirely to the `GraphPlugin`. Flushing is now fully automatic and is controlled by the `keptDuration` option that can be passed to `spy`.
+* `destination` and `rootDestination` has been renamed to `sink` and `rootSink`.
+
+Also, the `DevToolsPlugin` has been removed and moved to the `next` branch, as it is a work in progress.
+
 <a name="4.1.2"></a>
 ## [4.1.2](https://github.com/cartant/rxjs-spy/compare/v4.1.1...v4.1.2) (2017-11-01)
 
