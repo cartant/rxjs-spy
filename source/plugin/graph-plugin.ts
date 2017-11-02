@@ -156,9 +156,8 @@ export class GraphPlugin extends BasePlugin {
             return;
         }
 
-        const { sentinel_ } = this;
+        const { keptDuration_, sentinel_ } = this;
         const { link, sink } = graphRef;
-        const { keptDuration_ } = this;
 
         const flush = () => {
             const { merges, sources } = link;
