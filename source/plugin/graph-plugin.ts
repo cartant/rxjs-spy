@@ -10,12 +10,12 @@ import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plug
 const graphRefSymbol = Symbol("graphRef");
 
 export interface GraphRef {
-    destination: SubscriptionRef | null;
     link: GraphRef;
     merges: SubscriptionRef[];
     mergesFlushed: number;
-    rootDestination: SubscriptionRef | null;
+    rootSink: SubscriptionRef | null;
     sentinel: GraphRef;
+    sink: SubscriptionRef | null;
     sources: SubscriptionRef[];
     sourcesFlushed: number;
 }
@@ -51,12 +51,12 @@ export class GraphPlugin extends BasePlugin {
         this.keptDuration_ = keptDuration;
         this.notifications_ = [];
         this.sentinel_ = {
-            destination: null,
             link: null!,
             merges: [],
             mergesFlushed: 0,
-            rootDestination: null,
+            rootSink: null,
             sentinel: null!,
+            sink: null,
             sources: [],
             sourcesFlushed: 0
         };
@@ -98,12 +98,12 @@ export class GraphPlugin extends BasePlugin {
         const { notifications_, sentinel_ } = this;
 
         const graphRef = setGraphRef(ref, {
-            destination: null,
             link: sentinel_,
             merges: [],
             mergesFlushed: 0,
-            rootDestination: null,
+            rootSink: null,
             sentinel: sentinel_,
+            sink: null,
             sources: [],
             sourcesFlushed: 0
         });
@@ -111,23 +111,23 @@ export class GraphPlugin extends BasePlugin {
         const length = notifications_.length;
         if ((length > 0) && (notifications_[length - 1].notification === "next")) {
 
-            const { ref: destinationRef } = notifications_[length - 1];
-            const destinationGraphRef = getGraphRef(destinationRef);
-            destinationGraphRef.merges.push(ref as SubscriptionRef);
-            graphRef.destination = destinationRef as SubscriptionRef;
-            graphRef.link = destinationGraphRef;
-            graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef as SubscriptionRef;
+            const { ref: sinkRef } = notifications_[length - 1];
+            const sinkGraphRef = getGraphRef(sinkRef);
+            sinkGraphRef.merges.push(ref as SubscriptionRef);
+            graphRef.link = sinkGraphRef;
+            graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
+            graphRef.sink = sinkRef as SubscriptionRef;
 
         } else {
             for (let n = length - 1; n > -1; --n) {
                 if (notifications_[n].notification === "subscribe") {
 
-                    const { ref: destinationRef } = notifications_[length - 1];
-                    const destinationGraphRef = getGraphRef(destinationRef);
-                    destinationGraphRef.sources.push(ref as SubscriptionRef);
-                    graphRef.destination = destinationRef as SubscriptionRef;
-                    graphRef.link = destinationGraphRef;
-                    graphRef.rootDestination = destinationGraphRef.rootDestination || destinationRef as SubscriptionRef;
+                    const { ref: sinkRef } = notifications_[length - 1];
+                    const sinkGraphRef = getGraphRef(sinkRef);
+                    sinkGraphRef.sources.push(ref as SubscriptionRef);
+                    graphRef.link = sinkGraphRef;
+                    graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
+                    graphRef.sink = sinkRef as SubscriptionRef;
 
                     break;
                 }
@@ -157,7 +157,7 @@ export class GraphPlugin extends BasePlugin {
         }
 
         const { sentinel_ } = this;
-        const { destination, link } = graphRef;
+        const { link, sink } = graphRef;
         const { keptDuration_ } = this;
 
         const flush = () => {
@@ -172,8 +172,8 @@ export class GraphPlugin extends BasePlugin {
                 sources.splice(sourceIndex, 1);
                 ++link.sourcesFlushed;
             }
-            if (destination && destination.unsubscribed) {
-                this.flush_(destination);
+            if (sink && sink.unsubscribed) {
+                this.flush_(sink);
             }
         };
 

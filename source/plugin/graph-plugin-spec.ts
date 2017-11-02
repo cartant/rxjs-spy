@@ -113,23 +113,23 @@ describe("GraphPlugin", () => {
                 const subscription = combined.subscribe();
 
                 const sourceGraphRef = getGraphRef(subscriberRefsPlugin.get(source1));
-                const destinationGraphRef = getGraphRef(sourceGraphRef.destination!);
+                const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
                 const { sentinel } = sourceGraphRef;
 
-                expect(destinationGraphRef.sources).to.have.length(2);
+                expect(sinkGraphRef.sources).to.have.length(2);
                 expect(sentinel.sources).to.have.length(1);
 
                 source1.complete();
 
                 if (duration === 0) {
-                    expect(destinationGraphRef.sources).to.have.length(0);
+                    expect(sinkGraphRef.sources).to.have.length(0);
                     expect(sentinel.sources).to.have.length(0);
                 } else {
-                    expect(destinationGraphRef.sources).to.have.length(2);
+                    expect(sinkGraphRef.sources).to.have.length(2);
                     expect(sentinel.sources).to.have.length(1);
                 }
                 return delay(duration).then(() => {
-                    expect(destinationGraphRef.sources).to.have.length(0);
+                    expect(sinkGraphRef.sources).to.have.length(0);
                     expect(sentinel.sources).to.have.length(0);
                 });
             });
@@ -142,23 +142,23 @@ describe("GraphPlugin", () => {
                 const subscription = combined.subscribe();
 
                 const sourceGraphRef = getGraphRef(subscriberRefsPlugin.get(source1));
-                const destinationGraphRef = getGraphRef(sourceGraphRef.destination!);
+                const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
                 const { sentinel } = sourceGraphRef;
 
-                expect(destinationGraphRef.sources).to.have.length(2);
+                expect(sinkGraphRef.sources).to.have.length(2);
                 expect(sentinel.sources).to.have.length(1);
 
                 source1.error(new Error("Boom!"));
 
                 if (duration === 0) {
-                    expect(destinationGraphRef.sources).to.have.length(0);
+                    expect(sinkGraphRef.sources).to.have.length(0);
                     expect(sentinel.sources).to.have.length(0);
                 } else {
-                    expect(destinationGraphRef.sources).to.have.length(2);
+                    expect(sinkGraphRef.sources).to.have.length(2);
                     expect(sentinel.sources).to.have.length(1);
                 }
                 return delay(duration).then(() => {
-                    expect(destinationGraphRef.sources).to.have.length(0);
+                    expect(sinkGraphRef.sources).to.have.length(0);
                     expect(sentinel.sources).to.have.length(0);
                 });
             });
@@ -174,19 +174,19 @@ describe("GraphPlugin", () => {
                 subject.next(0);
 
                 const innerGraphRef = getGraphRef(subscriberRefsPlugin.get(inner));
-                const destinationGraphRef = getGraphRef(innerGraphRef.destination!);
+                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
                 const { sentinel } = innerGraphRef;
 
-                expect(destinationGraphRef.merges).to.have.length(1);
+                expect(sinkGraphRef.merges).to.have.length(1);
 
                 inner.complete();
 
                 if (duration === 0) {
-                    expect(destinationGraphRef.merges).to.have.length(0);
+                    expect(sinkGraphRef.merges).to.have.length(0);
                 } else {
-                    expect(destinationGraphRef.merges).to.have.length(1);
+                    expect(sinkGraphRef.merges).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(destinationGraphRef.merges).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRef.merges).to.have.length(0));
             });
 
             it("should flush errored merge subscriptions", () => {
@@ -200,19 +200,19 @@ describe("GraphPlugin", () => {
                 subject.next(0);
 
                 const innerGraphRef = getGraphRef(subscriberRefsPlugin.get(inner));
-                const destinationGraphRef = getGraphRef(innerGraphRef.destination!);
+                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
                 const { sentinel } = innerGraphRef;
 
-                expect(destinationGraphRef.merges).to.have.length(1);
+                expect(sinkGraphRef.merges).to.have.length(1);
 
                 inner.error(new Error("Boom!"));
 
                 if (duration === 0) {
-                    expect(destinationGraphRef.merges).to.have.length(0);
+                    expect(sinkGraphRef.merges).to.have.length(0);
                 } else {
-                    expect(destinationGraphRef.merges).to.have.length(1);
+                    expect(sinkGraphRef.merges).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(destinationGraphRef.merges).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRef.merges).to.have.length(0));
             });
 
             it("should flush completed custom source subscriptions", () => {
@@ -225,19 +225,19 @@ describe("GraphPlugin", () => {
                 const subscription = custom.subscribe();
 
                 const innerGraphRef = getGraphRef(subscriberRefsPlugin.get(inner));
-                const destinationGraphRef = getGraphRef(innerGraphRef.destination!);
+                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
                 const { sentinel } = innerGraphRef;
 
-                expect(destinationGraphRef.sources).to.have.length(1);
+                expect(sinkGraphRef.sources).to.have.length(1);
 
                 inner.complete();
 
                 if (duration === 0) {
-                    expect(destinationGraphRef.sources).to.have.length(0);
+                    expect(sinkGraphRef.sources).to.have.length(0);
                 } else {
-                    expect(destinationGraphRef.sources).to.have.length(1);
+                    expect(sinkGraphRef.sources).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(destinationGraphRef.sources).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRef.sources).to.have.length(0));
             });
 
             it("should flush errored custom source subscriptions", () => {
@@ -250,19 +250,19 @@ describe("GraphPlugin", () => {
                 const subscription = custom.subscribe();
 
                 const innerGraphRef = getGraphRef(subscriberRefsPlugin.get(inner));
-                const destinationGraphRef = getGraphRef(innerGraphRef.destination!);
+                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
                 const { sentinel } = innerGraphRef;
 
-                expect(destinationGraphRef.sources).to.have.length(1);
+                expect(sinkGraphRef.sources).to.have.length(1);
 
                 inner.error(new Error("Boom!"));
 
                 if (duration === 0) {
-                    expect(destinationGraphRef.sources).to.have.length(0);
+                    expect(sinkGraphRef.sources).to.have.length(0);
                 } else {
-                    expect(destinationGraphRef.sources).to.have.length(1);
+                    expect(sinkGraphRef.sources).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(destinationGraphRef.sources).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRef.sources).to.have.length(0));
             });
 
             it("should flush explicitly unsubscribed custom source subscriptions", () => {
@@ -276,19 +276,19 @@ describe("GraphPlugin", () => {
                 const subscription = custom.subscribe();
 
                 const innerGraphRef = getGraphRef(subscriberRefsPlugin.get(inner));
-                const destinationGraphRef = getGraphRef(innerGraphRef.destination!);
+                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
                 const { sentinel } = innerGraphRef;
 
-                expect(destinationGraphRef.sources).to.have.length(1);
+                expect(sinkGraphRef.sources).to.have.length(1);
 
                 innerSubscription.unsubscribe();
 
                 if (duration === 0) {
-                    expect(destinationGraphRef.sources).to.have.length(0);
+                    expect(sinkGraphRef.sources).to.have.length(0);
                 } else {
-                    expect(destinationGraphRef.sources).to.have.length(1);
+                    expect(sinkGraphRef.sources).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(destinationGraphRef.sources).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRef.sources).to.have.length(0));
             });
         }
 
@@ -323,7 +323,7 @@ describe("GraphPlugin", () => {
             teardown = spy({ plugins: [graphPlugin, subscriberRefsPlugin], warning: false });
         });
 
-        it("should graph sources and destinations", () => {
+        it("should graph sources and sinks", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -336,12 +336,12 @@ describe("GraphPlugin", () => {
             const mappedGraphRef = getGraphRef(mappedSubscriberRef);
 
             expect(subjectGraphRef).to.exist;
-            expect(subjectGraphRef).to.have.property("destination", mappedSubscriberRef);
+            expect(subjectGraphRef).to.have.property("sink", mappedSubscriberRef);
             expect(subjectGraphRef).to.have.property("sources");
             expect(subjectGraphRef.sources).to.deep.equal([]);
 
             expect(mappedGraphRef).to.exist;
-            expect(mappedGraphRef).to.have.property("destination", null);
+            expect(mappedGraphRef).to.have.property("sink", null);
             expect(mappedGraphRef).to.have.property("sources");
             expect(mappedGraphRef.sources).to.deep.equal([subjectSubscriberRef]);
         });
@@ -364,15 +364,15 @@ describe("GraphPlugin", () => {
             expect(subject1GraphRef).to.exist;
             expect(subject1GraphRef).to.have.property("sources");
             expect(subject1GraphRef.sources).to.deep.equal([]);
-            expect(hasDestination(subject1GraphRef, combinedSubscriberRef)).to.be.true;
+            expect(hasSink(subject1GraphRef, combinedSubscriberRef)).to.be.true;
 
             expect(subject2GraphRef).to.exist;
             expect(subject2GraphRef).to.have.property("sources");
             expect(subject2GraphRef.sources).to.deep.equal([]);
-            expect(hasDestination(subject2GraphRef, combinedSubscriberRef)).to.be.true;
+            expect(hasSink(subject2GraphRef, combinedSubscriberRef)).to.be.true;
 
             expect(combinedGraphRef).to.exist;
-            expect(combinedGraphRef).to.have.property("destination", null);
+            expect(combinedGraphRef).to.have.property("sink", null);
             expect(combinedGraphRef).to.have.property("sources");
             expect(combinedGraphRef.sources).to.not.be.empty;
             expect(hasSource(combinedGraphRef, subject1SubscriberRef)).to.be.true;
@@ -396,14 +396,14 @@ describe("GraphPlugin", () => {
             const composedSubscriberRef = subscriberRefsPlugin.get(composed);
 
             const outerGraphRef = getGraphRef(outerSubscriberRef);
-            expect(outerGraphRef).to.have.property("destination", composedSubscriberRef);
+            expect(outerGraphRef).to.have.property("sink", composedSubscriberRef);
             expect(outerGraphRef).to.have.property("sources");
             expect(outerGraphRef.merges).to.be.empty;
             expect(outerGraphRef.sources).to.not.be.empty;
             expect(hasSource(outerGraphRef, subjectSubscriberRef)).to.be.true;
 
             const composedGraphRef = getGraphRef(composedSubscriberRef);
-            expect(composedGraphRef).to.have.property("destination", null);
+            expect(composedGraphRef).to.have.property("sink", null);
             expect(composedGraphRef).to.have.property("sources");
             expect(composedGraphRef.sources).to.not.be.empty;
             expect(hasSource(composedGraphRef, subjectSubscriberRef)).to.be.true;
@@ -446,22 +446,22 @@ describe("GraphPlugin", () => {
             expect(inner1GraphRef).to.exist;
             expect(inner1GraphRef).to.have.property("sources");
             expect(inner1GraphRef.sources).to.deep.equal([]);
-            expect(hasDestination(inner1GraphRef, customSubscriberRef)).to.be.true;
+            expect(hasSink(inner1GraphRef, customSubscriberRef)).to.be.true;
 
             expect(inner2GraphRef).to.exist;
             expect(inner2GraphRef).to.have.property("sources");
             expect(inner2GraphRef.sources).to.deep.equal([]);
-            expect(hasDestination(inner2GraphRef, customSubscriberRef)).to.be.true;
+            expect(hasSink(inner2GraphRef, customSubscriberRef)).to.be.true;
 
             expect(customGraphRef).to.exist;
-            expect(customGraphRef).to.have.property("destination", null);
+            expect(customGraphRef).to.have.property("sink", null);
             expect(customGraphRef).to.have.property("sources");
             expect(customGraphRef.sources).to.not.be.empty;
             expect(hasSource(customGraphRef, inner1SubscriberRef)).to.be.true;
             expect(hasSource(customGraphRef, inner2SubscriberRef)).to.be.true;
         });
 
-        it("should determine destinations", () => {
+        it("should determine sinks", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -473,13 +473,13 @@ describe("GraphPlugin", () => {
             const subjectGraphRef = getGraphRef(subjectSubscriberRef);
             const mappedGraphRef = getGraphRef(mappedSubscriberRef);
 
-            expect(subjectGraphRef).to.have.property("destination", mappedSubscriberRef);
-            expect(subjectGraphRef).to.have.property("rootDestination", mappedSubscriberRef);
-            expect(mappedGraphRef).to.have.property("destination", null);
-            expect(mappedGraphRef).to.have.property("rootDestination", null);
+            expect(subjectGraphRef).to.have.property("sink", mappedSubscriberRef);
+            expect(subjectGraphRef).to.have.property("rootSink", mappedSubscriberRef);
+            expect(mappedGraphRef).to.have.property("sink", null);
+            expect(mappedGraphRef).to.have.property("rootSink", null);
         });
 
-        it("should determine root destinations", () => {
+        it("should determine root sinks", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -494,15 +494,15 @@ describe("GraphPlugin", () => {
             const mappedGraphRef = getGraphRef(mappedSubscriberRef);
             const remappedGraphRef = getGraphRef(remappedSubscriberRef);
 
-            expect(subjectGraphRef).to.have.property("destination", mappedSubscriberRef);
-            expect(subjectGraphRef).to.have.property("rootDestination", remappedSubscriberRef);
-            expect(mappedGraphRef).to.have.property("destination", remappedSubscriberRef);
-            expect(mappedGraphRef).to.have.property("rootDestination", remappedSubscriberRef);
-            expect(remappedGraphRef).to.have.property("destination", null);
-            expect(remappedGraphRef).to.have.property("rootDestination", null);
+            expect(subjectGraphRef).to.have.property("sink", mappedSubscriberRef);
+            expect(subjectGraphRef).to.have.property("rootSink", remappedSubscriberRef);
+            expect(mappedGraphRef).to.have.property("sink", remappedSubscriberRef);
+            expect(mappedGraphRef).to.have.property("rootSink", remappedSubscriberRef);
+            expect(remappedGraphRef).to.have.property("sink", null);
+            expect(remappedGraphRef).to.have.property("rootSink", null);
         });
 
-        it("should determine root destinations for array-based sources", () => {
+        it("should determine root sinks for array-based sources", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
@@ -517,15 +517,15 @@ describe("GraphPlugin", () => {
             const subject2GraphRef = getGraphRef(subject2SubscriberRef);
             const combinedGraphRef = getGraphRef(combinedSubscriberRef);
 
-            expect(subject1GraphRef).to.have.property("destination");
-            expect(subject1GraphRef).to.have.property("rootDestination", combinedSubscriberRef);
-            expect(subject2GraphRef).to.have.property("destination");
-            expect(subject2GraphRef).to.have.property("rootDestination", combinedSubscriberRef);
-            expect(combinedGraphRef).to.have.property("destination", null);
-            expect(combinedGraphRef).to.have.property("rootDestination", null);
+            expect(subject1GraphRef).to.have.property("sink");
+            expect(subject1GraphRef).to.have.property("rootSink", combinedSubscriberRef);
+            expect(subject2GraphRef).to.have.property("sink");
+            expect(subject2GraphRef).to.have.property("rootSink", combinedSubscriberRef);
+            expect(combinedGraphRef).to.have.property("sink", null);
+            expect(combinedGraphRef).to.have.property("rootSink", null);
         });
 
-        it("should determine root destinations for merges", () => {
+        it("should determine root sinks for merges", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
@@ -545,22 +545,22 @@ describe("GraphPlugin", () => {
             const innerSubject1GraphRef = getGraphRef(innerSubject1SubscriberRef);
             const innerSubject2GraphRef = getGraphRef(innerSubject2SubscriberRef);
 
-            expect(innerSubject1GraphRef).to.have.property("destination");
-            expect(innerSubject1GraphRef).to.have.property("rootDestination", composed1SubscriberRef);
-            expect(innerSubject2GraphRef).to.have.property("destination");
-            expect(innerSubject2GraphRef).to.have.property("rootDestination", composed2SubscriberRef);
+            expect(innerSubject1GraphRef).to.have.property("sink");
+            expect(innerSubject1GraphRef).to.have.property("rootSink", composed1SubscriberRef);
+            expect(innerSubject2GraphRef).to.have.property("sink");
+            expect(innerSubject2GraphRef).to.have.property("rootSink", composed2SubscriberRef);
         });
     });
 });
 
-function hasDestination(graphRef: GraphRef, destinationRef: SubscriberRef): boolean {
+function hasSink(graphRef: GraphRef, sinkRef: SubscriberRef): boolean {
 
-    if (graphRef.destination === null) {
+    if (graphRef.sink === null) {
         return false;
-    } else if (graphRef.destination === destinationRef) {
+    } else if (graphRef.sink === sinkRef) {
         return true;
     }
-    return hasDestination(getGraphRef(graphRef.destination), destinationRef);
+    return hasSink(getGraphRef(graphRef.sink), sinkRef);
 }
 
 function hasSource(graphRef: GraphRef, sourceRef: SubscriberRef): boolean {

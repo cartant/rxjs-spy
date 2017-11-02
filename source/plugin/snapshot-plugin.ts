@@ -61,13 +61,13 @@ export interface SubscriberSnapshot {
 
 export interface SubscriptionSnapshot {
     complete: boolean;
-    destination: SubscriptionSnapshot | null;
     error: any;
     id: number;
     merges: Map<Subscription, SubscriptionSnapshot>;
     mergesFlushed: number;
     observable: Observable<any>;
-    rootDestination: SubscriptionSnapshot | null;
+    rootSink: SubscriptionSnapshot | null;
+    sink: SubscriptionSnapshot | null;
     sources: Map<Subscription, SubscriptionSnapshot>;
     sourcesFlushed: number;
     stackTrace: StackFrame[];
@@ -183,13 +183,13 @@ export class SnapshotPlugin extends BasePlugin {
 
             const subscriptionSnapshot: SubscriptionSnapshot = {
                 complete,
-                destination: null,
                 error,
                 id,
                 merges: new Map<Subscription, SubscriptionSnapshot>(),
                 mergesFlushed,
                 observable,
-                rootDestination: null,
+                rootSink: null,
+                sink: null,
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 sourcesFlushed,
                 stackTrace: getStackTrace(ref),
@@ -236,11 +236,11 @@ export class SnapshotPlugin extends BasePlugin {
             const graphRef = getGraphRef(ref);
             const subscriptionSnapshot = subscriptions.get(ref.subscription)!;
 
-            if (graphRef.destination) {
-                subscriptionSnapshot.destination = subscriptions.get(graphRef.destination.subscription)!;
+            if (graphRef.sink) {
+                subscriptionSnapshot.sink = subscriptions.get(graphRef.sink.subscription)!;
             }
-            if (graphRef.rootDestination) {
-                subscriptionSnapshot.rootDestination = subscriptions.get(graphRef.rootDestination.subscription)!;
+            if (graphRef.rootSink) {
+                subscriptionSnapshot.rootSink = subscriptions.get(graphRef.rootSink.subscription)!;
             }
             graphRef.merges.forEach((m) => subscriptionSnapshot.merges.set(m.subscription, subscriptions.get(m.subscription)!));
             graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s.subscription, subscriptions.get(s.subscription)!));

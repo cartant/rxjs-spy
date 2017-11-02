@@ -245,7 +245,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.subscriptions).to.have.property("size", 1);
         });
 
-        it("should spy on sources and destinations", () => {
+        it("should spy on sources and sinks", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -260,10 +260,10 @@ describe("SnapshotPlugin", () => {
             const subjectSubscriptionSnapshot = getAt(getAt(subjectSnapshot.subscribers, 0).subscriptions, 0);
             const mappedSubscriptionSnapshot = getAt(getAt(mappedSnapshot.subscribers, 0).subscriptions, 0);
 
-            expect(subjectSubscriptionSnapshot.destination).to.equal(mappedSubscriptionSnapshot);
+            expect(subjectSubscriptionSnapshot.sink).to.equal(mappedSubscriptionSnapshot);
             expect(subjectSubscriptionSnapshot.sources).to.have.property("size", 0);
 
-            expect(mappedSubscriptionSnapshot.destination).to.equal(null);
+            expect(mappedSubscriptionSnapshot.sink).to.equal(null);
             expect(mappedSubscriptionSnapshot.sources).to.have.property("size", 1);
             expect(getAt(mappedSubscriptionSnapshot.sources, 0)).to.equal(subjectSubscriptionSnapshot);
         });
@@ -327,7 +327,7 @@ describe("SnapshotPlugin", () => {
             expect(outerSubscription.merges).to.have.property("size", 2);
         });
 
-        it("should determine a subscription's destination subscription", () => {
+        it("should determine a subscription's sink subscription", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -351,13 +351,13 @@ describe("SnapshotPlugin", () => {
             const subjectSubscription = getAt(subjectSubscriber.subscriptions, 0);
             const mappedSubscription = getAt(mappedSubscriber.subscriptions, 0);
 
-            expect(subjectSubscription).to.have.property("destination", mappedSubscription);
-            expect(subjectSubscription).to.have.property("rootDestination", mappedSubscription);
-            expect(mappedSubscription).to.have.property("destination", null);
-            expect(mappedSubscription).to.have.property("rootDestination", null);
+            expect(subjectSubscription).to.have.property("sink", mappedSubscription);
+            expect(subjectSubscription).to.have.property("rootSink", mappedSubscription);
+            expect(mappedSubscription).to.have.property("sink", null);
+            expect(mappedSubscription).to.have.property("rootSink", null);
         });
 
-        it("should determine a subscription's root destination subscription", () => {
+        it("should determine a subscription's root sink subscription", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.map((value) => value);
@@ -387,15 +387,15 @@ describe("SnapshotPlugin", () => {
             const mappedSubscription = getAt(mappedSubscriber.subscriptions, 0);
             const remappedSubscription = getAt(remappedSubscriber.subscriptions, 0);
 
-            expect(subjectSubscription).to.have.property("destination", mappedSubscription);
-            expect(subjectSubscription).to.have.property("rootDestination", remappedSubscription);
-            expect(mappedSubscription).to.have.property("destination", remappedSubscription);
-            expect(mappedSubscription).to.have.property("rootDestination", remappedSubscription);
-            expect(remappedSubscription).to.have.property("destination", null);
-            expect(remappedSubscription).to.have.property("rootDestination", null);
+            expect(subjectSubscription).to.have.property("sink", mappedSubscription);
+            expect(subjectSubscription).to.have.property("rootSink", remappedSubscription);
+            expect(mappedSubscription).to.have.property("sink", remappedSubscription);
+            expect(mappedSubscription).to.have.property("rootSink", remappedSubscription);
+            expect(remappedSubscription).to.have.property("sink", null);
+            expect(remappedSubscription).to.have.property("rootSink", null);
         });
 
-        it("should determine root destinations for array-based sources", () => {
+        it("should determine root sinks for array-based sources", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
@@ -425,15 +425,15 @@ describe("SnapshotPlugin", () => {
             const subject2Subscription = getAt(subject2Subscriber.subscriptions, 0);
             const combinedSubscription = getAt(combinedSubscriber.subscriptions, 0);
 
-            expect(subject1Subscription).to.have.property("destination");
-            expect(subject1Subscription).to.have.property("rootDestination", combinedSubscription);
-            expect(subject2Subscription).to.have.property("destination");
-            expect(subject2Subscription).to.have.property("rootDestination", combinedSubscription);
-            expect(combinedSubscription).to.have.property("destination", null);
-            expect(combinedSubscription).to.have.property("rootDestination", null);
+            expect(subject1Subscription).to.have.property("sink");
+            expect(subject1Subscription).to.have.property("rootSink", combinedSubscription);
+            expect(subject2Subscription).to.have.property("sink");
+            expect(subject2Subscription).to.have.property("rootSink", combinedSubscription);
+            expect(combinedSubscription).to.have.property("sink", null);
+            expect(combinedSubscription).to.have.property("rootSink", null);
         });
 
-        it("should determine root destinations for merges", () => {
+        it("should determine root sinks for merges", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
@@ -473,10 +473,10 @@ describe("SnapshotPlugin", () => {
             const inner1Subscription = getAt(inner1Subscriber.subscriptions, 0);
             const inner2Subscription = getAt(inner2Subscriber.subscriptions, 0);
 
-            expect(inner1Subscription).to.have.property("destination");
-            expect(inner1Subscription).to.have.property("rootDestination", composed1Subscription);
-            expect(inner2Subscription).to.have.property("destination");
-            expect(inner2Subscription).to.have.property("rootDestination", composed2Subscription);
+            expect(inner1Subscription).to.have.property("sink");
+            expect(inner1Subscription).to.have.property("rootSink", composed1Subscription);
+            expect(inner2Subscription).to.have.property("sink");
+            expect(inner2Subscription).to.have.property("rootSink", composed2Subscription);
         });
 
         it("should support multiple subscriptions", () => {

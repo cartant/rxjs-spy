@@ -251,7 +251,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             logger.groupCollapsed(`${subscriptions.size} subscription(s)`);
             subscriptions.forEach((subscriptionSnapshot) => {
 
-                const { complete, error, rootDestination, stackTrace, unsubscribed } = subscriptionSnapshot;
+                const { complete, error, rootSink, stackTrace, unsubscribed } = subscriptionSnapshot;
                 logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
                 if (error) {
                     logger.error("Error =", error);
@@ -259,7 +259,7 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
                 if (unsubscribed) {
                     logger.error("Unsubscribed =", true);
                 }
-                logger.log("Root subscribe", rootDestination ? rootDestination.stackTrace : stackTrace);
+                logger.log("Root subscribe", rootSink ? rootSink.stackTrace : stackTrace);
             });
             logger.groupEnd();
             logger.groupEnd();
@@ -358,8 +358,8 @@ function detectWithLog(id: string, detector: Detector): void {
     function logSubscription(logger: Logger, name: string, subscription: SubscriptionSnapshot): void {
 
         logger.group(name);
-        logger.log("Root subscribe", subscription.rootDestination ?
-            subscription.rootDestination.stackTrace :
+        logger.log("Root subscribe", subscription.rootSink ?
+            subscription.rootSink.stackTrace :
             subscription.stackTrace
         );
         logger.log("Subscribe", subscription.stackTrace);

@@ -91,8 +91,8 @@ export class LogPlugin extends BasePlugin {
                 }
                 if (graphRef) {
                     logger_.groupCollapsed("Subscription");
-                    const { rootDestination } = graphRef;
-                    logger_.log("Root subscribe", rootDestination ? getStackTrace(rootDestination) : getStackTrace(ref));
+                    const { rootSink } = graphRef;
+                    logger_.log("Root subscribe", rootSink ? getStackTrace(rootSink) : getStackTrace(ref));
                     logger_.groupEnd();
                 }
                 logger_.groupEnd();
