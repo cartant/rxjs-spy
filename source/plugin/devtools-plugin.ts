@@ -138,18 +138,18 @@ function toGraph(subscriberRef: SubscriberRef): any {
     }
 
     const {
-        destination,
         merges,
         mergesFlushed,
-        rootDestination,
+        rootSink,
+        sink,
         sources,
         sourcesFlushed
     } = graphRef;
     return {
-        destination: destination ? destination.id : null,
         merges: merges.map((m) => m.id),
         mergesFlushed,
-        rootDestination: rootDestination ? rootDestination.id : null,
+        rootSink: rootSink ? rootSink.id : null,
+        sink: sink ? sink.id : null,
         sources: merges.map((s) => s.id),
         sourcesFlushed
     };
