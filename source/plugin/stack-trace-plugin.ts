@@ -36,7 +36,7 @@ export class StackTracePlugin extends BasePlugin {
 
     private sourceMaps_: boolean;
 
-    constructor({ sourceMaps = true }: { sourceMaps?: boolean } = {}) {
+    constructor({ sourceMaps = false }: { sourceMaps?: boolean } = {}) {
 
         super();
         this.sourceMaps_ = sourceMaps;
