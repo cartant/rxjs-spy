@@ -106,6 +106,7 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 * [find](#module-find)
 * [findAll](#module-findAll)
 * [detect](#module-detect)
+* [stats](#module-stats)
 
 <a name="module-spy"></a>
 
@@ -295,6 +296,16 @@ The `detect` method is implemented so that it can be imported and called regardl
 ```ts
 import { detect } from "rxjs-spy/detect";
 ```
+
+<a name="module-stats"></a>
+
+### stats
+
+```ts
+function stats(partialLogger: PartialLogger = console): void
+```
+
+Writes, to the console, counts of the number of notifications, etc.
 
 ## Console API
 
