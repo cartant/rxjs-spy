@@ -11,7 +11,7 @@ import { Observer } from "rxjs/Observer";
 import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
-import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "./plugin";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 import { spy } from "../spy";
 
