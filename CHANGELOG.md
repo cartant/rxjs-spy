@@ -1,3 +1,10 @@
+<a name="5.1.0"></a>
+## [5.1.0](https://github.com/cartant/rxjs-spy/compare/v5.0.0...v5.1.0) (2017-11-07)
+
+### Features
+
+* **Stats**: Add a plugin to collect basic stats. ([a49344c](https://github.com/cartant/rxjs-spy/commit/a49344c))
+
 <a name="5.0.0"></a>
 ## [5.0.0](https://github.com/cartant/rxjs-spy/compare/v4.1.2...v5.0.0) (2017-11-02)
 
