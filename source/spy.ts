@@ -26,6 +26,8 @@ import {
     Plugin,
     SnapshotPlugin,
     StackTracePlugin,
+    Stats,
+    StatsPlugin,
     SubscriberSnapshot,
     SubscriptionRef,
     SubscriptionSnapshot
@@ -100,6 +102,11 @@ if (typeof window !== "undefined") {
         spy(...args: any[]): void {
 
             spy.apply(null, args);
+        },
+
+        stats(): void {
+
+            stats();
         },
 
         undo(...args: any[]): void {
@@ -295,6 +302,7 @@ export function spy(options: {
         plugins_ = plugins;
     } else {
         plugins_ = [
+            new StatsPlugin(),
             new StackTracePlugin(options as { [key: string]: any }),
             new GraphPlugin(options as { [key: string]: any }),
             new SnapshotPlugin(options as { [key: string]: any })
@@ -318,6 +326,28 @@ export function spy(options: {
     undos_.push({ name: "spy", teardown });
 
     return teardown;
+}
+
+export function stats(partialLogger?: PartialLogger): void {
+
+    const statsPlugin = find(StatsPlugin);
+    if (!statsPlugin) {
+        /*tslint:disable-next-line:no-console*/
+        console.warn("Stats are not enabled.");
+        return;
+    }
+
+    const stats = statsPlugin.stats;
+    const logger = toLogger(partialLogger || defaultLogger);
+    logger.group("Stats");
+    logger.log("subscribes =", stats.subscribes);
+    logger.log("unsubscribes =", stats.unsubscribes);
+    logger.log("nexts =", stats.nexts);
+    logger.log("errors =", stats.errors);
+    logger.log("completes =", stats.completes);
+    logger.log("tick =", stats.tick);
+    logger.log("timespan =", stats.timespan);
+    logger.groupEnd();
 }
 
 export function subscribeWithoutSpy(this: Observable<any>, ...args: any[]): Subscription {

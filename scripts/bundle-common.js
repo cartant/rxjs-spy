@@ -15,6 +15,7 @@ const shims = {
     "rxjs/add/observable/interval": "Rx.unused",
     "rxjs/add/observable/never": "Rx.unused",
     "rxjs/add/observable/of": "Rx.unused",
+    "rxjs/add/observable/timer": "Rx.unused",
     "rxjs/add/operator/dematerialize": "Rx.unused",
     "rxjs/add/operator/let": "Rx.unused",
     "rxjs/add/operator/map": "Rx.unused",

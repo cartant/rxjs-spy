@@ -10,7 +10,7 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
 import { Plugin } from "./plugin";
-import { flush, _let, log, pause, show, spy } from "./spy";
+import { flush, _let, log, pause, show, spy, stats } from "./spy";
 import { tick } from "./tick";
 
 import "rxjs/add/operator/mapTo";
@@ -344,6 +344,27 @@ describe("spy", () => {
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["1 snapshot(s) matching /.+/"]);
             expect(calls[1]).to.deep.equal(["  Tag = people"]);
+        });
+    });
+
+    describe("stats", () => {
+
+        it("should show the stats", () => {
+
+            teardown = spy({ ...options });
+
+            const calls: any[][] = [];
+            const subject = new Subject<number>();
+            const subscription = subject.subscribe();
+
+            stats({
+                log(...args: any[]): void { calls.push(args); }
+            });
+
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Stats"]);
+            expect(calls[1]).to.deep.equal(["  subscribes =", 1]);
+            expect(calls[2]).to.deep.equal(["  unsubscribes =", 0]);
         });
     });
 
