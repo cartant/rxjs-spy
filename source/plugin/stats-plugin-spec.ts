@@ -8,10 +8,12 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
+import { GraphPlugin } from "./graph-plugin";
 import { StatsPlugin } from "./stats-plugin";
 import { spy } from "../spy";
 
 import "rxjs/add/observable/timer";
+import "rxjs/add/operator/map";
 
 describe("StatsPlugin", () => {
 
@@ -28,7 +30,7 @@ describe("StatsPlugin", () => {
     beforeEach(() => {
 
         statsPlugin = new StatsPlugin();
-        teardown = spy({ plugins: [statsPlugin], warning: false });
+        teardown = spy({ plugins: [new GraphPlugin({ keptDuration: -1 }), statsPlugin], warning: false });
     });
 
     it("should count subscribes/unsubscribes", () => {
@@ -50,6 +52,31 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(1);
         expect(stats.unsubscribes).to.equal(1);
+    });
+
+    it("should count root subscribes", () => {
+
+        const subject = new Subject<number>();
+        const mapped = subject.map(value => value);
+
+        let stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(0);
+        expect(stats.rootSubscribes).to.equal(0);
+        expect(stats.unsubscribes).to.equal(0);
+
+        const subscription = mapped.subscribe();
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(2);
+        expect(stats.rootSubscribes).to.equal(1);
+        expect(stats.unsubscribes).to.equal(0);
+
+        subscription.unsubscribe();
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(2);
+        expect(stats.rootSubscribes).to.equal(1);
+        expect(stats.unsubscribes).to.equal(2);
     });
 
     it("should count completes", () => {

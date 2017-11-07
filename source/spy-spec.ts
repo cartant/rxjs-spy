@@ -364,7 +364,8 @@ describe("spy", () => {
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Stats"]);
             expect(calls[1]).to.deep.equal(["  subscribes =", 1]);
-            expect(calls[2]).to.deep.equal(["  unsubscribes =", 0]);
+            expect(calls[2]).to.deep.equal(["  root subscribes =", 1]);
+            expect(calls[3]).to.deep.equal(["  unsubscribes =", 0]);
         });
     });
 
