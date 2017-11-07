@@ -6,13 +6,15 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
+import { getGraphRef } from "./graph-plugin";
+import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
 import { tick } from "../tick";
 
 export interface Stats {
     completes: number;
     errors: number;
     nexts: number;
+    rootSubscribes: number;
     subscribes: number;
     tick: number;
     timespan: number;
@@ -25,6 +27,7 @@ export class StatsPlugin extends BasePlugin {
         completes: 0,
         errors: 0,
         nexts: 0,
+        rootSubscribes: 0,
         subscribes: 0,
         tick: 0,
         timespan: 0,
@@ -54,6 +57,10 @@ export class StatsPlugin extends BasePlugin {
         const { stats_ } = this;
         ++stats_.subscribes;
         this.all_();
+        const graphRef = getGraphRef(ref);
+        if (graphRef && (graphRef.rootSink === null)) {
+            ++stats_.rootSubscribes;
+        }
     }
 
     beforeUnsubscribe(ref: SubscriptionRef): void {

@@ -303,10 +303,10 @@ export function spy(options: {
         plugins_ = plugins;
     } else {
         plugins_ = [
-            new StatsPlugin(),
             new StackTracePlugin(options as { [key: string]: any }),
             new GraphPlugin(options as { [key: string]: any }),
             new SnapshotPlugin(options as { [key: string]: any }),
+            new StatsPlugin(),
             new DevToolsPlugin()
         ];
     }
@@ -340,9 +340,13 @@ export function stats(partialLogger?: PartialLogger): void {
     }
 
     const stats = statsPlugin.stats;
+    const { rootSubscribes } = stats;
     const logger = toLogger(partialLogger || defaultLogger);
     logger.group("Stats");
     logger.log("subscribes =", stats.subscribes);
+    if (rootSubscribes > 0) {
+        logger.log("root subscribes =", rootSubscribes);
+    }
     logger.log("unsubscribes =", stats.unsubscribes);
     logger.log("nexts =", stats.nexts);
     logger.log("errors =", stats.errors);
