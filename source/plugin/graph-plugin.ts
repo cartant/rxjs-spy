@@ -10,7 +10,9 @@ import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plug
 const graphRefSymbol = Symbol("graphRef");
 
 export interface GraphRef {
+    depth: number;
     link: GraphRef;
+    merged: boolean;
     merges: SubscriptionRef[];
     mergesFlushed: number;
     rootSink: SubscriptionRef | null;
@@ -51,7 +53,9 @@ export class GraphPlugin extends BasePlugin {
         this.keptDuration_ = keptDuration;
         this.notifications_ = [];
         this.sentinel_ = {
+            depth: -1,
             link: null!,
+            merged: false,
             merges: [],
             mergesFlushed: 0,
             rootSink: null,
@@ -98,7 +102,9 @@ export class GraphPlugin extends BasePlugin {
         const { notifications_, sentinel_ } = this;
 
         const graphRef = setGraphRef(ref, {
+            depth: 0,
             link: sentinel_,
+            merged: false,
             merges: [],
             mergesFlushed: 0,
             rootSink: null,
@@ -115,6 +121,7 @@ export class GraphPlugin extends BasePlugin {
             const sinkGraphRef = getGraphRef(sinkRef);
             sinkGraphRef.merges.push(ref as SubscriptionRef);
             graphRef.link = sinkGraphRef;
+            graphRef.merged = true;
             graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
             graphRef.sink = sinkRef as SubscriptionRef;
 
@@ -125,6 +132,7 @@ export class GraphPlugin extends BasePlugin {
                     const { ref: sinkRef } = notifications_[length - 1];
                     const sinkGraphRef = getGraphRef(sinkRef);
                     sinkGraphRef.sources.push(ref as SubscriptionRef);
+                    graphRef.depth = sinkGraphRef.depth + 1;
                     graphRef.link = sinkGraphRef;
                     graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
                     graphRef.sink = sinkRef as SubscriptionRef;

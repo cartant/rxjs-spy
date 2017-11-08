@@ -550,6 +550,54 @@ describe("GraphPlugin", () => {
             expect(innerSubject2GraphRef).to.have.property("sink");
             expect(innerSubject2GraphRef).to.have.property("rootSink", composed2SubscriberRef);
         });
+
+        it("should determine the depth", () => {
+
+            const subject = new Subject<number>();
+            const mapped = subject.map((value) => value);
+            const subscription = mapped.subscribe();
+
+            const subjectSubscriberRef = subscriberRefsPlugin.get(subject);
+            const mappedSubscriberRef = subscriberRefsPlugin.get(mapped);
+
+            const subjectGraphRef = getGraphRef(subjectSubscriberRef);
+            const mappedGraphRef = getGraphRef(mappedSubscriberRef);
+
+            expect(subjectGraphRef).to.exist;
+            expect(subjectGraphRef).to.have.property("depth", 1);
+
+            expect(mappedGraphRef).to.exist;
+            expect(mappedGraphRef).to.have.property("depth", 0);
+        });
+
+        it("should indicate merged subscriptions", () => {
+
+            const subject = new Subject<number>();
+            const outer = subject.tag("outer");
+            const merges: Observable<number>[] = [];
+            const composed = outer.mergeMap((value) => {
+                const m = Observable.never<number>().tag("inner");
+                merges.push(m);
+                return m;
+            });
+            const subscription = composed.subscribe();
+
+            const outerSubscriberRef = subscriberRefsPlugin.get(outer);
+            const outerGraphRef = getGraphRef(outerSubscriberRef);
+            expect(outerGraphRef).to.have.property("merged", false);
+
+            subject.next(0);
+
+            let mergedSubscriberRef = outerGraphRef.merges[0];
+            let mergedGraphRef = getGraphRef(mergedSubscriberRef);
+            expect(mergedGraphRef).to.have.property("merged", true);
+
+            subject.next(1);
+
+            mergedSubscriberRef = outerGraphRef.merges[1];
+            mergedGraphRef = getGraphRef(mergedSubscriberRef);
+            expect(mergedGraphRef).to.have.property("merged", true);
+        });
     });
 });
 
