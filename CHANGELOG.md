@@ -1,3 +1,10 @@
+<a name="5.2.1"></a>
+## [5.2.1](https://github.com/cartant/rxjs-spy/compare/v5.2.0...v5.2.1) (2017-11-08)
+
+### Fixes
+
+* Fix publishing from `next` fiasco.
+
 <a name="5.2.0"></a>
 ## [5.2.0](https://github.com/cartant/rxjs-spy/compare/v5.1.1...v5.2.0) (2017-11-08)
 
