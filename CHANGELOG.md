@@ -1,3 +1,10 @@
+<a name="5.2.0"></a>
+## [5.2.0](https://github.com/cartant/rxjs-spy/compare/v5.1.1...v5.2.0) (2017-11-08)
+
+### Features
+
+* **Stats**: Add graph-related stats (included only if the `GraphPlugin` is configured). ([c377506](https://github.com/cartant/rxjs-spy/commit/c377506))
+
 <a name="5.1.1"></a>
 ## [5.1.1](https://github.com/cartant/rxjs-spy/compare/v5.1.0...v5.1.1) (2017-11-07)
 
