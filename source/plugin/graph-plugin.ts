@@ -53,7 +53,7 @@ export class GraphPlugin extends BasePlugin {
         this.keptDuration_ = keptDuration;
         this.notifications_ = [];
         this.sentinel_ = {
-            depth: -1,
+            depth: 0,
             link: null!,
             merged: false,
             merges: [],
@@ -102,7 +102,7 @@ export class GraphPlugin extends BasePlugin {
         const { notifications_, sentinel_ } = this;
 
         const graphRef = setGraphRef(ref, {
-            depth: 0,
+            depth: 1,
             link: sentinel_,
             merged: false,
             merges: [],
