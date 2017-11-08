@@ -12,8 +12,10 @@ import { GraphPlugin } from "./graph-plugin";
 import { StatsPlugin } from "./stats-plugin";
 import { spy } from "../spy";
 
+import "rxjs/add/observable/never";
 import "rxjs/add/observable/timer";
 import "rxjs/add/operator/map";
+import "rxjs/add/operator/switchMap";
 
 describe("StatsPlugin", () => {
 
@@ -54,7 +56,7 @@ describe("StatsPlugin", () => {
         expect(stats.unsubscribes).to.equal(1);
     });
 
-    it("should count root subscribes", () => {
+    it("should count root/leaf subscribes", () => {
 
         const subject = new Subject<number>();
         const mapped = subject.map(value => value);
@@ -62,6 +64,7 @@ describe("StatsPlugin", () => {
         let stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(0);
         expect(stats.rootSubscribes).to.equal(0);
+        expect(stats.leafSubscribes).to.equal(0);
         expect(stats.unsubscribes).to.equal(0);
 
         const subscription = mapped.subscribe();
@@ -69,6 +72,7 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(2);
         expect(stats.rootSubscribes).to.equal(1);
+        expect(stats.leafSubscribes).to.equal(1);
         expect(stats.unsubscribes).to.equal(0);
 
         subscription.unsubscribe();
@@ -76,7 +80,44 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(2);
         expect(stats.rootSubscribes).to.equal(1);
+        expect(stats.leafSubscribes).to.equal(1);
         expect(stats.unsubscribes).to.equal(2);
+    });
+
+    it("should count merged subscribes", () => {
+
+        const subject = new Subject<number>();
+        const mapped = subject.switchMap(value => Observable.never<number>());
+
+        let stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(0);
+        expect(stats.rootSubscribes).to.equal(0);
+        expect(stats.mergedSubscribes).to.equal(0);
+        expect(stats.unsubscribes).to.equal(0);
+
+        const subscription = mapped.subscribe();
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(2);
+        expect(stats.rootSubscribes).to.equal(1);
+        expect(stats.mergedSubscribes).to.equal(0);
+        expect(stats.unsubscribes).to.equal(0);
+
+        subject.next(0);
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(3);
+        expect(stats.rootSubscribes).to.equal(1);
+        expect(stats.mergedSubscribes).to.equal(1);
+        expect(stats.unsubscribes).to.equal(0);
+
+        subscription.unsubscribe();
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(3);
+        expect(stats.rootSubscribes).to.equal(1);
+        expect(stats.mergedSubscribes).to.equal(1);
+        expect(stats.unsubscribes).to.equal(3);
     });
 
     it("should count completes", () => {
@@ -142,5 +183,42 @@ describe("StatsPlugin", () => {
             callback,
             callback
         );
+    });
+
+    it("should determine the maximum and total depth", () => {
+
+        const subject = new Subject<number>();
+        const mapped = subject.map(value => value);
+        const remapped = mapped.map(value => value);
+
+        let stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(0);
+        expect(stats.rootSubscribes).to.equal(0);
+        expect(stats.unsubscribes).to.equal(0);
+
+        const mappedSubscription = mapped.subscribe();
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(2);
+        expect(stats.unsubscribes).to.equal(0);
+        expect(stats.maxDepth).to.equal(2);
+        expect(stats.totalDepth).to.equal(2);
+
+        const remappedSubscription = remapped.subscribe();
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(5);
+        expect(stats.unsubscribes).to.equal(0);
+        expect(stats.maxDepth).to.equal(3);
+        expect(stats.totalDepth).to.equal(5);
+
+        mappedSubscription.unsubscribe();
+        remappedSubscription.unsubscribe();
+
+        stats = statsPlugin.stats;
+        expect(stats.subscribes).to.equal(5);
+        expect(stats.unsubscribes).to.equal(5);
+        expect(stats.maxDepth).to.equal(3);
+        expect(stats.totalDepth).to.equal(5);
     });
 });

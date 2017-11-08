@@ -340,17 +340,27 @@ export function stats(partialLogger?: PartialLogger): void {
     }
 
     const stats = statsPlugin.stats;
-    const { rootSubscribes } = stats;
+    const { leafSubscribes, maxDepth, mergedSubscribes, rootSubscribes, totalDepth } = stats;
     const logger = toLogger(partialLogger || defaultLogger);
     logger.group("Stats");
     logger.log("subscribes =", stats.subscribes);
     if (rootSubscribes > 0) {
         logger.log("root subscribes =", rootSubscribes);
     }
+    if (leafSubscribes > 0) {
+        logger.log("leaf subscribes =", leafSubscribes);
+    }
+    if (mergedSubscribes > 0) {
+        logger.log("merged subscribes =", mergedSubscribes);
+    }
     logger.log("unsubscribes =", stats.unsubscribes);
     logger.log("nexts =", stats.nexts);
     logger.log("errors =", stats.errors);
     logger.log("completes =", stats.completes);
+    if (maxDepth > 0) {
+        logger.log("max. depth =", maxDepth);
+        logger.log("avg. depth =", (totalDepth / leafSubscribes).toFixed(1));
+    }
     logger.log("tick =", stats.tick);
     logger.log("timespan =", stats.timespan);
     logger.groupEnd();

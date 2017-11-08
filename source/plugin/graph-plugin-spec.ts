@@ -564,10 +564,10 @@ describe("GraphPlugin", () => {
             const mappedGraphRef = getGraphRef(mappedSubscriberRef);
 
             expect(subjectGraphRef).to.exist;
-            expect(subjectGraphRef).to.have.property("depth", 1);
+            expect(subjectGraphRef).to.have.property("depth", 2);
 
             expect(mappedGraphRef).to.exist;
-            expect(mappedGraphRef).to.have.property("depth", 0);
+            expect(mappedGraphRef).to.have.property("depth", 1);
         });
 
         it("should indicate merged subscriptions", () => {
