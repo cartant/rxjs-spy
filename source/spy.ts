@@ -12,6 +12,7 @@ import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { detect, hook } from "./detect";
 import { Detector } from "./detector";
+import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
 
@@ -416,6 +417,9 @@ function subscribeWithSpy(this: Observable<any>, ...args: any[]): any {
     /*tslint:disable-next-line:no-invalid-this*/
     const observable = this;
     const subscriber = toSubscriber.apply(null, args);
+
+    identify(observable);
+    identify(subscriber);
 
     const ref: SubscriptionRef = {
         id: ++lastSubscriptionRefId,

@@ -7,6 +7,7 @@
 import "./add/operator/tag-spec";
 import "./detect-spec";
 import "./detector-spec";
+import "./identify-spec";
 import "./match-spec";
 import "./plugin/graph-plugin-spec";
 import "./plugin/let-plugin-spec";
