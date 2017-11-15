@@ -12,7 +12,7 @@
     "@types/chai": "^4.0.0",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.0",
-    "@types/sinon": "^2.0.0",
+    "@types/sinon": "^4.0.0",
     "browserify": "^14.4.0",
     "browserify-global-shim": "^1.0.3",
     "chai": "^4.0.0",
