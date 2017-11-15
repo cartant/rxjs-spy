@@ -144,11 +144,11 @@ function toGraph(subscriberRef: SubscriberRef): Graph | null {
         sourcesFlushed
     } = graphRef;
     return {
-        merges: merges.map((m) => m.id),
+        merges: merges.map(identify),
         mergesFlushed,
-        rootSink: rootSink ? rootSink.id : null,
-        sink: sink ? sink.id : null,
-        sources: merges.map((s) => s.id),
+        rootSink: rootSink ? identify(rootSink) : null,
+        sink: sink ? identify(sink) : null,
+        sources: merges.map(identify),
         sourcesFlushed
     };
 }
@@ -156,7 +156,7 @@ function toGraph(subscriberRef: SubscriberRef): Graph | null {
 function toMessage(messageRef: MessageRef): NotificationMessage {
 
     const { error, notification, prefix, ref, value } = messageRef;
-    const { id, observable, subscriber } = ref;
+    const { observable, subscriber } = ref;
 
     return {
         error,
@@ -166,7 +166,7 @@ function toMessage(messageRef: MessageRef): NotificationMessage {
         observableId: identify(observable),
         stackTrace: getStackTrace(ref) || null,
         subscriberId: identify(subscriber),
-        subscriptionId: id,
+        subscriptionId: identify(ref),
         tag: read(observable) || null,
         type: toType(observable),
         value

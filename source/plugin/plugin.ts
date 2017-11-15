@@ -9,7 +9,6 @@ import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 
 export interface SubscriberRef {
-    id: number;
     observable: Observable<any>;
     subscriber: Subscriber<any>;
     timestamp: number;

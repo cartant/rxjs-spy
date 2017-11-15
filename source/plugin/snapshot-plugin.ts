@@ -8,8 +8,9 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { StackFrame } from "stacktrace-js";
-import { read } from "../match";
+import { identify } from "../identify";
 import { getGraphRef, GraphRef } from "./graph-plugin";
+import { read } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 import { getSourceMapsResolved, getStackTrace } from "./stack-trace-plugin";
 import { tick } from "../tick";
@@ -45,6 +46,7 @@ export interface Snapshot {
 }
 
 export interface ObservableSnapshot {
+    id: string;
     observable: Observable<any>;
     subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
     tag: string | null;
@@ -52,6 +54,7 @@ export interface ObservableSnapshot {
 }
 
 export interface SubscriberSnapshot {
+    id: string;
     subscriber: Subscriber<any>;
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tick: number;
@@ -62,7 +65,7 @@ export interface SubscriberSnapshot {
 export interface SubscriptionSnapshot {
     complete: boolean;
     error: any;
-    id: number;
+    id: string;
     merges: Map<Subscription, SubscriptionSnapshot>;
     mergesFlushed: number;
     observable: Observable<any>;
@@ -166,7 +169,7 @@ export class SnapshotPlugin extends BasePlugin {
         const subscriptionRefs = this.getSubscriptionRefs_();
         subscriptionRefs.forEach((unused, ref) => {
 
-            const { id, observable, subscriber, subscription } = ref;
+            const { observable, subscriber, subscription } = ref;
 
             const graphRef = getGraphRef(ref);
             const { mergesFlushed, sourcesFlushed } = graphRef;
@@ -185,7 +188,7 @@ export class SnapshotPlugin extends BasePlugin {
             const subscriptionSnapshot: SubscriptionSnapshot = {
                 complete,
                 error,
-                id,
+                id: identify(ref),
                 merges: new Map<Subscription, SubscriptionSnapshot>(),
                 mergesFlushed,
                 observable,
@@ -206,6 +209,7 @@ export class SnapshotPlugin extends BasePlugin {
             let subscriberSnapshot = subscribers.get(subscriber);
             if (!subscriberSnapshot) {
                 subscriberSnapshot = {
+                    id: identify(subscriber),
                     subscriber,
                     subscriptions: new Map<Subscription, SubscriptionSnapshot>(),
                     tick,
@@ -222,6 +226,7 @@ export class SnapshotPlugin extends BasePlugin {
             let observableSnapshot = observables.get(observable);
             if (!observableSnapshot) {
                 observableSnapshot = {
+                    id: identify(observable),
                     observable,
                     subscribers: new Map<Subscriber<any>, SubscriberSnapshot>(),
                     tag: read(observable),

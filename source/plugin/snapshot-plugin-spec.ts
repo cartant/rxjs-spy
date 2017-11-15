@@ -509,7 +509,6 @@ describe("SnapshotPlugin", () => {
             const subscription = subject.subscribe(subscriber);
 
             let observableSnapshot = plugin.snapshotObservable({
-                id: 0,
                 observable: subject,
                 subscriber,
                 subscription,
@@ -532,7 +531,6 @@ describe("SnapshotPlugin", () => {
             const subscription = subject.subscribe(subscriber);
 
             let subscriberSnapshot = plugin.snapshotSubscriber({
-                id: 0,
                 observable: subject,
                 subscriber,
                 subscription,

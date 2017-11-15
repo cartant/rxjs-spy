@@ -17,11 +17,11 @@ export interface Extension {
 }
 
 export interface Graph {
-    merges: number[];
+    merges: string[];
     mergesFlushed: number;
-    rootSink: number | null;
-    sink: number | null;
-    sources: number[];
+    rootSink: string | null;
+    sink: string | null;
+    sources: string[];
     sourcesFlushed: number;
 }
 
@@ -34,10 +34,10 @@ export interface Notification extends Message {
     graph: Graph | null;
     messageType: "notification";
     notification: string;
-    observableId: number;
+    observableId: string;
     stackTrace: StackFrame[] | null;
-    subscriberId: number;
-    subscriptionId: number;
+    subscriberId: string;
+    subscriptionId: string;
     tag: string | null;
     type: string;
     value?: any;
