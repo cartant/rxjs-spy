@@ -10,6 +10,7 @@ import { Subscriber } from "rxjs/Subscriber";
 import { EXTENSION_KEY } from "../devtools/constants";
 import { Connection, Extension, Graph, Notification as NotificationMessage } from "../devtools/interfaces";
 import { getGraphRef } from "./graph-plugin";
+import { identify } from "../identify";
 import { read } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
@@ -155,15 +156,17 @@ function toGraph(subscriberRef: SubscriberRef): Graph | null {
 function toMessage(messageRef: MessageRef): NotificationMessage {
 
     const { error, notification, prefix, ref, value } = messageRef;
-    const { id, observable } = ref;
+    const { id, observable, subscriber } = ref;
 
     return {
         error,
         graph: toGraph(ref) || null,
-        id,
         messageType: "notification",
         notification: `${prefix}-${notification}`,
+        observableId: identify(observable),
         stackTrace: getStackTrace(ref) || null,
+        subscriberId: identify(subscriber),
+        subscriptionId: id,
         tag: read(observable) || null,
         type: toType(observable),
         value

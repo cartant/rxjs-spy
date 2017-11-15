@@ -32,10 +32,12 @@ export interface Message {
 export interface Notification extends Message {
     error?: any;
     graph: Graph | null;
-    id: number;
     messageType: "notification";
     notification: string;
+    observableId: number;
     stackTrace: StackFrame[] | null;
+    subscriberId: number;
+    subscriptionId: number;
     tag: string | null;
     type: string;
     value?: any;
