@@ -33,6 +33,7 @@ export interface Notification extends Message {
     error?: any;
     graph: Graph | null;
     id: number;
+    messageType: "notification";
     notification: string;
     stackTrace: StackFrame[] | null;
     tag: string | null;
@@ -46,10 +47,11 @@ export interface Post extends Message {
 }
 
 export interface Request extends Message {
-    messageType: string;
+    messageType: "request";
 }
 
 export interface Response extends Message {
+    messageType: "response";
     request: Post;
 }
 
