@@ -7,6 +7,8 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
+import { EXTENSION_KEY } from "../devtools/constants";
+import { Connection, Extension, Graph, Notification as NotificationMessage } from "../devtools/interfaces";
 import { getGraphRef } from "./graph-plugin";
 import { read } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
@@ -22,27 +24,21 @@ interface MessageRef {
 
 export class DevToolsPlugin extends BasePlugin {
 
-    private listener_: ((event: MessageEvent) => void) | null;
+    private connection_: Connection | null;
 
     constructor() {
 
         super();
 
-        if ((typeof window !== "undefined") && (typeof window.postMessage === "function")) {
-            this.listener_ = event => {
-                const { data, source } = event;
-                if ((source === window) && (typeof data === "object") && data && (data.source === "rxjs-spy-devtools")) {
-                    /*tslint:disable-next-line:no-console*/
-                    console.log("Received a DevTools message", data);
-                }
-            };
-            window.addEventListener("message", this.listener_);
+        if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
+            const extension = window[EXTENSION_KEY] as Extension;
+            this.connection_ = extension.connect();
         }
     }
 
     afterSubscribe(ref: SubscriptionRef): void {
 
-        postMessage({
+        this.postMessage_({
             notification: "subscribe",
             prefix: "after",
             ref
@@ -51,7 +47,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     afterUnsubscribe(ref: SubscriptionRef): void {
 
-        postMessage({
+        this.postMessage_({
             notification: "unsubscribe",
             prefix: "after",
             ref
@@ -60,7 +56,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeComplete(ref: SubscriptionRef): void {
 
-        postMessage({
+        this.postMessage_({
             notification: "complete",
             prefix: "before",
             ref
@@ -69,7 +65,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeError(ref: SubscriptionRef, error: any): void {
 
-        postMessage({
+        this.postMessage_({
             error,
             notification: "error",
             prefix: "before",
@@ -79,7 +75,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        postMessage({
+        this.postMessage_({
             notification: "next",
             prefix: "before",
             ref,
@@ -89,7 +85,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        postMessage({
+        this.postMessage_({
             notification: "subscribe",
             prefix: "before",
             ref
@@ -98,7 +94,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeUnsubscribe(ref: SubscriptionRef): void {
 
-        postMessage({
+        this.postMessage_({
             notification: "unsubscribe",
             prefix: "before",
             ref
@@ -107,29 +103,30 @@ export class DevToolsPlugin extends BasePlugin {
 
     teardown(): void {
 
-        if (this.listener_) {
-            window.removeEventListener("message", this.listener_);
-            this.listener_ = null;
+        if (this.connection_) {
+            this.connection_.disconnect();
+            this.connection_ = null;
+        }
+    }
+
+    private postMessage_(messageRef: MessageRef): void {
+
+        const { connection_ } = this;
+        if (connection_) {
+
+            const post = () => connection_.post(toMessage(messageRef));
+            const stackTraceRef = getStackTraceRef(messageRef.ref);
+
+            if (stackTraceRef) {
+                stackTraceRef.sourceMapsResolved.then(post);
+            } else {
+                post();
+            }
         }
     }
 }
 
-function postMessage(messageRef: MessageRef): void {
-
-    if ((typeof window !== "undefined") && (typeof window.postMessage === "function")) {
-
-        const post = () => window.postMessage(toMessage(messageRef), "*");
-        const stackTraceRef = getStackTraceRef(messageRef.ref);
-
-        if (stackTraceRef) {
-            stackTraceRef.sourceMapsResolved.then(post);
-        } else {
-            post();
-        }
-    }
-}
-
-function toGraph(subscriberRef: SubscriberRef): any {
+function toGraph(subscriberRef: SubscriberRef): Graph | null {
 
     const graphRef = getGraphRef(subscriberRef);
 
@@ -155,7 +152,7 @@ function toGraph(subscriberRef: SubscriberRef): any {
     };
 }
 
-function toMessage(messageRef: MessageRef): any {
+function toMessage(messageRef: MessageRef): NotificationMessage {
 
     const { error, notification, prefix, ref, value } = messageRef;
     const { id, observable } = ref;
@@ -164,8 +161,8 @@ function toMessage(messageRef: MessageRef): any {
         error,
         graph: toGraph(ref) || null,
         id,
+        messageType: "notification",
         notification: `${prefix}-${notification}`,
-        source: "rxjs-spy",
         stackTrace: getStackTrace(ref) || null,
         tag: read(observable) || null,
         type: toType(observable),

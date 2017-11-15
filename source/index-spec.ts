@@ -9,6 +9,7 @@ import "./detect-spec";
 import "./detector-spec";
 import "./identify-spec";
 import "./match-spec";
+import "./plugin/devtools-plugin-spec";
 import "./plugin/graph-plugin-spec";
 import "./plugin/let-plugin-spec";
 import "./plugin/log-plugin-spec";
