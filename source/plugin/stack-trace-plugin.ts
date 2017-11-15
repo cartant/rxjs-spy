@@ -15,6 +15,12 @@ export interface StackTraceRef {
     stackTrace: StackFrame[];
 }
 
+export function getSourceMapsResolved(ref: SubscriberRef): Promise<void> {
+
+    const stackTraceRef = getStackTraceRef(ref);
+    return stackTraceRef ? stackTraceRef.sourceMapsResolved : Promise.resolve();
+}
+
 export function getStackTrace(ref: SubscriberRef): StackFrame[] {
 
     const stackTraceRef = getStackTraceRef(ref);

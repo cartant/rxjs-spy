@@ -11,7 +11,7 @@ import { StackFrame } from "stacktrace-js";
 import { read } from "../match";
 import { getGraphRef, GraphRef } from "./graph-plugin";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
-import { getStackTrace } from "./stack-trace-plugin";
+import { getSourceMapsResolved, getStackTrace } from "./stack-trace-plugin";
 import { tick } from "../tick";
 
 const snapshotRefSymbol = Symbol("snapshotRef");
@@ -68,6 +68,7 @@ export interface SubscriptionSnapshot {
     observable: Observable<any>;
     rootSink: SubscriptionSnapshot | null;
     sink: SubscriptionSnapshot | null;
+    sourceMapsResolved: Promise<void>;
     sources: Map<Subscription, SubscriptionSnapshot>;
     sourcesFlushed: number;
     stackTrace: StackFrame[];
@@ -190,6 +191,7 @@ export class SnapshotPlugin extends BasePlugin {
                 observable,
                 rootSink: null,
                 sink: null,
+                sourceMapsResolved: getSourceMapsResolved(ref),
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 sourcesFlushed,
                 stackTrace: getStackTrace(ref),
