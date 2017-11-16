@@ -48,7 +48,7 @@ export interface Notification extends Message {
     };
     tick: number;
     timestamp: number;
-    value?: any;
+    value?: { json: string };
 }
 
 export interface ObservableSnapshot {
@@ -91,7 +91,7 @@ export interface SubscriberSnapshot {
     id: string;
     subscriptions: string[];
     tick: number;
-    values: { tick: number; timestamp: number; value: any; }[];
+    values: { tick: number; timestamp: number; value: { json: string }; }[];
     valuesFlushed: number;
 }
 

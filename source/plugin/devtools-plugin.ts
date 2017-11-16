@@ -5,6 +5,7 @@
  */
 /*tslint:disable:no-debugger*/
 
+import { stringify } from "circular-json";
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { EXTENSION_KEY } from "../devtools/constants";
@@ -178,7 +179,7 @@ function toMessage(messageRef: MessageRef): NotificationMessage {
         },
         tick: tick(),
         timestamp: Date.now(),
-        value
+        value: (value === undefined) ? undefined : toValue(value)
     };
 }
 
@@ -189,4 +190,9 @@ function toType(observable: Observable<any>): string {
         return prototype.constructor.name;
     }
     return "Object";
+}
+
+function toValue(value: any): { json: string } {
+
+    return { json: stringify(value, null, null, true) };
 }
