@@ -7,6 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Operator } from "rxjs/Operator";
 import { Subscriber } from "rxjs/Subscriber";
+import { identify } from "./identify";
 import { isObservable } from "./util";
 
 export type MatchPredicate = (tag: string | null, observable?: Observable<any>) => boolean;
@@ -18,16 +19,17 @@ export function matches<T>(observable: Observable<T>, match: Match): boolean {
         return observable === match;
     }
 
+    const identity = identify(observable);
     const tag = read(observable);
 
     if (typeof match === "function") {
         return match(tag, observable);
     }
-
+    if (typeof match === "string") {
+        return (match === identity) || (match === tag);
+    }
     if (tag === null) {
         return false;
-    } else if (typeof match === "string") {
-        return match === tag;
     }
     return match.test(tag);
 }
