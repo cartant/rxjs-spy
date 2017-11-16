@@ -30,17 +30,32 @@ export interface Message {
 }
 
 export interface Notification extends Message {
-    error?: any;
-    graph: Graph | null;
     messageType: "notification";
     notification: string;
-    observableId: string;
-    stackTrace: StackFrame[] | null;
-    subscriberId: string;
-    subscriptionId: string;
-    tag: string | null;
-    type: string;
+    observable: {
+        id: string;
+        tag: string | null;
+        type: string;
+    };
+    subscriber: {
+        id: string;
+    };
+    subscription: {
+        error?: any;
+        graph: Graph | null;
+        id: string;
+        stackTrace: StackFrame[] | null;
+    };
+    tick: number;
+    timestamp: number;
     value?: any;
+}
+
+export interface ObservableSnapshot {
+    id: string;
+    subscriptions: string[];
+    tag: string | null;
+    tick: number;
 }
 
 export interface Post extends Message {
@@ -57,12 +72,38 @@ export interface Response extends Message {
     request: Post;
 }
 
+export interface Snapshot {
+    observables: ObservableSnapshot[];
+    subscribers: SubscriberSnapshot[];
+    subscriptions: SubscriptionSnapshot[];
+    tick: number;
+}
+
 export interface StackFrame {
     columnNumber: number;
     fileName: string;
     functionName: string;
-    isEval: boolean;
-    isNative: boolean;
     lineNumber: number;
     source: string;
+}
+
+export interface SubscriberSnapshot {
+    id: string;
+    subscriptions: string[];
+    tick: number;
+    values: { tick: number; timestamp: number; value: any; }[];
+    valuesFlushed: number;
+}
+
+export interface SubscriptionSnapshot {
+    complete: boolean;
+    error?: any;
+    graph: Graph | null;
+    id: string;
+    observable: string;
+    stackTrace: StackFrame[];
+    subscriber: string;
+    tick: number;
+    timestamp: number;
+    unsubscribed: boolean;
 }

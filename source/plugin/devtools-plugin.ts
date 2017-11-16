@@ -14,6 +14,7 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
+import { tick } from "../tick";
 
 interface MessageRef {
     error?: any;
@@ -159,16 +160,24 @@ function toMessage(messageRef: MessageRef): NotificationMessage {
     const { observable, subscriber } = ref;
 
     return {
-        error,
-        graph: toGraph(ref) || null,
         messageType: "notification",
         notification: `${prefix}-${notification}`,
-        observableId: identify(observable),
-        stackTrace: getStackTrace(ref) || null,
-        subscriberId: identify(subscriber),
-        subscriptionId: identify(ref),
-        tag: read(observable) || null,
-        type: toType(observable),
+        observable: {
+            id: identify(observable),
+            tag: read(observable) || null,
+            type: toType(observable)
+        },
+        subscriber: {
+            id: identify(subscriber)
+        },
+        subscription: {
+            error,
+            graph: toGraph(ref) || null,
+            id: identify(ref),
+            stackTrace: getStackTrace(ref) || null
+        },
+        tick: tick(),
+        timestamp: Date.now(),
         value
     };
 }
