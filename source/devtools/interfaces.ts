@@ -30,6 +30,7 @@ export interface Message {
 }
 
 export interface Notification extends Message {
+    id: string;
     messageType: "notification";
     notification: string;
     observable: {

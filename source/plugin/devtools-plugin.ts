@@ -161,6 +161,7 @@ function toMessage(messageRef: MessageRef): NotificationMessage {
     const { observable, subscriber } = ref;
 
     return {
+        id: identify({}),
         messageType: "notification",
         notification: `${prefix}-${notification}`,
         observable: {
