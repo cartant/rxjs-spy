@@ -48,7 +48,7 @@ export interface Snapshot {
 export interface ObservableSnapshot {
     id: string;
     observable: Observable<any>;
-    subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
+    subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tag: string | null;
     tick: number;
 }
@@ -228,13 +228,13 @@ export class SnapshotPlugin extends BasePlugin {
                 observableSnapshot = {
                     id: identify(observable),
                     observable,
-                    subscribers: new Map<Subscriber<any>, SubscriberSnapshot>(),
+                    subscriptions: new Map<Subscription, SubscriptionSnapshot>(),
                     tag: read(observable),
                     tick
                 };
                 observables.set(observable, observableSnapshot);
             }
-            observableSnapshot.subscribers.set(subscriber, subscriberSnapshot);
+            observableSnapshot.subscriptions.set(subscription, subscriptionSnapshot);
             observableSnapshot.tick = Math.max(observableSnapshot.tick, tick);
         });
 

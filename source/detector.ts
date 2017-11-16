@@ -159,18 +159,16 @@ export class Detector {
     ): void {
 
         snapshot.observables.forEach((observableSnapshot) => {
-            observableSnapshot.subscribers.forEach((subscriberSnapshot) => {
-                subscriberSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
-                    const { complete, error, sink, subscription } = subscriptionSnapshot;
-                    if (!complete && !error && !sink && !subscription.closed) {
-                        const subscriptionRecord = {
-                            merges: new Map<Subscription, SubscriptionSnapshot>(),
-                            subscriptionSnapshot
-                        };
-                        this.findMergedSubscriptions_(snapshot, subscriptionRecord);
-                        rootSubscriptions.set(subscription, subscriptionRecord);
-                    }
-                });
+            observableSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
+                const { complete, error, sink, subscription } = subscriptionSnapshot;
+                if (!complete && !error && !sink && !subscription.closed) {
+                    const subscriptionRecord = {
+                        merges: new Map<Subscription, SubscriptionSnapshot>(),
+                        subscriptionSnapshot
+                    };
+                    this.findMergedSubscriptions_(snapshot, subscriptionRecord);
+                    rootSubscriptions.set(subscription, subscriptionRecord);
+                }
             });
         });
     }

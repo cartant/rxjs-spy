@@ -236,41 +236,41 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
         .from(snapshot.observables.values())
         .filter((observableSnapshot) => matches(observableSnapshot.observable, match));
     const logger = toLogger(partialLogger);
-    const snapshotGroupMethod = (filtered.length > 3) ? "groupCollapsed" : "group";
+    const observableGroupMethod = (filtered.length > 3) ? "groupCollapsed" : "group";
 
     logger.group(`${filtered.length} snapshot(s) matching ${matchToString(match)}`);
     filtered.forEach((observableSnapshot) => {
 
-        const { subscribers } = observableSnapshot;
-        logger[snapshotGroupMethod].call(logger, `Tag = ${observableSnapshot.tag}`);
+        const { subscriptions } = observableSnapshot;
+        logger[observableGroupMethod].call(logger, `Tag = ${observableSnapshot.tag}`);
 
-        const subscriberGroupMethod = (subscribers.size > 3) ? "groupCollapsed" : "group";
-        logger.group(`${subscribers.size} subscriber(s)`);
-        subscribers.forEach((subscriberSnapshot) => {
+        const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
+        logger.group(`${subscriptions.size} subscriber(s)`);
+        subscriptions.forEach((subscriptionSnapshot) => {
 
-            const { values, valuesFlushed } = subscriberSnapshot;
-            logger[subscriberGroupMethod].call(logger, "Subscriber");
-            logger.log("Value count =", values.length + valuesFlushed);
-            if (values.length > 0) {
-                logger.log("Last value =", values[values.length - 1].value);
+            const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
+            if (subscriberSnapshot) {
+
+                const { values, valuesFlushed } = subscriberSnapshot;
+                logger[subscriberGroupMethod].call(logger, "Subscriber");
+                logger.log("Value count =", values.length + valuesFlushed);
+                if (values.length > 0) {
+                    logger.log("Last value =", values[values.length - 1].value);
+                }
+                logSubscription(subscriptionSnapshot);
+
+                const otherSubscriptions = Array
+                    .from(subscriberSnapshot.subscriptions.values())
+                    .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
+                otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
+                    logger.groupCollapsed("Other subscription");
+                    logSubscription(otherSubscriptionSnapshot);
+                    logger.groupEnd();
+                });
+                logger.groupEnd();
+            } else {
+                logger.warn("Cannot find subscriber snapshot");
             }
-
-            const { subscriptions } = subscriberSnapshot;
-            logger.groupCollapsed(`${subscriptions.size} subscription(s)`);
-            subscriptions.forEach((subscriptionSnapshot) => {
-
-                const { complete, error, rootSink, stackTrace, unsubscribed } = subscriptionSnapshot;
-                logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
-                if (error) {
-                    logger.error("Error =", error);
-                }
-                if (unsubscribed) {
-                    logger.error("Unsubscribed =", true);
-                }
-                logger.log("Root subscribe", rootSink ? rootSink.stackTrace : stackTrace);
-            });
-            logger.groupEnd();
-            logger.groupEnd();
         });
         logger.groupEnd();
         logger.groupCollapsed("Raw snapshot");
@@ -279,6 +279,19 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
         logger.groupEnd();
     });
     logger.groupEnd();
+
+    function logSubscription(subscriptionSnapshot: SubscriptionSnapshot): void {
+
+        const { complete, error, rootSink, stackTrace, unsubscribed } = subscriptionSnapshot;
+        logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
+        if (error) {
+            logger.error("Error =", error);
+        }
+        if (unsubscribed) {
+            logger.error("Unsubscribed =", true);
+        }
+        logger.log("Root subscribe", rootSink ? rootSink.stackTrace : stackTrace);
+    }
 }
 
 export function spy(options: {

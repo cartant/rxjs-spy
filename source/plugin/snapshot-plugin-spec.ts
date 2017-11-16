@@ -65,7 +65,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.subscriptions).to.have.property("size", 1);
 
             const observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
             const subscriberSnapshot = getAt(snapshot.subscribers, 0);
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
@@ -85,7 +85,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
             let subscriberSnapshot = getAt(snapshot.subscribers, 0);
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
@@ -101,7 +101,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
             subscriberSnapshot = getAt(snapshot.subscribers, 0);
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
@@ -121,7 +121,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
             let subscriberSnapshot = getAt(snapshot.subscribers, 0);
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
@@ -137,7 +137,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
             subscriberSnapshot = getAt(snapshot.subscribers, 0);
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
@@ -157,7 +157,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
             let subscriberSnapshot = getAt(snapshot.subscribers, 0);
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
@@ -174,7 +174,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
             subscriberSnapshot = getAt(snapshot.subscribers, 0);
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
@@ -194,9 +194,10 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
-            let subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
+            let subscriptionSnapshot = getAt(observableSnapshot.subscriptions, 0);
+            let subscriberSnapshot = get(snapshot.subscribers, subscriptionSnapshot.subscriber);
             expect(subscriberSnapshot.values).to.deep.equal([]);
 
             subject.next(1);
@@ -205,9 +206,10 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
-            subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
+            subscriptionSnapshot = getAt(observableSnapshot.subscriptions, 0);
+            subscriberSnapshot = get(snapshot.subscribers, subscriptionSnapshot.subscriber);
             expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1]);
 
             subject.next(-1);
@@ -216,9 +218,10 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
-            expect(observableSnapshot.subscribers).to.have.property("size", 1);
+            expect(observableSnapshot.subscriptions).to.have.property("size", 1);
 
-            subscriberSnapshot = getAt(observableSnapshot.subscribers, 0);
+            subscriptionSnapshot = getAt(observableSnapshot.subscriptions, 0);
+            subscriberSnapshot = get(snapshot.subscribers, subscriptionSnapshot.subscriber);
             expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1, -1]);
         });
 
@@ -257,8 +260,8 @@ describe("SnapshotPlugin", () => {
             const subjectSnapshot = get(snapshot.observables, subject);
             const mappedSnapshot = get(snapshot.observables, mapped);
 
-            const subjectSubscriptionSnapshot = getAt(getAt(subjectSnapshot.subscribers, 0).subscriptions, 0);
-            const mappedSubscriptionSnapshot = getAt(getAt(mappedSnapshot.subscribers, 0).subscriptions, 0);
+            const subjectSubscriptionSnapshot = getAt(subjectSnapshot.subscriptions, 0);
+            const mappedSubscriptionSnapshot = getAt(mappedSnapshot.subscriptions, 0);
 
             expect(subjectSubscriptionSnapshot.sink).to.equal(mappedSubscriptionSnapshot);
             expect(subjectSubscriptionSnapshot.sources).to.have.property("size", 0);
@@ -282,9 +285,9 @@ describe("SnapshotPlugin", () => {
             const subject2Snapshot = get(snapshot.observables, subject2);
             const combinedSnapshot = get(snapshot.observables, combined);
 
-            const subject1SubscriptionSnapshot = getAt(getAt(subject1Snapshot.subscribers, 0).subscriptions, 0);
-            const subject2SubscriptionSnapshot = getAt(getAt(subject2Snapshot.subscribers, 0).subscriptions, 0);
-            const combinedSubscriptionSnapshot = getAt(getAt(combinedSnapshot.subscribers, 0).subscriptions, 0);
+            const subject1SubscriptionSnapshot = getAt(subject1Snapshot.subscriptions, 0);
+            const subject2SubscriptionSnapshot = getAt(subject2Snapshot.subscriptions, 0);
+            const combinedSubscriptionSnapshot = getAt(combinedSnapshot.subscriptions, 0);
 
             expect(subject1SubscriptionSnapshot.sources).to.have.property("size", 0);
             expect(subject1SubscriptionSnapshot.sources).to.have.property("size", 0);
@@ -303,8 +306,8 @@ describe("SnapshotPlugin", () => {
 
             let snapshot = plugin.snapshotAll();
             let outerSnapshot = get(snapshot.observables, outer);
-            let outerSubscriber = getAt(outerSnapshot.subscribers, 0);
-            let outerSubscription = getAt(outerSubscriber.subscriptions, 0);
+            let outerSubscription = getAt(outerSnapshot.subscriptions, 0);
+            let outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
 
             expect(outerSubscription.merges).to.have.property("size", 0);
 
@@ -312,8 +315,8 @@ describe("SnapshotPlugin", () => {
 
             snapshot = plugin.snapshotAll();
             outerSnapshot = get(snapshot.observables, outer);
-            outerSubscriber = getAt(outerSnapshot.subscribers, 0);
-            outerSubscription = getAt(outerSubscriber.subscriptions, 0);
+            outerSubscription = getAt(outerSnapshot.subscriptions, 0);
+            outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
 
             expect(outerSubscription.merges).to.have.property("size", 1);
 
@@ -321,8 +324,8 @@ describe("SnapshotPlugin", () => {
 
             snapshot = plugin.snapshotAll();
             outerSnapshot = get(snapshot.observables, outer);
-            outerSubscriber = getAt(outerSnapshot.subscribers, 0);
-            outerSubscription = getAt(outerSubscriber.subscriptions, 0);
+            outerSubscription = getAt(outerSnapshot.subscriptions, 0);
+            outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
 
             expect(outerSubscription.merges).to.have.property("size", 2);
         });
@@ -339,17 +342,11 @@ describe("SnapshotPlugin", () => {
             const subjectSnapshot = get(snapshot.observables, subject);
             const mappedSnapshot = get(snapshot.observables, mapped);
 
-            expect(subjectSnapshot.subscribers).to.have.property("size", 1);
-            expect(mappedSnapshot.subscribers).to.have.property("size", 1);
+            expect(subjectSnapshot.subscriptions).to.have.property("size", 1);
+            expect(mappedSnapshot.subscriptions).to.have.property("size", 1);
 
-            const subjectSubscriber = getAt(subjectSnapshot.subscribers, 0);
-            const mappedSubscriber = getAt(mappedSnapshot.subscribers, 0);
-
-            expect(subjectSubscriber.subscriptions).to.have.property("size", 1);
-            expect(mappedSubscriber.subscriptions).to.have.property("size", 1);
-
-            const subjectSubscription = getAt(subjectSubscriber.subscriptions, 0);
-            const mappedSubscription = getAt(mappedSubscriber.subscriptions, 0);
+            const subjectSubscription = getAt(subjectSnapshot.subscriptions, 0);
+            const mappedSubscription = getAt(mappedSnapshot.subscriptions, 0);
 
             expect(subjectSubscription).to.have.property("sink", mappedSubscription);
             expect(subjectSubscription).to.have.property("rootSink", mappedSubscription);
@@ -371,21 +368,13 @@ describe("SnapshotPlugin", () => {
             const mappedSnapshot = get(snapshot.observables, mapped);
             const remappedSnapshot = get(snapshot.observables, remapped);
 
-            expect(subjectSnapshot.subscribers).to.have.property("size", 1);
-            expect(mappedSnapshot.subscribers).to.have.property("size", 1);
-            expect(remappedSnapshot.subscribers).to.have.property("size", 1);
+            expect(subjectSnapshot.subscriptions).to.have.property("size", 1);
+            expect(mappedSnapshot.subscriptions).to.have.property("size", 1);
+            expect(remappedSnapshot.subscriptions).to.have.property("size", 1);
 
-            const subjectSubscriber = getAt(subjectSnapshot.subscribers, 0);
-            const mappedSubscriber = getAt(mappedSnapshot.subscribers, 0);
-            const remappedSubscriber = getAt(remappedSnapshot.subscribers, 0);
-
-            expect(subjectSubscriber.subscriptions).to.have.property("size", 1);
-            expect(mappedSubscriber.subscriptions).to.have.property("size", 1);
-            expect(remappedSubscriber.subscriptions).to.have.property("size", 1);
-
-            const subjectSubscription = getAt(subjectSubscriber.subscriptions, 0);
-            const mappedSubscription = getAt(mappedSubscriber.subscriptions, 0);
-            const remappedSubscription = getAt(remappedSubscriber.subscriptions, 0);
+            const subjectSubscription = getAt(subjectSnapshot.subscriptions, 0);
+            const mappedSubscription = getAt(mappedSnapshot.subscriptions, 0);
+            const remappedSubscription = getAt(remappedSnapshot.subscriptions, 0);
 
             expect(subjectSubscription).to.have.property("sink", mappedSubscription);
             expect(subjectSubscription).to.have.property("rootSink", remappedSubscription);
@@ -409,21 +398,13 @@ describe("SnapshotPlugin", () => {
             const subject2Snapshot = get(snapshot.observables, subject2);
             const combinedSnapshot = get(snapshot.observables, combined);
 
-            expect(subject1Snapshot.subscribers).to.have.property("size", 1);
-            expect(subject2Snapshot.subscribers).to.have.property("size", 1);
-            expect(combinedSnapshot.subscribers).to.have.property("size", 1);
+            expect(subject1Snapshot.subscriptions).to.have.property("size", 1);
+            expect(subject2Snapshot.subscriptions).to.have.property("size", 1);
+            expect(combinedSnapshot.subscriptions).to.have.property("size", 1);
 
-            const subject1Subscriber = getAt(subject1Snapshot.subscribers, 0);
-            const subject2Subscriber = getAt(subject2Snapshot.subscribers, 0);
-            const combinedSubscriber = getAt(combinedSnapshot.subscribers, 0);
-
-            expect(subject1Subscriber.subscriptions).to.have.property("size", 1);
-            expect(subject2Subscriber.subscriptions).to.have.property("size", 1);
-            expect(combinedSubscriber.subscriptions).to.have.property("size", 1);
-
-            const subject1Subscription = getAt(subject1Subscriber.subscriptions, 0);
-            const subject2Subscription = getAt(subject2Subscriber.subscriptions, 0);
-            const combinedSubscription = getAt(combinedSubscriber.subscriptions, 0);
+            const subject1Subscription = getAt(subject1Snapshot.subscriptions, 0);
+            const subject2Subscription = getAt(subject2Snapshot.subscriptions, 0);
+            const combinedSubscription = getAt(combinedSnapshot.subscriptions, 0);
 
             expect(subject1Subscription).to.have.property("sink");
             expect(subject1Subscription).to.have.property("rootSink", combinedSubscription);
@@ -453,25 +434,15 @@ describe("SnapshotPlugin", () => {
             const inner1Snapshot = get(snapshot.observables, innerSubject1);
             const inner2Snapshot = get(snapshot.observables, innerSubject2);
 
-            expect(composed1Snapshot.subscribers).to.have.property("size", 1);
-            expect(composed2Snapshot.subscribers).to.have.property("size", 1);
-            expect(inner1Snapshot.subscribers).to.have.property("size", 1);
-            expect(inner2Snapshot.subscribers).to.have.property("size", 1);
+            expect(composed1Snapshot.subscriptions).to.have.property("size", 1);
+            expect(composed2Snapshot.subscriptions).to.have.property("size", 1);
+            expect(inner1Snapshot.subscriptions).to.have.property("size", 1);
+            expect(inner2Snapshot.subscriptions).to.have.property("size", 1);
 
-            const composed1Subscriber = getAt(composed1Snapshot.subscribers, 0);
-            const composed2Subscriber = getAt(composed2Snapshot.subscribers, 0);
-            const inner1Subscriber = getAt(inner1Snapshot.subscribers, 0);
-            const inner2Subscriber = getAt(inner2Snapshot.subscribers, 0);
-
-            expect(composed1Subscriber.subscriptions).to.have.property("size", 1);
-            expect(composed2Subscriber.subscriptions).to.have.property("size", 1);
-            expect(inner1Subscriber.subscriptions).to.have.property("size", 1);
-            expect(inner2Subscriber.subscriptions).to.have.property("size", 1);
-
-            const composed1Subscription = getAt(composed1Subscriber.subscriptions, 0);
-            const composed2Subscription = getAt(composed2Subscriber.subscriptions, 0);
-            const inner1Subscription = getAt(inner1Subscriber.subscriptions, 0);
-            const inner2Subscription = getAt(inner2Subscriber.subscriptions, 0);
+            const composed1Subscription = getAt(composed1Snapshot.subscriptions, 0);
+            const composed2Subscription = getAt(composed2Snapshot.subscriptions, 0);
+            const inner1Subscription = getAt(inner1Snapshot.subscriptions, 0);
+            const inner2Subscription = getAt(inner2Snapshot.subscriptions, 0);
 
             expect(inner1Subscription).to.have.property("sink");
             expect(inner1Subscription).to.have.property("rootSink", composed1Subscription);
@@ -493,7 +464,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.subscriptions).to.have.property("size", 2);
 
             const sourceSnapshot = get(snapshot.observables, source);
-            expect(sourceSnapshot.subscribers).to.have.property("size", 1);
+            expect(sourceSnapshot.subscriptions).to.have.property("size", 2);
 
             const sourceSubscriber = get(snapshot.subscribers, subscriber);
             expect(sourceSubscriber.subscriptions).to.have.property("size", 2);
@@ -518,7 +489,7 @@ describe("SnapshotPlugin", () => {
 
             expect(observableSnapshot).to.exist;
             expect(observableSnapshot).to.have.property("observable", subject);
-            expect(observableSnapshot).to.have.property("subscribers");
+            expect(observableSnapshot).to.have.property("subscriptions");
         });
     });
 
