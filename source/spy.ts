@@ -135,10 +135,7 @@ export function debug(match: Match, ...notifications: Notification[]): () => voi
         notifications = ["complete", "error", "next", "subscribe", "unsubscribe"];
     }
 
-    return plugin(
-        new DebugPlugin(match, notifications),
-        `debug(${matchToString(match)})`
-    );
+    return plugin(new DebugPlugin(match, notifications));
 }
 
 export function find<T extends Plugin>(constructor: { new (...args: any[]): T }): T | null {
@@ -159,7 +156,7 @@ export function flush(): void {
 
 export function _let(match: Match, select: (source: Observable<any>) => Observable<any>): () => void {
 
-    return plugin(new LetPlugin(match, select), `let(${matchToString(match)})`);
+    return plugin(new LetPlugin(match, select));
 }
 
 export function log(partialLogger?: PartialLogger): () => void;
@@ -174,23 +171,20 @@ export function log(match: any, partialLogger?: PartialLogger): () => void {
         match = anyTagged;
     }
 
-    return plugin(
-        new LogPlugin(match, partialLogger),
-        `log(${matchToString(match)})`
-    );
+    return plugin(new LogPlugin(match, partialLogger));
 }
 
 export function pause(match: Match): Deck {
 
     const pausePlugin = new PausePlugin(match);
-    const teardown = plugin(pausePlugin, `pause(${matchToString(match)})`);
+    const teardown = plugin(pausePlugin);
 
     const deck = pausePlugin.deck;
     deck.teardown = teardown;
     return deck;
 }
 
-export function plugin(plugin: Plugin, name: string): () => void {
+export function plugin(plugin: Plugin): () => void {
 
     plugins_.push(plugin);
     pluginsSubject_.next(plugins_);
@@ -202,7 +196,7 @@ export function plugin(plugin: Plugin, name: string): () => void {
         pluginsSubject_.next(plugins_);
         undos_ = undos_.filter((u) => u.teardown !== teardown);
     };
-    undos_.push({ name, teardown });
+    undos_.push({ name: plugin.name, teardown });
 
     return teardown;
 }

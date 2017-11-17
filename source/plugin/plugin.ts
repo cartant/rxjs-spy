@@ -23,6 +23,8 @@ export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubs
 
 export interface Plugin {
 
+    readonly name: string;
+
     afterComplete(ref: SubscriptionRef): void;
     afterError(ref: SubscriptionRef, error: any): void;
     afterNext(ref: SubscriptionRef, value: any): void;
@@ -39,6 +41,8 @@ export interface Plugin {
 }
 
 export class BasePlugin implements Plugin {
+
+    constructor(public readonly name: string) {}
 
     afterComplete(ref: SubscriptionRef): void {}
     afterError(ref: SubscriptionRef, error: any): void {}

@@ -48,7 +48,7 @@ export class GraphPlugin extends BasePlugin {
         keptDuration?: number
     } = {}) {
 
-        super();
+        super("graph");
 
         this.keptDuration_ = keptDuration;
         this.notifications_ = [];

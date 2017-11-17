@@ -146,7 +146,7 @@ export class PausePlugin extends BasePlugin {
 
     constructor(match: Match) {
 
-        super();
+        super(`pause(${matchToString(match)})`);
 
         this.deck_ = new Deck(match);
         this.match_ = match;

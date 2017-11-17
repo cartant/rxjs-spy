@@ -6,7 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { Match, matches } from "../match";
+import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin, SubscriptionRef } from "./plugin";
 
 export class LetPlugin extends BasePlugin {
@@ -16,7 +16,7 @@ export class LetPlugin extends BasePlugin {
 
     constructor(match: Match, select: (source: Observable<any>) => Observable<any>) {
 
-        super();
+        super(`let(${matchToString(match)})`);
 
         this.match_ = match;
         this.select_ = select;

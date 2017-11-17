@@ -50,7 +50,7 @@ describe("LetPlugin", () => {
         const subscription = subject.tag("people").subscribe((value) => values.push(value));
 
         const selected = new Subject<string>();
-        plugin(new LetPlugin("people", () => selected), "let");
+        plugin(new LetPlugin("people", () => selected));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);

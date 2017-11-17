@@ -12,6 +12,8 @@ export class SubscriberRefsPlugin extends BasePlugin {
 
     private subscriberRefs_: Map<Observable<any>, SubscriberRef> = new Map<Observable<any>, SubscriberRef>();
 
+    constructor() { super("subscriberRefs"); }
+
     beforeSubscribe(ref: SubscriberRef): void {
 
         const { subscriberRefs_ } = this;

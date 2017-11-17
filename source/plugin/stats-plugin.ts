@@ -43,6 +43,8 @@ export class StatsPlugin extends BasePlugin {
     };
     private time_ = 0;
 
+    constructor() { super("stats"); }
+
     afterSubscribe(ref: SubscriptionRef): void {
         const { stats_ } = this;
         const graphRef = getGraphRef(ref);

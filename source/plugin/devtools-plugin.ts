@@ -63,10 +63,10 @@ export class DevToolsPlugin extends BasePlugin {
 
     constructor(
         private findPlugin_: <T extends Plugin>(constructor: { new (...args: any[]): T }) => T | null,
-        private configurePlugin_: (plugin: Plugin, name: string) => () => void
+        private configurePlugin_: (plugin: Plugin) => () => void
     ) {
 
-        super();
+        super("devTools");
 
         if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
 
@@ -88,14 +88,14 @@ export class DevToolsPlugin extends BasePlugin {
                     };
                     switch (request.requestType) {
                     case "log":
-                        this.recordPlugin_(request.postId, new LogPlugin(request["match"]), `log(${matchToString(request["match"])})`);
+                        this.recordPlugin_(request.postId, new LogPlugin(request["match"]));
                         response["pluginId"] = request.postId;
                         break;
                     case "log-teardown":
                         this.teardownPlugin_(request["pluginId"]);
                         break;
                     case "pause":
-                        this.recordPlugin_(request.postId, new PausePlugin(request["match"]), `pause(${matchToString(request["match"])})`);
+                        this.recordPlugin_(request.postId, new PausePlugin(request["match"]));
                         response["pluginId"] = request.postId;
                         break;
                     case "pause-deck":
@@ -221,9 +221,9 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private recordPlugin_(id: string, plugin: Plugin, name: string): void {
+    private recordPlugin_(id: string, plugin: Plugin): void {
 
-        const teardown = this.configurePlugin_(plugin, name);
+        const teardown = this.configurePlugin_(plugin);
         this.plugins_.set(id, { plugin, teardown });
     }
 

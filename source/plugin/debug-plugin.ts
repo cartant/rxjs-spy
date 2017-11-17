@@ -7,7 +7,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { Match, matches } from "../match";
+import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 
 export class DebugPlugin extends BasePlugin {
@@ -17,7 +17,7 @@ export class DebugPlugin extends BasePlugin {
 
     constructor(match: Match, notifications: Notification[]) {
 
-        super();
+        super(`debug(${matchToString(match)})`);
 
         this.notifications_ = notifications;
         this.matcher_ = (observable: Observable<any>, notification: Notification) => matches(observable, match) && (this.notifications_.indexOf(notification) !== -1);

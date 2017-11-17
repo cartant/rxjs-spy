@@ -95,7 +95,7 @@ export class SnapshotPlugin extends BasePlugin {
         keptValues?: number
     } = {}) {
 
-        super();
+        super("snapshot");
 
         this.keptValues_ = keptValues;
         this.sentinel_ = null;

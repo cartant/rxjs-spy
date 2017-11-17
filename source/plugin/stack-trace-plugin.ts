@@ -51,7 +51,7 @@ export class StackTracePlugin extends BasePlugin {
 
     constructor({ sourceMaps = false }: { sourceMaps?: boolean } = {}) {
 
-        super();
+        super("stackTrace");
         this.sourceMaps_ = sourceMaps;
     }
 

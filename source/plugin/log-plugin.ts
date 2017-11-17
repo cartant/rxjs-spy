@@ -20,7 +20,7 @@ export class LogPlugin extends BasePlugin {
 
     constructor(match: Match, partialLogger: PartialLogger = defaultLogger) {
 
-        super();
+        super(`log(${matchToString(match)})`);
 
         this.logger_ = toLogger(partialLogger);
         this.match_ = match;
