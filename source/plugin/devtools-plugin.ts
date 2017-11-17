@@ -27,10 +27,11 @@ import {
 
 import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
+import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { LogPlugin } from "./log-plugin";
 import { read, toString as matchToString } from "../match";
 import { PausePlugin } from "./pause-plugin";
-import { BasePlugin, Notification, Plugin, SubscriberRef, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { getStackTrace, getStackTraceRef, getType } from "./stack-trace-plugin";
 import { tick } from "../tick";

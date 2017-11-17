@@ -8,10 +8,11 @@ import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { StackFrame } from "stacktrace-js";
-import { identify } from "../identify";
 import { getGraphRef, GraphRef } from "./graph-plugin";
+import { identify } from "../identify";
+import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { read } from "../match";
-import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification } from "./plugin";
 import { getSourceMapsResolved, getStackTrace, getType } from "./stack-trace-plugin";
 import { tick } from "../tick";
 

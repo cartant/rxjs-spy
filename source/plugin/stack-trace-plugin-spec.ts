@@ -8,7 +8,7 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { SubscriptionRef } from "./plugin";
+import { SubscriptionRef } from "../interfaces";
 import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 import { spy } from "../spy";

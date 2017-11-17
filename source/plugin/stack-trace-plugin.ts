@@ -6,7 +6,8 @@
 
 import { Observable } from "rxjs/Observable";
 import { get, getSync, StackFrame } from "stacktrace-js";
-import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../interfaces";
+import { BasePlugin } from "./plugin";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
 

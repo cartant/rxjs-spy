@@ -7,9 +7,10 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { getGraphRef } from "./graph-plugin";
+import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
 import { getStackTrace, getType } from "./stack-trace-plugin";
 

@@ -7,7 +7,8 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { getGraphRef } from "./graph-plugin";
-import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../interfaces";
+import { BasePlugin } from "./plugin";
 import { tick } from "../tick";
 
 export interface Stats {

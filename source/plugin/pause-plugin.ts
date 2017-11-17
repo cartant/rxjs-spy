@@ -9,9 +9,10 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
+import { SubscriptionRef } from "../interfaces";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, SubscriptionRef } from "./plugin";
+import { BasePlugin } from "./plugin";
 import { subscribeWithoutSpy } from "../spy";
 
 import "rxjs/add/operator/dematerialize";

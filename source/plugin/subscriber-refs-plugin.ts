@@ -6,7 +6,8 @@
 /*tslint:disable:no-debugger*/
 
 import { Observable } from "rxjs/Observable";
-import { BasePlugin, SubscriberRef } from "./plugin";
+import { SubscriberRef } from "../interfaces";
+import { BasePlugin } from "./plugin";
 
 export class SubscriberRefsPlugin extends BasePlugin {
 

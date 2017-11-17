@@ -13,6 +13,7 @@ import { Subscription } from "rxjs/Subscription";
 import { detect, hook } from "./detect";
 import { Detector } from "./detector";
 import { identify } from "./identify";
+import { SubscriberRef, SubscriptionRef } from "./interfaces";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
 
@@ -31,7 +32,6 @@ import {
     Stats,
     StatsPlugin,
     SubscriberSnapshot,
-    SubscriptionRef,
     SubscriptionSnapshot
 } from "./plugin";
 
