@@ -8,6 +8,7 @@ import "./add/operator/tag-spec";
 import "./detect-spec";
 import "./detector-spec";
 import "./identify-spec";
+import "./interfaces-spec";
 import "./match-spec";
 import "./plugin/devtools-plugin-spec";
 import "./plugin/graph-plugin-spec";

@@ -14,7 +14,6 @@ const stackTraceRefSymbol = Symbol("stackTraceRef");
 export interface StackTraceRef {
     sourceMapsResolved: Promise<void>;
     stackTrace: StackFrame[];
-    type: string;
 }
 
 export function getSourceMapsResolved(ref: SubscriberRef): Promise<void> {
@@ -32,12 +31,6 @@ export function getStackTrace(ref: SubscriberRef): StackFrame[] {
 export function getStackTraceRef(ref: SubscriberRef): StackTraceRef {
 
     return ref[stackTraceRefSymbol];
-}
-
-export function getType(ref: SubscriberRef): string {
-
-    const stackTraceRef = getStackTraceRef(ref);
-    return stackTraceRef ? stackTraceRef.type : inferType(ref, []);
 }
 
 function setStackTraceRef(ref: SubscriberRef, value: StackTraceRef): StackTraceRef {
@@ -60,8 +53,7 @@ export class StackTracePlugin extends BasePlugin {
 
         const stackTraceRef: StackTraceRef = {
             sourceMapsResolved: Promise.resolve(),
-            stackTrace: getSync(options()),
-            type: inferType(ref, [])
+            stackTrace: getSync(options())
         };
         setStackTraceRef(ref, stackTraceRef);
 
@@ -70,27 +62,11 @@ export class StackTracePlugin extends BasePlugin {
                 .then((stackFrames) => {
                     const { stackTrace } = stackTraceRef;
                     stackTrace.splice(0, stackTrace.length, ...stackFrames);
-                    stackTraceRef.type = inferType(ref, stackTrace);
                 })
                 /*tslint:disable-next-line:no-console*/
                 .catch((error) => console.error("Cannot resolve source maps", error));
         }
     }
-}
-
-function inferType(ref: SubscriberRef, stackTrace: StackFrame[]): string {
-
-    const { observable } = ref;
-    const { operator } = observable as any;
-
-    const prototype = Object.getPrototypeOf(operator ? operator : observable);
-    if (prototype.constructor && prototype.constructor.name) {
-        return prototype.constructor.name.replace(
-            /^([\w])(\w+)(Observable|Operator)$/,
-            (match: string, p1: string, p2: string) => `${p1.toLowerCase()}${p2}`
-        );
-    }
-    return "unknown";
 }
 
 function options(): any {
