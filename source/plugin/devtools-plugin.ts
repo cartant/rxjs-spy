@@ -33,8 +33,10 @@ import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 import { tick } from "../tick";
 
-import "rxjs/add/operator/do";
+import "rxjs/add/observable/of";
 import "rxjs/add/operator/filter";
+import "rxjs/add/operator/share";
+import "rxjs/add/operator/switchMap";
 
 interface MessageRef {
     error?: any;
@@ -48,7 +50,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     private connection_: Connection | null;
     private posts_: Observable<Post>;
-    private requests_: Observable<Request>;
+    private responses_: Observable<Response>;
     private subscription_: Subscription;
 
     constructor(
@@ -61,34 +63,40 @@ export class DevToolsPlugin extends BasePlugin {
         if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
             const extension = window[EXTENSION_KEY] as Extension;
             this.connection_ = extension.connect();
-            this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_!.subscribe((post) => observer.next(post)));
-            this.requests_ = this.posts_
+            this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
+                this.connection_.subscribe((post) => observer.next(post)) :
+                () => {}
+            ).share();
+            this.responses_ = this.posts_
                 .filter(isPostRequest)
-                .do((request) => {
+                .switchMap((request) => {
                     const response: Response = {
                         messageType: MESSAGE_RESPONSE,
                         request
                     };
-                    const post = () => this.connection_!.post(response);
                     switch (request.requestType) {
                     case "snapshot":
                         const snapshotPlugin = find(SnapshotPlugin);
                         if (snapshotPlugin) {
                             const snapshot = snapshotPlugin.snapshotAll();
                             response["snapshot"] = toSnapshot(snapshot);
-                            snapshot.sourceMapsResolved.then(post);
-                        } else {
-                            response.error = "Cannot find snapshot plugin.";
-                            post();
+                            return snapshot.sourceMapsResolved.then(() => response);
                         }
+                        response.error = "Cannot find snapshot plugin.";
                         break;
                     default:
                         response.error = "Unexpected request.";
-                        post();
                         break;
                     }
-                });
-            this.subscription_ = this.requests_.subscribe();
+                    return Observable.of(response);
+                })
+                .share();
+            this.subscription_ = this.responses_.subscribe((response) => {
+                console.log(JSON.stringify(response, null, 2));
+                if (this.connection_) {
+                    this.connection_.post(response);
+                }
+            });
         }
     }
 

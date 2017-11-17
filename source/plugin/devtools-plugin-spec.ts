@@ -67,22 +67,21 @@ if (typeof window !== "undefined") {
             subject.next(1);
             subject.complete();
 
-            const promises: Promise<void>[] = [];
             const snapshot = snapshotPlugin.snapshotAll();
-            snapshot.subscriptions.forEach(snapshot => promises.push(snapshot.sourceMapsResolved));
+            return snapshot.sourceMapsResolved
+                .then(waitAfterResolved)
+                .then(() => {
 
-            return Promise.all(promises).then(() => {
-
-                expect(mockConnection.post).to.have.property("callCount", 6);
-                expect(mockConnection.post.args.map(([message]: [any]) => message.notification)).to.deep.equal([
-                    "before-subscribe",
-                    "after-subscribe",
-                    "before-next",
-                    "before-complete",
-                    "before-unsubscribe",
-                    "after-unsubscribe"
-                ]);
-            });
+                    expect(mockConnection.post).to.have.property("callCount", 6);
+                    expect(mockConnection.post.args.map(([message]: [any]) => message.notification)).to.deep.equal([
+                        "before-subscribe",
+                        "after-subscribe",
+                        "before-next",
+                        "before-complete",
+                        "before-unsubscribe",
+                        "after-unsubscribe"
+                    ]);
+                });
         });
 
         it("should serialize circular values", () => {
@@ -96,21 +95,23 @@ if (typeof window !== "undefined") {
             subject.next(person);
 
             const snapshot = snapshotPlugin.snapshotAll();
-            return snapshot.sourceMapsResolved.then(() => {
+            return snapshot.sourceMapsResolved
+                .then(waitAfterResolved)
+                .then(() => {
 
-                expect(mockConnection.post).to.have.property("callCount", 3);
-                expect(mockConnection.post.args.map(([post]: [any]) => post.notification)).to.deep.equal([
-                    "before-subscribe",
-                    "after-subscribe",
-                    "before-next"
-                ]);
+                    expect(mockConnection.post).to.have.property("callCount", 3);
+                    expect(mockConnection.post.args.map(([post]: [any]) => post.notification)).to.deep.equal([
+                        "before-subscribe",
+                        "after-subscribe",
+                        "before-next"
+                    ]);
 
-                const [,, [message]] = mockConnection.post.args;
-                expect(message).to.have.property("value");
-                expect(message.value).to.have.property("json");
-                expect(message.value.json).to.match(/"name":\s*"alice"/);
-                expect(message.value.json).to.match(/"employer":\s*"\[Circular\]"/);
-            });
+                    const [,, [message]] = mockConnection.post.args;
+                    expect(message).to.have.property("value");
+                    expect(message.value).to.have.property("json");
+                    expect(message.value.json).to.match(/"name":\s*"alice"/);
+                    expect(message.value.json).to.match(/"employer":\s*"\[Circular\]"/);
+                });
         });
 
         it("should respond to 'snapshot'", () => {
@@ -131,13 +132,24 @@ if (typeof window !== "undefined") {
             });
 
             const snapshot = snapshotPlugin.snapshotAll();
-            return snapshot.sourceMapsResolved.then(() => {
+            return snapshot.sourceMapsResolved
+                .then(waitAfterResolved)
+                .then(() => {
 
-                const [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
-                expect(response).to.exist;
-                expect(response).to.have.property("request");
-                expect(response).to.have.property("snapshot");
-            });
+                    const [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
+                    expect(response).to.exist;
+                    expect(response).to.have.property("request");
+                    expect(response).to.have.property("snapshot");
+                });
         });
     });
+}
+
+function waitAfterResolved(): Promise<void> {
+
+    // Wait for another asychronous promise resolution so that the test is not
+    // dependent upon the notification order - the internal post must occur
+    // before the stub expectations are asserted.
+
+    return Promise.resolve();
 }
