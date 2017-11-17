@@ -79,14 +79,17 @@ export class StackTracePlugin extends BasePlugin {
 
 function inferType(ref: SubscriberRef, stackTrace: StackFrame[]): string {
 
-    // TODO: Infer the friendliest possible type name for the observable from
-    // the prototype and the stack trace.
+    const { observable } = ref;
+    const { operator } = observable as any;
 
-    const prototype = Object.getPrototypeOf(ref.observable);
+    const prototype = Object.getPrototypeOf(operator ? operator : observable);
     if (prototype.constructor && prototype.constructor.name) {
-        return prototype.constructor.name;
+        return prototype.constructor.name.replace(
+            /^([\w])(\w+)(Observable|Operator)$/,
+            (match: string, p1: string, p2: string) => `${p1.toLowerCase()}${p2}`
+        );
     }
-    return "Object";
+    return "unknown";
 }
 
 function options(): any {
