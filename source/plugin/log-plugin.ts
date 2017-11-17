@@ -11,7 +11,7 @@ import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
-import { getStackTrace } from "./stack-trace-plugin";
+import { getStackTrace, getType } from "./stack-trace-plugin";
 
 export class LogPlugin extends BasePlugin {
 
@@ -61,19 +61,25 @@ export class LogPlugin extends BasePlugin {
         const { observable, subscriber } = ref;
 
         if (matches(observable, match_)) {
+
             const tag = read(observable);
+            const type = getType(ref);
             const matching = (typeof match_ === "string") ? "" : `; matching ${matchToString(match_)}`;
+            const group = tag ?
+                `Tag = ${tag}; notification = ${notification}${matching}` :
+                `Type = ${type}; notification = ${notification}${matching}`;
+
             switch (notification) {
             case "error":
-                logger_.group(`Tag = ${tag}; notification = ${notification}${matching}`);
+                logger_.group(group);
                 logger_.error("Error =", param);
                 break;
             case "next":
-                logger_.group(`Tag = ${tag}; notification = ${notification}${matching}`);
+                logger_.group(group);
                 logger_.log("Value =", param);
                 break;
             default:
-                logger_.groupCollapsed(`Tag = ${tag}; notification = ${notification}${matching}`);
+                logger_.groupCollapsed(group);
                 break;
             }
 

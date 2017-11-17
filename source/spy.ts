@@ -242,7 +242,10 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
     filtered.forEach((observableSnapshot) => {
 
         const { subscriptions } = observableSnapshot;
-        logger[observableGroupMethod].call(logger, `Tag = ${observableSnapshot.tag}`);
+        logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
+            `Tag = ${observableSnapshot.tag}` :
+            `Type = ${observableSnapshot.type}`
+        );
 
         const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
         logger.group(`${subscriptions.size} subscriber(s)`);
