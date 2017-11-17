@@ -35,14 +35,16 @@ export function matches<T>(arg: Observable<T> | SubscriberRef, match: Match): bo
         return observable === match;
     }
 
-    const identity = identify(observable);
+    const observableId = identify(observable);
+    const subscriberId = subscriber ? identify(subscriber) : null;
+    const subscriptionId = subscription ? identify(subscription) : null;
     const tag = read(observable);
 
     if (typeof match === "function") {
         return match(tag, observable);
     }
     if (typeof match === "string") {
-        return (match === identity) || (match === tag);
+        return (match === observableId) || (match === subscriberId) || (match === subscriptionId) || (match === tag);
     }
     if (tag === null) {
         return false;

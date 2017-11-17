@@ -168,9 +168,8 @@ export class PausePlugin extends BasePlugin {
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
 
         const { deck_, match_ } = this;
-        const { observable } = ref;
 
-        if (matches(observable, match_)) {
+        if (matches(ref, match_)) {
             return deck_.select(ref);
         }
         return null;

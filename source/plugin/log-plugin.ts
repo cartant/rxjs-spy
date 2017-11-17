@@ -61,7 +61,7 @@ export class LogPlugin extends BasePlugin {
         const { logger_, match_ } = this;
         const { observable, subscriber } = ref;
 
-        if (matches(observable, match_)) {
+        if (matches(ref, match_)) {
 
             const tag = read(observable);
             const type = getType(ref);

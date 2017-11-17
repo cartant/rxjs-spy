@@ -26,9 +26,8 @@ export class LetPlugin extends BasePlugin {
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
 
         const { match_, select_ } = this;
-        const { observable } = ref;
 
-        if (matches(observable, match_)) {
+        if (matches(ref, match_)) {
             return select_;
         }
         return null;
