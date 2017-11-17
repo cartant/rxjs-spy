@@ -7,15 +7,34 @@
 
 import { stringify } from "circular-json";
 import { Observable } from "rxjs/Observable";
+import { Observer } from "rxjs/Observer";
 import { Subscriber } from "rxjs/Subscriber";
+import { Subscription } from "rxjs/Subscription";
 import { EXTENSION_KEY } from "../devtools/constants";
-import { Connection, Extension, Graph, Notification as NotificationMessage } from "../devtools/interfaces";
+import { isPostRequest } from "../devtools/guards";
+
+import {
+    Connection,
+    Extension,
+    Graph as GraphPayload,
+    Message,
+    Notification as NotificationMessage,
+    Post,
+    Request,
+    Response,
+    Snapshot as SnapshotPayload
+} from "../devtools/interfaces";
+
 import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { read } from "../match";
-import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification, Plugin, SubscriberRef, SubscriptionRef } from "./plugin";
+import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 import { tick } from "../tick";
+
+import "rxjs/add/operator/do";
+import "rxjs/add/operator/filter";
 
 interface MessageRef {
     error?: any;
@@ -28,14 +47,48 @@ interface MessageRef {
 export class DevToolsPlugin extends BasePlugin {
 
     private connection_: Connection | null;
+    private posts_: Observable<Post>;
+    private requests_: Observable<Request>;
+    private subscription_: Subscription;
 
-    constructor() {
+    constructor(
+        find: <T extends Plugin>(constructor: { new (...args: any[]): T }) => T | null,
+        plugin: (plugin: Plugin, name: string) => () => void
+    ) {
 
         super();
 
         if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
             const extension = window[EXTENSION_KEY] as Extension;
             this.connection_ = extension.connect();
+            this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_!.subscribe((post) => observer.next(post)));
+            this.requests_ = this.posts_
+                .filter(isPostRequest)
+                .do((request) => {
+                    const response: Response = {
+                        messageType: "response",
+                        request
+                    };
+                    const post = () => this.connection_!.post(response);
+                    switch (request.requestType) {
+                    case "snapshot":
+                        const snapshotPlugin = find(SnapshotPlugin);
+                        if (snapshotPlugin) {
+                            const snapshot = snapshotPlugin.snapshotAll();
+                            response["snapshot"] = toSnapshot(snapshot);
+                            snapshot.sourceMapsResolved.then(post);
+                        } else {
+                            response.error = "Cannot find snapshot plugin.";
+                            post();
+                        }
+                        break;
+                    default:
+                        response.error = "Unexpected request.";
+                        post();
+                        break;
+                    }
+                });
+            this.subscription_ = this.requests_.subscribe();
         }
     }
 
@@ -109,6 +162,7 @@ export class DevToolsPlugin extends BasePlugin {
         if (this.connection_) {
             this.connection_.disconnect();
             this.connection_ = null;
+            this.subscription_.unsubscribe();
         }
     }
 
@@ -129,7 +183,7 @@ export class DevToolsPlugin extends BasePlugin {
     }
 }
 
-function toGraph(subscriberRef: SubscriberRef): Graph | null {
+function toGraph(subscriberRef: SubscriberRef): GraphPayload | null {
 
     const graphRef = getGraphRef(subscriberRef);
 
@@ -181,6 +235,63 @@ function toMessage(messageRef: MessageRef): NotificationMessage {
         tick: tick(),
         timestamp: Date.now(),
         value: (value === undefined) ? undefined : toValue(value)
+    };
+}
+
+function toSnapshot(snapshot: Snapshot): SnapshotPayload {
+
+    return {
+        observables: Array
+            .from(snapshot.observables.values())
+            .map((s) => ({
+                id: s.id,
+                subscriptions: Array
+                    .from(s.subscriptions.values())
+                    .map(s => s.id),
+                tag: s.tag,
+                tick: s.tick
+            })),
+        subscribers: Array
+            .from(snapshot.subscribers.values())
+            .map((s) => ({
+                id: s.id,
+                subscriptions: Array
+                    .from(s.subscriptions.values())
+                    .map(s => s.id),
+                tick: s.tick,
+                values: s.values.map(v => ({
+                    tick: v.tick,
+                    timestamp: v.timestamp,
+                    value: toValue(v.value)
+                })),
+                valuesFlushed: s.valuesFlushed
+            })),
+        subscriptions: Array
+            .from(snapshot.subscriptions.values())
+            .map((s) => ({
+                complete: s.complete,
+                error: s.error,
+                graph: {
+                    merges: Array
+                        .from(s.merges.values())
+                        .map(s => s.id),
+                    mergesFlushed: s.mergesFlushed,
+                    rootSink: s.rootSink ? s.rootSink.id : null,
+                    sink: s.sink ? s.sink.id : null,
+                    sources: Array
+                        .from(s.sources.values())
+                        .map(s => s.id),
+                    sourcesFlushed: s.sourcesFlushed
+                },
+                id: s.id,
+                observable: identify(s.observable),
+                stackTrace: s.stackTrace,
+                subscriber: identify(s.subscriber),
+                tick: s.tick,
+                timestamp: s.timestamp,
+                unsubscribed: s.unsubscribed
+            })),
+        tick: snapshot.tick
     };
 }
 

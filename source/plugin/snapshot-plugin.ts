@@ -40,6 +40,7 @@ function setSnapshotRef(ref: SubscriberRef, value: SnapshotRef): SnapshotRef {
 
 export interface Snapshot {
     observables: Map<Observable<any>, ObservableSnapshot>;
+    sourceMapsResolved: Promise<void>;
     subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tick: number;
@@ -163,6 +164,7 @@ export class SnapshotPlugin extends BasePlugin {
     } = {}): Snapshot {
 
         const observables = new Map<Observable<any>, ObservableSnapshot>();
+        const promises: Promise<void>[] = [];
         const subscribers = new Map<Subscriber<any>, SubscriberSnapshot>();
         const subscriptions = new Map<Subscription, SubscriptionSnapshot>();
 
@@ -185,6 +187,9 @@ export class SnapshotPlugin extends BasePlugin {
                 valuesFlushed
             } = snapshotRef;
 
+            const sourceMapsResolved = getSourceMapsResolved(ref);
+            promises.push(sourceMapsResolved);
+
             const subscriptionSnapshot: SubscriptionSnapshot = {
                 complete,
                 error,
@@ -194,7 +199,7 @@ export class SnapshotPlugin extends BasePlugin {
                 observable,
                 rootSink: null,
                 sink: null,
-                sourceMapsResolved: getSourceMapsResolved(ref),
+                sourceMapsResolved,
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 sourcesFlushed,
                 stackTrace: getStackTrace(ref),
@@ -281,6 +286,7 @@ export class SnapshotPlugin extends BasePlugin {
 
         return {
             observables,
+            sourceMapsResolved: Promise.all(promises).then(() => undefined),
             subscribers,
             subscriptions,
             tick: tick()

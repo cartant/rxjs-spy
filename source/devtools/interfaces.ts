@@ -66,11 +66,13 @@ export interface Post extends Message {
 
 export interface Request extends Message {
     messageType: "request";
+    requestType: string;
 }
 
 export interface Response extends Message {
+    error?: string;
     messageType: "response";
-    request: Post;
+    request: Post & Request;
 }
 
 export interface Snapshot {

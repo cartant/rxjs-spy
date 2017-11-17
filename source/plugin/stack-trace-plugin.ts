@@ -57,10 +57,13 @@ export class StackTracePlugin extends BasePlugin {
         setStackTraceRef(ref, stackTraceRef);
 
         if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            stackTraceRef.sourceMapsResolved = get(options()).then((stackFrames) => {
-                const { stackTrace } = stackTraceRef;
-                stackTrace.splice(0, stackTrace.length, ...stackFrames);
-            });
+            stackTraceRef.sourceMapsResolved = get(options())
+                .then((stackFrames) => {
+                    const { stackTrace } = stackTraceRef;
+                    stackTrace.splice(0, stackTrace.length, ...stackFrames);
+                })
+                /*tslint:disable-next-line:no-console*/
+                .catch((error) => console.error("Cannot resolve source maps", error));
         }
     }
 }

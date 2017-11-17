@@ -320,7 +320,7 @@ export function spy(options: {
             new GraphPlugin(options as { [key: string]: any }),
             new SnapshotPlugin(options as { [key: string]: any }),
             new StatsPlugin(),
-            new DevToolsPlugin()
+            new DevToolsPlugin(find, plugin)
         ];
     }
     pluginsSubject_.next(plugins_);

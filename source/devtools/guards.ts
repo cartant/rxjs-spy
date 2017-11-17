@@ -14,6 +14,14 @@ export function isPost(message: Message): message is Post {
     return message["postType"] !== undefined;
 }
 
+export function isPostRequest(message: Message): message is Post & Request {
+    return isPost(message) && (message.messageType === "request");
+}
+
+export function isPostResponse(message: Message): message is Post & Response {
+    return isPost(message) && (message.messageType === "response");
+}
+
 export function isRequest(message: Message): message is Request {
     return message.messageType === "request";
 }
