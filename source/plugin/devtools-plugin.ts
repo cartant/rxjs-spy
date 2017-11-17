@@ -10,7 +10,7 @@ import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { EXTENSION_KEY } from "../devtools/constants";
+import { EXTENSION_KEY, MESSAGE_NOTIFICATION, MESSAGE_RESPONSE } from "../devtools/constants";
 import { isPostRequest } from "../devtools/guards";
 
 import {
@@ -66,7 +66,7 @@ export class DevToolsPlugin extends BasePlugin {
                 .filter(isPostRequest)
                 .do((request) => {
                     const response: Response = {
-                        messageType: "response",
+                        messageType: MESSAGE_RESPONSE,
                         request
                     };
                     const post = () => this.connection_!.post(response);
@@ -216,7 +216,7 @@ function toMessage(messageRef: MessageRef): NotificationMessage {
 
     return {
         id: identify({}),
-        messageType: "notification",
+        messageType: MESSAGE_NOTIFICATION,
         notification: `${prefix}-${notification}`,
         observable: {
             id: identify(observable),

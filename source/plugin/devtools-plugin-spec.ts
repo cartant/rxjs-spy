@@ -8,7 +8,7 @@
 import { expect } from "chai";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
-import { EXTENSION_KEY } from "../devtools/constants";
+import { EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools/constants";
 import { Connection, Extension } from "../devtools/interfaces";
 import { DevToolsPlugin } from "./devtools-plugin";
 import { GraphPlugin } from "./graph-plugin";
@@ -124,9 +124,9 @@ if (typeof window !== "undefined") {
             expect(next).to.have.be.a("function");
 
             next({
-                messageType: "request",
+                messageType: MESSAGE_REQUEST,
                 postId: "0",
-                postType: "panel-message",
+                postType: PANEL_MESSAGE,
                 requestType: "snapshot"
             });
 
