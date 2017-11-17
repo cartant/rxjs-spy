@@ -12,6 +12,8 @@ import { EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools/const
 import { Connection, Extension } from "../devtools/interfaces";
 import { DevToolsPlugin } from "./devtools-plugin";
 import { GraphPlugin } from "./graph-plugin";
+import { LogPlugin } from "./log-plugin";
+import { PausePlugin } from "./pause-plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
 import { find, plugin, spy } from "../spy";
 import { StackTracePlugin } from "./stack-trace-plugin";
@@ -141,6 +143,90 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("snapshot");
                 });
+        });
+
+        it("should respond to 'log'", () => {
+
+            const subject = new Subject<number>();
+            const subscription = subject.subscribe();
+
+            expect(mockConnection.subscribe).to.have.property("callCount", 1);
+
+            const [[next]] = mockConnection.subscribe.args;
+            expect(next).to.have.be.a("function");
+
+            next({
+                match: "1",
+                messageType: MESSAGE_REQUEST,
+                postId: "0",
+                postType: PANEL_MESSAGE,
+                requestType: "log"
+            });
+
+            let [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
+            expect(response).to.exist;
+            expect(response).to.have.property("request");
+            expect(response).to.have.property("pluginId", "0");
+
+            let found = find(LogPlugin)!;
+            expect(found).to.exist;
+
+            next({
+                messageType: MESSAGE_REQUEST,
+                pluginId: "0",
+                postId: "1",
+                postType: PANEL_MESSAGE,
+                requestType: "log-teardown"
+            });
+
+            [, [response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
+            expect(response).to.exist;
+            expect(response).to.have.property("request");
+
+            found = find(LogPlugin)!;
+            expect(found).to.not.exist;
+        });
+
+        it("should respond to 'pause'", () => {
+
+            const subject = new Subject<number>();
+            const subscription = subject.subscribe();
+
+            expect(mockConnection.subscribe).to.have.property("callCount", 1);
+
+            const [[next]] = mockConnection.subscribe.args;
+            expect(next).to.have.be.a("function");
+
+            next({
+                match: "1",
+                messageType: MESSAGE_REQUEST,
+                postId: "0",
+                postType: PANEL_MESSAGE,
+                requestType: "pause"
+            });
+
+            let [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
+            expect(response).to.exist;
+            expect(response).to.have.property("request");
+            expect(response).to.have.property("pluginId", "0");
+
+            let found = find(PausePlugin)!;
+            expect(found).to.exist;
+
+            next({
+                messageType: MESSAGE_REQUEST,
+                pluginId: "0",
+                postId: "1",
+                postType: PANEL_MESSAGE,
+                requestType: "pause-teardown"
+            });
+
+            [, [response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
+            expect(response).to.exist;
+            expect(response).to.have.property("request");
+
+            found = find(PausePlugin)!;
+            expect(found).to.not.exist;
         });
     });
 }

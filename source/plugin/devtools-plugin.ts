@@ -27,7 +27,9 @@ import {
 
 import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
-import { read } from "../match";
+import { LogPlugin } from "./log-plugin";
+import { read, toString as matchToString } from "../match";
+import { PausePlugin } from "./pause-plugin";
 import { BasePlugin, Notification, Plugin, SubscriberRef, SubscriptionRef } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { getStackTrace, getStackTraceRef, getType } from "./stack-trace-plugin";
@@ -46,27 +48,37 @@ interface MessageRef {
     value?: any;
 }
 
+interface PluginRecord {
+    plugin: Plugin;
+    teardown: () => void;
+}
+
 export class DevToolsPlugin extends BasePlugin {
 
     private connection_: Connection | null;
     private posts_: Observable<Post>;
+    private plugins_: Map<string, PluginRecord>;
     private responses_: Observable<Response>;
     private subscription_: Subscription;
 
     constructor(
-        find: <T extends Plugin>(constructor: { new (...args: any[]): T }) => T | null,
-        plugin: (plugin: Plugin, name: string) => () => void
+        private findPlugin_: <T extends Plugin>(constructor: { new (...args: any[]): T }) => T | null,
+        private configurePlugin_: (plugin: Plugin, name: string) => () => void
     ) {
 
         super();
 
         if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
+
             const extension = window[EXTENSION_KEY] as Extension;
             this.connection_ = extension.connect();
+            this.plugins_ = new Map<string, PluginRecord>();
+
             this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
                 this.connection_.subscribe((post) => observer.next(post)) :
                 () => {}
             ).share();
+
             this.responses_ = this.posts_
                 .filter(isPostRequest)
                 .switchMap((request) => {
@@ -75,8 +87,43 @@ export class DevToolsPlugin extends BasePlugin {
                         request
                     };
                     switch (request.requestType) {
+                    case "log":
+                        this.recordPlugin_(request.postId, new LogPlugin(request["match"]), `log(${matchToString(request["match"])})`);
+                        response["pluginId"] = request.postId;
+                        break;
+                    case "log-teardown":
+                        this.teardownPlugin_(request["pluginId"]);
+                        break;
+                    case "pause":
+                        this.recordPlugin_(request.postId, new PausePlugin(request["match"]), `pause(${matchToString(request["match"])})`);
+                        response["pluginId"] = request.postId;
+                        break;
+                    case "pause-deck":
+                        const pausePlugin = this.plugins_.get(request["pluginId"]) as PausePlugin | undefined;
+                        if (pausePlugin) {
+                            const { deck } = pausePlugin;
+                            switch (request["deck"]) {
+                            case "clear":
+                            case "pause":
+                            case "resume":
+                            case "skip":
+                            case "step":
+                                deck[request["command"]]();
+                                break;
+                            case "inspect":
+                                response.error = "Not implemented.";
+                                break;
+                            default:
+                                response.error = "Unexpected deck command.";
+                                break;
+                            }
+                        }
+                        break;
+                    case "pause-teardown":
+                        this.teardownPlugin_(request["pluginId"]);
+                        break;
                     case "snapshot":
-                        const snapshotPlugin = find(SnapshotPlugin);
+                        const snapshotPlugin = this.findPlugin_(SnapshotPlugin);
                         if (snapshotPlugin) {
                             const snapshot = snapshotPlugin.snapshotAll();
                             response["snapshot"] = toSnapshot(snapshot);
@@ -91,6 +138,7 @@ export class DevToolsPlugin extends BasePlugin {
                     return Observable.of(response);
                 })
                 .share();
+
             this.subscription_ = this.responses_.subscribe((response) => {
                 if (this.connection_) {
                     this.connection_.post(response);
@@ -173,6 +221,12 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
+    private recordPlugin_(id: string, plugin: Plugin, name: string): void {
+
+        const teardown = this.configurePlugin_(plugin, name);
+        this.plugins_.set(id, { plugin, teardown });
+    }
+
     private postMessage_(messageRef: MessageRef): void {
 
         const { connection_ } = this;
@@ -186,6 +240,16 @@ export class DevToolsPlugin extends BasePlugin {
             } else {
                 post();
             }
+        }
+    }
+
+    private teardownPlugin_(id: string): void {
+
+        const { plugins_ } = this;
+        const record = plugins_.get(id);
+        if (record) {
+            record.teardown();
+            plugins_.delete(id);
         }
     }
 }
