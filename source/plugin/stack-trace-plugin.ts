@@ -13,6 +13,7 @@ const stackTraceRefSymbol = Symbol("stackTraceRef");
 export interface StackTraceRef {
     sourceMapsResolved: Promise<void>;
     stackTrace: StackFrame[];
+    type: string;
 }
 
 export function getSourceMapsResolved(ref: SubscriberRef): Promise<void> {
@@ -30,6 +31,12 @@ export function getStackTrace(ref: SubscriberRef): StackFrame[] {
 export function getStackTraceRef(ref: SubscriberRef): StackTraceRef {
 
     return ref[stackTraceRefSymbol];
+}
+
+export function getType(ref: SubscriberRef): string {
+
+    const stackTraceRef = getStackTraceRef(ref);
+    return stackTraceRef ? stackTraceRef.type : inferType(ref, []);
 }
 
 function setStackTraceRef(ref: SubscriberRef, value: StackTraceRef): StackTraceRef {
@@ -52,7 +59,8 @@ export class StackTracePlugin extends BasePlugin {
 
         const stackTraceRef: StackTraceRef = {
             sourceMapsResolved: Promise.resolve(),
-            stackTrace: getSync(options())
+            stackTrace: getSync(options()),
+            type: inferType(ref, [])
         };
         setStackTraceRef(ref, stackTraceRef);
 
@@ -61,11 +69,24 @@ export class StackTracePlugin extends BasePlugin {
                 .then((stackFrames) => {
                     const { stackTrace } = stackTraceRef;
                     stackTrace.splice(0, stackTrace.length, ...stackFrames);
+                    stackTraceRef.type = inferType(ref, stackTrace);
                 })
                 /*tslint:disable-next-line:no-console*/
                 .catch((error) => console.error("Cannot resolve source maps", error));
         }
     }
+}
+
+function inferType(ref: SubscriberRef, stackTrace: StackFrame[]): string {
+
+    // TODO: Infer the friendliest possible type name for the observable from
+    // the prototype and the stack trace.
+
+    const prototype = Object.getPrototypeOf(ref.observable);
+    if (prototype.constructor && prototype.constructor.name) {
+        return prototype.constructor.name;
+    }
+    return "Object";
 }
 
 function options(): any {

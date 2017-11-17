@@ -12,7 +12,7 @@ import { identify } from "../identify";
 import { getGraphRef, GraphRef } from "./graph-plugin";
 import { read } from "../match";
 import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
-import { getSourceMapsResolved, getStackTrace } from "./stack-trace-plugin";
+import { getSourceMapsResolved, getStackTrace, getType } from "./stack-trace-plugin";
 import { tick } from "../tick";
 
 const snapshotRefSymbol = Symbol("snapshotRef");
@@ -52,6 +52,7 @@ export interface ObservableSnapshot {
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tag: string | null;
     tick: number;
+    type: string;
 }
 
 export interface SubscriberSnapshot {
@@ -235,7 +236,8 @@ export class SnapshotPlugin extends BasePlugin {
                     observable,
                     subscriptions: new Map<Subscription, SubscriptionSnapshot>(),
                     tag: read(observable),
-                    tick
+                    tick,
+                    type: getType(ref)
                 };
                 observables.set(observable, observableSnapshot);
             }

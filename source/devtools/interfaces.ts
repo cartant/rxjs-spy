@@ -57,6 +57,7 @@ export interface ObservableSnapshot {
     subscriptions: string[];
     tag: string | null;
     tick: number;
+    type: string;
 }
 
 export interface Post extends Message {

@@ -30,7 +30,7 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { BasePlugin, Notification, Plugin, SubscriberRef, SubscriptionRef } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
-import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
+import { getStackTrace, getStackTraceRef, getType } from "./stack-trace-plugin";
 import { tick } from "../tick";
 
 import "rxjs/add/observable/of";
@@ -92,7 +92,6 @@ export class DevToolsPlugin extends BasePlugin {
                 })
                 .share();
             this.subscription_ = this.responses_.subscribe((response) => {
-                console.log(JSON.stringify(response, null, 2));
                 if (this.connection_) {
                     this.connection_.post(response);
                 }
@@ -229,7 +228,7 @@ function toMessage(messageRef: MessageRef): NotificationMessage {
         observable: {
             id: identify(observable),
             tag: read(observable) || null,
-            type: toType(observable)
+            type: getType(ref)
         },
         subscriber: {
             id: identify(subscriber)
@@ -257,7 +256,8 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                     .from(s.subscriptions.values())
                     .map(s => s.id),
                 tag: s.tag,
-                tick: s.tick
+                tick: s.tick,
+                type: s.type
             })),
         subscribers: Array
             .from(snapshot.subscribers.values())
@@ -301,15 +301,6 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
             })),
         tick: snapshot.tick
     };
-}
-
-function toType(observable: Observable<any>): string {
-
-    const prototype = Object.getPrototypeOf(observable);
-    if (prototype.constructor && prototype.constructor.name) {
-        return prototype.constructor.name;
-    }
-    return "Object";
 }
 
 function toValue(value: any): { json: string } {
