@@ -317,7 +317,7 @@ export function spy(options: {
             new GraphPlugin(options as { [key: string]: any }),
             new SnapshotPlugin(options as { [key: string]: any }),
             new StatsPlugin(),
-            new DevToolsPlugin(find, plugin)
+            new DevToolsPlugin(find, plugin, subscribeWithoutSpy)
         ];
     }
     pluginsSubject_.next(plugins_);

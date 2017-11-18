@@ -36,10 +36,8 @@ import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 import { tick } from "../tick";
 
-import "rxjs/add/observable/of";
 import "rxjs/add/operator/filter";
-import "rxjs/add/operator/share";
-import "rxjs/add/operator/switchMap";
+import "rxjs/add/operator/map";
 
 interface MessageRef {
     error?: any;
@@ -59,12 +57,13 @@ export class DevToolsPlugin extends BasePlugin {
     private connection_: Connection | null;
     private posts_: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
-    private responses_: Observable<Response>;
+    private responses_: Observable<Promise<Response>>;
     private subscription_: Subscription;
 
     constructor(
         private findPlugin_: <T extends Plugin>(constructor: { new (...args: any[]): T }) => T | null,
-        private configurePlugin_: (plugin: Plugin) => () => void
+        private configurePlugin_: (plugin: Plugin) => () => void,
+        private subscribe_: (this: Observable<any>, ...args: any[]) => Subscription
     ) {
 
         super("devTools");
@@ -78,11 +77,11 @@ export class DevToolsPlugin extends BasePlugin {
             this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
                 this.connection_.subscribe((post) => observer.next(post)) :
                 () => {}
-            ).share();
+            );
 
             this.responses_ = this.posts_
                 .filter(isPostRequest)
-                .switchMap((request) => {
+                .map((request) => {
                     const response: Response = {
                         messageType: MESSAGE_RESPONSE,
                         request
@@ -136,15 +135,18 @@ export class DevToolsPlugin extends BasePlugin {
                         response.error = "Unexpected request.";
                         break;
                     }
-                    return Observable.of(response);
-                })
-                .share();
+                    return Promise.resolve(response);
+                });
 
-            this.subscription_ = this.responses_.subscribe((response) => {
+            // The composed observable effects promises and to avoid internal
+            // subscriptions that would be seen by the spy, switchMap is not
+            // used.
+
+            this.subscription_ = this.subscribe_.call(this.responses_, (promise: Promise<Response>) => promise.then(response => {
                 if (this.connection_) {
                     this.connection_.post(response);
                 }
-            });
+            }));
         }
     }
 
