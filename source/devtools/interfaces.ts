@@ -35,6 +35,7 @@ export interface Notification extends Message {
     notification: string;
     observable: {
         id: string;
+        path: string;
         tag: string | null;
         type: string;
     };
@@ -54,6 +55,7 @@ export interface Notification extends Message {
 
 export interface ObservableSnapshot {
     id: string;
+    path: string;
     subscriptions: string[];
     tag: string | null;
     tick: number;

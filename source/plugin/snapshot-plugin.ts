@@ -10,11 +10,12 @@ import { Subscription } from "rxjs/Subscription";
 import { StackFrame } from "stacktrace-js";
 import { getGraphRef, GraphRef } from "./graph-plugin";
 import { identify } from "../identify";
-import { inferType, SubscriberRef, SubscriptionRef } from "../interfaces";
+import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { read } from "../match";
 import { BasePlugin, Notification } from "./plugin";
 import { getSourceMapsResolved, getStackTrace } from "./stack-trace-plugin";
 import { tick } from "../tick";
+import { inferPath, inferType } from "../util";
 
 const snapshotRefSymbol = Symbol("snapshotRef");
 
@@ -50,6 +51,7 @@ export interface Snapshot {
 export interface ObservableSnapshot {
     id: string;
     observable: Observable<any>;
+    path: string;
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tag: string | null;
     tick: number;
@@ -235,10 +237,11 @@ export class SnapshotPlugin extends BasePlugin {
                 observableSnapshot = {
                     id: identify(observable),
                     observable,
+                    path: inferPath(observable),
                     subscriptions: new Map<Subscription, SubscriptionSnapshot>(),
                     tag: read(observable),
                     tick,
-                    type: inferType(ref)
+                    type: inferType(observable)
                 };
                 observables.set(observable, observableSnapshot);
             }

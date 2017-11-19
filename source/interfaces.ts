@@ -19,21 +19,6 @@ export interface SubscriptionRef extends SubscriberRef {
     subscription: Subscription;
 }
 
-export function inferType(ref: SubscriberRef): string {
-
-    const { observable } = ref;
-    const { operator } = observable as any;
-
-    const prototype = Object.getPrototypeOf(operator ? operator : observable);
-    if (prototype.constructor && prototype.constructor.name) {
-        return prototype.constructor.name.replace(
-            /^([\w])(\w+)(Observable|Operator)$/,
-            (match: string, p1: string, p2: string) => `${p1.toLowerCase()}${p2}`
-        );
-    }
-    return "unknown";
-}
-
 export function isSubscriptionRef(subscriberRef: SubscriberRef): subscriberRef is SubscriptionRef {
     return subscriberRef && subscriberRef["subscription"];
 }
