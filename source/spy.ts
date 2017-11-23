@@ -270,9 +270,6 @@ export function show(match: any, partialLogger: PartialLogger = defaultLogger): 
             }
         });
         logger.groupEnd();
-        logger.groupCollapsed("Raw snapshot");
-        logger.log(observableSnapshot);
-        logger.groupEnd();
         logger.groupEnd();
     });
     logger.groupEnd();
