@@ -7,7 +7,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { SubscriberRef, SubscriptionRef } from "../interfaces";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
 

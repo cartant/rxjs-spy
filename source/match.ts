@@ -9,7 +9,7 @@ import { Operator } from "rxjs/Operator";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { identify } from "./identify";
-import { isSubscriptionRef, SubscriberRef, SubscriptionRef } from "./interfaces";
+import { isSubscriptionRef, SubscriberRef, SubscriptionRef } from "./subscription-ref";
 import { isObservable } from "./util";
 
 export type MatchPredicate = (tag: string | null, observable?: Observable<any>) => boolean;

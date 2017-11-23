@@ -11,9 +11,10 @@ import { Observer } from "rxjs/Observer";
 import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
-import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
-import { spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 import "rxjs/add/observable/combineLatest";
 import "rxjs/add/observable/never";
@@ -27,8 +28,8 @@ describe("GraphPlugin", () => {
     describe("flushing", () => {
 
         let graphPlugin: GraphPlugin;
+        let spy: Spy;
         let subscriberRefsPlugin: SubscriberRefsPlugin;
-        let teardown: () => void;
 
         function delay(duration: number): Promise<void> {
             const buffer = 10;
@@ -39,8 +40,8 @@ describe("GraphPlugin", () => {
 
             afterEach(() => {
 
-                if (teardown) {
-                    teardown();
+                if (spy) {
+                    spy.teardown();
                 }
             });
 
@@ -48,7 +49,8 @@ describe("GraphPlugin", () => {
 
                 graphPlugin = new GraphPlugin({ keptDuration: duration });
                 subscriberRefsPlugin = new SubscriberRefsPlugin();
-                teardown = spy({ plugins: [graphPlugin, subscriberRefsPlugin], warning: false });
+                spy = create({ defaultPlugins: false, warning: false });
+                spy.plugin(graphPlugin, subscriberRefsPlugin);
             });
 
             it("should flush completed root subscriptions", () => {
@@ -306,13 +308,13 @@ describe("GraphPlugin", () => {
     describe("graphing", () => {
 
         let graphPlugin: GraphPlugin;
+        let spy: Spy;
         let subscriberRefsPlugin: SubscriberRefsPlugin;
-        let teardown: () => void;
 
         afterEach(() => {
 
-            if (teardown) {
-                teardown();
+            if (spy) {
+                spy.teardown();
             }
         });
 
@@ -320,7 +322,8 @@ describe("GraphPlugin", () => {
 
             graphPlugin = new GraphPlugin({ keptDuration: 0 });
             subscriberRefsPlugin = new SubscriberRefsPlugin();
-            teardown = spy({ plugins: [graphPlugin, subscriberRefsPlugin], warning: false });
+            spy = create({ defaultPlugins: false, warning: false });
+            spy.plugin(graphPlugin, subscriberRefsPlugin);
         });
 
         it("should graph sources and sinks", () => {

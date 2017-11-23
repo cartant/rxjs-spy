@@ -8,23 +8,24 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { SubscriptionRef } from "../interfaces";
 import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
-import { spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
+import { SubscriptionRef } from "../subscription-ref";
 
 import "rxjs/add/operator/map";
 
 describe("StackTracePlugin", () => {
 
+    let spy: Spy;
     let stackTracePlugin: StackTracePlugin;
     let subscriberRefsPlugin: SubscriberRefsPlugin;
-    let teardown: () => void;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
@@ -32,7 +33,8 @@ describe("StackTracePlugin", () => {
 
         stackTracePlugin = new StackTracePlugin();
         subscriberRefsPlugin = new SubscriberRefsPlugin();
-        teardown = spy({ plugins: [stackTracePlugin, subscriberRefsPlugin], warning: false });
+        spy = create({ defaultPlugins: false, warning: false });
+        spy.plugin(stackTracePlugin, subscriberRefsPlugin);
     });
 
     it("should determine the stack traces", () => {

@@ -10,7 +10,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { GraphPlugin } from "./graph-plugin";
 import { SnapshotPlugin, SubscriptionSnapshot } from "./snapshot-plugin";
-import { spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 import { toSubscriber } from "../util";
 
 import "rxjs/add/observable/combineLatest";
@@ -25,19 +26,20 @@ describe("SnapshotPlugin", () => {
     const keptDuration = -1;
     const keptValues = 2;
     let plugin: SnapshotPlugin;
-    let teardown: () => void;
+    let spy: Spy;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
     beforeEach(() => {
 
-        plugin = new SnapshotPlugin({ keptValues });
-        teardown = spy({ plugins: [new GraphPlugin({ keptDuration }), plugin], warning: false });
+        spy = create({ defaultPlugins: false, warning: false });
+        plugin = new SnapshotPlugin(spy, { keptValues });
+        spy.plugin(new GraphPlugin({ keptDuration }), plugin);
     });
 
     describe("snapshotAll", () => {

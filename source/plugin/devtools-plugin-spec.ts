@@ -15,7 +15,8 @@ import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
 import { PausePlugin } from "./pause-plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
-import { find, plugin, spy, subscribeWithoutSpy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
 if (typeof window !== "undefined") {
@@ -26,12 +27,12 @@ if (typeof window !== "undefined") {
         let mockExtension: any;
         let mockUnsubscribe: any;
         let snapshotPlugin: SnapshotPlugin;
-        let teardown: () => void;
+        let spy: Spy;
 
         afterEach(() => {
 
-            if (teardown) {
-                teardown();
+            if (spy) {
+                spy.teardown();
             }
             expect(mockExtension.connect).to.have.property("callCount", 1);
             expect(mockConnection.disconnect).to.have.property("callCount", 1);
@@ -52,13 +53,14 @@ if (typeof window !== "undefined") {
             };
             window[EXTENSION_KEY] = mockExtension;
 
-            snapshotPlugin = new SnapshotPlugin({ keptValues: 1 });
-            teardown = spy({ plugins: [
+            spy = create({ defaultPlugins: false, warning: false });
+            snapshotPlugin = new SnapshotPlugin(spy, { keptValues: 1 });
+            spy.plugin(
                 new StackTracePlugin(),
                 new GraphPlugin({ keptDuration: -1 }),
                 snapshotPlugin,
-                new DevToolsPlugin(find, plugin, subscribeWithoutSpy)
-            ], warning: false });
+                new DevToolsPlugin(spy)
+            );
         });
 
         it("should post notification messages", () => {
@@ -171,7 +173,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const found = find(LogPlugin)!;
+                    const found = spy.find(LogPlugin)!;
                     expect(found).to.exist;
 
                     next({
@@ -189,7 +191,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.exist;
                     expect(response).to.have.property("request");
 
-                    const found = find(LogPlugin)!;
+                    const found = spy.find(LogPlugin)!;
                     expect(found).to.not.exist;
                 });
         });
@@ -220,7 +222,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const found = find(PausePlugin)!;
+                    const found = spy.find(PausePlugin)!;
                     expect(found).to.exist;
 
                     next({
@@ -238,7 +240,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.exist;
                     expect(response).to.have.property("request");
 
-                    const found = find(PausePlugin)!;
+                    const found = spy.find(PausePlugin)!;
                     expect(found).to.not.exist;
                 });
         });

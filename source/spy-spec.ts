@@ -10,8 +10,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
 import { Plugin } from "./plugin";
-import { flush, _let, log, pause, show, spy, stats } from "./spy";
-import { tick } from "./tick";
+import { create } from "./spy-factory";
+import { Spy } from "./spy-interface";
 
 import "rxjs/add/operator/mapTo";
 
@@ -23,12 +23,12 @@ const options = {
 
 describe("spy", () => {
 
-    let teardown: () => void;
+    let spy: Spy;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
@@ -39,12 +39,13 @@ describe("spy", () => {
         beforeEach(() => {
 
             plugin = stubPlugin();
-            teardown = spy({ plugins: [plugin], ...options });
+            spy = create({ defaultPlugins: false, ...options });
+            spy.plugin(plugin);
         });
 
         it("should call the plugin's flush method", () => {
 
-            flush();
+            spy.flush();
             expect(plugin.flush).to.have.property("called", true);
         });
     });
@@ -53,8 +54,8 @@ describe("spy", () => {
 
         it("should apply the selector to the tagged observable", () => {
 
-            teardown = spy({ plugins: [], ...options });
-            _let("people", (source) => source.mapTo("bob"));
+            spy = create({ defaultPlugins: false, ...options });
+            spy.let("people", (source) => source.mapTo("bob"));
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -69,12 +70,12 @@ describe("spy", () => {
 
         it("should log the tagged observable", () => {
 
-            teardown = spy({ plugins: [], ...options });
+            spy = create({ defaultPlugins: false, ...options });
 
             const subject = new Subject<string>();
             let calls: any[][] = [];
 
-            log("people", {
+            spy.log("people", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -98,12 +99,12 @@ describe("spy", () => {
 
         it("should log all/any tagged observables", () => {
 
-            teardown = spy({ plugins: [], ...options });
+            spy = create({ defaultPlugins: false, ...options });
 
             const subject = new Subject<string>();
             const calls: any[][] = [];
 
-            log({
+            spy.log({
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -117,8 +118,8 @@ describe("spy", () => {
 
         it("should pause the tagged observable's subscriptions", () => {
 
-            teardown = spy({ plugins: [], ...options });
-            const deck = pause("people");
+            spy = create({ defaultPlugins: false, ...options });
+            const deck = spy.pause("people");
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -133,8 +134,8 @@ describe("spy", () => {
 
         it("should resume upon teardown", () => {
 
-            teardown = spy({ plugins: [], ...options });
-            const deck = pause("people");
+            spy = create({ defaultPlugins: false, ...options });
+            const deck = spy.pause("people");
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -143,7 +144,7 @@ describe("spy", () => {
             subject.next("alice");
             subject.next("bob");
             expect(values).to.deep.equal([]);
-            teardown();
+            spy.teardown();
             expect(values).to.deep.equal(["alice", "bob"]);
         });
     });
@@ -155,7 +156,8 @@ describe("spy", () => {
         beforeEach(() => {
 
             plugin = stubPlugin();
-            teardown = spy({ plugins: [plugin], ...options });
+            spy = create({ defaultPlugins: false, ...options });
+            spy.plugin(plugin);
         });
 
         it("should call the plugin subscribe/next/unsubscribe methods", () => {
@@ -243,7 +245,7 @@ describe("spy", () => {
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
-            const deck = pause("people");
+            const deck = spy.pause("people");
             subscription.unsubscribe();
             expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
@@ -257,7 +259,7 @@ describe("spy", () => {
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
-            const deck = pause("people");
+            const deck = spy.pause("people");
             subject.complete();
             expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
@@ -274,7 +276,7 @@ describe("spy", () => {
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
-            const deck = pause("people");
+            const deck = spy.pause("people");
             subject.error(new Error("Boom!"));
             expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
@@ -314,13 +316,13 @@ describe("spy", () => {
 
         it("should show snapshotted information for the tagged observable", () => {
 
-            teardown = spy({ ...options });
+            spy = create({ ...options });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
             const subscription = subject.tag("people").subscribe();
 
-            show("people", {
+            spy.show("people", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -331,13 +333,13 @@ describe("spy", () => {
 
         it("should show snapshotted information all/any tagged observables", () => {
 
-            teardown = spy({ ...options });
+            spy = create({ ...options });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
             const subscription = subject.tag("people").subscribe();
 
-            show({
+            spy.show({
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -351,13 +353,13 @@ describe("spy", () => {
 
         it("should show the stats", () => {
 
-            teardown = spy({ ...options });
+            spy = create({ ...options });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
             const subscription = subject.subscribe();
 
-            stats({
+            spy.stats({
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -374,21 +376,21 @@ describe("spy", () => {
 
         it("should increment with each subscription and value, etc.", () => {
 
-            teardown = spy({ plugins: [], ...options });
+            spy = create({ defaultPlugins: false, ...options });
 
             const subject = new Subject<string>();
 
-            let last = tick();
+            let last = spy.tick;
             const subscription = subject.subscribe();
-            expect(tick()).to.be.above(last);
+            expect(spy.tick).to.be.above(last);
 
-            last = tick();
+            last = spy.tick;
             subject.next("alice");
-            expect(tick()).to.be.above(last);
+            expect(spy.tick).to.be.above(last);
 
-            last = tick();
+            last = spy.tick;
             subscription.unsubscribe();
-            expect(tick()).to.be.above(last);
+            expect(spy.tick).to.be.above(last);
         });
     });
 });

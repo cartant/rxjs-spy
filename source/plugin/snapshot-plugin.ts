@@ -10,11 +10,11 @@ import { Subscription } from "rxjs/Subscription";
 import { StackFrame } from "stacktrace-js";
 import { getGraphRef, GraphRef } from "./graph-plugin";
 import { identify } from "../identify";
-import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { read } from "../match";
 import { BasePlugin, Notification } from "./plugin";
+import { Spy } from "../spy-interface";
 import { getSourceMapsResolved, getStackTrace } from "./stack-trace-plugin";
-import { tick } from "../tick";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 
 const snapshotRefSymbol = Symbol("snapshotRef");
@@ -91,8 +91,9 @@ export class SnapshotPlugin extends BasePlugin {
 
     private keptValues_: number;
     private sentinel_: GraphRef | null;
+    private spy_: Spy;
 
-    constructor({
+    constructor(spy: Spy, {
         keptValues = 4
     }: {
         keptValues?: number
@@ -102,35 +103,36 @@ export class SnapshotPlugin extends BasePlugin {
 
         this.keptValues_ = keptValues;
         this.sentinel_ = null;
+        this.spy_ = spy;
     }
 
     afterUnsubscribe(ref: SubscriptionRef): void {
 
         const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = tick();
+        snapshotRef.tick = this.spy_.tick;
         snapshotRef.unsubscribed = true;
     }
 
     beforeComplete(ref: SubscriptionRef): void {
 
         const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = tick();
+        snapshotRef.tick = this.spy_.tick;
         snapshotRef.complete = true;
     }
 
     beforeError(ref: SubscriptionRef, error: any): void {
 
         const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = tick();
+        snapshotRef.tick = this.spy_.tick;
         snapshotRef.error = error;
     }
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        const t = tick();
+        const tick = this.spy_.tick;
         const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = t;
-        snapshotRef.values.push({ tick: t, timestamp: Date.now(), value });
+        snapshotRef.tick = tick;
+        snapshotRef.values.push({ tick, timestamp: Date.now(), value });
 
         const { keptValues_ } = this;
         const count = snapshotRef.values.length - keptValues_;
@@ -145,7 +147,7 @@ export class SnapshotPlugin extends BasePlugin {
         const snapshotRef = setSnapshotRef(ref, {
             complete: false,
             error: null,
-            tick: tick(),
+            tick: this.spy_.tick,
             timestamp: Date.now(),
             unsubscribed: false,
             values: [],
@@ -295,7 +297,7 @@ export class SnapshotPlugin extends BasePlugin {
             sourceMapsResolved: Promise.all(promises).then(() => undefined),
             subscribers,
             subscriptions,
-            tick: tick()
+            tick: this.spy_.tick
         };
     }
 

@@ -9,23 +9,24 @@ import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { identify } from "../identify";
-import { SubscriptionRef } from "../interfaces";
 import { LogPlugin } from "./log-plugin";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
-import { plugin, spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
+import { SubscriptionRef } from "../subscription-ref";
 
 import "../add/operator/tag";
 
 describe("LogPlugin", () => {
 
     let calls: any[][];
+    let spy: Spy;
     let subscriberRefsPlugin: SubscriberRefsPlugin;
-    let teardown: () => void;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
@@ -36,7 +37,8 @@ describe("LogPlugin", () => {
             const plugin = new LogPlugin("people", {
                 log(...args: any[]): void { calls.push(args); }
             });
-            teardown = spy({ plugins: [plugin], warning: false });
+            spy = create({ defaultPlugins: false, warning: false });
+            spy.plugin(plugin);
             calls = [];
         });
 
@@ -150,7 +152,8 @@ describe("LogPlugin", () => {
         beforeEach(() => {
 
             subscriberRefsPlugin = new SubscriberRefsPlugin();
-            teardown = spy({ plugins: [subscriberRefsPlugin ], warning: false });
+            spy = create({ defaultPlugins: false, warning: false });
+            spy.plugin(subscriberRefsPlugin);
             calls = [];
         });
 
@@ -160,7 +163,7 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
-            plugin(new LogPlugin(identify(subscriptionRef.observable), {
+            spy.plugin(new LogPlugin(identify(subscriptionRef.observable), {
                 log(...args: any[]): void { calls.push(args); }
             }));
 
@@ -178,7 +181,7 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
-            plugin(new LogPlugin(identify(subscriptionRef.subscriber), {
+            spy.plugin(new LogPlugin(identify(subscriptionRef.subscriber), {
                 log(...args: any[]): void { calls.push(args); }
             }));
 
@@ -196,7 +199,7 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
-            plugin(new LogPlugin(identify(subscriptionRef.subscription), {
+            spy.plugin(new LogPlugin(identify(subscriptionRef.subscription), {
                 log(...args: any[]): void { calls.push(args); }
             }));
 

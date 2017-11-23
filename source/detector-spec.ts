@@ -11,7 +11,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Detector } from "./detector";
 import { SnapshotPlugin } from "./plugin/snapshot-plugin";
-import { find, spy } from "./spy";
+import { create } from "./spy-factory";
+import { Spy } from "./spy-interface";
 
 import "rxjs/add/operator/mergeMap";
 
@@ -24,19 +25,19 @@ const options = {
 describe("detector", () => {
 
     let detector: Detector;
-    let teardown: () => void;
+    let spy: Spy;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
     beforeEach(() => {
 
-        teardown = spy({ ...options });
-        detector = new Detector(find(SnapshotPlugin));
+        spy = create({ ...options });
+        detector = new Detector(spy.find(SnapshotPlugin));
     });
 
     it("should detect subscriptions and unsubscriptions", () => {

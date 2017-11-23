@@ -6,8 +6,8 @@
 
 import { Observable } from "rxjs/Observable";
 import { get, getSync, StackFrame } from "stacktrace-js";
-import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { BasePlugin } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
 
@@ -75,7 +75,7 @@ function options(): any {
     return {
         filter: (stackFrame: StackFrame) => {
             const result = preSubscribeWithSpy;
-            if (/subscribeWithSpy/.test(stackFrame.functionName)) {
+            if (/coreSubscribe_/.test(stackFrame.functionName)) {
                 preSubscribeWithSpy = true;
             }
             return result;

@@ -11,7 +11,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { PartialLogger } from "../logger";
 import { Deck, PausePlugin } from "./pause-plugin";
-import { spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 
 import "../add/operator/tag";
 
@@ -20,21 +21,22 @@ describe("PausePlugin", () => {
     let calls: any[][];
     let deck: Deck;
     let plugin: PausePlugin;
-    let teardown: () => void;
+    let spy: Spy;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
     beforeEach(() => {
 
-        plugin = new PausePlugin("people");
-        deck = plugin.deck;
+        spy = create({ defaultPlugins: false, warning: false });
+        plugin = new PausePlugin(spy, "people");
+        spy.plugin(plugin);
 
-        teardown = spy({ plugins: [plugin], warning: false });
+        deck = plugin.deck;
         calls = [];
     });
 

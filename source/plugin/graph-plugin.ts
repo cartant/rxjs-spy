@@ -5,8 +5,8 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { BasePlugin, Notification } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 const graphRefSymbol = Symbol("graphRef");
 

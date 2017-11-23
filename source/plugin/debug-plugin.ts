@@ -7,9 +7,9 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin, Notification } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 export class DebugPlugin extends BasePlugin {
 

@@ -6,9 +6,9 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { SubscriptionRef } from "../interfaces";
 import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
+import { SubscriptionRef } from "../subscription-ref";
 
 export class LetPlugin extends BasePlugin {
 

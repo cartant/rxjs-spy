@@ -9,11 +9,11 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { SubscriptionRef } from "../interfaces";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
-import { subscribeWithoutSpy } from "../spy";
+import { Spy } from "../spy-interface";
+import { SubscriptionRef } from "../subscription-ref";
 
 import "rxjs/add/operator/dematerialize";
 import "rxjs/add/operator/materialize";
@@ -31,11 +31,13 @@ export class Deck {
 
     private match_: Match;
     private paused_ = true;
+    private spy_: Spy;
     private states_ = new Map<Observable<any>, State>();
 
-    constructor(match: Match) {
+    constructor(spy: Spy, match: Match) {
 
         this.match_ = match;
+        this.spy_ = spy;
     }
 
     get paused(): boolean {
@@ -98,7 +100,7 @@ export class Deck {
                 this.states_.set(observable, state);
             }
 
-            state.subscription_ = subscribeWithoutSpy.call(source.materialize(), {
+            state.subscription_ = this.spy_.ignore(() => source.materialize().subscribe({
                 next: (notification: any) => {
                     if (this.paused_) {
                         state!.notifications_.push(notification);
@@ -106,7 +108,7 @@ export class Deck {
                         state!.subject_.next(notification);
                     }
                 }
-            });
+            }));
             return state.subject_.asObservable().dematerialize();
         };
     }
@@ -130,7 +132,6 @@ export class Deck {
     }
 
     unsubscribe(): void {
-
         this.states_.forEach((state) => {
             if (state.subscription_) {
                 state.subscription_.unsubscribe();
@@ -145,11 +146,11 @@ export class PausePlugin extends BasePlugin {
     private match_: Match;
     private deck_: Deck;
 
-    constructor(match: Match) {
+    constructor(spy: Spy, match: Match) {
 
         super(`pause(${matchToString(match)})`);
 
-        this.deck_ = new Deck(match);
+        this.deck_ = new Deck(spy, match);
         this.match_ = match;
     }
 

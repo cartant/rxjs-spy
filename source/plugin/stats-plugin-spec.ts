@@ -10,7 +10,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { GraphPlugin } from "./graph-plugin";
 import { StatsPlugin } from "./stats-plugin";
-import { spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 
 import "rxjs/add/observable/never";
 import "rxjs/add/observable/timer";
@@ -19,20 +20,21 @@ import "rxjs/add/operator/switchMap";
 
 describe("StatsPlugin", () => {
 
+    let spy: Spy;
     let statsPlugin: StatsPlugin;
-    let teardown: () => void;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
     beforeEach(() => {
 
-        statsPlugin = new StatsPlugin();
-        teardown = spy({ plugins: [new GraphPlugin({ keptDuration: -1 }), statsPlugin], warning: false });
+        spy = create({ defaultPlugins: false, warning: false });
+        statsPlugin = new StatsPlugin(spy);
+        spy.plugin(new GraphPlugin({ keptDuration: -1 }), statsPlugin);
     });
 
     it("should count subscribes/unsubscribes", () => {

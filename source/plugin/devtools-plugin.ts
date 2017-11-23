@@ -27,14 +27,14 @@ import {
 
 import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
-import { SubscriberRef, SubscriptionRef } from "../interfaces";
 import { LogPlugin } from "./log-plugin";
 import { read, toString as matchToString } from "../match";
 import { PausePlugin } from "./pause-plugin";
 import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
+import { Spy } from "../spy-interface";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
-import { tick } from "../tick";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 
 import "rxjs/add/operator/filter";
@@ -59,13 +59,10 @@ export class DevToolsPlugin extends BasePlugin {
     private posts_: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
     private responses_: Observable<Promise<Response>>;
+    private spy_: Spy;
     private subscription_: Subscription;
 
-    constructor(
-        private findPlugin_: <T extends Plugin>(constructor: { new (...args: any[]): T }) => T | null,
-        private configurePlugin_: (plugin: Plugin) => () => void,
-        private subscribe_: (this: Observable<any>, ...args: any[]) => Subscription
-    ) {
+    constructor(spy: Spy) {
 
         super("devTools");
 
@@ -74,6 +71,7 @@ export class DevToolsPlugin extends BasePlugin {
             const extension = window[EXTENSION_KEY] as Extension;
             this.connection_ = extension.connect();
             this.plugins_ = new Map<string, PluginRecord>();
+            this.spy_ = spy;
 
             this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
                 this.connection_.subscribe((post) => observer.next(post)) :
@@ -96,7 +94,7 @@ export class DevToolsPlugin extends BasePlugin {
                         this.teardownPlugin_(request["pluginId"]);
                         break;
                     case "pause":
-                        this.recordPlugin_(request.postId, new PausePlugin(request["match"]));
+                        this.recordPlugin_(request.postId, new PausePlugin(this.spy_, request["match"]));
                         response["pluginId"] = request.postId;
                         break;
                     case "pause-deck":
@@ -124,7 +122,7 @@ export class DevToolsPlugin extends BasePlugin {
                         this.teardownPlugin_(request["pluginId"]);
                         break;
                     case "snapshot":
-                        const snapshotPlugin = this.findPlugin_(SnapshotPlugin);
+                        const snapshotPlugin = this.spy_.find(SnapshotPlugin);
                         if (snapshotPlugin) {
                             const snapshot = snapshotPlugin.snapshotAll();
                             response["snapshot"] = toSnapshot(snapshot);
@@ -143,11 +141,11 @@ export class DevToolsPlugin extends BasePlugin {
             // subscriptions that would be seen by the spy, switchMap is not
             // used.
 
-            this.subscription_ = this.subscribe_.call(this.responses_, (promise: Promise<Response>) => promise.then(response => {
+            this.subscription_ = this.spy_.ignore(() => this.responses_.subscribe((promise: Promise<Response>) => promise.then(response => {
                 if (this.connection_) {
                     this.connection_.post(response);
                 }
-            }));
+            })));
         }
     }
 
@@ -227,7 +225,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     private recordPlugin_(id: string, plugin: Plugin): void {
 
-        const teardown = this.configurePlugin_(plugin);
+        const teardown = this.spy_.plugin(plugin);
         this.plugins_.set(id, { plugin, teardown });
     }
 
@@ -236,7 +234,7 @@ export class DevToolsPlugin extends BasePlugin {
         const { connection_ } = this;
         if (connection_) {
 
-            const post = () => connection_.post(toMessage(messageRef));
+            const post = () => connection_.post(this.toMessage_(messageRef));
             const stackTraceRef = getStackTraceRef(messageRef.ref);
 
             if (stackTraceRef) {
@@ -255,6 +253,36 @@ export class DevToolsPlugin extends BasePlugin {
             record.teardown();
             plugins_.delete(id);
         }
+    }
+
+    private toMessage_(messageRef: MessageRef): NotificationMessage {
+
+        const { error, notification, prefix, ref, value } = messageRef;
+        const { observable, subscriber } = ref;
+
+        return {
+            id: identify({}),
+            messageType: MESSAGE_NOTIFICATION,
+            notification: `${prefix}-${notification}`,
+            observable: {
+                id: identify(observable),
+                path: inferPath(observable),
+                tag: read(observable) || null,
+                type: inferType(observable)
+            },
+            subscriber: {
+                id: identify(subscriber)
+            },
+            subscription: {
+                error,
+                graph: toGraph(ref) || null,
+                id: identify(ref),
+                stackTrace: getStackTrace(ref) || null
+            },
+            tick: this.spy_.tick,
+            timestamp: Date.now(),
+            value: (value === undefined) ? undefined : toValue(value)
+        };
     }
 }
 
@@ -281,36 +309,6 @@ function toGraph(subscriberRef: SubscriberRef): GraphPayload | null {
         sink: sink ? identify(sink) : null,
         sources: merges.map(identify),
         sourcesFlushed
-    };
-}
-
-function toMessage(messageRef: MessageRef): NotificationMessage {
-
-    const { error, notification, prefix, ref, value } = messageRef;
-    const { observable, subscriber } = ref;
-
-    return {
-        id: identify({}),
-        messageType: MESSAGE_NOTIFICATION,
-        notification: `${prefix}-${notification}`,
-        observable: {
-            id: identify(observable),
-            path: inferPath(observable),
-            tag: read(observable) || null,
-            type: inferType(observable)
-        },
-        subscriber: {
-            id: identify(subscriber)
-        },
-        subscription: {
-            error,
-            graph: toGraph(ref) || null,
-            id: identify(ref),
-            stackTrace: getStackTrace(ref) || null
-        },
-        tick: tick(),
-        timestamp: Date.now(),
-        value: (value === undefined) ? undefined : toValue(value)
     };
 }
 
