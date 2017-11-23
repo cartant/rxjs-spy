@@ -38,7 +38,7 @@ describe("LogPlugin", () => {
                 log(...args: any[]): void { calls.push(args); }
             });
             spy = create({ defaultPlugins: false, warning: false });
-            spy.plugin(plugin);
+            spy.plug(plugin);
             calls = [];
         });
 
@@ -153,7 +153,7 @@ describe("LogPlugin", () => {
 
             subscriberRefsPlugin = new SubscriberRefsPlugin();
             spy = create({ defaultPlugins: false, warning: false });
-            spy.plugin(subscriberRefsPlugin);
+            spy.plug(subscriberRefsPlugin);
             calls = [];
         });
 
@@ -163,7 +163,7 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
-            spy.plugin(new LogPlugin(identify(subscriptionRef.observable), {
+            spy.plug(new LogPlugin(identify(subscriptionRef.observable), {
                 log(...args: any[]): void { calls.push(args); }
             }));
 
@@ -181,7 +181,7 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
-            spy.plugin(new LogPlugin(identify(subscriptionRef.subscriber), {
+            spy.plug(new LogPlugin(identify(subscriptionRef.subscriber), {
                 log(...args: any[]): void { calls.push(args); }
             }));
 
@@ -199,7 +199,7 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
-            spy.plugin(new LogPlugin(identify(subscriptionRef.subscription), {
+            spy.plug(new LogPlugin(identify(subscriptionRef.subscription), {
                 log(...args: any[]): void { calls.push(args); }
             }));
 

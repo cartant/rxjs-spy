@@ -31,7 +31,7 @@ import {
     SubscriptionSnapshot
 } from "./plugin";
 
-import { SpyConsole } from "./spy-console";
+import { wrap } from "./spy-console";
 import { Ctor, Spy, Teardown } from "./spy-interface";
 import { SubscriberRef, SubscriptionRef } from "./subscription-ref";
 import { isObservable, toSubscriber } from "./util";
@@ -49,7 +49,7 @@ export class SpyCore implements Spy {
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
     private teardown_: Teardown | null;
     private tick_: number;
-    private undos_: { name: string, teardown: Teardown }[];
+    private undos_: Plugin[];
 
     constructor(options: {
         [key: string]: any,
@@ -89,7 +89,7 @@ export class SpyCore implements Spy {
         hook((id) => this.detect_(id, detector));
 
         if (typeof window !== "undefined") {
-            window["rxSpy"] = new SpyConsole(this);
+            window["rxSpy"] = wrap(this);
         }
 
         this.teardown_ = () => {
@@ -107,7 +107,6 @@ export class SpyCore implements Spy {
             SpyCore.spy_ = null;
             Observable.prototype.subscribe = observableSubscribe;
         };
-        this.undos_.push({ name: "spy", teardown: this.teardown_ });
     }
 
     get tick(): number {
@@ -115,7 +114,7 @@ export class SpyCore implements Spy {
         return this.tick_;
     }
 
-    get undos(): { name: string, teardown: Teardown }[] {
+    get undos(): Plugin[] {
 
         return [...this.undos_];
     }
@@ -125,7 +124,7 @@ export class SpyCore implements Spy {
         if (notifications.length === 0) {
             notifications = ["complete", "error", "next", "subscribe", "unsubscribe"];
         }
-        return this.plugin(new DebugPlugin(match, notifications));
+        return this.plug(new DebugPlugin(match, notifications));
     }
 
     find<T extends Plugin>(ctor: Ctor<T>): T | null {
@@ -162,7 +161,7 @@ export class SpyCore implements Spy {
 
     let(match: Match, select: (source: Observable<any>) => Observable<any>): Teardown {
 
-        return this.plugin(new LetPlugin(match, select));
+        return this.plug(new LetPlugin(match, select));
     }
 
     log(partialLogger?: PartialLogger): Teardown;
@@ -177,36 +176,26 @@ export class SpyCore implements Spy {
             match = anyTagged;
         }
 
-        return this.plugin(new LogPlugin(match, partialLogger || this.defaultLogger_));
+        return this.plug(new LogPlugin(match, partialLogger || this.defaultLogger_));
     }
 
     pause(match: Match): Deck {
 
         const pausePlugin = new PausePlugin(this, match);
-        const teardown = this.plugin(pausePlugin);
+        const teardown = this.plug(pausePlugin);
 
         const deck = pausePlugin.deck;
         deck.teardown = teardown;
         return deck;
     }
 
-    plugin(...plugins: Plugin[]): Teardown {
+    plug(...plugins: Plugin[]): Teardown {
 
         this.plugins_.push(...plugins);
         this.pluginsSubject_.next(this.plugins_);
 
-        const teardowns: Teardown[] = [];
-        plugins.forEach((plugin) => {
-            const teardown = () => {
-                plugin.teardown();
-                this.plugins_ = this.plugins_.filter((p) => p !== plugin);
-                this.pluginsSubject_.next(this.plugins_);
-                this.undos_ = this.undos_.filter((u) => u.teardown !== teardown);
-            };
-            teardowns.push(teardown);
-            this.undos_.push({ name: plugin.name, teardown });
-        });
-        return () => teardowns.forEach(teardown => teardown());
+        this.undos_.push(...plugins);
+        return () => this.unplug(...plugins);
     }
 
     show(partialLogger?: PartialLogger): void;
@@ -333,6 +322,16 @@ export class SpyCore implements Spy {
             this.teardown_();
             this.teardown_ = null;
         }
+    }
+
+    unplug(...plugins: Plugin[]): void {
+
+        plugins.forEach((plugin) => {
+            plugin.teardown();
+            this.plugins_ = this.plugins_.filter((p) => p !== plugin);
+            this.pluginsSubject_.next(this.plugins_);
+            this.undos_ = this.undos_.filter((u) => u !== plugin);
+        });
     }
 
     /*tslint:disable-next-line:member-ordering*/

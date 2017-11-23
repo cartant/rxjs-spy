@@ -12,7 +12,7 @@ import { Subscription } from "rxjs/Subscription";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
-import { Spy } from "../spy-interface";
+import { Spy, Teardown } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 
 import "rxjs/add/operator/dematerialize";
@@ -27,7 +27,7 @@ interface State {
 
 export class Deck {
 
-    public teardown: () => void;
+    public teardown: Teardown;
 
     private match_: Match;
     private paused_ = true;

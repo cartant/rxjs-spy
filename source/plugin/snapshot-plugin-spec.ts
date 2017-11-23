@@ -39,7 +39,7 @@ describe("SnapshotPlugin", () => {
 
         spy = create({ defaultPlugins: false, warning: false });
         plugin = new SnapshotPlugin(spy, { keptValues });
-        spy.plugin(new GraphPlugin({ keptDuration }), plugin);
+        spy.plug(new GraphPlugin({ keptDuration }), plugin);
     });
 
     describe("snapshotAll", () => {

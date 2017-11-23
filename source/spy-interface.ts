@@ -29,9 +29,10 @@ export interface Spy {
     log(partialLogger?: PartialLogger): Teardown;
     log(match: Match, partialLogger?: PartialLogger): Teardown;
     pause(match: Match): Deck;
-    plugin(...plugins: Plugin[]): Teardown;
+    plug(...plugins: Plugin[]): Teardown;
     show(partialLogger?: PartialLogger): void;
     show(match: Match, partialLogger?: PartialLogger): void;
     stats(partialLogger?: PartialLogger): void;
     teardown(): void;
+    unplug(...plugins: Plugin[]): void;
 }

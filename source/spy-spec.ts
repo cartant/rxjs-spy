@@ -40,7 +40,7 @@ describe("spy", () => {
 
             plugin = stubPlugin();
             spy = create({ defaultPlugins: false, ...options });
-            spy.plugin(plugin);
+            spy.plug(plugin);
         });
 
         it("should call the plugin's flush method", () => {
@@ -157,7 +157,7 @@ describe("spy", () => {
 
             plugin = stubPlugin();
             spy = create({ defaultPlugins: false, ...options });
-            spy.plugin(plugin);
+            spy.plug(plugin);
         });
 
         it("should call the plugin subscribe/next/unsubscribe methods", () => {

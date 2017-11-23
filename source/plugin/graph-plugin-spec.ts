@@ -50,7 +50,7 @@ describe("GraphPlugin", () => {
                 graphPlugin = new GraphPlugin({ keptDuration: duration });
                 subscriberRefsPlugin = new SubscriberRefsPlugin();
                 spy = create({ defaultPlugins: false, warning: false });
-                spy.plugin(graphPlugin, subscriberRefsPlugin);
+                spy.plug(graphPlugin, subscriberRefsPlugin);
             });
 
             it("should flush completed root subscriptions", () => {
@@ -323,7 +323,7 @@ describe("GraphPlugin", () => {
             graphPlugin = new GraphPlugin({ keptDuration: 0 });
             subscriberRefsPlugin = new SubscriberRefsPlugin();
             spy = create({ defaultPlugins: false, warning: false });
-            spy.plugin(graphPlugin, subscriberRefsPlugin);
+            spy.plug(graphPlugin, subscriberRefsPlugin);
         });
 
         it("should graph sources and sinks", () => {

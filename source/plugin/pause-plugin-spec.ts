@@ -34,7 +34,7 @@ describe("PausePlugin", () => {
 
         spy = create({ defaultPlugins: false, warning: false });
         plugin = new PausePlugin(spy, "people");
-        spy.plugin(plugin);
+        spy.plug(plugin);
 
         deck = plugin.deck;
         calls = [];

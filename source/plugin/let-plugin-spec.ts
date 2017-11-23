@@ -31,7 +31,7 @@ describe("LetPlugin", () => {
         const plugin = new LetPlugin("people", () => selected);
 
         spy = create({ defaultPlugins: false, warning: false });
-        spy.plugin(plugin);
+        spy.plug(plugin);
 
         const values: any[] = [];
         const subject = new Subject<string>();
@@ -53,7 +53,7 @@ describe("LetPlugin", () => {
         const subscription = subject.tag("people").subscribe((value) => values.push(value));
 
         const selected = new Subject<string>();
-        spy.plugin(new LetPlugin("people", () => selected));
+        spy.plug(new LetPlugin("people", () => selected));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);

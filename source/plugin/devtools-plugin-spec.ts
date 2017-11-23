@@ -55,7 +55,7 @@ if (typeof window !== "undefined") {
 
             spy = create({ defaultPlugins: false, warning: false });
             snapshotPlugin = new SnapshotPlugin(spy, { keptValues: 1 });
-            spy.plugin(
+            spy.plug(
                 new StackTracePlugin(),
                 new GraphPlugin({ keptDuration: -1 }),
                 snapshotPlugin,

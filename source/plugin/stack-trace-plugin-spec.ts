@@ -34,7 +34,7 @@ describe("StackTracePlugin", () => {
         stackTracePlugin = new StackTracePlugin();
         subscriberRefsPlugin = new SubscriberRefsPlugin();
         spy = create({ defaultPlugins: false, warning: false });
-        spy.plugin(stackTracePlugin, subscriberRefsPlugin);
+        spy.plug(stackTracePlugin, subscriberRefsPlugin);
     });
 
     it("should determine the stack traces", () => {

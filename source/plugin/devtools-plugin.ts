@@ -225,7 +225,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     private recordPlugin_(id: string, plugin: Plugin): void {
 
-        const teardown = this.spy_.plugin(plugin);
+        const teardown = this.spy_.plug(plugin);
         this.plugins_.set(id, { plugin, teardown });
     }
 
