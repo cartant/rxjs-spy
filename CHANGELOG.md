@@ -1,3 +1,10 @@
+<a name="5.2.2"></a>
+## [5.2.2](https://github.com/cartant/rxjs-spy/compare/v5.2.1...v5.2.2) (2017-11-23)
+
+### Fixes
+
+* Remove raw snapshots and observables from console logs to avoid leaking memory. ([756b32d](https://github.com/cartant/rxjs-spy/commit/756b32d))
+
 <a name="5.2.1"></a>
 ## [5.2.1](https://github.com/cartant/rxjs-spy/compare/v5.2.0...v5.2.1) (2017-11-08)
 
