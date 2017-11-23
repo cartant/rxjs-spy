@@ -98,9 +98,6 @@ export class LogPlugin extends BasePlugin {
                 logger_.groupEnd();
             }
 
-            logger_.groupCollapsed("Raw observable");
-            logger_.log(observable);
-            logger_.groupEnd();
             logger_.groupEnd();
         }
     }
