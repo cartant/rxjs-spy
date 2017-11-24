@@ -73,5 +73,5 @@
   },
   "typings": "./dist/index.d.ts",
   "unpkg": "./bundles/rxjs-spy.min.umd.js",
-  "version": "5.2.2"
+  "version": "5.2.3"
 }
