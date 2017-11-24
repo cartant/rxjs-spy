@@ -1,3 +1,10 @@
+<a name="5.2.3"></a>
+## [5.2.3](https://github.com/cartant/rxjs-spy/compare/v5.2.2...v5.2.3) (2017-11-24)
+
+### Fixes
+
+* Fix a bug that occurred when logging if the `GraphPlugin` was enabled without the `SnapshotPlugin`. ([970e184](https://github.com/cartant/rxjs-spy/commit/970e184))
+
 <a name="5.2.2"></a>
 ## [5.2.2](https://github.com/cartant/rxjs-spy/compare/v5.2.1...v5.2.2) (2017-11-23)
 
