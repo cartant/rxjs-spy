@@ -49,7 +49,7 @@ describe("detector", () => {
 
         const id = "";
         let detected = detector.detect(id);
-        expect(detected).to.be.null;
+        expect(detected).to.not.exist;
 
         const subscription = source.subscribe();
         subject.next();
@@ -77,7 +77,7 @@ describe("detector", () => {
 
         const id = "";
         let detected = detector.detect(id);
-        expect(detected).to.be.null;
+        expect(detected).to.not.exist;
 
         subject.next();
 
@@ -88,7 +88,7 @@ describe("detector", () => {
         subject.next();
 
         detected = detector.detect(id)!;
-        expect(detected).to.not.be.null;
+        expect(detected).to.exist;
         expect(detected.mergeSubscriptions).to.have.length(1);
         expect(detected.mergeUnsubscriptions).to.be.empty;
 

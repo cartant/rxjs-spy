@@ -409,7 +409,7 @@ function stubPlugin(): Plugin {
         beforeSubscribe: sinon.stub(),
         beforeUnsubscribe: sinon.stub(),
         flush: sinon.stub(),
-        select: sinon.stub().returns(null),
+        select: sinon.stub().returns(undefined),
         teardown: sinon.stub()
     } as any;
 }

@@ -38,22 +38,22 @@ interface SubscriptionRecord {
 export class Detector {
 
     private detectorRecords_: Map<string, DetectorRecord>;
-    private snapshotPlugin_: SnapshotPlugin | null;
+    private snapshotPlugin_: SnapshotPlugin | undefined;
 
-    constructor(snapshotPlugin: SnapshotPlugin | null) {
+    constructor(snapshotPlugin: SnapshotPlugin | undefined) {
 
         this.detectorRecords_ = new Map<string, DetectorRecord>();
         this.snapshotPlugin_ = snapshotPlugin;
     }
 
-    detect(id: string): Detected | null {
+    detect(id: string): Detected | undefined {
 
         const { detectorRecords_, snapshotPlugin_ } = this;
 
         if (!snapshotPlugin_) {
             /*tslint:disable-next-line:no-console*/
             console.warn("Snapshotting is not enabled.");
-            return null;
+            return undefined;
         }
 
         let detectorRecord = detectorRecords_.get(id);
@@ -71,14 +71,14 @@ export class Detector {
             detectorRecord.snapshotRecords.shift();
         }
         if (detectorRecord.snapshotRecords.length < 2) {
-            return null;
+            return undefined;
         }
 
         const [previous, current] = detectorRecord.snapshotRecords;
         return this.compare_(id, previous, current);
     }
 
-    private compare_(id: string, previous: SnapshotRecord, current: SnapshotRecord): Detected | null {
+    private compare_(id: string, previous: SnapshotRecord, current: SnapshotRecord): Detected | undefined {
 
         const subscriptions: SubscriptionRecord[] = [];
         const unsubscriptions: SubscriptionRecord[] = [];
@@ -123,7 +123,7 @@ export class Detector {
             subscriptions.length === 0 &&
             unsubscriptions.length === 0
         ) {
-            return null;
+            return undefined;
         }
 
         return {

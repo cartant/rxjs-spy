@@ -59,7 +59,7 @@ export class StatsPlugin extends BasePlugin {
         const graphRef = getGraphRef(ref);
         if (graphRef) {
             const { depth, merged, merges, mergesFlushed, rootSink, sources, sourcesFlushed } = graphRef;
-            if (rootSink === null) {
+            if (!rootSink) {
                 stats_.rootSubscribes += 1;
             }
             if (merged) {

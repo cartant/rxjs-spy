@@ -13,7 +13,7 @@ describe("detect", () => {
 
     afterEach(() => {
 
-        hook(null);
+        hook(undefined);
     });
 
     it("should do nothing if there is no hook", () => {

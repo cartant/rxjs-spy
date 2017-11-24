@@ -93,7 +93,7 @@ if (typeof window !== "undefined") {
             const subject = new Subject<any>();
             const subscription = subject.subscribe();
 
-            const person: any = { name: "alice", employer: null };
+            const person: any = { name: "alice", employer: undefined };
             person.employer = person;
 
             subject.next(person);

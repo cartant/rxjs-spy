@@ -55,7 +55,7 @@ describe("match", () => {
 
         it("should match a predicate", () => {
 
-            function predicate(tag: string | null): boolean {
+            function predicate(tag: string | undefined): boolean {
                 return tag === "people";
             }
 

@@ -73,7 +73,7 @@ describe("SnapshotPlugin", () => {
 
             const subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
             expect(subscriptionSnapshot).to.have.property("complete", false);
-            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("error", undefined);
             expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
         });
 
@@ -93,7 +93,7 @@ describe("SnapshotPlugin", () => {
 
             let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
             expect(subscriptionSnapshot).to.have.property("complete", false);
-            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("error", undefined);
             expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
 
             subscription.unsubscribe();
@@ -109,7 +109,7 @@ describe("SnapshotPlugin", () => {
 
             subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
             expect(subscriptionSnapshot).to.have.property("complete", false);
-            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("error", undefined);
             expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
         });
 
@@ -129,7 +129,7 @@ describe("SnapshotPlugin", () => {
 
             let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
             expect(subscriptionSnapshot).to.have.property("complete", false);
-            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("error", undefined);
             expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
 
             subject.complete();
@@ -145,7 +145,7 @@ describe("SnapshotPlugin", () => {
 
             subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
             expect(subscriptionSnapshot).to.have.property("complete", true);
-            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("error", undefined);
             expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
         });
 
@@ -165,7 +165,7 @@ describe("SnapshotPlugin", () => {
 
             let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
             expect(subscriptionSnapshot).to.have.property("complete", false);
-            expect(subscriptionSnapshot).to.have.property("error", null);
+            expect(subscriptionSnapshot).to.have.property("error", undefined);
             expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
 
             const error = new Error("Boom!");
@@ -267,7 +267,7 @@ describe("SnapshotPlugin", () => {
             expect(subjectSubscriptionSnapshot.sink).to.equal(mappedSubscriptionSnapshot);
             expect(subjectSubscriptionSnapshot.sources).to.have.property("size", 0);
 
-            expect(mappedSubscriptionSnapshot.sink).to.equal(null);
+            expect(mappedSubscriptionSnapshot.sink).to.equal(undefined);
             expect(mappedSubscriptionSnapshot.sources).to.have.property("size", 1);
             expect(getAt(mappedSubscriptionSnapshot.sources, 0)).to.equal(subjectSubscriptionSnapshot);
         });
@@ -351,8 +351,8 @@ describe("SnapshotPlugin", () => {
 
             expect(subjectSubscription).to.have.property("sink", mappedSubscription);
             expect(subjectSubscription).to.have.property("rootSink", mappedSubscription);
-            expect(mappedSubscription).to.have.property("sink", null);
-            expect(mappedSubscription).to.have.property("rootSink", null);
+            expect(mappedSubscription).to.have.property("sink", undefined);
+            expect(mappedSubscription).to.have.property("rootSink", undefined);
         });
 
         it("should determine a subscription's root sink subscription", () => {
@@ -381,8 +381,8 @@ describe("SnapshotPlugin", () => {
             expect(subjectSubscription).to.have.property("rootSink", remappedSubscription);
             expect(mappedSubscription).to.have.property("sink", remappedSubscription);
             expect(mappedSubscription).to.have.property("rootSink", remappedSubscription);
-            expect(remappedSubscription).to.have.property("sink", null);
-            expect(remappedSubscription).to.have.property("rootSink", null);
+            expect(remappedSubscription).to.have.property("sink", undefined);
+            expect(remappedSubscription).to.have.property("rootSink", undefined);
         });
 
         it("should determine root sinks for array-based sources", () => {
@@ -411,8 +411,8 @@ describe("SnapshotPlugin", () => {
             expect(subject1Subscription).to.have.property("rootSink", combinedSubscription);
             expect(subject2Subscription).to.have.property("sink");
             expect(subject2Subscription).to.have.property("rootSink", combinedSubscription);
-            expect(combinedSubscription).to.have.property("sink", null);
-            expect(combinedSubscription).to.have.property("rootSink", null);
+            expect(combinedSubscription).to.have.property("sink", undefined);
+            expect(combinedSubscription).to.have.property("rootSink", undefined);
         });
 
         it("should determine root sinks for merges", () => {

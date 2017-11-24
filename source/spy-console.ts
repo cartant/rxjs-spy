@@ -23,7 +23,7 @@ export function wrap(core: SpyCore): any {
                 logger.groupEnd();
             } else {
                 const pausePlugin = pausePlugins[call - 1];
-                return pausePlugin ? pausePlugin.deck : null;
+                return pausePlugin ? pausePlugin.deck : undefined;
             }
         },
 

@@ -23,13 +23,13 @@ export class LetPlugin extends BasePlugin {
         this.select_ = select;
     }
 
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
+    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { match_, select_ } = this;
 
         if (matches(ref, match_)) {
             return select_;
         }
-        return null;
+        return undefined;
     }
 }

@@ -16,9 +16,9 @@ export interface GraphRef {
     merged: boolean;
     merges: SubscriptionRef[];
     mergesFlushed: number;
-    rootSink: SubscriptionRef | null;
+    rootSink: SubscriptionRef | undefined;
     sentinel: GraphRef;
-    sink: SubscriptionRef | null;
+    sink: SubscriptionRef | undefined;
     sources: SubscriptionRef[];
     sourcesFlushed: number;
 }
@@ -55,13 +55,13 @@ export class GraphPlugin extends BasePlugin {
         this.notifications_ = [];
         this.sentinel_ = {
             depth: 0,
-            link: null!,
+            link: undefined!,
             merged: false,
             merges: [],
             mergesFlushed: 0,
-            rootSink: null,
-            sentinel: null!,
-            sink: null,
+            rootSink: undefined,
+            sentinel: undefined!,
+            sink: undefined,
             sources: [],
             sourcesFlushed: 0
         };
@@ -108,9 +108,9 @@ export class GraphPlugin extends BasePlugin {
             merged: false,
             merges: [],
             mergesFlushed: 0,
-            rootSink: null,
+            rootSink: undefined,
             sentinel: sentinel_,
-            sink: null,
+            sink: undefined,
             sources: [],
             sourcesFlushed: 0
         });

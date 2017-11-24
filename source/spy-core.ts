@@ -42,12 +42,12 @@ const observableSubscribe = Observable.prototype.subscribe;
 
 export class SpyCore implements Spy {
 
-    private static spy_: SpyCore | null = null;
+    private static spy_: SpyCore | undefined = undefined;
 
     private defaultLogger_: PartialLogger;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
-    private teardown_: Teardown | null;
+    private teardown_: Teardown | undefined;
     private tick_: number;
     private undos_: Plugin[];
 
@@ -98,13 +98,13 @@ export class SpyCore implements Spy {
                 delete window["rxSpy"];
             }
 
-            hook(null);
+            hook(undefined);
             this.plugins_.forEach((plugin) => plugin.teardown());
             this.plugins_ = [];
             this.pluginsSubject_.next(this.plugins_);
             this.undos_ = [];
 
-            SpyCore.spy_ = null;
+            SpyCore.spy_ = undefined;
             Observable.prototype.subscribe = observableSubscribe;
         };
     }
@@ -127,14 +127,14 @@ export class SpyCore implements Spy {
         return this.plug(new DebugPlugin(match, notifications));
     }
 
-    find<T extends Plugin>(ctor: Ctor<T>): T | null {
+    find<T extends Plugin>(ctor: Ctor<T>): T | undefined {
 
         const found = this.plugins_.find((plugin) => plugin instanceof ctor);
-        return found ? found as T : null;
+        return found ? found as T : undefined;
     }
 
     findAll<T extends Plugin>(ctor: Ctor<T>): T[];
-    findAll(): Plugin[] | null;
+    findAll(): Plugin[];
     findAll<T extends Plugin>(ctor?: Ctor<T>): T[] | Plugin[] {
 
         return ctor ?
@@ -149,7 +149,7 @@ export class SpyCore implements Spy {
 
     ignore<R>(block: () => R): R {
 
-        SpyCore.spy_ = null;
+        SpyCore.spy_ = undefined;
         try {
             return block();
         } catch (error) {
@@ -320,7 +320,7 @@ export class SpyCore implements Spy {
 
         if (this.teardown_) {
             this.teardown_();
-            this.teardown_ = null;
+            this.teardown_ = undefined;
         }
     }
 
@@ -351,14 +351,14 @@ export class SpyCore implements Spy {
             spy_.plugins_.forEach(after);
         };
 
-        const subscriber = toSubscriber.apply(null, args);
+        const subscriber = toSubscriber.apply(undefined, args);
         identify(observable);
         identify(subscriber);
 
         const ref: SubscriptionRef = {
             observable,
             subscriber,
-            subscription: null!,
+            subscription: undefined!,
             timestamp: Date.now(),
             unsubscribed: false
         };
@@ -422,8 +422,8 @@ export class SpyCore implements Spy {
             let: (plugins: Plugin[]) => void;
             next: (value: any) => void;
             postLetSubscriber: Subscriber<any>;
-            postLetSubscription: Subscription | null;
-            preLetSubject: Subject<any> | null;
+            postLetSubscription: Subscription | undefined;
+            preLetSubject: Subject<any> | undefined;
             unsubscribed: boolean;
         }
 
@@ -479,8 +479,8 @@ export class SpyCore implements Spy {
                 } else if (this.postLetSubscription) {
 
                     this.postLetSubscription.unsubscribe();
-                    this.postLetSubscription = null;
-                    this.preLetSubject = null;
+                    this.postLetSubscription = undefined;
+                    this.preLetSubject = undefined;
                 }
             },
 
@@ -494,8 +494,8 @@ export class SpyCore implements Spy {
             },
 
             postLetSubscriber,
-            postLetSubscription: null,
-            preLetSubject: null,
+            postLetSubscription: undefined,
+            preLetSubject: undefined,
             unsubscribed: false
         };
         /*tslint:enable:no-invalid-this*/
@@ -519,7 +519,7 @@ export class SpyCore implements Spy {
                 if (!preLetObserver.completed && !preLetObserver.errored) {
                     if (preLetObserver.postLetSubscription) {
                         preLetObserver.postLetSubscription.unsubscribe();
-                        preLetObserver.postLetSubscription = null;
+                        preLetObserver.postLetSubscription = undefined;
                     }
                     preLetObserver.postLetSubscriber.unsubscribe();
                 }

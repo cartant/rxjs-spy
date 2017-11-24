@@ -53,7 +53,7 @@ export interface ObservableSnapshot {
     observable: Observable<any>;
     path: string;
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
-    tag: string | null;
+    tag: string | undefined;
     tick: number;
     type: string;
 }
@@ -74,8 +74,8 @@ export interface SubscriptionSnapshot {
     merges: Map<Subscription, SubscriptionSnapshot>;
     mergesFlushed: number;
     observable: Observable<any>;
-    rootSink: SubscriptionSnapshot | null;
-    sink: SubscriptionSnapshot | null;
+    rootSink: SubscriptionSnapshot | undefined;
+    sink: SubscriptionSnapshot | undefined;
     sourceMapsResolved: Promise<void>;
     sources: Map<Subscription, SubscriptionSnapshot>;
     sourcesFlushed: number;
@@ -90,7 +90,7 @@ export interface SubscriptionSnapshot {
 export class SnapshotPlugin extends BasePlugin {
 
     private keptValues_: number;
-    private sentinel_: GraphRef | null;
+    private sentinel_: GraphRef | undefined;
     private spy_: Spy;
 
     constructor(spy: Spy, {
@@ -102,7 +102,7 @@ export class SnapshotPlugin extends BasePlugin {
         super("snapshot");
 
         this.keptValues_ = keptValues;
-        this.sentinel_ = null;
+        this.sentinel_ = undefined;
         this.spy_ = spy;
     }
 
@@ -146,7 +146,7 @@ export class SnapshotPlugin extends BasePlugin {
 
         const snapshotRef = setSnapshotRef(ref, {
             complete: false,
-            error: null,
+            error: undefined,
             tick: this.spy_.tick,
             timestamp: Date.now(),
             unsubscribed: false,
@@ -203,8 +203,8 @@ export class SnapshotPlugin extends BasePlugin {
                 merges: new Map<Subscription, SubscriptionSnapshot>(),
                 mergesFlushed,
                 observable,
-                rootSink: null,
-                sink: null,
+                rootSink: undefined,
+                sink: undefined,
                 sourceMapsResolved,
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 sourcesFlushed,
@@ -301,16 +301,16 @@ export class SnapshotPlugin extends BasePlugin {
         };
     }
 
-    snapshotObservable(ref: SubscriptionRef): ObservableSnapshot | null {
+    snapshotObservable(ref: SubscriptionRef): ObservableSnapshot | undefined {
 
         const snapshot = this.snapshotAll();
-        return snapshot.observables.get(ref.observable) || null;
+        return snapshot.observables.get(ref.observable);
     }
 
-    snapshotSubscriber(ref: SubscriptionRef): SubscriberSnapshot | null {
+    snapshotSubscriber(ref: SubscriptionRef): SubscriberSnapshot | undefined {
 
         const snapshot = this.snapshotAll();
-        return snapshot.subscribers.get(ref.subscriber) || null;
+        return snapshot.subscribers.get(ref.subscriber);
     }
 
     private addSubscriptionRefs_(ref: SubscriptionRef, map: Map<SubscriptionRef, boolean>): void {

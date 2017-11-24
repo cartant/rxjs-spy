@@ -20,9 +20,9 @@ export interface Teardown {
 export interface Spy {
     readonly tick: number;
     debug(match: Match, ...notifications: Notification[]): Teardown;
-    find<T extends Plugin>(ctor: Ctor<T>): T | null;
-    findAll<T extends Plugin>(ctor: Ctor<T>): T[] | null;
-    findAll(): Plugin[] | null;
+    find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
+    findAll<T extends Plugin>(ctor: Ctor<T>): T[];
+    findAll(): Plugin[];
     flush(): void;
     ignore<R>(block: () => R): R;
     let(match: Match, select: (source: Observable<any>) => Observable<any>): Teardown;

@@ -21,8 +21,8 @@ import "rxjs/add/operator/materialize";
 interface State {
     notifications_: Notification<any>[];
     subject_: Subject<Notification<any>>;
-    subscription_: Subscription | null;
-    tag_: string | null;
+    subscription_: Subscription | undefined;
+    tag_: string | undefined;
 }
 
 export class Deck {
@@ -94,7 +94,7 @@ export class Deck {
                 state = {
                     notifications_: [],
                     subject_: new Subject<Notification<any>>(),
-                    subscription_: null,
+                    subscription_: undefined,
                     tag_: read(observable)
                 };
                 this.states_.set(observable, state);
@@ -135,7 +135,7 @@ export class Deck {
         this.states_.forEach((state) => {
             if (state.subscription_) {
                 state.subscription_.unsubscribe();
-                state.subscription_ = null;
+                state.subscription_ = undefined;
             }
         });
     }
@@ -166,14 +166,14 @@ export class PausePlugin extends BasePlugin {
         return match_;
     }
 
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
+    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { deck_, match_ } = this;
 
         if (matches(ref, match_)) {
             return deck_.select(ref);
         }
-        return null;
+        return undefined;
     }
 
     teardown(): void {

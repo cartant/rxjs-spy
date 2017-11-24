@@ -55,7 +55,7 @@ interface PluginRecord {
 
 export class DevToolsPlugin extends BasePlugin {
 
-    private connection_: Connection | null;
+    private connection_: Connection | undefined;
     private posts_: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
     private responses_: Observable<Promise<Response>>;
@@ -218,7 +218,7 @@ export class DevToolsPlugin extends BasePlugin {
 
         if (this.connection_) {
             this.connection_.disconnect();
-            this.connection_ = null;
+            this.connection_ = undefined;
             this.subscription_.unsubscribe();
         }
     }
@@ -267,7 +267,7 @@ export class DevToolsPlugin extends BasePlugin {
             observable: {
                 id: identify(observable),
                 path: inferPath(observable),
-                tag: read(observable) || null,
+                tag: orNull(read(observable)),
                 type: inferType(observable)
             },
             subscriber: {
@@ -275,9 +275,9 @@ export class DevToolsPlugin extends BasePlugin {
             },
             subscription: {
                 error,
-                graph: toGraph(ref) || null,
+                graph: orNull(toGraph(ref)),
                 id: identify(ref),
-                stackTrace: getStackTrace(ref) || null
+                stackTrace: orNull(getStackTrace(ref))
             },
             tick: this.spy_.tick,
             timestamp: Date.now(),
@@ -286,12 +286,17 @@ export class DevToolsPlugin extends BasePlugin {
     }
 }
 
-function toGraph(subscriberRef: SubscriberRef): GraphPayload | null {
+function orNull(value: any): any {
+
+    return  (value === undefined) ? null : value;
+}
+
+function toGraph(subscriberRef: SubscriberRef): GraphPayload | undefined {
 
     const graphRef = getGraphRef(subscriberRef);
 
     if (!graphRef) {
-        return null;
+        return undefined;
     }
 
     const {
@@ -323,7 +328,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                 subscriptions: Array
                     .from(s.subscriptions.values())
                     .map(s => s.id),
-                tag: s.tag,
+                tag: orNull(s.tag),
                 tick: s.tick,
                 type: s.type
             })),
@@ -352,8 +357,8 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                         .from(s.merges.values())
                         .map(s => s.id),
                     mergesFlushed: s.mergesFlushed,
-                    rootSink: s.rootSink ? s.rootSink.id : null,
-                    sink: s.sink ? s.sink.id : null,
+                    rootSink: s.rootSink ? identify(s.rootSink) : null,
+                    sink: s.sink ? identify(s.sink) : null,
                     sources: Array
                         .from(s.sources.values())
                         .map(s => s.id),
