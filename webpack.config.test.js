@@ -1,5 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
+const { alias, externals } = require("./webpack.common");
 
 module.exports = env => {
 
@@ -9,6 +10,7 @@ module.exports = env => {
         entry: {
             index: "./source/index-spec.ts"
         },
+        externals,
         module: {
             rules: [{
                 test: /\.ts$/,
@@ -29,6 +31,7 @@ module.exports = env => {
         },
         plugins: [],
         resolve: {
+            alias,
             extensions: [".ts", ".js"]
         }
     }

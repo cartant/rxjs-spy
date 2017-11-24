@@ -6,6 +6,8 @@
 
 import { Notification } from "rxjs/Notification";
 import { Observable } from "rxjs/Observable";
+import { dematerialize } from "rxjs/operator/dematerialize";
+import { materialize } from "rxjs/operator/materialize";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
@@ -14,9 +16,6 @@ import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
 import { Spy, Teardown } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
-
-import "rxjs/add/operator/dematerialize";
-import "rxjs/add/operator/materialize";
 
 interface State {
     notifications_: Notification<any>[];
@@ -100,7 +99,7 @@ export class Deck {
                 this.states_.set(observable, state);
             }
 
-            state.subscription_ = this.spy_.ignore(() => source.materialize().subscribe({
+            state.subscription_ = this.spy_.ignore(() => materialize.call(source).subscribe({
                 next: (notification: any) => {
                     if (this.paused_) {
                         state!.notifications_.push(notification);
@@ -109,7 +108,7 @@ export class Deck {
                     }
                 }
             }));
-            return state.subject_.asObservable().dematerialize();
+            return dematerialize.call(state.subject_.asObservable());
         };
     }
 

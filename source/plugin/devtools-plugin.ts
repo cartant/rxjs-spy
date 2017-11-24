@@ -8,6 +8,8 @@
 import { stringify } from "circular-json";
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
+import { filter } from "rxjs/operator/filter";
+import { map } from "rxjs/operator/map";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { EXTENSION_KEY, MESSAGE_NOTIFICATION, MESSAGE_RESPONSE } from "../devtools/constants";
@@ -36,9 +38,6 @@ import { Spy } from "../spy-interface";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
-
-import "rxjs/add/operator/filter";
-import "rxjs/add/operator/map";
 
 interface MessageRef {
     error?: any;
@@ -78,64 +77,63 @@ export class DevToolsPlugin extends BasePlugin {
                 () => {}
             );
 
-            this.responses_ = this.posts_
-                .filter(isPostRequest)
-                .map((request) => {
-                    const response: Response = {
-                        messageType: MESSAGE_RESPONSE,
-                        request
-                    };
-                    switch (request.requestType) {
-                    case "log":
-                        this.recordPlugin_(request.postId, new LogPlugin(request["match"]));
-                        response["pluginId"] = request.postId;
-                        break;
-                    case "log-teardown":
-                        this.teardownPlugin_(request["pluginId"]);
-                        break;
-                    case "pause":
-                        this.recordPlugin_(request.postId, new PausePlugin(this.spy_, request["match"]));
-                        response["pluginId"] = request.postId;
-                        break;
-                    case "pause-deck":
-                        const pausePlugin = this.plugins_.get(request["pluginId"]) as PausePlugin | undefined;
-                        if (pausePlugin) {
-                            const { deck } = pausePlugin;
-                            switch (request["deck"]) {
-                            case "clear":
-                            case "pause":
-                            case "resume":
-                            case "skip":
-                            case "step":
-                                deck[request["command"]]();
-                                break;
-                            case "inspect":
-                                response.error = "Not implemented.";
-                                break;
-                            default:
-                                response.error = "Unexpected deck command.";
-                                break;
-                            }
+            const filtered = filter.call(this.posts_, isPostRequest);
+            this.responses_ = map.call(filtered, (request: Post & Request) => {
+                const response: Response = {
+                    messageType: MESSAGE_RESPONSE,
+                    request
+                };
+                switch (request.requestType) {
+                case "log":
+                    this.recordPlugin_(request.postId, new LogPlugin(request["match"]));
+                    response["pluginId"] = request.postId;
+                    break;
+                case "log-teardown":
+                    this.teardownPlugin_(request["pluginId"]);
+                    break;
+                case "pause":
+                    this.recordPlugin_(request.postId, new PausePlugin(this.spy_, request["match"]));
+                    response["pluginId"] = request.postId;
+                    break;
+                case "pause-deck":
+                    const pausePlugin = this.plugins_.get(request["pluginId"]) as PausePlugin | undefined;
+                    if (pausePlugin) {
+                        const { deck } = pausePlugin;
+                        switch (request["deck"]) {
+                        case "clear":
+                        case "pause":
+                        case "resume":
+                        case "skip":
+                        case "step":
+                            deck[request["command"]]();
+                            break;
+                        case "inspect":
+                            response.error = "Not implemented.";
+                            break;
+                        default:
+                            response.error = "Unexpected deck command.";
+                            break;
                         }
-                        break;
-                    case "pause-teardown":
-                        this.teardownPlugin_(request["pluginId"]);
-                        break;
-                    case "snapshot":
-                        const snapshotPlugin = this.spy_.find(SnapshotPlugin);
-                        if (snapshotPlugin) {
-                            const snapshot = snapshotPlugin.snapshotAll();
-                            response["snapshot"] = toSnapshot(snapshot);
-                            return snapshot.sourceMapsResolved.then(() => response);
-                        }
-                        response.error = "Cannot find snapshot plugin.";
-                        break;
-                    default:
-                        response.error = "Unexpected request.";
-                        break;
                     }
-                    return Promise.resolve(response);
-                });
+                    break;
+                case "pause-teardown":
+                    this.teardownPlugin_(request["pluginId"]);
+                    break;
+                case "snapshot":
+                    const snapshotPlugin = this.spy_.find(SnapshotPlugin);
+                    if (snapshotPlugin) {
+                        const snapshot = snapshotPlugin.snapshotAll();
+                        response["snapshot"] = toSnapshot(snapshot);
+                        return snapshot.sourceMapsResolved.then(() => response);
+                    }
+                    response.error = "Cannot find snapshot plugin.";
+                    break;
+                default:
+                    response.error = "Unexpected request.";
+                    break;
+                }
+                return Promise.resolve(response);
+            });
 
             // The composed observable effects promises and to avoid internal
             // subscriptions that would be seen by the spy, switchMap is not

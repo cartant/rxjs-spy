@@ -6,6 +6,7 @@
 
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
+import { letProto } from "rxjs/operator/let";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
@@ -35,8 +36,6 @@ import { wrap } from "./spy-console";
 import { Ctor, Spy, Teardown } from "./spy-interface";
 import { SubscriberRef, SubscriptionRef } from "./subscription-ref";
 import { isObservable, toSubscriber } from "./util";
-
-import "rxjs/add/operator/let";
 
 const observableSubscribe = Observable.prototype.subscribe;
 
@@ -469,7 +468,7 @@ export class SpyCore implements Spy {
                     }
 
                     let source = this.preLetSubject.asObservable();
-                    selectors.forEach(selector => source = source.let(selector!));
+                    selectors.forEach(selector => source = letProto.call(source, selector!));
                     this.postLetSubscription = spy_.ignore(() => source.subscribe({
                         complete: () => this.postLetSubscriber.complete(),
                         error: (error: any) => this.postLetSubscriber.error(error),
