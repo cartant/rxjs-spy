@@ -81,9 +81,9 @@ export class LogPlugin extends BasePlugin {
             const snapshotRef = getSnapshotRef(ref);
 
             if (graphRef || snapshotRef) {
-                const { values, valuesFlushed } = snapshotRef;
                 logger_.groupCollapsed("Subscriber");
                 if (snapshotRef) {
+                    const { values, valuesFlushed } = snapshotRef;
                     logger_.log("Value count =", values.length + valuesFlushed);
                     if (values.length > 0) {
                         logger_.log("Last value =", values[values.length - 1].value);
