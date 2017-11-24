@@ -11,7 +11,7 @@ import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Notification } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
-import { getStackTrace } from "./stack-trace-plugin";
+import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 
@@ -87,8 +87,9 @@ export class LogPlugin extends BasePlugin {
 
             const graphRef = getGraphRef(ref);
             const snapshotRef = getSnapshotRef(ref);
+            const stackTraceRef = getStackTraceRef(ref);
 
-            if (graphRef || snapshotRef) {
+            if ((graphRef && stackTraceRef) || snapshotRef) {
                 logger_.groupCollapsed("Subscriber");
                 if (snapshotRef) {
                     const { values, valuesFlushed } = snapshotRef;
@@ -97,7 +98,7 @@ export class LogPlugin extends BasePlugin {
                         logger_.log("Last value =", values[values.length - 1].value);
                     }
                 }
-                if (graphRef) {
+                if (graphRef && stackTraceRef) {
                     logger_.groupCollapsed("Subscription");
                     const { rootSink } = graphRef;
                     logger_.log("Root subscribe", rootSink ? getStackTrace(rootSink) : getStackTrace(ref));
