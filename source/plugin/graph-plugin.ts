@@ -36,6 +36,8 @@ function setGraphRef(ref: SubscriberRef, value: GraphRef): GraphRef {
 
 export class GraphPlugin extends BasePlugin {
 
+    private flushIntervalId_: any;
+    private flushQueue_: { due: number, flush: Function }[];
     private keptDuration_: number;
     private notifications_: {
         notification: Notification;
@@ -51,6 +53,8 @@ export class GraphPlugin extends BasePlugin {
 
         super("graph");
 
+        this.flushIntervalId_ = undefined;
+        this.flushQueue_ = [];
         this.keptDuration_ = keptDuration;
         this.notifications_ = [];
         this.sentinel_ = {
@@ -156,6 +160,14 @@ export class GraphPlugin extends BasePlugin {
         notifications_.push({ notification: "unsubscribe", ref });
     }
 
+    teardown(): void {
+
+        if (this.flushIntervalId_ !== undefined) {
+            clearInterval(this.flushIntervalId_);
+            this.flushIntervalId_ = undefined;
+        }
+    }
+
     private flush_(ref: SubscriptionRef): void {
 
         const graphRef = getGraphRef(ref);
@@ -165,7 +177,7 @@ export class GraphPlugin extends BasePlugin {
             return;
         }
 
-        const { keptDuration_, sentinel_ } = this;
+        const { keptDuration_ } = this;
         const { link, sink } = graphRef;
 
         const flush = () => {
@@ -188,7 +200,21 @@ export class GraphPlugin extends BasePlugin {
         if (keptDuration_ === 0) {
             flush();
         } else if ((keptDuration_ > 0) && (keptDuration_ < Infinity)) {
-            setTimeout(flush, keptDuration_);
+            this.flushQueue_.push({ due: Date.now() + keptDuration_, flush });
+            if (this.flushIntervalId_ === undefined) {
+                this.flushIntervalId_ = setInterval(() => {
+                    const now = Date.now();
+                    this.flushQueue_ = this.flushQueue_.filter(q => {
+                        if (q.due > now) { return true; }
+                        q.flush();
+                        return false;
+                    });
+                    if (this.flushQueue_.length === 0) {
+                        clearInterval(this.flushIntervalId_);
+                        this.flushIntervalId_ = undefined;
+                    }
+                }, keptDuration_);
+            }
         }
     }
 }
