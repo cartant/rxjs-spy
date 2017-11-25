@@ -298,19 +298,19 @@ function toGraph(subscriberRef: SubscriberRef): GraphPayload | undefined {
     }
 
     const {
-        merges,
-        mergesFlushed,
+        flattenings,
+        flatteningsFlushed,
         rootSink,
         sink,
         sources,
         sourcesFlushed
     } = graphRef;
     return {
-        merges: merges.map(identify),
-        mergesFlushed,
+        flattenings: flattenings.map(identify),
+        flatteningsFlushed,
         rootSink: rootSink ? identify(rootSink) : null,
         sink: sink ? identify(sink) : null,
-        sources: merges.map(identify),
+        sources: sources.map(identify),
         sourcesFlushed
     };
 }
@@ -351,10 +351,10 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                 complete: s.complete,
                 error: s.error,
                 graph: {
-                    merges: Array
-                        .from(s.merges.values())
+                    flattenings: Array
+                        .from(s.flattenings.values())
                         .map(s => s.id),
-                    mergesFlushed: s.mergesFlushed,
+                    flatteningsFlushed: s.flatteningsFlushed,
                     rootSink: s.rootSink ? identify(s.rootSink) : null,
                     sink: s.sink ? identify(s.sink) : null,
                     sources: Array

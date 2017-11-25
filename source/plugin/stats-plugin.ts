@@ -14,9 +14,9 @@ import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 export interface Stats {
     completes: number;
     errors: number;
+    flattenedSubscribes: number;
     leafSubscribes: number;
     maxDepth: number;
-    mergedSubscribes: number;
     nexts: number;
     rootSubscribes: number;
     subscribes: number;
@@ -40,9 +40,9 @@ export class StatsPlugin extends BasePlugin {
         this.stats_ = {
             completes: 0,
             errors: 0,
+            flattenedSubscribes: 0,
             leafSubscribes: 0,
             maxDepth: 0,
-            mergedSubscribes: 0,
             nexts: 0,
             rootSubscribes: 0,
             subscribes: 0,
@@ -58,14 +58,14 @@ export class StatsPlugin extends BasePlugin {
         const { stats_ } = this;
         const graphRef = getGraphRef(ref);
         if (graphRef) {
-            const { depth, merged, merges, mergesFlushed, rootSink, sources, sourcesFlushed } = graphRef;
+            const { depth, flattened, flattenings, flatteningsFlushed, rootSink, sources, sourcesFlushed } = graphRef;
             if (!rootSink) {
                 stats_.rootSubscribes += 1;
             }
-            if (merged) {
-                stats_.mergedSubscribes += 1;
+            if (flattened) {
+                stats_.flattenedSubscribes += 1;
             }
-            if ((merges.length + mergesFlushed + sources.length + sourcesFlushed) === 0) {
+            if ((flattenings.length + flatteningsFlushed + sources.length + sourcesFlushed) === 0) {
                 if (stats_.maxDepth < depth) {
                     stats_.maxDepth = depth;
                 }

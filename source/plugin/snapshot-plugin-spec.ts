@@ -298,7 +298,7 @@ describe("SnapshotPlugin", () => {
             expect(hasSource(combinedSubscriptionSnapshot, subject2SubscriptionSnapshot)).to.be.true;
         });
 
-        it("should spy on merges", () => {
+        it("should spy on flattenings", () => {
 
             const subject = new Subject<number>();
             const outer = subject.tag("outer");
@@ -310,7 +310,7 @@ describe("SnapshotPlugin", () => {
             let outerSubscription = getAt(outerSnapshot.subscriptions, 0);
             let outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
 
-            expect(outerSubscription.merges).to.have.property("size", 0);
+            expect(outerSubscription.flattenings).to.have.property("size", 0);
 
             subject.next(0);
 
@@ -319,7 +319,7 @@ describe("SnapshotPlugin", () => {
             outerSubscription = getAt(outerSnapshot.subscriptions, 0);
             outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
 
-            expect(outerSubscription.merges).to.have.property("size", 1);
+            expect(outerSubscription.flattenings).to.have.property("size", 1);
 
             subject.next(0);
 
@@ -328,7 +328,7 @@ describe("SnapshotPlugin", () => {
             outerSubscription = getAt(outerSnapshot.subscriptions, 0);
             outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
 
-            expect(outerSubscription.merges).to.have.property("size", 2);
+            expect(outerSubscription.flattenings).to.have.property("size", 2);
         });
 
         it("should determine a subscription's sink subscription", () => {
@@ -415,7 +415,7 @@ describe("SnapshotPlugin", () => {
             expect(combinedSubscription).to.have.property("rootSink", undefined);
         });
 
-        it("should determine root sinks for merges", () => {
+        it("should determine root sinks for flattenings", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();

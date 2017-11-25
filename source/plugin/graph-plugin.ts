@@ -12,10 +12,10 @@ const graphRefSymbol = Symbol("graphRef");
 
 export interface GraphRef {
     depth: number;
+    flattened: boolean;
+    flattenings: SubscriptionRef[];
+    flatteningsFlushed: number;
     link: GraphRef;
-    merged: boolean;
-    merges: SubscriptionRef[];
-    mergesFlushed: number;
     rootSink: SubscriptionRef | undefined;
     sentinel: GraphRef;
     sink: SubscriptionRef | undefined;
@@ -59,10 +59,10 @@ export class GraphPlugin extends BasePlugin {
         this.notifications_ = [];
         this.sentinel_ = {
             depth: 0,
+            flattened: false,
+            flattenings: [],
+            flatteningsFlushed: 0,
             link: undefined!,
-            merged: false,
-            merges: [],
-            mergesFlushed: 0,
             rootSink: undefined,
             sentinel: undefined!,
             sink: undefined,
@@ -108,10 +108,10 @@ export class GraphPlugin extends BasePlugin {
 
         const graphRef = setGraphRef(ref, {
             depth: 1,
+            flattened: false,
+            flattenings: [],
+            flatteningsFlushed: 0,
             link: sentinel_,
-            merged: false,
-            merges: [],
-            mergesFlushed: 0,
             rootSink: undefined,
             sentinel: sentinel_,
             sink: undefined,
@@ -124,9 +124,9 @@ export class GraphPlugin extends BasePlugin {
 
             const { ref: sinkRef } = notifications_[length - 1];
             const sinkGraphRef = getGraphRef(sinkRef);
-            sinkGraphRef.merges.push(ref as SubscriptionRef);
+            sinkGraphRef.flattenings.push(ref as SubscriptionRef);
             graphRef.link = sinkGraphRef;
-            graphRef.merged = true;
+            graphRef.flattened = true;
             graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
             graphRef.sink = sinkRef as SubscriptionRef;
 
@@ -171,9 +171,9 @@ export class GraphPlugin extends BasePlugin {
     private flush_(ref: SubscriptionRef): void {
 
         const graphRef = getGraphRef(ref);
-        const { merges, sources } = graphRef;
+        const { flattenings, sources } = graphRef;
 
-        if (!ref.unsubscribed || !merges.every(ref => ref.unsubscribed) || !sources.every(ref => ref.unsubscribed)) {
+        if (!ref.unsubscribed || !flattenings.every(ref => ref.unsubscribed) || !sources.every(ref => ref.unsubscribed)) {
             return;
         }
 
@@ -181,11 +181,11 @@ export class GraphPlugin extends BasePlugin {
         const { link, sink } = graphRef;
 
         const flush = () => {
-            const { merges, sources } = link;
-            const mergeIndex = merges.indexOf(ref);
-            if (mergeIndex !== -1) {
-                merges.splice(mergeIndex, 1);
-                ++link.mergesFlushed;
+            const { flattenings, sources } = link;
+            const flatteningIndex = flattenings.indexOf(ref);
+            if (flatteningIndex !== -1) {
+                flattenings.splice(flatteningIndex, 1);
+                ++link.flatteningsFlushed;
             }
             const sourceIndex = sources.indexOf(ref);
             if (sourceIndex !== -1) {

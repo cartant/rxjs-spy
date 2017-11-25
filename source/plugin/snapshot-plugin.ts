@@ -70,9 +70,9 @@ export interface SubscriberSnapshot {
 export interface SubscriptionSnapshot {
     complete: boolean;
     error: any;
+    flattenings: Map<Subscription, SubscriptionSnapshot>;
+    flatteningsFlushed: number;
     id: string;
-    merges: Map<Subscription, SubscriptionSnapshot>;
-    mergesFlushed: number;
     observable: Observable<any>;
     rootSink: SubscriptionSnapshot | undefined;
     sink: SubscriptionSnapshot | undefined;
@@ -180,7 +180,7 @@ export class SnapshotPlugin extends BasePlugin {
             const { observable, subscriber, subscription } = ref;
 
             const graphRef = getGraphRef(ref);
-            const { mergesFlushed, sourcesFlushed } = graphRef;
+            const { flatteningsFlushed, sourcesFlushed } = graphRef;
 
             const snapshotRef = getSnapshotRef(ref);
             const {
@@ -199,9 +199,9 @@ export class SnapshotPlugin extends BasePlugin {
             const subscriptionSnapshot: SubscriptionSnapshot = {
                 complete,
                 error,
+                flattenings: new Map<Subscription, SubscriptionSnapshot>(),
+                flatteningsFlushed,
                 id: identify(ref),
-                merges: new Map<Subscription, SubscriptionSnapshot>(),
-                mergesFlushed,
                 observable,
                 rootSink: undefined,
                 sink: undefined,
@@ -262,7 +262,7 @@ export class SnapshotPlugin extends BasePlugin {
             if (graphRef.rootSink) {
                 subscriptionSnapshot.rootSink = subscriptions.get(graphRef.rootSink.subscription)!;
             }
-            graphRef.merges.forEach((m) => subscriptionSnapshot.merges.set(m.subscription, subscriptions.get(m.subscription)!));
+            graphRef.flattenings.forEach((m) => subscriptionSnapshot.flattenings.set(m.subscription, subscriptions.get(m.subscription)!));
             graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s.subscription, subscriptions.get(s.subscription)!));
         });
 
@@ -318,7 +318,7 @@ export class SnapshotPlugin extends BasePlugin {
         map.set(ref, true);
 
         const graphRef = getGraphRef(ref);
-        graphRef.merges.forEach((m) => this.addSubscriptionRefs_(m, map));
+        graphRef.flattenings.forEach((m) => this.addSubscriptionRefs_(m, map));
         graphRef.sources.forEach((s) => this.addSubscriptionRefs_(s, map));
     }
 

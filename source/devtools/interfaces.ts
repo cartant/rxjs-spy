@@ -17,8 +17,8 @@ export interface Extension {
 }
 
 export interface Graph {
-    merges: string[];
-    mergesFlushed: number;
+    flattenings: string[];
+    flatteningsFlushed: number;
     rootSink: string | null;
     sink: string | null;
     sources: string[];

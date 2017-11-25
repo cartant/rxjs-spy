@@ -289,29 +289,29 @@ export class SpyCore implements Spy {
         }
 
         const stats = statsPlugin.stats;
-        const { leafSubscribes, maxDepth, mergedSubscribes, rootSubscribes, totalDepth } = stats;
+        const { leafSubscribes, maxDepth, flattenedSubscribes, rootSubscribes, totalDepth } = stats;
         const logger = toLogger(partialLogger || this.defaultLogger_);
         logger.group("Stats");
-        logger.log("subscribes =", stats.subscribes);
+        logger.log("Subscribes =", stats.subscribes);
         if (rootSubscribes > 0) {
-            logger.log("root subscribes =", rootSubscribes);
+            logger.log("Root subscribes =", rootSubscribes);
         }
         if (leafSubscribes > 0) {
-            logger.log("leaf subscribes =", leafSubscribes);
+            logger.log("Leaf subscribes =", leafSubscribes);
         }
-        if (mergedSubscribes > 0) {
-            logger.log("merged subscribes =", mergedSubscribes);
+        if (flattenedSubscribes > 0) {
+            logger.log("Flattened subscribes =", flattenedSubscribes);
         }
-        logger.log("unsubscribes =", stats.unsubscribes);
-        logger.log("nexts =", stats.nexts);
-        logger.log("errors =", stats.errors);
-        logger.log("completes =", stats.completes);
+        logger.log("Unsubscribes =", stats.unsubscribes);
+        logger.log("Nexts =", stats.nexts);
+        logger.log("Errors =", stats.errors);
+        logger.log("Completes =", stats.completes);
         if (maxDepth > 0) {
-            logger.log("max. depth =", maxDepth);
-            logger.log("avg. depth =", (totalDepth / leafSubscribes).toFixed(1));
+            logger.log("Max. depth =", maxDepth);
+            logger.log("Avg. depth =", (totalDepth / leafSubscribes).toFixed(1));
         }
-        logger.log("tick =", stats.tick);
-        logger.log("timespan =", stats.timespan);
+        logger.log("Tick =", stats.tick);
+        logger.log("Timespan =", stats.timespan);
         logger.groupEnd();
     }
 
@@ -570,11 +570,11 @@ export class SpyCore implements Spy {
             detected.unsubscriptions.forEach((s) => {
                 logSubscription(logger, "Unsubscription", s);
             });
-            detected.mergeSubscriptions.forEach((s) => {
-                logSubscription(logger, "Merge subscription", s);
+            detected.flatteningSubscriptions.forEach((s) => {
+                logSubscription(logger, "Flattening subscription", s);
             });
-            detected.mergeUnsubscriptions.forEach((s) => {
-                logSubscription(logger, "Merge unsubscription", s);
+            detected.flatteningUnsubscriptions.forEach((s) => {
+                logSubscription(logger, "Flattening unsubscription", s);
             });
             logger.groupEnd();
         }
