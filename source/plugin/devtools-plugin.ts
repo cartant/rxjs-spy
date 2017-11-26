@@ -95,11 +95,11 @@ export class DevToolsPlugin extends BasePlugin {
                     this.recordPlugin_(request.postId, new PausePlugin(this.spy_, request["match"]));
                     response["pluginId"] = request.postId;
                     break;
-                case "pause-deck":
+                case "pause-command":
                     const pausePlugin = this.plugins_.get(request["pluginId"]) as PausePlugin | undefined;
                     if (pausePlugin) {
                         const { deck } = pausePlugin;
-                        switch (request["deck"]) {
+                        switch (request["command"]) {
                         case "clear":
                         case "pause":
                         case "resume":
@@ -111,7 +111,7 @@ export class DevToolsPlugin extends BasePlugin {
                             response.error = "Not implemented.";
                             break;
                         default:
-                            response.error = "Unexpected deck command.";
+                            response.error = "Unexpected command.";
                             break;
                         }
                     }
