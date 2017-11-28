@@ -12,15 +12,16 @@ import { filter } from "rxjs/operator/filter";
 import { map } from "rxjs/operator/map";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { EXTENSION_KEY, MESSAGE_NOTIFICATION, MESSAGE_RESPONSE } from "../devtools/constants";
+import { EXTENSION_KEY, MESSAGE_BROADCAST, MESSAGE_RESPONSE } from "../devtools/constants";
 import { isPostRequest } from "../devtools/guards";
 
 import {
+    Broadcast,
     Connection,
     Extension,
     Graph as GraphPayload,
     Message,
-    Notification as NotificationMessage,
+    Notification as NotificationPayload,
     Post,
     Request,
     Response,
@@ -255,15 +256,13 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private toMessage_(messageRef: MessageRef): NotificationMessage {
+    private toMessage_(messageRef: MessageRef): Broadcast {
 
         const { error, notification, prefix, ref, value } = messageRef;
         const { observable, subscriber } = ref;
 
-        return {
+        const payload: NotificationPayload = {
             id: identify({}),
-            messageType: MESSAGE_NOTIFICATION,
-            notification: `${prefix}-${notification}`,
             observable: {
                 id: identify(observable),
                 path: inferPath(observable),
@@ -281,7 +280,14 @@ export class DevToolsPlugin extends BasePlugin {
             },
             tick: this.spy_.tick,
             timestamp: Date.now(),
+            type: `${prefix}-${notification}`,
             value: (value === undefined) ? undefined : toValue(value)
+        };
+
+        return {
+            broadcastType: "notification",
+            messageType: MESSAGE_BROADCAST,
+            notification: payload
         };
     }
 }

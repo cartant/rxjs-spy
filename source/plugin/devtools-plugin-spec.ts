@@ -77,7 +77,7 @@ if (typeof window !== "undefined") {
                 .then(() => {
 
                     expect(mockConnection.post).to.have.property("callCount", 6);
-                    expect(mockConnection.post.args.map(([message]: [any]) => message.notification)).to.deep.equal([
+                    expect(mockConnection.post.args.map(([post]: [any]) => post.notification.type)).to.deep.equal([
                         "before-subscribe",
                         "after-subscribe",
                         "before-next",
@@ -104,17 +104,18 @@ if (typeof window !== "undefined") {
                 .then(() => {
 
                     expect(mockConnection.post).to.have.property("callCount", 3);
-                    expect(mockConnection.post.args.map(([post]: [any]) => post.notification)).to.deep.equal([
+                    expect(mockConnection.post.args.map(([post]: [any]) => post.notification.type)).to.deep.equal([
                         "before-subscribe",
                         "after-subscribe",
                         "before-next"
                     ]);
 
                     const [,, [message]] = mockConnection.post.args;
-                    expect(message).to.have.property("value");
-                    expect(message.value).to.have.property("json");
-                    expect(message.value.json).to.match(/"name":\s*"alice"/);
-                    expect(message.value.json).to.match(/"employer":\s*"\[Circular\]"/);
+                    expect(message).to.have.property("notification");
+                    expect(message.notification).to.have.property("value");
+                    expect(message.notification.value).to.have.property("json");
+                    expect(message.notification.value.json).to.match(/"name":\s*"alice"/);
+                    expect(message.notification.value.json).to.match(/"employer":\s*"\[Circular\]"/);
                 });
         });
 

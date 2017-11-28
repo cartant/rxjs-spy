@@ -4,10 +4,10 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Message, Notification, Post, Request, Response } from "./interfaces";
+import { Broadcast, Message, Post, Request, Response } from "./interfaces";
 
-export function isNotification(message: Message): message is Notification {
-    return message.messageType === "notification";
+export function isBroadcast(message: Message): message is Broadcast {
+    return message.messageType === "broadcast";
 }
 
 export function isPost(message: Message): message is Post {

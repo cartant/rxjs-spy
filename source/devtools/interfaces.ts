@@ -4,8 +4,6 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { EXTENSION_KEY } from "./constants";
-
 export interface Connection {
     disconnect(): void;
     post(message: Message): Post;
@@ -29,10 +27,14 @@ export interface Message {
     messageType: string;
 }
 
-export interface Notification extends Message {
+export interface Broadcast extends Message {
+    [key: string]: any;
+    broadcastType: string;
+    messageType: "broadcast";
+}
+
+export interface Notification {
     id: string;
-    messageType: "notification";
-    notification: string;
     observable: {
         id: string;
         path: string;
@@ -50,6 +52,7 @@ export interface Notification extends Message {
     };
     tick: number;
     timestamp: number;
+    type: string;
     value?: { json: string };
 }
 
@@ -62,17 +65,25 @@ export interface ObservableSnapshot {
     type: string;
 }
 
+export interface Paused {
+    id: string;
+    notifications: number;
+    subscriptions: number;
+}
+
 export interface Post extends Message {
     postId: string;
     postType: string;
 }
 
 export interface Request extends Message {
+    [key: string]: any;
     messageType: "request";
     requestType: string;
 }
 
 export interface Response extends Message {
+    [key: string]: any;
     error?: string;
     messageType: "response";
     request: Post & Request;
