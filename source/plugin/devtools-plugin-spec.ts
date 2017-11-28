@@ -158,11 +158,11 @@ if (typeof window !== "undefined") {
             expect(next).to.have.be.a("function");
 
             next({
-                match: "1",
                 messageType: MESSAGE_REQUEST,
                 postId: "0",
                 postType: PANEL_MESSAGE,
-                requestType: "log"
+                requestType: "log",
+                spyId: "1"
             });
 
             return waitAfterResolved()
@@ -207,11 +207,11 @@ if (typeof window !== "undefined") {
             expect(next).to.have.be.a("function");
 
             next({
-                match: "1",
                 messageType: MESSAGE_REQUEST,
                 postId: "0",
                 postType: PANEL_MESSAGE,
-                requestType: "pause"
+                requestType: "pause",
+                spyId: "1"
             });
 
             return waitAfterResolved()

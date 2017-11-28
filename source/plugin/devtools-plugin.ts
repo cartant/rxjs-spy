@@ -30,7 +30,7 @@ import {
 import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { LogPlugin } from "./log-plugin";
-import { read, toString as matchToString } from "../match";
+import { read } from "../match";
 import { PausePlugin } from "./pause-plugin";
 import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
@@ -49,6 +49,8 @@ interface MessageRef {
 
 interface PluginRecord {
     plugin: Plugin;
+    pluginId: string;
+    spyId: string;
     teardown: () => void;
 }
 
@@ -85,14 +87,14 @@ export class DevToolsPlugin extends BasePlugin {
                 };
                 switch (request.requestType) {
                 case "log":
-                    this.recordPlugin_(request.postId, new LogPlugin(request["match"]));
+                    this.recordPlugin_(request["spyId"], request.postId, new LogPlugin(request["spyId"]));
                     response["pluginId"] = request.postId;
                     break;
                 case "log-teardown":
                     this.teardownPlugin_(request["pluginId"]);
                     break;
                 case "pause":
-                    this.recordPlugin_(request.postId, new PausePlugin(this.spy_, request["match"]));
+                    this.recordPlugin_(request["spyId"], request.postId, new PausePlugin(this.spy_, request["spyId"]));
                     response["pluginId"] = request.postId;
                     break;
                 case "pause-command":
@@ -221,12 +223,6 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private recordPlugin_(id: string, plugin: Plugin): void {
-
-        const teardown = this.spy_.plug(plugin);
-        this.plugins_.set(id, { plugin, teardown });
-    }
-
     private postMessage_(messageRef: MessageRef): void {
 
         const { connection_ } = this;
@@ -243,13 +239,19 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private teardownPlugin_(id: string): void {
+    private recordPlugin_(spyId: string, pluginId: string, plugin: Plugin): void {
+
+        const teardown = this.spy_.plug(plugin);
+        this.plugins_.set(pluginId, { plugin, pluginId, spyId, teardown });
+    }
+
+    private teardownPlugin_(pluginId: string): void {
 
         const { plugins_ } = this;
-        const record = plugins_.get(id);
+        const record = plugins_.get(pluginId);
         if (record) {
             record.teardown();
-            plugins_.delete(id);
+            plugins_.delete(pluginId);
         }
     }
 
