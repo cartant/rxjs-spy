@@ -96,9 +96,9 @@ export class DevToolsPlugin extends BasePlugin {
                     response["pluginId"] = request.postId;
                     break;
                 case "pause-command":
-                    const pausePlugin = this.plugins_.get(request["pluginId"]) as PausePlugin | undefined;
-                    if (pausePlugin) {
-                        const { deck } = pausePlugin;
+                    const pluginRecord = this.plugins_.get(request["pluginId"]) as PluginRecord | undefined;
+                    if (pluginRecord) {
+                        const { deck } = pluginRecord.plugin as PausePlugin;
                         switch (request["command"]) {
                         case "clear":
                         case "pause":

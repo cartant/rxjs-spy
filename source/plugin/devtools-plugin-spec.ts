@@ -226,9 +226,29 @@ if (typeof window !== "undefined") {
                     expect(found).to.exist;
 
                     next({
+                        command: "resume",
                         messageType: MESSAGE_REQUEST,
                         pluginId: "0",
                         postId: "1",
+                        postType: PANEL_MESSAGE,
+                        requestType: "pause-command"
+                    });
+                    return waitAfterResolved();
+                })
+                .then(() => {
+
+                    const [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
+                    expect(response).to.exist;
+                    expect(response).to.have.property("request");
+                    expect(response).to.have.property("pluginId", "0");
+
+                    const found = spy.find(PausePlugin)!;
+                    expect(found).to.exist;
+
+                    next({
+                        messageType: MESSAGE_REQUEST,
+                        pluginId: "0",
+                        postId: "2",
                         postType: PANEL_MESSAGE,
                         requestType: "pause-teardown"
                     });
