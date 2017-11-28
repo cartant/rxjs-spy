@@ -32,7 +32,7 @@ describe("GraphPlugin", () => {
         let subscriberRefsPlugin: SubscriberRefsPlugin;
 
         function delay(duration: number): Promise<void> {
-            const buffer = 10;
+            const buffer = 50;
             return new Promise(resolve => setTimeout(resolve, duration + buffer));
         }
 
