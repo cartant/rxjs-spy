@@ -18,6 +18,7 @@ import { isPostRequest } from "../devtools/guards";
 import {
     Broadcast,
     Connection,
+    DeckStats as DeckStatsPayload,
     Extension,
     Graph as GraphPayload,
     Message,
@@ -32,7 +33,7 @@ import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { LogPlugin } from "./log-plugin";
 import { read } from "../match";
-import { PausePlugin } from "./pause-plugin";
+import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
@@ -95,7 +96,17 @@ export class DevToolsPlugin extends BasePlugin {
                     this.teardownPlugin_(request["pluginId"]);
                     break;
                 case "pause":
-                    this.recordPlugin_(request["spyId"], request.postId, new PausePlugin(this.spy_, request["spyId"]));
+                    const plugin = new PausePlugin(this.spy_, request["spyId"]);
+                    this.recordPlugin_(request["spyId"], request.postId, plugin);
+                    this.spy_.ignore(() => plugin.deck.stats.subscribe(stats => {
+                        if (this.connection_) {
+                            this.connection_.post({
+                                broadcastType: "deck-stats",
+                                messageType: MESSAGE_BROADCAST,
+                                stats: toStats(request["spyId"], stats)
+                            });
+                        }
+                    }));
                     response["pluginId"] = request.postId;
                     break;
                 case "pause-command":
@@ -380,6 +391,11 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
             })),
         tick: snapshot.tick
     };
+}
+
+function toStats(id: string, stats: DeckStats): DeckStatsPayload {
+
+    return { id, ...stats };
 }
 
 function toValue(value: any): { json: string } {

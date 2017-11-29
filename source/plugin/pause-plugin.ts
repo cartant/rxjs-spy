@@ -17,6 +17,11 @@ import { BasePlugin } from "./plugin";
 import { Spy, Teardown } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 
+export interface DeckStats {
+    notifications: number;
+    paused: boolean;
+}
+
 interface State {
     notifications_: Notification<any>[];
     subject_: Subject<Notification<any>>;
@@ -32,11 +37,18 @@ export class Deck {
     private paused_ = true;
     private spy_: Spy;
     private states_ = new Map<Observable<any>, State>();
+    private stats_: Subject<DeckStats>;
 
     constructor(spy: Spy, match: Match) {
 
         this.match_ = match;
         this.spy_ = spy;
+        this.stats_ = new Subject<DeckStats>();
+    }
+
+    get stats(): Observable<DeckStats> {
+
+        return this.stats_.asObservable();
     }
 
     get paused(): boolean {
@@ -49,6 +61,7 @@ export class Deck {
         this.states_.forEach((state) => {
             state.notifications_ = state.notifications_.filter((notification) => !predicate(notification));
         });
+        this.broadcast_();
     }
 
     log(partialLogger: PartialLogger = defaultLogger): void {
@@ -68,6 +81,7 @@ export class Deck {
     pause(): void {
 
         this.paused_ = true;
+        this.broadcast_();
     }
 
     resume(): void {
@@ -78,6 +92,7 @@ export class Deck {
             }
         });
         this.paused_ = false;
+        this.broadcast_();
     }
 
     select(ref: SubscriptionRef): (source: Observable<any>) => Observable<any> {
@@ -106,8 +121,11 @@ export class Deck {
                     } else {
                         state!.subject_.next(notification);
                     }
+                    this.broadcast_();
                 }
             }));
+            this.broadcast_();
+
             return dematerialize.call(state.subject_.asObservable());
         };
     }
@@ -119,6 +137,7 @@ export class Deck {
                 state.notifications_.shift();
             }
         });
+        this.broadcast_();
     }
 
     step(): void {
@@ -128,6 +147,7 @@ export class Deck {
                 state.subject_.next(state.notifications_.shift());
             }
         });
+        this.broadcast_();
     }
 
     unsubscribe(): void {
@@ -136,6 +156,20 @@ export class Deck {
                 state.subscription_.unsubscribe();
                 state.subscription_ = undefined;
             }
+        });
+        this.broadcast_();
+    }
+
+    private broadcast_(): void {
+
+        const { paused_, states_, stats_ } = this;
+
+        let notifications = 0;
+        states_.forEach((state) => notifications += state.notifications_.length);
+
+        stats_.next({
+            notifications,
+            paused: paused_
         });
     }
 }

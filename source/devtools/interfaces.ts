@@ -10,6 +10,12 @@ export interface Connection {
     subscribe(next: (message: Post) => void): { unsubscribe(): void };
 }
 
+export interface DeckStats {
+    id: string;
+    notifications: number;
+    paused: boolean;
+}
+
 export interface Extension {
     connect(): Connection;
 }
@@ -24,6 +30,7 @@ export interface Graph {
 }
 
 export interface Message {
+    [key: string]: any;
     messageType: string;
 }
 
@@ -72,6 +79,7 @@ export interface Paused {
 }
 
 export interface Post extends Message {
+    [key: string]: any;
     postId: string;
     postType: string;
 }

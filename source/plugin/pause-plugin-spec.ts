@@ -10,7 +10,7 @@ import { Notification } from "rxjs/Notification";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { PartialLogger } from "../logger";
-import { Deck, PausePlugin } from "./pause-plugin";
+import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 
@@ -160,6 +160,37 @@ describe("PausePlugin", () => {
             deck.skip();
             expect(values).to.deep.equal([]);
             expect(notifications(deck)).to.deep.equal([]);
+        });
+    });
+
+    describe("stats", () => {
+
+        it("should broadcast stats", () => {
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            expect(deck).to.have.property("stats");
+
+            const stats: DeckStats[] = [];
+            deck.stats.subscribe(value => stats.push(value));
+            expect(stats).to.deep.equal([]);
+
+            subject.next("alice");
+            expect(stats).to.deep.equal([{
+                notifications: 1,
+                paused: true
+            }]);
+
+            deck.resume();
+            expect(stats).to.deep.equal([{
+                notifications: 1,
+                paused: true
+            }, {
+                notifications: 0,
+                paused: false
+            }]);
         });
     });
 
