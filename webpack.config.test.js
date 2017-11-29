@@ -27,6 +27,8 @@ module.exports = env => {
         },
         output: {
             filename: "rxjs-spy-test.umd.js",
+            library: "RxSpyTest",
+            libraryTarget: "umd",
             path: path.resolve(__dirname, "./bundles")
         },
         plugins: [],
