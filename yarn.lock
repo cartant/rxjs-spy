@@ -3730,6 +3730,10 @@ watchpack@^1.4.0:
     chokidar "^1.7.0"
     graceful-fs "^4.1.2"
 
+webpack-rxjs-externals@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/webpack-rxjs-externals/-/webpack-rxjs-externals-1.1.0.tgz#532e32525a12b90170263f99311b044021e6322e"
+
 webpack-sources@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/webpack-sources/-/webpack-sources-1.0.2.tgz#d0148ec083b3b5ccef1035a6b3ec16442983b27a"

@@ -6,7 +6,6 @@
 
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
-import { letProto } from "rxjs/operator/let";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
@@ -363,7 +362,7 @@ export class SpyCore implements Spy {
         };
         identify(ref);
 
-        interface PostLetObserver {
+        interface PostSelectObserver {
             complete: () => void;
             error: (error: any) => void;
             next: (value: any) => void;
@@ -371,9 +370,9 @@ export class SpyCore implements Spy {
         }
 
         /*tslint:disable:no-invalid-this*/
-        const postLetObserver: PostLetObserver = {
+        const postSelectObserver: PostSelectObserver = {
 
-            complete(this: PostLetObserver): void {
+            complete(this: PostSelectObserver): void {
 
                 notify_(
                     (plugin) => plugin.beforeComplete(ref),
@@ -382,7 +381,7 @@ export class SpyCore implements Spy {
                 );
             },
 
-            error(this: PostLetObserver, error: any): void {
+            error(this: PostSelectObserver, error: any): void {
 
                 if (!(error instanceof Error)) {
                     /*tslint:disable-next-line:no-console*/
@@ -395,7 +394,7 @@ export class SpyCore implements Spy {
                 );
             },
 
-            next(this: PostLetObserver, value: any): void {
+            next(this: PostSelectObserver, value: any): void {
 
                 notify_(
                     (plugin) => plugin.beforeNext(ref, value),
@@ -407,137 +406,137 @@ export class SpyCore implements Spy {
             unsubscribed: false
         };
         /*tslint:enable:no-invalid-this*/
-        const postLetSubscriber = toSubscriber(
-            postLetObserver.next.bind(postLetObserver),
-            postLetObserver.error.bind(postLetObserver),
-            postLetObserver.complete.bind(postLetObserver)
+        const postSelectSubscriber = toSubscriber(
+            postSelectObserver.next.bind(postSelectObserver),
+            postSelectObserver.error.bind(postSelectObserver),
+            postSelectObserver.complete.bind(postSelectObserver)
         );
 
-        interface PreLetObserver {
+        interface PreSelectObserver {
             complete: () => void;
             completed: boolean;
             error: (error: any) => void;
             errored: boolean;
             let: (plugins: Plugin[]) => void;
             next: (value: any) => void;
-            postLetSubscriber: Subscriber<any>;
-            postLetSubscription: Subscription | undefined;
-            preLetSubject: Subject<any> | undefined;
+            postSelectSubscriber: Subscriber<any>;
+            postSelectSubscription: Subscription | undefined;
+            preSelectSubject: Subject<any> | undefined;
             unsubscribed: boolean;
         }
 
         /*tslint:disable:no-invalid-this*/
-        const preLetObserver: PreLetObserver = {
+        const preSelectObserver: PreSelectObserver = {
 
-            complete(this: PreLetObserver): void {
+            complete(this: PreSelectObserver): void {
 
                 this.completed = true;
 
-                if (this.preLetSubject) {
-                    this.preLetSubject.complete();
+                if (this.preSelectSubject) {
+                    this.preSelectSubject.complete();
                 } else {
-                    this.postLetSubscriber.complete();
+                    this.postSelectSubscriber.complete();
                 }
             },
 
             completed: false,
 
-            error(this: PreLetObserver, error: any): void {
+            error(this: PreSelectObserver, error: any): void {
 
                 this.errored = true;
 
-                if (this.preLetSubject) {
-                    this.preLetSubject.error(error);
+                if (this.preSelectSubject) {
+                    this.preSelectSubject.error(error);
                 } else {
-                    this.postLetSubscriber.error(error);
+                    this.postSelectSubscriber.error(error);
                 }
             },
 
             errored: false,
 
-            let(this: PreLetObserver, plugins: Plugin[]): void {
+            let(this: PreSelectObserver, plugins: Plugin[]): void {
 
                 const selectors = plugins.map((plugin) => plugin.select(ref)).filter(Boolean);
                 if (selectors.length > 0) {
 
-                    if (!this.preLetSubject) {
-                        this.preLetSubject = new Subject<any>();
+                    if (!this.preSelectSubject) {
+                        this.preSelectSubject = new Subject<any>();
                     }
-                    if (this.postLetSubscription) {
-                        this.postLetSubscription.unsubscribe();
+                    if (this.postSelectSubscription) {
+                        this.postSelectSubscription.unsubscribe();
                     }
 
-                    let source = this.preLetSubject.asObservable();
-                    selectors.forEach(selector => source = letProto.call(source, selector!));
-                    this.postLetSubscription = spy_.ignore(() => source.subscribe({
-                        complete: () => this.postLetSubscriber.complete(),
-                        error: (error: any) => this.postLetSubscriber.error(error),
-                        next: (value: any) => this.postLetSubscriber.next(value)
+                    let source = this.preSelectSubject.asObservable();
+                    selectors.forEach(selector => source = selector!(source));
+                    this.postSelectSubscription = spy_.ignore(() => source.subscribe({
+                        complete: () => this.postSelectSubscriber.complete(),
+                        error: (error: any) => this.postSelectSubscriber.error(error),
+                        next: (value: any) => this.postSelectSubscriber.next(value)
                     }));
 
-                } else if (this.postLetSubscription) {
+                } else if (this.postSelectSubscription) {
 
-                    this.postLetSubscription.unsubscribe();
-                    this.postLetSubscription = undefined;
-                    this.preLetSubject = undefined;
+                    this.postSelectSubscription.unsubscribe();
+                    this.postSelectSubscription = undefined;
+                    this.preSelectSubject = undefined;
                 }
             },
 
-            next(this: PreLetObserver, value: any): void {
+            next(this: PreSelectObserver, value: any): void {
 
-                if (this.preLetSubject) {
-                    this.preLetSubject.next(value);
+                if (this.preSelectSubject) {
+                    this.preSelectSubject.next(value);
                 } else {
-                    this.postLetSubscriber.next(value);
+                    this.postSelectSubscriber.next(value);
                 }
             },
 
-            postLetSubscriber,
-            postLetSubscription: undefined,
-            preLetSubject: undefined,
+            postSelectSubscriber,
+            postSelectSubscription: undefined,
+            preSelectSubject: undefined,
             unsubscribed: false
         };
         /*tslint:enable:no-invalid-this*/
-        const preLetSubscriber = toSubscriber(
-            preLetObserver.next.bind(preLetObserver),
-            preLetObserver.error.bind(preLetObserver),
-            preLetObserver.complete.bind(preLetObserver)
+        const preSelectSubscriber = toSubscriber(
+            preSelectObserver.next.bind(preSelectObserver),
+            preSelectObserver.error.bind(preSelectObserver),
+            preSelectObserver.complete.bind(preSelectObserver)
         );
 
         const pluginsSubscription = spy_.ignore(() => spy_.pluginsSubject_.subscribe({
-            next: (plugins: any) => preLetObserver.let(plugins)
+            next: (plugins: any) => preSelectObserver.let(plugins)
         }));
 
-        const preLetUnsubscribe = preLetSubscriber.unsubscribe;
-        preLetSubscriber.unsubscribe = () => {
+        const preSelectUnsubscribe = preSelectSubscriber.unsubscribe;
+        preSelectSubscriber.unsubscribe = () => {
 
-            if (!preLetObserver.unsubscribed) {
+            if (!preSelectObserver.unsubscribed) {
 
-                preLetObserver.unsubscribed = true;
+                preSelectObserver.unsubscribed = true;
 
-                if (!preLetObserver.completed && !preLetObserver.errored) {
-                    if (preLetObserver.postLetSubscription) {
-                        preLetObserver.postLetSubscription.unsubscribe();
-                        preLetObserver.postLetSubscription = undefined;
+                if (!preSelectObserver.completed && !preSelectObserver.errored) {
+                    if (preSelectObserver.postSelectSubscription) {
+                        preSelectObserver.postSelectSubscription.unsubscribe();
+                        preSelectObserver.postSelectSubscription = undefined;
                     }
-                    preLetObserver.postLetSubscriber.unsubscribe();
+                    preSelectObserver.postSelectSubscriber.unsubscribe();
                 }
             }
-            preLetUnsubscribe.call(preLetSubscriber);
+            preSelectUnsubscribe.call(preSelectSubscriber);
         };
-        subscriber.add(preLetSubscriber);
+        subscriber.add(preSelectSubscriber);
 
-        const postLetUnsubscribe = postLetSubscriber.unsubscribe;
-        postLetSubscriber.unsubscribe = () => {
+        const postSelectUnsubscribe = postSelectSubscriber.unsubscribe;
+        postSelectSubscriber.unsubscribe = () => {
 
-            if (!postLetObserver.unsubscribed) {
+            if (!postSelectObserver.unsubscribed) {
 
-                postLetObserver.unsubscribed = true;
+                postSelectObserver.unsubscribed = true;
 
                 notify_(
                     (plugin) => plugin.beforeUnsubscribe(ref),
                     () => {
-                        postLetUnsubscribe.call(postLetSubscriber);
+                        postSelectUnsubscribe.call(postSelectSubscriber);
                         pluginsSubscription.unsubscribe();
                         ref.unsubscribed = true;
                     },
@@ -545,13 +544,13 @@ export class SpyCore implements Spy {
                 );
 
             } else {
-                postLetUnsubscribe.call(postLetSubscriber);
+                postSelectUnsubscribe.call(postSelectSubscriber);
             }
         };
 
         notify_(
             (plugin) => plugin.beforeSubscribe(ref),
-            () => ref.subscription = observableSubscribe.call(observable, preLetSubscriber),
+            () => ref.subscription = observableSubscribe.call(observable, preSelectSubscriber),
             (plugin) => plugin.afterSubscribe(ref)
         );
         return ref.subscription;

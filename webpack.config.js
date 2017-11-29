@@ -1,7 +1,7 @@
 const path = require("path");
 const UglifyJsWebpackPlugin = require("uglifyjs-webpack-plugin");
 const webpack = require("webpack");
-const { alias, externals } = require("./webpack.common");
+const webpackRxjsExternals = require("webpack-rxjs-externals");
 
 module.exports = env => {
 
@@ -29,7 +29,7 @@ module.exports = env => {
         entry: {
             index: "./source/index.ts"
         },
-        externals,
+        externals: webpackRxjsExternals(),
         module: {
             rules: [{
                 test: /\.ts$/,
@@ -52,7 +52,6 @@ module.exports = env => {
         },
         plugins,
         resolve: {
-            alias,
             extensions: [".ts", ".js"]
         }
     }
