@@ -11,7 +11,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Detector } from "./detector";
 import { SnapshotPlugin } from "./plugin/snapshot-plugin";
-import { find, spy } from "./spy";
+import { create } from "./spy-factory";
+import { Spy } from "./spy-interface";
 
 import "rxjs/add/operator/mergeMap";
 
@@ -24,19 +25,19 @@ const options = {
 describe("detector", () => {
 
     let detector: Detector;
-    let teardown: () => void;
+    let spy: Spy;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
     beforeEach(() => {
 
-        teardown = spy({ ...options });
-        detector = new Detector(find(SnapshotPlugin));
+        spy = create({ ...options });
+        detector = new Detector(spy.find(SnapshotPlugin));
     });
 
     it("should detect subscriptions and unsubscriptions", () => {
@@ -48,7 +49,7 @@ describe("detector", () => {
 
         const id = "";
         let detected = detector.detect(id);
-        expect(detected).to.be.null;
+        expect(detected).to.not.exist;
 
         const subscription = source.subscribe();
         subject.next();
@@ -65,7 +66,7 @@ describe("detector", () => {
         expect(detected.unsubscriptions).to.have.length(1);
     });
 
-    it("should detect merged subscriptions and unsubscriptions", () => {
+    it("should detect flattening subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
         const source = subject.tag("source");
@@ -76,20 +77,20 @@ describe("detector", () => {
 
         const id = "";
         let detected = detector.detect(id);
-        expect(detected).to.be.null;
+        expect(detected).to.not.exist;
 
         subject.next();
 
         detected = detector.detect(id)!;
-        expect(detected.mergeSubscriptions).to.have.length(1);
-        expect(detected.mergeUnsubscriptions).to.be.empty;
+        expect(detected.flatteningSubscriptions).to.have.length(1);
+        expect(detected.flatteningUnsubscriptions).to.be.empty;
 
         subject.next();
 
         detected = detector.detect(id)!;
-        expect(detected).to.not.be.null;
-        expect(detected.mergeSubscriptions).to.have.length(1);
-        expect(detected.mergeUnsubscriptions).to.be.empty;
+        expect(detected).to.exist;
+        expect(detected.flatteningSubscriptions).to.have.length(1);
+        expect(detected.flatteningUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
     });

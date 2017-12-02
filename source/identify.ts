@@ -7,7 +7,7 @@
 const idSymbol = Symbol("id");
 let lastId = 0;
 
-export function identify(instance: object): number {
-    const id = instance[idSymbol] = instance[idSymbol] || ++lastId;
+export function identify(instance: object): string {
+    const id = instance[idSymbol] = instance[idSymbol] || (++lastId).toString();
     return id;
 }

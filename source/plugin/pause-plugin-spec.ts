@@ -10,8 +10,9 @@ import { Notification } from "rxjs/Notification";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { PartialLogger } from "../logger";
-import { Deck, PausePlugin } from "./pause-plugin";
-import { spy } from "../spy";
+import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 
 import "../add/operator/tag";
 
@@ -20,21 +21,22 @@ describe("PausePlugin", () => {
     let calls: any[][];
     let deck: Deck;
     let plugin: PausePlugin;
-    let teardown: () => void;
+    let spy: Spy;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
     beforeEach(() => {
 
-        plugin = new PausePlugin("people");
-        deck = plugin.deck;
+        spy = create({ defaultPlugins: false, warning: false });
+        plugin = new PausePlugin(spy, "people");
+        spy.plug(plugin);
 
-        teardown = spy({ plugins: [plugin], warning: false });
+        deck = plugin.deck;
         calls = [];
     });
 
@@ -158,6 +160,37 @@ describe("PausePlugin", () => {
             deck.skip();
             expect(values).to.deep.equal([]);
             expect(notifications(deck)).to.deep.equal([]);
+        });
+    });
+
+    describe("stats", () => {
+
+        it("should broadcast stats", () => {
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+
+            expect(deck).to.have.property("stats");
+
+            const stats: DeckStats[] = [];
+            deck.stats.subscribe(value => stats.push(value));
+            expect(stats).to.deep.equal([]);
+
+            subject.next("alice");
+            expect(stats).to.deep.equal([{
+                notifications: 1,
+                paused: true
+            }]);
+
+            deck.resume();
+            expect(stats).to.deep.equal([{
+                notifications: 1,
+                paused: true
+            }, {
+                notifications: 0,
+                paused: false
+            }]);
         });
     });
 

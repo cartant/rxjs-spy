@@ -9,18 +9,19 @@ import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { LetPlugin } from "./let-plugin";
-import { plugin, spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 
 import "../add/operator/tag";
 
 describe("LetPlugin", () => {
 
-    let teardown: () => void;
+    let spy: Spy;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
@@ -28,7 +29,9 @@ describe("LetPlugin", () => {
 
         const selected = new Subject<string>();
         const plugin = new LetPlugin("people", () => selected);
-        teardown = spy({ plugins: [plugin], warning: false });
+
+        spy = create({ defaultPlugins: false, warning: false });
+        spy.plug(plugin);
 
         const values: any[] = [];
         const subject = new Subject<string>();
@@ -43,14 +46,14 @@ describe("LetPlugin", () => {
 
     it("should apply the selector to an already-subscribed tag's source", () => {
 
-        teardown = spy({ plugins: [], warning: false });
+        spy = create({ defaultPlugins: false, warning: false });
 
         const values: any[] = [];
         const subject = new Subject<string>();
         const subscription = subject.tag("people").subscribe((value) => values.push(value));
 
         const selected = new Subject<string>();
-        plugin(new LetPlugin("people", () => selected), "let");
+        spy.plug(new LetPlugin("people", () => selected));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);

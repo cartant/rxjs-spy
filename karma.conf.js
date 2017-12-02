@@ -12,7 +12,6 @@ exports = module.exports = function (config) {
         concurrency: Infinity,
         exclude: [],
         files: [
-            "node_modules/core-js/client/core.js",
             "node_modules/rxjs/bundles/Rx.js",
             "bundles/rxjs-spy-test.umd.js"
         ],

@@ -6,8 +6,9 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { Match, matches } from "../match";
-import { BasePlugin, SubscriptionRef } from "./plugin";
+import { Match, matches, toString as matchToString } from "../match";
+import { BasePlugin } from "./plugin";
+import { SubscriptionRef } from "../subscription-ref";
 
 export class LetPlugin extends BasePlugin {
 
@@ -16,20 +17,19 @@ export class LetPlugin extends BasePlugin {
 
     constructor(match: Match, select: (source: Observable<any>) => Observable<any>) {
 
-        super();
+        super(`let(${matchToString(match)})`);
 
         this.match_ = match;
         this.select_ = select;
     }
 
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
+    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { match_, select_ } = this;
-        const { observable } = ref;
 
-        if (matches(observable, match_)) {
+        if (matches(ref, match_)) {
             return select_;
         }
-        return null;
+        return undefined;
     }
 }

@@ -5,19 +5,20 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 const graphRefSymbol = Symbol("graphRef");
 
 export interface GraphRef {
     depth: number;
+    flattened: boolean;
+    flattenings: SubscriptionRef[];
+    flatteningsFlushed: number;
     link: GraphRef;
-    merged: boolean;
-    merges: SubscriptionRef[];
-    mergesFlushed: number;
-    rootSink: SubscriptionRef | null;
+    rootSink: SubscriptionRef | undefined;
     sentinel: GraphRef;
-    sink: SubscriptionRef | null;
+    sink: SubscriptionRef | undefined;
     sources: SubscriptionRef[];
     sourcesFlushed: number;
 }
@@ -35,6 +36,8 @@ function setGraphRef(ref: SubscriberRef, value: GraphRef): GraphRef {
 
 export class GraphPlugin extends BasePlugin {
 
+    private flushIntervalId_: any;
+    private flushQueue_: { due: number, flush: Function }[];
     private keptDuration_: number;
     private notifications_: {
         notification: Notification;
@@ -48,19 +51,21 @@ export class GraphPlugin extends BasePlugin {
         keptDuration?: number
     } = {}) {
 
-        super();
+        super("graph");
 
+        this.flushIntervalId_ = undefined;
+        this.flushQueue_ = [];
         this.keptDuration_ = keptDuration;
         this.notifications_ = [];
         this.sentinel_ = {
             depth: 0,
-            link: null!,
-            merged: false,
-            merges: [],
-            mergesFlushed: 0,
-            rootSink: null,
-            sentinel: null!,
-            sink: null,
+            flattened: false,
+            flattenings: [],
+            flatteningsFlushed: 0,
+            link: undefined!,
+            rootSink: undefined,
+            sentinel: undefined!,
+            sink: undefined,
             sources: [],
             sourcesFlushed: 0
         };
@@ -103,13 +108,13 @@ export class GraphPlugin extends BasePlugin {
 
         const graphRef = setGraphRef(ref, {
             depth: 1,
+            flattened: false,
+            flattenings: [],
+            flatteningsFlushed: 0,
             link: sentinel_,
-            merged: false,
-            merges: [],
-            mergesFlushed: 0,
-            rootSink: null,
+            rootSink: undefined,
             sentinel: sentinel_,
-            sink: null,
+            sink: undefined,
             sources: [],
             sourcesFlushed: 0
         });
@@ -119,9 +124,9 @@ export class GraphPlugin extends BasePlugin {
 
             const { ref: sinkRef } = notifications_[length - 1];
             const sinkGraphRef = getGraphRef(sinkRef);
-            sinkGraphRef.merges.push(ref as SubscriptionRef);
+            sinkGraphRef.flattenings.push(ref as SubscriptionRef);
             graphRef.link = sinkGraphRef;
-            graphRef.merged = true;
+            graphRef.flattened = true;
             graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
             graphRef.sink = sinkRef as SubscriptionRef;
 
@@ -155,24 +160,32 @@ export class GraphPlugin extends BasePlugin {
         notifications_.push({ notification: "unsubscribe", ref });
     }
 
+    teardown(): void {
+
+        if (this.flushIntervalId_ !== undefined) {
+            clearInterval(this.flushIntervalId_);
+            this.flushIntervalId_ = undefined;
+        }
+    }
+
     private flush_(ref: SubscriptionRef): void {
 
         const graphRef = getGraphRef(ref);
-        const { merges, sources } = graphRef;
+        const { flattenings, sources } = graphRef;
 
-        if (!ref.unsubscribed || !merges.every(ref => ref.unsubscribed) || !sources.every(ref => ref.unsubscribed)) {
+        if (!ref.unsubscribed || !flattenings.every(ref => ref.unsubscribed) || !sources.every(ref => ref.unsubscribed)) {
             return;
         }
 
-        const { keptDuration_, sentinel_ } = this;
+        const { keptDuration_ } = this;
         const { link, sink } = graphRef;
 
         const flush = () => {
-            const { merges, sources } = link;
-            const mergeIndex = merges.indexOf(ref);
-            if (mergeIndex !== -1) {
-                merges.splice(mergeIndex, 1);
-                ++link.mergesFlushed;
+            const { flattenings, sources } = link;
+            const flatteningIndex = flattenings.indexOf(ref);
+            if (flatteningIndex !== -1) {
+                flattenings.splice(flatteningIndex, 1);
+                ++link.flatteningsFlushed;
             }
             const sourceIndex = sources.indexOf(ref);
             if (sourceIndex !== -1) {
@@ -187,7 +200,21 @@ export class GraphPlugin extends BasePlugin {
         if (keptDuration_ === 0) {
             flush();
         } else if ((keptDuration_ > 0) && (keptDuration_ < Infinity)) {
-            setTimeout(flush, keptDuration_);
+            this.flushQueue_.push({ due: Date.now() + keptDuration_, flush });
+            if (this.flushIntervalId_ === undefined) {
+                this.flushIntervalId_ = setInterval(() => {
+                    const now = Date.now();
+                    this.flushQueue_ = this.flushQueue_.filter(q => {
+                        if (q.due > now) { return true; }
+                        q.flush();
+                        return false;
+                    });
+                    if (this.flushQueue_.length === 0) {
+                        clearInterval(this.flushIntervalId_);
+                        this.flushIntervalId_ = undefined;
+                    }
+                }, keptDuration_);
+            }
         }
     }
 }

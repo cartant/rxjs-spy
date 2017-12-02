@@ -3,6 +3,30 @@ import { PartialObserver } from "rxjs/Observer";
 import { Subscriber } from "rxjs/Subscriber";
 import { rxSubscriber as rxSubscriberSymbol } from "rxjs/symbol/rxSubscriber";
 
+export function inferPath(observable: Observable<any>): string {
+
+    const { source } = observable as any;
+
+    if (source) {
+        return `${inferPath(source)}/${inferType(observable)}`;
+    }
+    return `/${inferType(observable)}`;
+}
+
+export function inferType(observable: Observable<any>): string {
+
+    const { operator } = observable as any;
+
+    const prototype = Object.getPrototypeOf(operator ? operator : observable);
+    if (prototype.constructor && prototype.constructor.name) {
+        return prototype.constructor.name.replace(
+            /^([\w])(\w+)(Observable|Operator)$/,
+            (match: string, p1: string, p2: string) => `${p1.toLowerCase()}${p2}`
+        );
+    }
+    return "unknown";
+}
+
 export function isObservable(arg: any): arg is Observable<any> {
 
     return arg && arg.subscribe;

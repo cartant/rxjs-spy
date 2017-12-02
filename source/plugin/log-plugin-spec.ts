@@ -8,133 +8,207 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
+import { identify } from "../identify";
 import { LogPlugin } from "./log-plugin";
-import { spy } from "../spy";
+import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
+import { SubscriptionRef } from "../subscription-ref";
 
 import "../add/operator/tag";
 
 describe("LogPlugin", () => {
 
     let calls: any[][];
-    let teardown: () => void;
+    let spy: Spy;
+    let subscriberRefsPlugin: SubscriberRefsPlugin;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
-    beforeEach(() => {
+    describe("tags", () => {
 
-        const plugin = new LogPlugin("people", {
-            log(...args: any[]): void { calls.push(args); }
+        beforeEach(() => {
+
+            const plugin = new LogPlugin("people", {
+                log(...args: any[]): void { calls.push(args); }
+            });
+            spy = create({ defaultPlugins: false, warning: false });
+            spy.plug(plugin);
+            calls = [];
         });
-        teardown = spy({ plugins: [plugin], warning: false });
-        calls = [];
+
+        it("should log subscribe/next/unsubscribe", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.tag("people").subscribe();
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
+
+            calls = [];
+
+            subject.next("alice");
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
+            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+
+            calls = [];
+
+            subscription.unsubscribe();
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = unsubscribe"]);
+        });
+
+        it("should log null values", () => {
+
+            const subject = new Subject<string | null>();
+
+            const subscription = subject.tag("people").subscribe();
+
+            calls = [];
+
+            subject.next(null);
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
+            expect(calls[1]).to.deep.equal(["  Value =", null]);
+
+            subscription.unsubscribe();
+        });
+
+        it("should log undefined values", () => {
+
+            const subject = new Subject<string | undefined>();
+
+            const subscription = subject.tag("people").subscribe();
+
+            calls = [];
+
+            subject.next(undefined);
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
+            expect(calls[1]).to.deep.equal(["  Value =", undefined]);
+
+            subscription.unsubscribe();
+        });
+
+        it("should log complete", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.tag("people").subscribe();
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
+
+            calls = [];
+
+            subject.complete();
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = complete"]);
+        });
+
+        it("should log error", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.tag("people").subscribe((value) => {}, (error) => {});
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
+
+            calls = [];
+
+            const error = new Error("Boom!");
+            subject.error(error);
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = error"]);
+            expect(calls[1]).to.deep.equal(["  Error =", error]);
+        });
+
+        it("should ignore untagged observables", () => {
+
+            const subject = new Subject<string>();
+
+            const subscription = subject.subscribe();
+            expect(calls).to.be.empty;
+
+            calls = [];
+
+            subject.next("alice");
+            expect(calls).to.be.empty;
+
+            calls = [];
+
+            subscription.unsubscribe();
+            expect(calls).to.be.empty;
+        });
     });
 
-    it("should log subscribe/next/unsubscribe", () => {
+    describe("ids", () => {
 
-        const subject = new Subject<string>();
+        beforeEach(() => {
 
-        const subscription = subject.tag("people").subscribe();
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
+            subscriberRefsPlugin = new SubscriberRefsPlugin();
+            spy = create({ defaultPlugins: false, warning: false });
+            spy.plug(subscriberRefsPlugin);
+            calls = [];
+        });
 
-        calls = [];
+        it("should match observable ids", () => {
 
-        subject.next("alice");
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
-        expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+            const subject = new Subject<string>();
+            const subscription = subject.subscribe();
 
-        calls = [];
+            const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
+            spy.plug(new LogPlugin(identify(subscriptionRef.observable), {
+                log(...args: any[]): void { calls.push(args); }
+            }));
 
-        subscription.unsubscribe();
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = unsubscribe"]);
-    });
+            calls = [];
 
-    it("should log null values", () => {
+            subject.next("alice");
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next"]);
+            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+        });
 
-        const subject = new Subject<string | null>();
+        it("should match subscriber ids", () => {
 
-        const subscription = subject.tag("people").subscribe();
+            const subject = new Subject<string>();
+            const subscription = subject.subscribe();
 
-        calls = [];
+            const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
+            spy.plug(new LogPlugin(identify(subscriptionRef.subscriber), {
+                log(...args: any[]): void { calls.push(args); }
+            }));
 
-        subject.next(null);
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
-        expect(calls[1]).to.deep.equal(["  Value =", null]);
+            calls = [];
 
-        subscription.unsubscribe();
-    });
+            subject.next("alice");
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next"]);
+            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+        });
 
-    it("should log undefined values", () => {
+        it("should match subscription ids", () => {
 
-        const subject = new Subject<string | undefined>();
+            const subject = new Subject<string>();
+            const subscription = subject.subscribe();
 
-        const subscription = subject.tag("people").subscribe();
+            const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
+            spy.plug(new LogPlugin(identify(subscriptionRef.subscription), {
+                log(...args: any[]): void { calls.push(args); }
+            }));
 
-        calls = [];
+            calls = [];
 
-        subject.next(undefined);
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
-        expect(calls[1]).to.deep.equal(["  Value =", undefined]);
-
-        subscription.unsubscribe();
-    });
-
-    it("should log complete", () => {
-
-        const subject = new Subject<string>();
-
-        const subscription = subject.tag("people").subscribe();
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
-
-        calls = [];
-
-        subject.complete();
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = complete"]);
-    });
-
-    it("should log error", () => {
-
-        const subject = new Subject<string>();
-
-        const subscription = subject.tag("people").subscribe((value) => {}, (error) => {});
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
-
-        calls = [];
-
-        const error = new Error("Boom!");
-        subject.error(error);
-        expect(calls).to.not.be.empty;
-        expect(calls[0]).to.deep.equal(["Tag = people; notification = error"]);
-        expect(calls[1]).to.deep.equal(["  Error =", error]);
-    });
-
-    it("should ignore untagged observables", () => {
-
-        const subject = new Subject<string>();
-
-        const subscription = subject.subscribe();
-        expect(calls).to.be.empty;
-
-        calls = [];
-
-        subject.next("alice");
-        expect(calls).to.be.empty;
-
-        calls = [];
-
-        subscription.unsubscribe();
-        expect(calls).to.be.empty;
+            subject.next("alice");
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next"]);
+            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+        });
     });
 });

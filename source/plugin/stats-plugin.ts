@@ -7,15 +7,16 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 import { getGraphRef } from "./graph-plugin";
-import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
-import { tick } from "../tick";
+import { BasePlugin } from "./plugin";
+import { Spy } from "../spy-interface";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 export interface Stats {
     completes: number;
     errors: number;
+    flattenedSubscribes: number;
     leafSubscribes: number;
     maxDepth: number;
-    mergedSubscribes: number;
     nexts: number;
     rootSubscribes: number;
     subscribes: number;
@@ -27,34 +28,44 @@ export interface Stats {
 
 export class StatsPlugin extends BasePlugin {
 
-    private stats_: Stats = {
-        completes: 0,
-        errors: 0,
-        leafSubscribes: 0,
-        maxDepth: 0,
-        mergedSubscribes: 0,
-        nexts: 0,
-        rootSubscribes: 0,
-        subscribes: 0,
-        tick: 0,
-        timespan: 0,
-        totalDepth: 0,
-        unsubscribes: 0
-    };
-    private time_ = 0;
+    private spy_: Spy;
+    private stats_: Stats;
+    private time_: number;
+
+    constructor(spy: Spy) {
+
+        super("stats");
+
+        this.spy_ = spy;
+        this.stats_ = {
+            completes: 0,
+            errors: 0,
+            flattenedSubscribes: 0,
+            leafSubscribes: 0,
+            maxDepth: 0,
+            nexts: 0,
+            rootSubscribes: 0,
+            subscribes: 0,
+            tick: 0,
+            timespan: 0,
+            totalDepth: 0,
+            unsubscribes: 0
+        };
+        this.time_ = 0;
+    }
 
     afterSubscribe(ref: SubscriptionRef): void {
         const { stats_ } = this;
         const graphRef = getGraphRef(ref);
         if (graphRef) {
-            const { depth, merged, merges, mergesFlushed, rootSink, sources, sourcesFlushed } = graphRef;
-            if (rootSink === null) {
+            const { depth, flattened, flattenings, flatteningsFlushed, rootSink, sources, sourcesFlushed } = graphRef;
+            if (!rootSink) {
                 stats_.rootSubscribes += 1;
             }
-            if (merged) {
-                stats_.mergedSubscribes += 1;
+            if (flattened) {
+                stats_.flattenedSubscribes += 1;
             }
-            if ((merges.length + mergesFlushed + sources.length + sourcesFlushed) === 0) {
+            if ((flattenings.length + flatteningsFlushed + sources.length + sourcesFlushed) === 0) {
                 if (stats_.maxDepth < depth) {
                     stats_.maxDepth = depth;
                 }
@@ -100,12 +111,12 @@ export class StatsPlugin extends BasePlugin {
     }
 
     private all_(): void {
-        const { stats_, time_ } = this;
+        const { spy_, stats_, time_ } = this;
         if (time_ === 0) {
             this.time_ = Date.now();
         } else {
             stats_.timespan = Date.now() - time_;
         }
-        stats_.tick = tick();
+        stats_.tick = spy_.tick;
     }
 }

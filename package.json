@@ -4,7 +4,9 @@
     "url": "https://github.com/cartant/rxjs-spy/issues"
   },
   "dependencies": {
+    "@types/circular-json": "^0.4.0",
     "@types/stacktrace-js": "^0.0.32",
+    "circular-json": "^0.4.0",
     "stacktrace-js": "^2.0.0"
   },
   "description": "A debugging library for RxJS",
@@ -13,10 +15,7 @@
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.0",
     "@types/sinon": "^4.0.0",
-    "browserify": "^14.4.0",
-    "browserify-global-shim": "^1.0.3",
     "chai": "^4.0.0",
-    "core-js": "^2.4.1",
     "cpy-cli": "^1.0.1",
     "eslint": "^4.0.0",
     "karma": "^1.6.0",
@@ -30,10 +29,13 @@
     "rxjs": "^5.4.2",
     "rxjs-tslint-rules": "^3.0.0",
     "sinon": "^4.0.0",
+    "ts-loader": "^3.0.4",
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
     "typescript": "~2.6.1",
-    "uglify-js": "^3.0.10"
+    "uglifyjs-webpack-plugin": "^1.0.1",
+    "webpack": "^3.1.0",
+    "webpack-rxjs-externals": "^1.1.0"
   },
   "homepage": "https://github.com/cartant/rxjs-spy",
   "keywords": [
@@ -53,25 +55,27 @@
     "rxjs": "^5.0.0"
   },
   "private": true,
+  "publishConfig": {
+    "tag": "next"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/cartant/rxjs-spy.git"
   },
   "resolutions": {},
   "scripts": {
-    "dist": "yarn run dist:build && yarn run dist:uglify && yarn run dist:copy",
-    "dist:build": "yarn run dist:clean && tsc -p tsconfig-dist.json && node scripts/bundle-dist.js",
+    "dist": "yarn run dist:build && yarn run dist:copy",
+    "dist:build": "yarn run dist:clean && tsc -p tsconfig-dist.json && webpack --config webpack.config.js && webpack --config webpack.config.js --env.production",
     "dist:clean": "rimraf dist && rimraf bundles/rxjs-spy.* && mkdirp bundles",
     "dist:copy": "node scripts/pack.js && cpy bundles/rxjs-spy.* dist/bundles/ && cpy CHANGELOG.md LICENSE README.md dist/",
-    "dist:uglify": "uglifyjs -c --comments /license/ -m -o bundles/rxjs-spy.min.umd.js bundles/rxjs-spy.umd.js",
     "lint": "tslint --project tsconfig.json source/**/*.ts",
     "test": "yarn run lint && yarn run test:build && yarn run test:karma && yarn run test:mocha",
-    "test:build": "yarn run test:clean && tsc -p tsconfig.json && node scripts/bundle-test.js",
+    "test:build": "yarn run test:clean && tsc -p tsconfig.json && webpack --config webpack.config.test.js",
     "test:clean": "rimraf build && rimraf bundles/rxjs-spy-test.* && mkdirp bundles",
     "test:karma": "karma start",
     "test:mocha": "mocha build/index-spec.js"
   },
   "typings": "./dist/index.d.ts",
   "unpkg": "./bundles/rxjs-spy.min.umd.js",
-  "version": "5.2.3"
+  "version": "6.0.0-beta.3"
 }

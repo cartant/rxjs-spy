@@ -6,13 +6,20 @@
 
 import { Observable } from "rxjs/Observable";
 import { get, getSync, StackFrame } from "stacktrace-js";
-import { BasePlugin, SubscriberRef, SubscriptionRef } from "./plugin";
+import { BasePlugin } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
 
 export interface StackTraceRef {
     sourceMapsResolved: Promise<void>;
     stackTrace: StackFrame[];
+}
+
+export function getSourceMapsResolved(ref: SubscriberRef): Promise<void> {
+
+    const stackTraceRef = getStackTraceRef(ref);
+    return stackTraceRef ? stackTraceRef.sourceMapsResolved : Promise.resolve();
 }
 
 export function getStackTrace(ref: SubscriberRef): StackFrame[] {
@@ -38,7 +45,7 @@ export class StackTracePlugin extends BasePlugin {
 
     constructor({ sourceMaps = false }: { sourceMaps?: boolean } = {}) {
 
-        super();
+        super("stackTrace");
         this.sourceMaps_ = sourceMaps;
     }
 
@@ -51,10 +58,13 @@ export class StackTracePlugin extends BasePlugin {
         setStackTraceRef(ref, stackTraceRef);
 
         if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            stackTraceRef.sourceMapsResolved = get(options()).then((stackFrames) => {
-                const { stackTrace } = stackTraceRef;
-                stackTrace.splice(0, stackTrace.length, ...stackFrames);
-            });
+            stackTraceRef.sourceMapsResolved = get(options())
+                .then((stackFrames) => {
+                    const { stackTrace } = stackTraceRef;
+                    stackTrace.splice(0, stackTrace.length, ...stackFrames);
+                })
+                /*tslint:disable-next-line:no-console*/
+                .catch((error) => console.error("Cannot resolve source maps", error));
         }
     }
 }
@@ -65,7 +75,7 @@ function options(): any {
     return {
         filter: (stackFrame: StackFrame) => {
             const result = preSubscribeWithSpy;
-            if (/subscribeWithSpy/.test(stackFrame.functionName)) {
+            if (/coreSubscribe_/.test(stackFrame.functionName)) {
                 preSubscribeWithSpy = true;
             }
             return result;

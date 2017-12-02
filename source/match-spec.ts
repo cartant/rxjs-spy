@@ -8,6 +8,7 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Observable";
 import * as sinon from "sinon";
+import { identify } from "./identify";
 import { matches, read, toString } from "./match";
 
 import "rxjs/add/observable/from";
@@ -33,10 +34,17 @@ describe("match", () => {
             expect(matches(Observable.of("mallory"), source)).to.be.false;
         });
 
-        it("should match a string", () => {
+        it("should match a string tag", () => {
 
             expect(matches(source, "people")).to.be.true;
             expect(matches(Observable.of("mallory"), "people")).to.be.false;
+        });
+
+        it("should match a string identity", () => {
+
+            const identity = identify(source);
+            expect(matches(source, identity)).to.be.true;
+            expect(matches(Observable.of("mallory"), identity)).to.be.false;
         });
 
         it("should match a regular expression", () => {
@@ -47,7 +55,7 @@ describe("match", () => {
 
         it("should match a predicate", () => {
 
-            function predicate(tag: string | null): boolean {
+            function predicate(tag: string | undefined): boolean {
                 return tag === "people";
             }
 

@@ -14,7 +14,7 @@ export function detect(id: string): void {
     hook_(id);
 }
 
-export function hook(hook: Hook | null): void {
+export function hook(hook: Hook | undefined): void {
 
     hook_ = hook || noop_;
 }

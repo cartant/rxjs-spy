@@ -6,11 +6,14 @@
 /*tslint:disable:no-debugger*/
 
 import { Observable } from "rxjs/Observable";
-import { BasePlugin, SubscriberRef } from "./plugin";
+import { BasePlugin } from "./plugin";
+import { SubscriberRef } from "../subscription-ref";
 
 export class SubscriberRefsPlugin extends BasePlugin {
 
     private subscriberRefs_: Map<Observable<any>, SubscriberRef> = new Map<Observable<any>, SubscriberRef>();
+
+    constructor() { super("subscriberRefs"); }
 
     beforeSubscribe(ref: SubscriberRef): void {
 

@@ -15,8 +15,8 @@ import {
 } from "./plugin/snapshot-plugin";
 
 export interface Detected {
-    mergeSubscriptions: SubscriptionSnapshot[];
-    mergeUnsubscriptions: SubscriptionSnapshot[];
+    flatteningSubscriptions: SubscriptionSnapshot[];
+    flatteningUnsubscriptions: SubscriptionSnapshot[];
     subscriptions: SubscriptionSnapshot[];
     unsubscriptions: SubscriptionSnapshot[];
 }
@@ -31,29 +31,29 @@ interface SnapshotRecord {
 }
 
 interface SubscriptionRecord {
-    merges: Map<Subscription, SubscriptionSnapshot>;
+    flattenings: Map<Subscription, SubscriptionSnapshot>;
     subscriptionSnapshot: SubscriptionSnapshot;
 }
 
 export class Detector {
 
     private detectorRecords_: Map<string, DetectorRecord>;
-    private snapshotPlugin_: SnapshotPlugin | null;
+    private snapshotPlugin_: SnapshotPlugin | undefined;
 
-    constructor(snapshotPlugin: SnapshotPlugin | null) {
+    constructor(snapshotPlugin: SnapshotPlugin | undefined) {
 
         this.detectorRecords_ = new Map<string, DetectorRecord>();
         this.snapshotPlugin_ = snapshotPlugin;
     }
 
-    detect(id: string): Detected | null {
+    detect(id: string): Detected | undefined {
 
         const { detectorRecords_, snapshotPlugin_ } = this;
 
         if (!snapshotPlugin_) {
             /*tslint:disable-next-line:no-console*/
             console.warn("Snapshotting is not enabled.");
-            return null;
+            return undefined;
         }
 
         let detectorRecord = detectorRecords_.get(id);
@@ -71,19 +71,19 @@ export class Detector {
             detectorRecord.snapshotRecords.shift();
         }
         if (detectorRecord.snapshotRecords.length < 2) {
-            return null;
+            return undefined;
         }
 
         const [previous, current] = detectorRecord.snapshotRecords;
         return this.compare_(id, previous, current);
     }
 
-    private compare_(id: string, previous: SnapshotRecord, current: SnapshotRecord): Detected | null {
+    private compare_(id: string, previous: SnapshotRecord, current: SnapshotRecord): Detected | undefined {
 
         const subscriptions: SubscriptionRecord[] = [];
         const unsubscriptions: SubscriptionRecord[] = [];
-        const mergeSubscriptions: SubscriptionSnapshot[] = [];
-        const mergeUnsubscriptions: SubscriptionSnapshot[] = [];
+        const flatteningSubscriptions: SubscriptionSnapshot[] = [];
+        const flatteningUnsubscriptions: SubscriptionSnapshot[] = [];
 
         const { rootSubscriptions: previousSubscriptions } = previous;
         const { rootSubscriptions: currentSubscriptions } = current;
@@ -99,17 +99,17 @@ export class Detector {
             const previous = previousSubscriptions.get(key);
             if (previous) {
 
-                const { merges: previousMerges } = previous;
-                const { merges: currentMerges } = current;
+                const { flattenings: previousFlattenings } = previous;
+                const { flattenings: currentFlattenings } = current;
 
-                previousMerges.forEach((merge, key) => {
-                    if (!currentMerges.has(key)) {
-                        mergeUnsubscriptions.push(merge);
+                previousFlattenings.forEach((flattening, key) => {
+                    if (!currentFlattenings.has(key)) {
+                        flatteningUnsubscriptions.push(flattening);
                     }
                 });
-                currentMerges.forEach((merge, key) => {
-                    if (!previousMerges.has(key)) {
-                        mergeSubscriptions.push(merge);
+                currentFlattenings.forEach((flattening, key) => {
+                    if (!previousFlattenings.has(key)) {
+                        flatteningSubscriptions.push(flattening);
                     }
                 });
             } else {
@@ -118,35 +118,35 @@ export class Detector {
         });
 
         if (
-            mergeSubscriptions.length === 0 &&
-            mergeUnsubscriptions.length === 0 &&
+            flatteningSubscriptions.length === 0 &&
+            flatteningUnsubscriptions.length === 0 &&
             subscriptions.length === 0 &&
             unsubscriptions.length === 0
         ) {
-            return null;
+            return undefined;
         }
 
         return {
-            mergeSubscriptions,
-            mergeUnsubscriptions,
+            flatteningSubscriptions,
+            flatteningUnsubscriptions,
             subscriptions: subscriptions.map((s) => s.subscriptionSnapshot),
             unsubscriptions: unsubscriptions.map((s) => s.subscriptionSnapshot)
         };
     }
 
-    private findMergedSubscriptions_(
+    private findFlatteningSubscriptions_(
         snapshot: Snapshot,
         subscriptionRecord: SubscriptionRecord
     ): void {
 
-        const { merges, subscriptionSnapshot } = subscriptionRecord;
+        const { flattenings, subscriptionSnapshot } = subscriptionRecord;
 
         snapshot.subscriptions.forEach((s) => {
             if (s.rootSink === subscriptionSnapshot) {
-                s.merges.forEach((m) => {
-                    const { subscription } = m;
+                s.flattenings.forEach((f) => {
+                    const { subscription } = f;
                     if (!subscription.closed) {
-                        merges.set(subscription, m);
+                        flattenings.set(subscription, f);
                     }
                 });
             }
@@ -159,18 +159,16 @@ export class Detector {
     ): void {
 
         snapshot.observables.forEach((observableSnapshot) => {
-            observableSnapshot.subscribers.forEach((subscriberSnapshot) => {
-                subscriberSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
-                    const { complete, error, sink, subscription } = subscriptionSnapshot;
-                    if (!complete && !error && !sink && !subscription.closed) {
-                        const subscriptionRecord = {
-                            merges: new Map<Subscription, SubscriptionSnapshot>(),
-                            subscriptionSnapshot
-                        };
-                        this.findMergedSubscriptions_(snapshot, subscriptionRecord);
-                        rootSubscriptions.set(subscription, subscriptionRecord);
-                    }
-                });
+            observableSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
+                const { complete, error, sink, subscription } = subscriptionSnapshot;
+                if (!complete && !error && !sink && !subscription.closed) {
+                    const subscriptionRecord = {
+                        flattenings: new Map<Subscription, SubscriptionSnapshot>(),
+                        subscriptionSnapshot
+                    };
+                    this.findFlatteningSubscriptions_(snapshot, subscriptionRecord);
+                    rootSubscriptions.set(subscription, subscriptionRecord);
+                }
             });
         });
     }

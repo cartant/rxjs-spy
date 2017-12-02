@@ -7,28 +7,28 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { Match, matches } from "../match";
-import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
+import { Match, matches, toString as matchToString } from "../match";
+import { BasePlugin, Notification } from "./plugin";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 export class DebugPlugin extends BasePlugin {
 
     private notifications_: Notification[];
-    private matcher_: (observable: Observable<any>, notification: Notification) => boolean;
+    private matcher_: (ref: SubscriberRef, notification: Notification) => boolean;
 
     constructor(match: Match, notifications: Notification[]) {
 
-        super();
+        super(`debug(${matchToString(match)})`);
 
         this.notifications_ = notifications;
-        this.matcher_ = (observable: Observable<any>, notification: Notification) => matches(observable, match) && (this.notifications_.indexOf(notification) !== -1);
+        this.matcher_ = (ref: SubscriberRef, notification: Notification) => matches(ref, match) && (this.notifications_.indexOf(notification) !== -1);
     }
 
     beforeComplete(ref: SubscriptionRef): void {
 
         const { matcher_ } = this;
-        const { observable } = ref;
 
-        if (matcher_(observable, "complete")) {
+        if (matcher_(ref, "complete")) {
             debugger;
         }
     }
@@ -36,9 +36,8 @@ export class DebugPlugin extends BasePlugin {
     beforeError(ref: SubscriptionRef, error: any): void {
 
         const { matcher_ } = this;
-        const { observable } = ref;
 
-        if (matcher_(observable, "error")) {
+        if (matcher_(ref, "error")) {
             debugger;
         }
     }
@@ -46,9 +45,8 @@ export class DebugPlugin extends BasePlugin {
     beforeNext(ref: SubscriptionRef, value: any): void {
 
         const { matcher_ } = this;
-        const { observable } = ref;
 
-        if (matcher_(observable, "next")) {
+        if (matcher_(ref, "next")) {
             debugger;
         }
     }
@@ -56,9 +54,8 @@ export class DebugPlugin extends BasePlugin {
     beforeSubscribe(ref: SubscriberRef): void {
 
         const { matcher_ } = this;
-        const { observable } = ref;
 
-        if (matcher_(observable, "subscribe")) {
+        if (matcher_(ref, "subscribe")) {
             debugger;
         }
     }
@@ -66,9 +63,8 @@ export class DebugPlugin extends BasePlugin {
     beforeUnsubscribe(ref: SubscriptionRef): void {
 
         const { matcher_ } = this;
-        const { observable } = ref;
 
-        if (matcher_(observable, "unsubscribe")) {
+        if (matcher_(ref, "unsubscribe")) {
             debugger;
         }
     }

@@ -6,35 +6,49 @@
 
 import { Notification } from "rxjs/Notification";
 import { Observable } from "rxjs/Observable";
+import { dematerialize } from "rxjs/operator/dematerialize";
+import { materialize } from "rxjs/operator/materialize";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, SubscriptionRef } from "./plugin";
-import { subscribeWithoutSpy } from "../spy";
+import { BasePlugin } from "./plugin";
+import { Spy, Teardown } from "../spy-interface";
+import { SubscriptionRef } from "../subscription-ref";
 
-import "rxjs/add/operator/dematerialize";
-import "rxjs/add/operator/materialize";
+export interface DeckStats {
+    notifications: number;
+    paused: boolean;
+}
 
 interface State {
     notifications_: Notification<any>[];
     subject_: Subject<Notification<any>>;
-    subscription_: Subscription | null;
-    tag_: string | null;
+    subscription_: Subscription | undefined;
+    tag_: string | undefined;
 }
 
 export class Deck {
 
-    public teardown: () => void;
+    public teardown: Teardown;
 
     private match_: Match;
     private paused_ = true;
+    private spy_: Spy;
     private states_ = new Map<Observable<any>, State>();
+    private stats_: Subject<DeckStats>;
 
-    constructor(match: Match) {
+    constructor(spy: Spy, match: Match) {
 
         this.match_ = match;
+        this.spy_ = spy;
+        this.stats_ = new Subject<DeckStats>();
+    }
+
+    get stats(): Observable<DeckStats> {
+
+        return this.stats_.asObservable();
     }
 
     get paused(): boolean {
@@ -47,6 +61,7 @@ export class Deck {
         this.states_.forEach((state) => {
             state.notifications_ = state.notifications_.filter((notification) => !predicate(notification));
         });
+        this.broadcast_();
     }
 
     log(partialLogger: PartialLogger = defaultLogger): void {
@@ -66,6 +81,7 @@ export class Deck {
     pause(): void {
 
         this.paused_ = true;
+        this.broadcast_();
     }
 
     resume(): void {
@@ -76,6 +92,7 @@ export class Deck {
             }
         });
         this.paused_ = false;
+        this.broadcast_();
     }
 
     select(ref: SubscriptionRef): (source: Observable<any>) => Observable<any> {
@@ -91,22 +108,25 @@ export class Deck {
                 state = {
                     notifications_: [],
                     subject_: new Subject<Notification<any>>(),
-                    subscription_: null,
+                    subscription_: undefined,
                     tag_: read(observable)
                 };
                 this.states_.set(observable, state);
             }
 
-            state.subscription_ = subscribeWithoutSpy.call(source.materialize(), {
+            state.subscription_ = this.spy_.ignore(() => materialize.call(source).subscribe({
                 next: (notification: any) => {
                     if (this.paused_) {
                         state!.notifications_.push(notification);
                     } else {
                         state!.subject_.next(notification);
                     }
+                    this.broadcast_();
                 }
-            });
-            return state.subject_.asObservable().dematerialize();
+            }));
+            this.broadcast_();
+
+            return dematerialize.call(state.subject_.asObservable());
         };
     }
 
@@ -117,6 +137,7 @@ export class Deck {
                 state.notifications_.shift();
             }
         });
+        this.broadcast_();
     }
 
     step(): void {
@@ -126,15 +147,29 @@ export class Deck {
                 state.subject_.next(state.notifications_.shift());
             }
         });
+        this.broadcast_();
     }
 
     unsubscribe(): void {
-
         this.states_.forEach((state) => {
             if (state.subscription_) {
                 state.subscription_.unsubscribe();
-                state.subscription_ = null;
+                state.subscription_ = undefined;
             }
+        });
+        this.broadcast_();
+    }
+
+    private broadcast_(): void {
+
+        const { paused_, states_, stats_ } = this;
+
+        let notifications = 0;
+        states_.forEach((state) => notifications += state.notifications_.length);
+
+        stats_.next({
+            notifications,
+            paused: paused_
         });
     }
 }
@@ -144,11 +179,11 @@ export class PausePlugin extends BasePlugin {
     private match_: Match;
     private deck_: Deck;
 
-    constructor(match: Match) {
+    constructor(spy: Spy, match: Match) {
 
-        super();
+        super(`pause(${matchToString(match)})`);
 
-        this.deck_ = new Deck(match);
+        this.deck_ = new Deck(spy, match);
         this.match_ = match;
     }
 
@@ -164,15 +199,14 @@ export class PausePlugin extends BasePlugin {
         return match_;
     }
 
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | null {
+    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { deck_, match_ } = this;
-        const { observable } = ref;
 
-        if (matches(observable, match_)) {
+        if (matches(ref, match_)) {
             return deck_.select(ref);
         }
-        return null;
+        return undefined;
     }
 
     teardown(): void {

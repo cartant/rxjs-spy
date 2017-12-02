@@ -9,9 +9,11 @@ import { Subscriber } from "rxjs/Subscriber";
 import { getGraphRef } from "./graph-plugin";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, Notification, SubscriberRef, SubscriptionRef } from "./plugin";
+import { BasePlugin, Notification } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
-import { getStackTrace } from "./stack-trace-plugin";
+import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { inferType } from "../util";
 
 export class LogPlugin extends BasePlugin {
 
@@ -20,7 +22,7 @@ export class LogPlugin extends BasePlugin {
 
     constructor(match: Match, partialLogger: PartialLogger = defaultLogger) {
 
-        super();
+        super(`log(${matchToString(match)})`);
 
         this.logger_ = toLogger(partialLogger);
         this.match_ = match;
@@ -60,27 +62,34 @@ export class LogPlugin extends BasePlugin {
         const { logger_, match_ } = this;
         const { observable, subscriber } = ref;
 
-        if (matches(observable, match_)) {
+        if (matches(ref, match_)) {
+
             const tag = read(observable);
+            const type = inferType(observable);
             const matching = (typeof match_ === "string") ? "" : `; matching ${matchToString(match_)}`;
+            const group = tag ?
+                `Tag = ${tag}; notification = ${notification}${matching}` :
+                `Type = ${type}; notification = ${notification}${matching}`;
+
             switch (notification) {
             case "error":
-                logger_.group(`Tag = ${tag}; notification = ${notification}${matching}`);
+                logger_.group(group);
                 logger_.error("Error =", param);
                 break;
             case "next":
-                logger_.group(`Tag = ${tag}; notification = ${notification}${matching}`);
+                logger_.group(group);
                 logger_.log("Value =", param);
                 break;
             default:
-                logger_.groupCollapsed(`Tag = ${tag}; notification = ${notification}${matching}`);
+                logger_.groupCollapsed(group);
                 break;
             }
 
             const graphRef = getGraphRef(ref);
             const snapshotRef = getSnapshotRef(ref);
+            const stackTraceRef = getStackTraceRef(ref);
 
-            if (graphRef || snapshotRef) {
+            if ((graphRef && stackTraceRef) || snapshotRef) {
                 logger_.groupCollapsed("Subscriber");
                 if (snapshotRef) {
                     const { values, valuesFlushed } = snapshotRef;
@@ -89,7 +98,7 @@ export class LogPlugin extends BasePlugin {
                         logger_.log("Last value =", values[values.length - 1].value);
                     }
                 }
-                if (graphRef) {
+                if (graphRef && stackTraceRef) {
                     logger_.groupCollapsed("Subscription");
                     const { rootSink } = graphRef;
                     logger_.log("Root subscribe", rootSink ? getStackTrace(rootSink) : getStackTrace(ref));

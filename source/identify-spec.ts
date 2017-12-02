@@ -14,7 +14,7 @@ import "rxjs/add/operator/mapTo";
 
 describe("identify", () => {
 
-    it("should identify observables", () => {
+    it("should identify objects", () => {
 
         const source = Observable.interval(1000);
         const mapped = source.mapTo(0);
@@ -22,8 +22,8 @@ describe("identify", () => {
         const sourceId = identify(source);
         const mappedId = identify(mapped);
 
-        expect(sourceId).to.be.a("number");
-        expect(mappedId).to.be.a("number");
+        expect(sourceId).to.be.a("string");
+        expect(mappedId).to.be.a("string");
         expect(sourceId).to.not.equal(0);
         expect(mappedId).to.not.equal(0);
         expect(sourceId).to.not.equal(mappedId);

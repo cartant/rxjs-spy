@@ -10,7 +10,8 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { GraphPlugin } from "./graph-plugin";
 import { StatsPlugin } from "./stats-plugin";
-import { spy } from "../spy";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 
 import "rxjs/add/observable/never";
 import "rxjs/add/observable/timer";
@@ -19,20 +20,21 @@ import "rxjs/add/operator/switchMap";
 
 describe("StatsPlugin", () => {
 
+    let spy: Spy;
     let statsPlugin: StatsPlugin;
-    let teardown: () => void;
 
     afterEach(() => {
 
-        if (teardown) {
-            teardown();
+        if (spy) {
+            spy.teardown();
         }
     });
 
     beforeEach(() => {
 
-        statsPlugin = new StatsPlugin();
-        teardown = spy({ plugins: [new GraphPlugin({ keptDuration: -1 }), statsPlugin], warning: false });
+        spy = create({ defaultPlugins: false, warning: false });
+        statsPlugin = new StatsPlugin(spy);
+        spy.plug(new GraphPlugin({ keptDuration: -1 }), statsPlugin);
     });
 
     it("should count subscribes/unsubscribes", () => {
@@ -84,7 +86,7 @@ describe("StatsPlugin", () => {
         expect(stats.unsubscribes).to.equal(2);
     });
 
-    it("should count merged subscribes", () => {
+    it("should count flattened subscribes", () => {
 
         const subject = new Subject<number>();
         const mapped = subject.switchMap(value => Observable.never<number>());
@@ -92,7 +94,7 @@ describe("StatsPlugin", () => {
         let stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(0);
         expect(stats.rootSubscribes).to.equal(0);
-        expect(stats.mergedSubscribes).to.equal(0);
+        expect(stats.flattenedSubscribes).to.equal(0);
         expect(stats.unsubscribes).to.equal(0);
 
         const subscription = mapped.subscribe();
@@ -100,7 +102,7 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(2);
         expect(stats.rootSubscribes).to.equal(1);
-        expect(stats.mergedSubscribes).to.equal(0);
+        expect(stats.flattenedSubscribes).to.equal(0);
         expect(stats.unsubscribes).to.equal(0);
 
         subject.next(0);
@@ -108,7 +110,7 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(3);
         expect(stats.rootSubscribes).to.equal(1);
-        expect(stats.mergedSubscribes).to.equal(1);
+        expect(stats.flattenedSubscribes).to.equal(1);
         expect(stats.unsubscribes).to.equal(0);
 
         subscription.unsubscribe();
@@ -116,7 +118,7 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(3);
         expect(stats.rootSubscribes).to.equal(1);
-        expect(stats.mergedSubscribes).to.equal(1);
+        expect(stats.flattenedSubscribes).to.equal(1);
         expect(stats.unsubscribes).to.equal(3);
     });
 
