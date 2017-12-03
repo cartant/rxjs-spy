@@ -272,7 +272,7 @@ export class SpyCore implements Spy {
                 logger.error("Error =", error);
             }
             if (unsubscribed) {
-                logger.error("Unsubscribed =", true);
+                logger.log("Unsubscribed =", true);
             }
             logger.log("Root subscribe", rootSink ? rootSink.stackTrace : stackTrace);
         }
