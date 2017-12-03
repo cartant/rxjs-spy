@@ -52,6 +52,8 @@ export class SpyCore implements Spy {
     constructor(options: {
         [key: string]: any,
         defaultLogger?: PartialLogger,
+        defaultPlugins?: boolean,
+        devTools?: boolean,
         plugins?: Plugin[],
         warning?: boolean
     } = {}) {
@@ -75,9 +77,11 @@ export class SpyCore implements Spy {
                 new StackTracePlugin(options as { [key: string]: any }),
                 new GraphPlugin(options as { [key: string]: any }),
                 new SnapshotPlugin(this, options as { [key: string]: any }),
-                new StatsPlugin(this),
-                new DevToolsPlugin(this)
+                new StatsPlugin(this)
             ];
+            if (options.devTools !==  false) {
+                this.plugins_.push(new DevToolsPlugin(this));
+            }
         }
         this.pluginsSubject_ = new BehaviorSubject(this.plugins_);
         this.tick_ = 0;
