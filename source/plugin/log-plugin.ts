@@ -19,6 +19,7 @@ export class LogPlugin extends BasePlugin {
 
     private logger_: Logger;
     private match_: Match;
+    private verbose_ = false;
 
     constructor(match: Match, partialLogger: PartialLogger = defaultLogger) {
 
@@ -59,7 +60,7 @@ export class LogPlugin extends BasePlugin {
         param?: any
     ): void {
 
-        const { logger_, match_ } = this;
+        const { logger_, match_, verbose_ } = this;
         const { observable, subscriber } = ref;
 
         if (matches(ref, match_)) {
@@ -67,47 +68,64 @@ export class LogPlugin extends BasePlugin {
             const tag = read(observable);
             const type = inferType(observable);
             const matching = (typeof match_ === "string") ? "" : `; matching ${matchToString(match_)}`;
-            const group = tag ?
+            const description = tag ?
                 `Tag = ${tag}; notification = ${notification}${matching}` :
                 `Type = ${type}; notification = ${notification}${matching}`;
 
-            switch (notification) {
-            case "error":
-                logger_.group(group);
-                logger_.error("Error =", param);
-                break;
-            case "next":
-                logger_.group(group);
-                logger_.log("Value =", param);
-                break;
-            default:
-                logger_.groupCollapsed(group);
-                break;
-            }
+            if (verbose_) {
 
-            const graphRef = getGraphRef(ref);
-            const snapshotRef = getSnapshotRef(ref);
-            const stackTraceRef = getStackTraceRef(ref);
-
-            if ((graphRef && stackTraceRef) || snapshotRef) {
-                logger_.groupCollapsed("Subscriber");
-                if (snapshotRef) {
-                    const { values, valuesFlushed } = snapshotRef;
-                    logger_.log("Value count =", values.length + valuesFlushed);
-                    if (values.length > 0) {
-                        logger_.log("Last value =", values[values.length - 1].value);
-                    }
+                switch (notification) {
+                case "error":
+                    logger_.group(description);
+                    logger_.error("Error =", param);
+                    break;
+                case "next":
+                    logger_.group(description);
+                    logger_.log("Value =", param);
+                    break;
+                default:
+                    logger_.groupCollapsed(description);
+                    break;
                 }
-                if (graphRef && stackTraceRef) {
-                    logger_.groupCollapsed("Subscription");
-                    const { rootSink } = graphRef;
-                    logger_.log("Root subscribe", rootSink ? getStackTrace(rootSink) : getStackTrace(ref));
+
+                const graphRef = getGraphRef(ref);
+                const snapshotRef = getSnapshotRef(ref);
+                const stackTraceRef = getStackTraceRef(ref);
+
+                if ((graphRef && stackTraceRef) || snapshotRef) {
+                    logger_.groupCollapsed("Subscriber");
+                    if (snapshotRef) {
+                        const { values, valuesFlushed } = snapshotRef;
+                        logger_.log("Value count =", values.length + valuesFlushed);
+                        if (values.length > 0) {
+                            logger_.log("Last value =", values[values.length - 1].value);
+                        }
+                    }
+                    if (graphRef && stackTraceRef) {
+                        logger_.groupCollapsed("Subscription");
+                        const { rootSink } = graphRef;
+                        logger_.log("Root subscribe", rootSink ? getStackTrace(rootSink) : getStackTrace(ref));
+                        logger_.groupEnd();
+                    }
                     logger_.groupEnd();
                 }
-                logger_.groupEnd();
-            }
 
-            logger_.groupEnd();
+                logger_.groupEnd();
+
+            } else {
+
+                switch (notification) {
+                case "error":
+                    logger_.error(`${description}; error =`, param);
+                    break;
+                case "next":
+                    logger_.log(`${description}; value =`, param);
+                    break;
+                default:
+                    logger_.log(description);
+                    break;
+                }
+            }
         }
     }
 }

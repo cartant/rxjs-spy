@@ -54,8 +54,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
-            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next; value =", "alice"]);
 
             calls = [];
 
@@ -74,8 +73,7 @@ describe("LogPlugin", () => {
 
             subject.next(null);
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
-            expect(calls[1]).to.deep.equal(["  Value =", null]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next; value =", null]);
 
             subscription.unsubscribe();
         });
@@ -90,8 +88,7 @@ describe("LogPlugin", () => {
 
             subject.next(undefined);
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
-            expect(calls[1]).to.deep.equal(["  Value =", undefined]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next; value =", undefined]);
 
             subscription.unsubscribe();
         });
@@ -124,8 +121,7 @@ describe("LogPlugin", () => {
             const error = new Error("Boom!");
             subject.error(error);
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; notification = error"]);
-            expect(calls[1]).to.deep.equal(["  Error =", error]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = error; error =", error]);
         });
 
         it("should ignore untagged observables", () => {
@@ -171,8 +167,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next"]);
-            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next; value =", "alice"]);
         });
 
         it("should match subscriber ids", () => {
@@ -189,8 +184,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next"]);
-            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next; value =", "alice"]);
         });
 
         it("should match subscription ids", () => {
@@ -207,8 +201,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next"]);
-            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next; value =", "alice"]);
         });
     });
 });

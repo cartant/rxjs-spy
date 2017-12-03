@@ -87,8 +87,7 @@ describe("spy", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Tag = people; notification = next"]);
-            expect(calls[1]).to.deep.equal(["  Value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next; value =", "alice"]);
 
             calls = [];
 
