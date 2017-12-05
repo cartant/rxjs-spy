@@ -258,7 +258,6 @@ export class DevToolsPlugin extends BasePlugin {
                 const { connection_ } = this;
                 if (connection_) {
                     connection_.post({
-                        broadcastType: "batch",
                         messageType: MESSAGE_BATCH,
                         messages: this.batchQueue_
                     });
