@@ -26,7 +26,7 @@
     "mocha": "^4.0.0",
     "puppeteer": "^0.13.0",
     "rimraf": "^2.6.1",
-    "rxjs": "5.5.2",
+    "rxjs": "5.5.4",
     "rxjs-tslint-rules": "^3.0.0",
     "sinon": "^4.0.0",
     "ts-loader": "^3.0.4",
