@@ -12,10 +12,11 @@ import { filter } from "rxjs/operator/filter";
 import { map } from "rxjs/operator/map";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { EXTENSION_KEY, MESSAGE_BROADCAST, MESSAGE_RESPONSE } from "../devtools/constants";
+import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_BATCH, MESSAGE_BROADCAST, MESSAGE_RESPONSE } from "../devtools/constants";
 import { isPostRequest } from "../devtools/guards";
 
 import {
+    Batch,
     Broadcast,
     Connection,
     DeckStats as DeckStatsPayload,
@@ -41,7 +42,7 @@ import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 
-interface MessageRef {
+interface NotificationRef {
     error?: any;
     notification: Notification;
     prefix: "after" | "before";
@@ -58,9 +59,12 @@ interface PluginRecord {
 
 export class DevToolsPlugin extends BasePlugin {
 
+    private batchQueue_: Message[];
+    private batchTimeoutId_: any;
     private connection_: Connection | undefined;
     private posts_: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
+    private resolveQueue_: { notification: NotificationPayload, resolved: boolean }[];
     private responses_: Observable<Promise<Response>>;
     private spy_: Spy;
     private subscription_: Subscription;
@@ -72,8 +76,10 @@ export class DevToolsPlugin extends BasePlugin {
         if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
 
             const extension = window[EXTENSION_KEY] as Extension;
+            this.batchQueue_ = [];
             this.connection_ = extension.connect();
             this.plugins_ = new Map<string, PluginRecord>();
+            this.resolveQueue_ = [];
             this.spy_ = spy;
 
             this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
@@ -99,13 +105,11 @@ export class DevToolsPlugin extends BasePlugin {
                     const plugin = new PausePlugin(this.spy_, request["spyId"]);
                     this.recordPlugin_(request["spyId"], request.postId, plugin);
                     this.spy_.ignore(() => plugin.deck.stats.subscribe(stats => {
-                        if (this.connection_) {
-                            this.connection_.post({
-                                broadcastType: "deck-stats",
-                                messageType: MESSAGE_BROADCAST,
-                                stats: toStats(request["spyId"], stats)
-                            });
-                        }
+                        this.batchMessage_({
+                            broadcastType: "deck-stats",
+                            messageType: MESSAGE_BROADCAST,
+                            stats: toStats(request["spyId"], stats)
+                        });
                     }));
                     response["pluginId"] = request.postId;
                     break;
@@ -163,7 +167,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     afterSubscribe(ref: SubscriptionRef): void {
 
-        this.postMessage_({
+        this.resolveNotification_({
             notification: "subscribe",
             prefix: "after",
             ref
@@ -172,7 +176,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     afterUnsubscribe(ref: SubscriptionRef): void {
 
-        this.postMessage_({
+        this.resolveNotification_({
             notification: "unsubscribe",
             prefix: "after",
             ref
@@ -181,7 +185,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeComplete(ref: SubscriptionRef): void {
 
-        this.postMessage_({
+        this.resolveNotification_({
             notification: "complete",
             prefix: "before",
             ref
@@ -190,7 +194,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeError(ref: SubscriptionRef, error: any): void {
 
-        this.postMessage_({
+        this.resolveNotification_({
             error,
             notification: "error",
             prefix: "before",
@@ -200,7 +204,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        this.postMessage_({
+        this.resolveNotification_({
             notification: "next",
             prefix: "before",
             ref,
@@ -210,7 +214,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        this.postMessage_({
+        this.resolveNotification_({
             notification: "subscribe",
             prefix: "before",
             ref
@@ -219,7 +223,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeUnsubscribe(ref: SubscriptionRef): void {
 
-        this.postMessage_({
+        this.resolveNotification_({
             notification: "unsubscribe",
             prefix: "before",
             ref
@@ -228,6 +232,10 @@ export class DevToolsPlugin extends BasePlugin {
 
     teardown(): void {
 
+        if (this.batchTimeoutId_ !== undefined) {
+            clearTimeout(this.batchTimeoutId_);
+            this.batchTimeoutId_ = undefined;
+        }
         if (this.connection_) {
             this.connection_.disconnect();
             this.connection_ = undefined;
@@ -235,19 +243,29 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private postMessage_(messageRef: MessageRef): void {
+    private batchMessage_(message: Message): void {
 
-        const { connection_ } = this;
-        if (connection_) {
+        // If there are numerous, high-frequency observables, the connection
+        // can become overloaded. Post the message in batches, at a sensible
+        // interval.
 
-            const post = () => connection_.post(this.toMessage_(messageRef));
-            const stackTraceRef = getStackTraceRef(messageRef.ref);
+        if (this.batchTimeoutId_ !== undefined) {
+            this.batchQueue_.push(message);
+        } else {
+            this.batchQueue_ = [message];
+            this.batchTimeoutId_ = setTimeout(() => {
 
-            if (stackTraceRef) {
-                stackTraceRef.sourceMapsResolved.then(post);
-            } else {
-                post();
-            }
+                const { connection_ } = this;
+                if (connection_) {
+                    connection_.post({
+                        broadcastType: "batch",
+                        messageType: MESSAGE_BATCH,
+                        messages: this.batchQueue_
+                    });
+                    this.batchTimeoutId_ = undefined;
+                    this.batchQueue_ = [];
+                }
+            }, BATCH_MILLISECONDS);
         }
     }
 
@@ -255,6 +273,41 @@ export class DevToolsPlugin extends BasePlugin {
 
         const teardown = this.spy_.plug(plugin);
         this.plugins_.set(pluginId, { plugin, pluginId, spyId, teardown });
+    }
+
+    private resolveNotification_(notificationRef: NotificationRef): void {
+
+        const { connection_, resolveQueue_ } = this;
+        if (connection_) {
+
+            const notification = this.toNotification_(notificationRef);
+            const stackTraceRef = getStackTraceRef(notificationRef.ref);
+
+            // If source maps are enabled queue notifications until their source
+            // maps are resolved and ensure they are batched/broadcast in order
+            // of emission and not order of source map resolution.
+
+            if (stackTraceRef) {
+                const queued = { notification, resolved: false };
+                resolveQueue_.push(queued);
+                stackTraceRef.sourceMapsResolved.then(() => {
+                    queued.resolved = true;
+                    while (resolveQueue_.length && resolveQueue_[0].resolved) {
+                        this.batchMessage_({
+                            broadcastType: "notification",
+                            messageType: MESSAGE_BROADCAST,
+                            notification: resolveQueue_.shift()!.notification
+                        });
+                    }
+                });
+            } else {
+                this.batchMessage_({
+                    broadcastType: "notification",
+                    messageType: MESSAGE_BROADCAST,
+                    notification
+                });
+            }
+        }
     }
 
     private teardownPlugin_(pluginId: string): void {
@@ -267,12 +320,12 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private toMessage_(messageRef: MessageRef): Broadcast {
+    private toNotification_(notificationRef: NotificationRef): NotificationPayload {
 
-        const { error, notification, prefix, ref, value } = messageRef;
+        const { error, notification, prefix, ref, value } = notificationRef;
         const { observable, subscriber } = ref;
 
-        const payload: NotificationPayload = {
+        return {
             id: identify({}),
             observable: {
                 id: identify(observable),
@@ -293,12 +346,6 @@ export class DevToolsPlugin extends BasePlugin {
             timestamp: Date.now(),
             type: `${prefix}-${notification}`,
             value: (value === undefined) ? undefined : toValue(value)
-        };
-
-        return {
-            broadcastType: "notification",
-            messageType: MESSAGE_BROADCAST,
-            notification: payload
         };
     }
 }

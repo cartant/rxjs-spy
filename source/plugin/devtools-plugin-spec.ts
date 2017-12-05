@@ -8,7 +8,7 @@
 import { expect } from "chai";
 import { Subject } from "rxjs/Subject";
 import * as sinon from "sinon";
-import { EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools/constants";
+import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools/constants";
 import { Connection, Extension } from "../devtools/interfaces";
 import { DevToolsPlugin } from "./devtools-plugin";
 import { GraphPlugin } from "./graph-plugin";
@@ -76,8 +76,12 @@ if (typeof window !== "undefined") {
                 .then(waitAfterResolved)
                 .then(() => {
 
-                    expect(mockConnection.post).to.have.property("callCount", 6);
-                    expect(mockConnection.post.args.map(([post]: [any]) => post.notification.type)).to.deep.equal([
+                    expect(mockConnection.post).to.have.property("callCount", 1);
+
+                    const [args] = mockConnection.post.args;
+                    const [batch] = args;
+                    expect(batch).to.have.property("messages");
+                    expect(batch.messages.map((m: any) => m.notification.type)).to.deep.equal([
                         "before-subscribe",
                         "after-subscribe",
                         "before-next",
@@ -103,19 +107,22 @@ if (typeof window !== "undefined") {
                 .then(waitAfterResolved)
                 .then(() => {
 
-                    expect(mockConnection.post).to.have.property("callCount", 3);
-                    expect(mockConnection.post.args.map(([post]: [any]) => post.notification.type)).to.deep.equal([
+                    expect(mockConnection.post).to.have.property("callCount", 1);
+
+                    const [args] = mockConnection.post.args;
+                    const [batch] = args;
+                    expect(batch).to.have.property("messages");
+                    expect(batch.messages.map((m: any) => m.notification.type)).to.deep.equal([
                         "before-subscribe",
                         "after-subscribe",
                         "before-next"
                     ]);
 
-                    const [,, [message]] = mockConnection.post.args;
-                    expect(message).to.have.property("notification");
-                    expect(message.notification).to.have.property("value");
-                    expect(message.notification.value).to.have.property("json");
-                    expect(message.notification.value.json).to.match(/"name":\s*"alice"/);
-                    expect(message.notification.value.json).to.match(/"employer":\s*"\[Circular\]"/);
+                    const { messages: [,, { notification }] } = batch;
+                    expect(notification).to.have.property("value");
+                    expect(notification.value).to.have.property("json");
+                    expect(notification.value.json).to.match(/"name":\s*"alice"/);
+                    expect(notification.value.json).to.match(/"employer":\s*"\[Circular\]"/);
                 });
         });
 
@@ -270,9 +277,8 @@ if (typeof window !== "undefined") {
 
 function waitAfterResolved(): Promise<void> {
 
-    // Wait for another asychronous promise resolution so that the test is not
-    // dependent upon the notification order - the internal post must occur
-    // before the stub expectations are asserted.
+    // Notifications are posted to the DevTools in batches, so that large
+    // numbers of high-frequency observables won't overload the connection.
 
-    return Promise.resolve();
+    return new Promise((resolve) => setTimeout(resolve, BATCH_MILLISECONDS + 10));
 }

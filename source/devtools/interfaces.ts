@@ -34,6 +34,12 @@ export interface Message {
     messageType: string;
 }
 
+export interface Batch extends Message {
+    [key: string]: any;
+    messages: Message[];
+    messageType: "batch";
+}
+
 export interface Broadcast extends Message {
     [key: string]: any;
     broadcastType: string;

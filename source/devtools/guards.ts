@@ -4,7 +4,11 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Broadcast, Message, Post, Request, Response } from "./interfaces";
+import { Batch, Broadcast, Message, Post, Request, Response } from "./interfaces";
+
+export function isBatch(message: Message): message is Batch {
+    return message.messageType === "batch";
+}
 
 export function isBroadcast(message: Message): message is Broadcast {
     return message.messageType === "broadcast";
