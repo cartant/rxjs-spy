@@ -161,9 +161,9 @@ export class SpyCore implements Spy {
         }
     }
 
-    let(match: Match, select: (source: Observable<any>) => Observable<any>): Teardown {
+    let(match: Match, select: (source: Observable<any>) => Observable<any>, ignoreComplete?: boolean): Teardown {
 
-        return this.plug(new LetPlugin(match, select));
+        return this.plug(new LetPlugin(match, select, ignoreComplete));
     }
 
     log(partialLogger?: PartialLogger): Teardown;

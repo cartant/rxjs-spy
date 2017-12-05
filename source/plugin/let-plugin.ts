@@ -5,6 +5,8 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { merge } from "rxjs/observable/merge";
+import { never } from "rxjs/observable/never";
 import { Subscriber } from "rxjs/Subscriber";
 import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
@@ -15,12 +17,12 @@ export class LetPlugin extends BasePlugin {
     private match_: Match;
     private select_: (source: Observable<any>) => Observable<any>;
 
-    constructor(match: Match, select: (source: Observable<any>) => Observable<any>) {
+    constructor(match: Match, select: (source: Observable<any>) => Observable<any>, ignoreComplete: boolean = false) {
 
         super(`let(${matchToString(match)})`);
 
         this.match_ = match;
-        this.select_ = select;
+        this.select_ = ignoreComplete ? source => merge(never(), select(source)) : select;
     }
 
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
