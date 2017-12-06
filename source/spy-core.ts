@@ -32,7 +32,7 @@ import {
 } from "./plugin";
 
 import { wrap } from "./spy-console";
-import { Ctor, Spy, Teardown } from "./spy-interface";
+import { Ctor, Options, Spy, Teardown } from "./spy-interface";
 import { SubscriberRef, SubscriptionRef } from "./subscription-ref";
 import { isObservable, toSubscriber } from "./util";
 
@@ -74,9 +74,9 @@ export class SpyCore implements Spy {
             this.plugins_ = [];
         } else {
             this.plugins_ = [
-                new StackTracePlugin(options as { [key: string]: any }),
-                new GraphPlugin(options as { [key: string]: any }),
-                new SnapshotPlugin(this, options as { [key: string]: any }),
+                new StackTracePlugin(options as Options),
+                new GraphPlugin(options as Options),
+                new SnapshotPlugin(this, options as Options),
                 new StatsPlugin(this)
             ];
             if (options.devTools !==  false) {
@@ -161,13 +161,13 @@ export class SpyCore implements Spy {
         }
     }
 
-    let(match: Match, select: (source: Observable<any>) => Observable<any>, ignoreComplete?: boolean): Teardown {
+    let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
 
-        return this.plug(new LetPlugin(match, select, ignoreComplete));
+        return this.plug(new LetPlugin(match, select, options));
     }
 
-    log(partialLogger?: PartialLogger): Teardown;
     log(match: Match, partialLogger?: PartialLogger): Teardown;
+    log(partialLogger?: PartialLogger): Teardown;
     log(match: any, partialLogger?: PartialLogger): Teardown {
 
         const anyTagged = /.+/;
@@ -200,8 +200,8 @@ export class SpyCore implements Spy {
         return () => this.unplug(...plugins);
     }
 
-    show(partialLogger?: PartialLogger): void;
     show(match: Match, partialLogger?: PartialLogger): void;
+    show(partialLogger?: PartialLogger): void;
     show(match: any, partialLogger?: PartialLogger): void {
 
         const anyTagged = /.+/;

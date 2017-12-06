@@ -17,12 +17,16 @@ export class LetPlugin extends BasePlugin {
     private match_: Match;
     private select_: (source: Observable<any>) => Observable<any>;
 
-    constructor(match: Match, select: (source: Observable<any>) => Observable<any>, ignoreComplete: boolean = false) {
+    constructor(
+        match: Match,
+        select: (source: Observable<any>) => Observable<any>,
+        { complete = true }: { complete?: boolean } = {}
+    ) {
 
         super(`let(${matchToString(match)})`);
 
         this.match_ = match;
-        this.select_ = ignoreComplete ? source => merge(never(), select(source)) : select;
+        this.select_ = complete ? select : source => merge(never(), select(source));
     }
 
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {

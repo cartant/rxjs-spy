@@ -13,6 +13,10 @@ export interface Ctor<T> {
     new (...args: any[]): T;
 }
 
+export interface Options {
+    [key: string]: any;
+}
+
 export interface Teardown {
     (): void;
 }
@@ -25,13 +29,13 @@ export interface Spy {
     findAll(): Plugin[];
     flush(): void;
     ignore<R>(block: () => R): R;
-    let(match: Match, select: (source: Observable<any>) => Observable<any>): Teardown;
-    log(partialLogger?: PartialLogger): Teardown;
+    let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
     log(match: Match, partialLogger?: PartialLogger): Teardown;
+    log(partialLogger?: PartialLogger): Teardown;
     pause(match: Match): Deck;
     plug(...plugins: Plugin[]): Teardown;
-    show(partialLogger?: PartialLogger): void;
     show(match: Match, partialLogger?: PartialLogger): void;
+    show(partialLogger?: PartialLogger): void;
     stats(partialLogger?: PartialLogger): void;
     teardown(): void;
     unplug(...plugins: Plugin[]): void;

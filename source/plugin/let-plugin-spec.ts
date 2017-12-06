@@ -88,7 +88,7 @@ describe("LetPlugin", () => {
         const subscription = subject.tag("people").subscribe((value) => values.push(value));
 
         const selected = new Subject<string>();
-        spy.plug(new LetPlugin("people", () => Observable.of("bob"), true));
+        spy.plug(new LetPlugin("people", () => Observable.of("bob"), { complete: false }));
 
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);
