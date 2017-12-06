@@ -1,3 +1,38 @@
+<a name="6.0.0"></a>
+## [6.0.0](https://github.com/cartant/rxjs-spy/compare/v5.2.3...v6.0.0) (2017-12-06)
+
+Breaking changes:
+
+* The module API has been replaced with a factory and a class/interface. Instead of calling a `spy` method, call `create` which will return a instance that implements the `Spy` interface.
+* The `plugins` option has been removed and `defaultPlugins: boolean` has been added.
+* The `plugin` and `plugins` methods have changed. When using `defaultPlugins: false`, call `plug` on the spy instance to add one or more plugins.
+* The `name` parameter has been removed from the `plugin`/`plug` method.
+* A read-only `name` property has been added to the `Plugin` interface.
+* The `subscribers` map has been removed from the `observable` snapshot and replaced with a `subscriptions` map.
+* In the snapshots, `merges` has been renamed to `flattenings`.
+* It's no longer possible to undo the entire spy via the console.
+* The console global - `rxSpy` - won't exist until `create` has been called.
+* `undefined` is favoured for return values, etc. rather than `null`.
+
+Fixes:
+
+* When calling `show`, `console.error` is no longer used for the unsubscribed indicator.
+* For memory reasons, raw snapshots, etc. are no longer logged to the console when calling `show` or `log`.
+* For performance reasons, grouping has been removed from `log` messages.
+* Patching of `Observable.prototype` has been removed.
+* The `GraphPlugin` now uses a single `setInterval` when cleaning up unsubscribed subscription refs.
+
+Non-breaking changes:
+
+* Switched to Webpack.
+
+Features:
+
+* When logging, if the observable does not have a tag, its type is logged instead.
+* Add options to the `LetPlugin` so that completions from the selected observable can be ignored.
+* The `DevTools` plugin has bee added (for integration with an almost-ready-for-RC Chrome DevTools extension).
+* It's now possible to match IDs as well as tags (it's used by the DevTools extension).
+
 <a name="5.2.3"></a>
 ## [5.2.3](https://github.com/cartant/rxjs-spy/compare/v5.2.2...v5.2.3) (2017-11-24)
 
