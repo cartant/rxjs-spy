@@ -10,4 +10,4 @@ export { detect } from "./detect";
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugin";
-export { create, create as spy } from "./spy-factory";
+export { create } from "./spy-factory";
