@@ -314,7 +314,7 @@ If snapshotting is enabled, calling `flush` will release excess values and compl
 
 ```ts
 interface Spy {
-  plug(...plugins: Plugin[]): () => Teardown;
+  plug(...plugins: Plugin[]): Teardown;
 }
 ```
 
