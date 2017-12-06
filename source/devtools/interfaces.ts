@@ -17,7 +17,7 @@ export interface DeckStats {
 }
 
 export interface Extension {
-    connect(): Connection;
+    connect(options: { version: string }): Connection;
 }
 
 export interface Graph {

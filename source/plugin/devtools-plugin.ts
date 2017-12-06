@@ -77,7 +77,7 @@ export class DevToolsPlugin extends BasePlugin {
 
             const extension = window[EXTENSION_KEY] as Extension;
             this.batchQueue_ = [];
-            this.connection_ = extension.connect();
+            this.connection_ = extension.connect({ version: spy.version });
             this.plugins_ = new Map<string, PluginRecord>();
             this.resolveQueue_ = [];
             this.spy_ = spy;
