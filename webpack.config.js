@@ -1,3 +1,5 @@
+"use strict";
+
 const path = require("path");
 const UglifyJsWebpackPlugin = require("uglifyjs-webpack-plugin");
 const webpack = require("webpack");
@@ -22,6 +24,7 @@ module.exports = env => {
         filename = "rxjs-spy.umd.js";
         plugins = []
     }
+    plugins.unshift(require("./webpack.define"));
 
     return {
         context: path.join(__dirname, "./"),

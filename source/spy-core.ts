@@ -36,6 +36,7 @@ import { Ctor, Options, Spy, Teardown } from "./spy-interface";
 import { SubscriberRef, SubscriptionRef } from "./subscription-ref";
 import { isObservable, toSubscriber } from "./util";
 
+declare const __RX_SPY_VERSION__: string;
 const observableSubscribe = Observable.prototype.subscribe;
 
 export class SpyCore implements Spy {
@@ -119,6 +120,11 @@ export class SpyCore implements Spy {
     get undos(): Plugin[] {
 
         return [...this.undos_];
+    }
+
+    get version(): string {
+
+        return __RX_SPY_VERSION__;
     }
 
     debug(match: Match, ...notifications: Notification[]): Teardown {

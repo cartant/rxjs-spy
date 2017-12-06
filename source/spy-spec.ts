@@ -392,6 +392,15 @@ describe("spy", () => {
             expect(spy.tick).to.be.above(last);
         });
     });
+
+    describe("version", () => {
+
+        it("should return the package version", () => {
+
+            spy = create({ defaultPlugins: false, ...options });
+            expect(spy).to.have.property("version", require("../package.json").version);
+        });
+    });
 });
 
 function stubPlugin(): Plugin {

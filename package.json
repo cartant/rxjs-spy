@@ -65,12 +65,12 @@
   "resolutions": {},
   "scripts": {
     "dist": "yarn run dist:build && yarn run dist:copy",
-    "dist:build": "yarn run dist:clean && tsc -p tsconfig-dist.json && webpack --config webpack.config.js && webpack --config webpack.config.js --env.production",
+    "dist:build": "yarn run dist:clean && tsc -p tsconfig-dist.json && node scripts/version.js && webpack --config webpack.config.js && webpack --config webpack.config.js --env.production",
     "dist:clean": "rimraf dist && rimraf bundles/rxjs-spy.* && mkdirp bundles",
     "dist:copy": "node scripts/pack.js && cpy bundles/rxjs-spy.* dist/bundles/ && cpy CHANGELOG.md LICENSE README.md dist/",
     "lint": "tslint --project tsconfig.json source/**/*.ts",
     "test": "yarn run lint && yarn run test:build && yarn run test:karma && yarn run test:mocha",
-    "test:build": "yarn run test:clean && tsc -p tsconfig.json && webpack --config webpack.config.test.js",
+    "test:build": "yarn run test:clean && tsc -p tsconfig.json && node scripts/version.js && webpack --config webpack.config.test.js",
     "test:clean": "rimraf build && rimraf bundles/rxjs-spy-test.* && mkdirp bundles",
     "test:karma": "karma start",
     "test:mocha": "mocha build/index-spec.js"

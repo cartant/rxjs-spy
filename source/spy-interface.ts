@@ -23,6 +23,7 @@ export interface Teardown {
 
 export interface Spy {
     readonly tick: number;
+    readonly version: string;
     debug(match: Match, ...notifications: Notification[]): Teardown;
     find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
     findAll<T extends Plugin>(ctor: Ctor<T>): T[];

@@ -1,4 +1,7 @@
+"use strict";
+
 const path = require("path");
+const pkg = require("./package.json");
 const webpack = require("webpack");
 const webpackRxjsExternals = require("webpack-rxjs-externals");
 
@@ -31,7 +34,7 @@ module.exports = env => {
             libraryTarget: "umd",
             path: path.resolve(__dirname, "./bundles")
         },
-        plugins: [],
+        plugins: [require("./webpack.define")],
         resolve: {
             extensions: [".ts", ".js"]
         }
