@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+    <title>rxjs-spy test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <style>
+        body { font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <script src="../node_modules/core-js/client/core.min.js"></script>
+    <script src="../node_modules/rxjs/bundles/Rx.js"></script>
+    <script src="../dist/bundles/rxjs-spy.umd.js"></script>
+    <script>
+
+        RxSpy.create({ sourceMaps: true });
+
+    </script>
+    <script>
+
+        (function () {
+
+            const interval = new Rx.Observable
+                .interval(2000)
+                .tag("interval");
+
+            const subscriber = Rx.Subscriber.create(
+                (value) => {},
+                (error) => {},
+                () => {}
+            );
+            interval.subscribe(subscriber);
+
+            const people = interval
+                .map((value) => {
+                    const names = ["alice", "bob"];
+                    return names[value % names.length];
+                })
+                .tag("people")
+                .subscribe();
+        })();
+
+    </script>
+</body>
+</html>
