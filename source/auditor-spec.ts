@@ -23,7 +23,7 @@ describe("Auditor", () => {
 
     if (typeof window !== "undefined") {
 
-        it("should wait at least the duration before calling a task asynchronously", (callback: Function) => {
+        it.skip("should wait at least the duration before calling a task asynchronously", (callback: Function) => {
 
             const duration = 10;
             const auditor = new Auditor(duration);
@@ -66,7 +66,7 @@ describe("Auditor", () => {
 
     if (typeof window !== "undefined") {
 
-        it("should wait only the required amount of time", (callback: Function) => {
+        it.skip("should wait only the required amount of time", (callback: Function) => {
 
             const duration = 50;
             const auditor = new Auditor(duration);
