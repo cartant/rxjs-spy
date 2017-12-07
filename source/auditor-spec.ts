@@ -21,26 +21,27 @@ describe("Auditor", () => {
         expect(called).to.be.true;
     });
 
-    it("should wait at least the duration before calling a task asynchronously", (callback: Function) => {
+    if (typeof window !== "undefined") {
+
+        it("should wait at least the duration before calling a task asynchronously", (callback: Function) => {
+
+            const duration = 10;
+            const auditor = new Auditor(duration);
+            const since = window.performance.now();
+            const task = () => {
+                expect(window.performance.now() - since).to.be.at.least(duration);
+                callback();
+            };
+
+            auditor.audit("task", task);
+        });
+    }
+
+    it("should audit tasks", (callback: Function) => {
 
         const duration = 10;
         const auditor = new Auditor(duration);
-        const since = Date.now();
-        const task = () => {
-            expect(Date.now() - since).to.be.at.least(duration);
-            callback();
-        };
-
-        auditor.audit("task", task);
-    });
-
-    it("should audit subsequent tasks", (callback: Function) => {
-
-        const duration = 10;
-        const auditor = new Auditor(duration);
-        const since = Date.now();
         const task = (ignored: number) => {
-            expect(Date.now() - since).to.be.at.least(duration);
             expect(ignored).to.equal(1);
             callback();
         };
@@ -53,39 +54,39 @@ describe("Auditor", () => {
 
         const duration = 10;
         const auditor = new Auditor(duration);
-        const since = Date.now();
 
         auditor.audit("task", (ignored: number) => {
             callback(new Error("Should not be called."));
         });
         auditor.audit("task", (ignored: number) => {
-            expect(Date.now() - since).to.be.at.least(duration);
             expect(ignored).to.equal(1);
             callback();
         });
     });
 
-    it("should wait only the required amount of time", (callback: Function) => {
+    if (typeof window !== "undefined") {
 
-        const duration = 50;
-        const auditor = new Auditor(duration);
-        const since = Date.now();
+        it("should wait only the required amount of time", (callback: Function) => {
 
-        auditor.audit("task1", () => {
-            expect(Date.now() - since).to.be.at.least(duration);
+            const duration = 50;
+            const auditor = new Auditor(duration);
+            const since = window.performance.now();
+
+            auditor.audit("task1", () => {
+                expect(window.performance.now() - since).to.be.at.least(duration);
+            });
+            setTimeout(() => auditor.audit("task2", () => {
+                expect(window.performance.now() - since).to.be.at.least(20 + duration);
+                expect(window.performance.now() - since).to.be.below(20 + duration + 10);
+                callback();
+            }), 20);
         });
-        setTimeout(() => auditor.audit("task2", () => {
-            expect(Date.now() - since).to.be.at.least(20 + duration);
-            expect(Date.now() - since).to.be.below(duration + duration);
-            callback();
-        }), 20);
-    });
+    }
 
     it("should call tasks in audited order", (callback: Function) => {
 
         const duration = 50;
         const auditor = new Auditor(duration);
-        const since = Date.now();
         let called1 = false;
         let called2 = false;
 
