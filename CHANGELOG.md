@@ -1,5 +1,5 @@
 <a name="6.0.0"></a>
-## [6.0.0](https://github.com/cartant/rxjs-spy/compare/v5.2.3...v6.0.0) (2017-12-06)
+## [6.0.0](https://github.com/cartant/rxjs-spy/compare/v5.2.3...v6.0.0) (2017-12-07)
 
 Breaking changes:
 
@@ -29,8 +29,8 @@ Non-breaking changes:
 Features:
 
 * When logging, if the observable does not have a tag, its type is logged instead.
-* Add options to the `LetPlugin` so that completions from the selected observable can be ignored.
-* The `DevTools` plugin has bee added (for integration with an almost-ready-for-RC Chrome DevTools extension).
+* Option have been added to the `LetPlugin` so that completions from the selected observable can be ignored - so it's possible to return something like `Observable.of(42)` without having the spied-upon observable complete.
+* The `DevTools` plugin has been added (for integration with an almost-ready-for-RC Chrome DevTools extension).
 * It's now possible to match IDs as well as tags (it's used by the DevTools extension).
 * The output from `show` now includes the observable's 'path' - a string representation of the composed source and operators.
 * A `hide` operator has been added and can be used to ensure a composed observable is hidden from the spy.
