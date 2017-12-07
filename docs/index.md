@@ -130,7 +130,7 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 </script>
 <script src="https://unpkg.com/core-js/client/core.js"></script>
 <script src="https://unpkg.com/rxjs@5/bundles/Rx.js"></script>
-<script src="https://unpkg.com/rxjs-spy@6.0.0-rc.3"></script>
+<script src="https://unpkg.com/rxjs-spy@6.0.0-rc.3/bundles/rxjs-spy.umd.js"></script>
 <script>
 
     var spy = RxSpy.create();
