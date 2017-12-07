@@ -9,6 +9,7 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
+import { Auditor } from "./auditor";
 import { detect, hook } from "./detect";
 import { Detector } from "./detector";
 import { identify } from "./identify";
@@ -43,6 +44,7 @@ export class SpyCore implements Spy {
 
     private static spy_: SpyCore | undefined = undefined;
 
+    private auditor_: Auditor;
     private defaultLogger_: PartialLogger;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
@@ -52,6 +54,7 @@ export class SpyCore implements Spy {
 
     constructor(options: {
         [key: string]: any,
+        audit?: number;
         defaultLogger?: PartialLogger,
         defaultPlugins?: boolean,
         devTools?: boolean,
@@ -70,6 +73,7 @@ export class SpyCore implements Spy {
         SpyCore.spy_ = this;
         Observable.prototype.subscribe = SpyCore.coreSubscribe_;
 
+        this.auditor_ = new Auditor(options.audit || 0);
         this.defaultLogger_ = options.defaultLogger || defaultLogger;
         if (options.defaultPlugins ===  false) {
             this.plugins_ = [];
@@ -110,6 +114,11 @@ export class SpyCore implements Spy {
             SpyCore.spy_ = undefined;
             Observable.prototype.subscribe = observableSubscribe;
         };
+    }
+
+    get auditor(): Auditor {
+
+        return this.auditor_;
     }
 
     get tick(): number {
@@ -184,7 +193,7 @@ export class SpyCore implements Spy {
             match = anyTagged;
         }
 
-        return this.plug(new LogPlugin(match, partialLogger || this.defaultLogger_));
+        return this.plug(new LogPlugin(this, match, partialLogger || this.defaultLogger_));
     }
 
     pause(match: Match): Deck {
@@ -568,35 +577,41 @@ export class SpyCore implements Spy {
 
     private detect_(id: string, detector: Detector): void {
 
-        const detected = detector.detect(id);
-        const logger = toLogger(this.defaultLogger_);
+        const { auditor_, defaultLogger_ } = this;
 
-        if (detected) {
-            logger.group(`Subscription changes detected; id = '${id}'`);
-            detected.subscriptions.forEach((s) => {
-                logSubscription(logger, "Subscription", s);
-            });
-            detected.unsubscriptions.forEach((s) => {
-                logSubscription(logger, "Unsubscription", s);
-            });
-            detected.flatteningSubscriptions.forEach((s) => {
-                logSubscription(logger, "Flattening subscription", s);
-            });
-            detected.flatteningUnsubscriptions.forEach((s) => {
-                logSubscription(logger, "Flattening unsubscription", s);
-            });
-            logger.groupEnd();
-        }
+        auditor_.audit(id, (ignored) => {
 
-        function logSubscription(logger: Logger, name: string, subscription: SubscriptionSnapshot): void {
+            const detected = detector.detect(id);
+            const logger = toLogger(defaultLogger_);
 
-            logger.group(name);
-            logger.log("Root subscribe", subscription.rootSink ?
-                subscription.rootSink.stackTrace :
-                subscription.stackTrace
-            );
-            logger.log("Subscribe", subscription.stackTrace);
-            logger.groupEnd();
-        }
+            if (detected) {
+                const audit = (ignored === 0) ? "" : `; ignored ${ignored}`;
+                logger.group(`Subscription changes detected; id = '${id}'${audit}`);
+                detected.subscriptions.forEach((s) => {
+                    logSubscription(logger, "Subscription", s);
+                });
+                detected.unsubscriptions.forEach((s) => {
+                    logSubscription(logger, "Unsubscription", s);
+                });
+                detected.flatteningSubscriptions.forEach((s) => {
+                    logSubscription(logger, "Flattening subscription", s);
+                });
+                detected.flatteningUnsubscriptions.forEach((s) => {
+                    logSubscription(logger, "Flattening unsubscription", s);
+                });
+                logger.groupEnd();
+            }
+
+            function logSubscription(logger: Logger, name: string, subscription: SubscriptionSnapshot): void {
+
+                logger.group(name);
+                logger.log("Root subscribe", subscription.rootSink ?
+                    subscription.rootSink.stackTrace :
+                    subscription.stackTrace
+                );
+                logger.log("Subscribe", subscription.stackTrace);
+                logger.groupEnd();
+            }
+        });
     }
 }

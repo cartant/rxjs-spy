@@ -95,7 +95,7 @@ export class DevToolsPlugin extends BasePlugin {
                 };
                 switch (request.requestType) {
                 case "log":
-                    this.recordPlugin_(request["spyId"], request.postId, new LogPlugin(request["spyId"]));
+                    this.recordPlugin_(request["spyId"], request.postId, new LogPlugin(this.spy_, request["spyId"]));
                     response["pluginId"] = request.postId;
                     break;
                 case "log-teardown":

@@ -6,6 +6,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { PartialLogger } from "./logger";
+import { Auditor } from "./auditor";
 import { Match } from "./match";
 import { Deck, Notification, Plugin } from "./plugin";
 
@@ -22,6 +23,7 @@ export interface Teardown {
 }
 
 export interface Spy {
+    readonly auditor: Auditor;
     readonly tick: number;
     readonly version: string;
     debug(match: Match, ...notifications: Notification[]): Teardown;

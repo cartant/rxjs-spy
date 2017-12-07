@@ -5,6 +5,7 @@
  */
 
 import "./add/operator/tag-spec";
+import "./auditor-spec";
 import "./detect-spec";
 import "./detector-spec";
 import "./identify-spec";
