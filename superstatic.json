@@ -6,6 +6,6 @@
             "value": "no-cache"
         }]
     }],
-    "redirects": [{ "source": "/", "destination": "/harness/index.html" }],
-    "rewrites": []
+    "redirects": [],
+    "rewrites": [{ "source": "/", "destination": "/harness/index.html" }]
 }
