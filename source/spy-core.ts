@@ -239,6 +239,7 @@ export class SpyCore implements Spy {
                 `Tag = ${observableSnapshot.tag}` :
                 `Type = ${observableSnapshot.type}`
             );
+            logger.log("Path =", observableSnapshot.path);
 
             const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
             logger.group(`${subscriptions.size} subscriber(s)`);
