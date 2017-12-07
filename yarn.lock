@@ -3,8 +3,8 @@
 
 
 "@types/chai@^4.0.0":
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.0.6.tgz#9cb5a7fb7dd83be0cfcaafdbd95a2b5dd351762f"
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.0.8.tgz#d27600e9ba2f371e08695d90a0fe0408d89c7be7"
 
 "@types/circular-json@^0.4.0":
   version "0.4.0"
@@ -15,12 +15,12 @@
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-2.2.44.tgz#1d4a798e53f35212fd5ad4d04050620171cd5b5e"
 
 "@types/node@^8.0.0":
-  version "8.0.53"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.53.tgz#396b35af826fa66aad472c8cb7b8d5e277f4e6d8"
+  version "8.0.56"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.56.tgz#c4652f88d7a677e26ccc16c1485c282ce28f1ce9"
 
 "@types/sinon@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@types/sinon/-/sinon-4.0.0.tgz#9a93ffa4ee1329e85166278a5ed99f81dc4c8362"
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@types/sinon/-/sinon-4.1.0.tgz#cdfb934d656b2c888e51f53e95900c7bbca11c08"
 
 "@types/stacktrace-js@^0.0.32":
   version "0.0.32"
@@ -83,8 +83,8 @@ ajv@^4.9.1:
     json-stable-stringify "^1.0.1"
 
 ajv@^5.0.0, ajv@^5.1.5, ajv@^5.2.3, ajv@^5.3.0:
-  version "5.5.0"
-  resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.5.0.tgz#eb2840746e9dc48bd5e063a36e3fd400c5eab5a9"
+  version "5.5.1"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.5.1.tgz#b38bb8876d9e86bee994956a04e721e88b248eb2"
   dependencies:
     co "^4.6.0"
     fast-deep-equal "^1.0.0"
@@ -3093,8 +3093,8 @@ rxjs-tslint-rules@^3.0.0:
     tslib "^1.8.0"
 
 rxjs@^5.5.4:
-  version "5.5.4"
-  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.5.4.tgz#66a466acb21270b5f441645a1141f95fcae10ee6"
+  version "5.5.5"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.5.5.tgz#e164f11d38eaf29f56f08c3447f74ff02dd84e97"
   dependencies:
     symbol-observable "1.0.1"
 
@@ -3530,8 +3530,8 @@ ts-loader@^3.0.4:
     semver "^5.0.1"
 
 tslib@^1.6.1, tslib@^1.7.1, tslib@^1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.8.0.tgz#dc604ebad64bcbf696d613da6c954aa0e7ea1eb6"
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.8.1.tgz#6946af2d1d651a7b1863b531d6e5afa41aa44eac"
 
 tslint@^5.1.0:
   version "5.8.0"
@@ -3595,8 +3595,8 @@ typescript@~2.6.1:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.6.2.tgz#3c5b6fd7f6de0914269027f03c0946758f7673a4"
 
 uglify-es@^3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/uglify-es/-/uglify-es-3.2.0.tgz#fbbfb9dc465ec7e5065701b9720d0de977d0bc24"
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/uglify-es/-/uglify-es-3.2.1.tgz#93de0aad8a1bb629c8a316f686351bc4d6ece687"
   dependencies:
     commander "~2.12.1"
     source-map "~0.6.1"
@@ -3739,8 +3739,8 @@ webpack-sources@^1.0.1:
     source-map "~0.6.1"
 
 webpack@^3.1.0:
-  version "3.9.1"
-  resolved "https://registry.yarnpkg.com/webpack/-/webpack-3.9.1.tgz#9a60aa544ed5d4d454c069e3f521aa007e02643c"
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/webpack/-/webpack-3.10.0.tgz#5291b875078cf2abf42bdd23afe3f8f96c17d725"
   dependencies:
     acorn "^5.0.0"
     acorn-dynamic-import "^2.0.0"
