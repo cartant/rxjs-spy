@@ -29,7 +29,7 @@ Non-breaking changes:
 Features:
 
 * When logging, if the observable does not have a tag, its type is logged instead.
-* Option have been added to the `LetPlugin` so that completions from the selected observable can be ignored - so it's possible to return something like `Observable.of(42)` without having the spied-upon observable complete.
+* Options have been added to the `LetPlugin` so that completions from the selected observable can be ignored - so it's possible to return something like `Observable.of(42)` without having the spied-upon observable complete.
 * The `DevTools` plugin has been added (for integration with an almost-ready-for-RC Chrome DevTools extension).
 * It's now possible to match IDs as well as tags (it's used by the DevTools extension).
 * The output from `show` now includes the observable's 'path' - a string representation of the composed source and operators.
