@@ -129,8 +129,8 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
     ga('send', 'pageview');
 </script>
 <script src="https://unpkg.com/core-js/client/core.js"></script>
-<script src="https://unpkg.com/rxjs@5.5.4/bundles/Rx.js"></script>
-<script src="https://unpkg.com/rxjs-spy@6.0.0-rc.2"></script>
+<script src="https://unpkg.com/rxjs@5/bundles/Rx.js"></script>
+<script src="https://unpkg.com/rxjs-spy@6.0.0-rc.3"></script>
 <script>
 
     var spy = RxSpy.create();
