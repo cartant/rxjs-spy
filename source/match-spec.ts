@@ -74,9 +74,9 @@ describe("match", () => {
         });
     });
 
-    describe("read", () => {
+    describe.skip("read", () => {
     });
 
-    describe("toString", () => {
+    describe.skip("toString", () => {
     });
 });

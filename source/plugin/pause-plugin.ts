@@ -13,8 +13,9 @@ import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
+import { hide } from "../operator/hide";
 import { BasePlugin } from "./plugin";
-import { Spy, Teardown } from "../spy-interface";
+import { Teardown } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 
 export interface DeckStats {
@@ -35,14 +36,12 @@ export class Deck {
 
     private match_: Match;
     private paused_ = true;
-    private spy_: Spy;
     private states_ = new Map<Observable<any>, State>();
     private stats_: Subject<DeckStats>;
 
-    constructor(spy: Spy, match: Match) {
+    constructor(match: Match) {
 
         this.match_ = match;
-        this.spy_ = spy;
         this.stats_ = new Subject<DeckStats>();
     }
 
@@ -114,7 +113,7 @@ export class Deck {
                 this.states_.set(observable, state);
             }
 
-            state.subscription_ = this.spy_.ignore(() => materialize.call(source).subscribe({
+            state.subscription_ = hide.call(materialize.call(source)).subscribe({
                 next: (notification: any) => {
                     if (this.paused_) {
                         state!.notifications_.push(notification);
@@ -123,7 +122,7 @@ export class Deck {
                     }
                     this.broadcast_();
                 }
-            }));
+            });
             this.broadcast_();
 
             return dematerialize.call(state.subject_.asObservable());
@@ -179,11 +178,11 @@ export class PausePlugin extends BasePlugin {
     private match_: Match;
     private deck_: Deck;
 
-    constructor(spy: Spy, match: Match) {
+    constructor(match: Match) {
 
         super(`pause(${matchToString(match)})`);
 
-        this.deck_ = new Deck(spy, match);
+        this.deck_ = new Deck(match);
         this.match_ = match;
     }
 

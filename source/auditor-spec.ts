@@ -75,8 +75,8 @@ describe("Auditor", () => {
             expect(Date.now() - since).to.be.at.least(duration);
         });
         setTimeout(() => auditor.audit("task2", () => {
-            expect(Date.now() - since).to.be.at.least(duration + 20);
-            expect(Date.now() - since).to.be.at.most(duration + 30);
+            expect(Date.now() - since).to.be.at.least(20 + duration);
+            expect(Date.now() - since).to.be.below(duration + duration);
             callback();
         }), 20);
     });

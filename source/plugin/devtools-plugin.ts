@@ -34,6 +34,7 @@ import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { LogPlugin } from "./log-plugin";
 import { read } from "../match";
+import { hide } from "../operator/hide";
 import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
@@ -102,15 +103,15 @@ export class DevToolsPlugin extends BasePlugin {
                     this.teardownPlugin_(request["pluginId"]);
                     break;
                 case "pause":
-                    const plugin = new PausePlugin(this.spy_, request["spyId"]);
+                    const plugin = new PausePlugin(request["spyId"]);
                     this.recordPlugin_(request["spyId"], request.postId, plugin);
-                    this.spy_.ignore(() => plugin.deck.stats.subscribe(stats => {
+                    hide.call(plugin.deck.stats).subscribe((stats: DeckStats) => {
                         this.batchMessage_({
                             broadcastType: "deck-stats",
                             messageType: MESSAGE_BROADCAST,
                             stats: toStats(request["spyId"], stats)
                         });
-                    }));
+                    });
                     response["pluginId"] = request.postId;
                     break;
                 case "pause-command":
@@ -157,11 +158,11 @@ export class DevToolsPlugin extends BasePlugin {
             // subscriptions that would be seen by the spy, switchMap is not
             // used.
 
-            this.subscription_ = this.spy_.ignore(() => this.responses_.subscribe((promise: Promise<Response>) => promise.then(response => {
+            this.subscription_ = hide.call(this.responses_).subscribe((promise: Promise<Response>) => promise.then(response => {
                 if (this.connection_) {
                     this.connection_.post(response);
                 }
-            })));
+            }));
         }
     }
 

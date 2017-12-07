@@ -12,9 +12,11 @@ import { Subscription } from "rxjs/Subscription";
 import { Auditor } from "./auditor";
 import { detect, hook } from "./detect";
 import { Detector } from "./detector";
+import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
+import { hide } from "./operator/hide";
 
 import {
     DebugPlugin,
@@ -164,18 +166,6 @@ export class SpyCore implements Spy {
         this.plugins_.forEach((plugin) => plugin.flush());
     }
 
-    ignore<R>(block: () => R): R {
-
-        SpyCore.spy_ = undefined;
-        try {
-            return block();
-        } catch (error) {
-            throw error;
-        } finally {
-            SpyCore.spy_ = this;
-        }
-    }
-
     let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
 
         return this.plug(new LetPlugin(match, select, options));
@@ -198,7 +188,7 @@ export class SpyCore implements Spy {
 
     pause(match: Match): Deck {
 
-        const pausePlugin = new PausePlugin(this, match);
+        const pausePlugin = new PausePlugin(match);
         const teardown = this.plug(pausePlugin);
 
         const deck = pausePlugin.deck;
@@ -361,6 +351,14 @@ export class SpyCore implements Spy {
         if (!spy_) {
             return observableSubscribe.apply(observable, args);
         }
+        if (hidden(observable)) {
+            SpyCore.spy_ = undefined;
+            try {
+                return observableSubscribe.apply(observable, args);
+            } finally {
+                SpyCore.spy_ = spy_;
+            }
+        }
         const notify_ = (before: (plugin: Plugin) => void, block: () => void, after: (plugin: Plugin) => void) => {
             ++spy_.tick_;
             spy_.plugins_.forEach(before);
@@ -487,11 +485,11 @@ export class SpyCore implements Spy {
 
                     let source = this.preSelectSubject.asObservable();
                     selectors.forEach(selector => source = selector!(source));
-                    this.postSelectSubscription = spy_.ignore(() => source.subscribe({
+                    this.postSelectSubscription = hide.call(source).subscribe({
                         complete: () => this.postSelectSubscriber.complete(),
                         error: (error: any) => this.postSelectSubscriber.error(error),
                         next: (value: any) => this.postSelectSubscriber.next(value)
-                    }));
+                    });
 
                 } else if (this.postSelectSubscription) {
 
@@ -522,9 +520,9 @@ export class SpyCore implements Spy {
             preSelectObserver.complete.bind(preSelectObserver)
         );
 
-        const pluginsSubscription = spy_.ignore(() => spy_.pluginsSubject_.subscribe({
+        const pluginsSubscription = hide.call(spy_.pluginsSubject_).subscribe({
             next: (plugins: any) => preSelectObserver.let(plugins)
-        }));
+        });
 
         const preSelectUnsubscribe = preSelectSubscriber.unsubscribe;
         preSelectSubscriber.unsubscribe = () => {

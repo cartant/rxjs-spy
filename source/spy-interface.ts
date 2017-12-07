@@ -31,7 +31,6 @@ export interface Spy {
     findAll<T extends Plugin>(ctor: Ctor<T>): T[];
     findAll(): Plugin[];
     flush(): void;
-    ignore<R>(block: () => R): R;
     let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
     log(match: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;

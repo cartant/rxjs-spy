@@ -9,24 +9,21 @@ import { Operator } from "rxjs/Operator";
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
 
-export function tag<T>(tag: string): (source: Observable<T>) => Observable<T> {
+export function hide<T>(): (source: Observable<T>) => Observable<T> {
 
-    return function tagOperation(source: Observable<T>): Observable<T> {
+    return function hideOperation(source: Observable<T>): Observable<T> {
 
-        return source.lift(new TagOperator(tag));
+        return source.lift(new HideOperator());
     };
 }
 
-class TagOperator<T> implements Operator<T, T> {
+class HideOperator<T> implements Operator<T, T> {
 
     // It would be better if this were a symbol. However ...
     // error TS1166: A computed property name in a class property declaration must directly refer to a built-in symbol.
-    readonly tag: string;
+    readonly hide = true;
 
-    constructor(tag: string) {
-
-        this.tag = tag;
-    }
+    constructor() {}
 
     call(subscriber: Subscriber<T>, source: any): any {
 
