@@ -125,6 +125,7 @@ The methods in the module API are callable via imports, requires or the UMD `RxS
 ```ts
 function create(options: {
     [key: string]: any,
+    audit?: number,
     defaultLogger?: PartialLogger,
     defaultPlugins?: boolean,
     warning?: boolean
@@ -166,6 +167,8 @@ spy.plug(
   new SnapshotPlugin(spy, { keptValues: 1 })
 );
 ```
+
+If the `audit` option is specified, the logging of notifications will be audited within the specified (milliseconds) duration. Each notification source will only be logged once in each duration and the number of ignored notifications (if any) will be included in the console output. This can be useful for logging high-frequency observables. `audit` defaults to zero - i.e. no auditing.
 
 Options passed to `create` are forwarded to the plugins, so the following can be specified:
 

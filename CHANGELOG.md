@@ -32,6 +32,9 @@ Features:
 * Add options to the `LetPlugin` so that completions from the selected observable can be ignored.
 * The `DevTools` plugin has bee added (for integration with an almost-ready-for-RC Chrome DevTools extension).
 * It's now possible to match IDs as well as tags (it's used by the DevTools extension).
+* The output from `show` now includes the observable's 'path' - a string representation of the composed source and operators.
+* A `hide` operator has been added and can be used to ensure a composed observable is hidden from the spy.
+* An `audit` option has been added to the spy and can be used to audit logged notifications within the specified number of milliseconds - so that logging high-frequency observables will not overwhelm the console.
 
 <a name="5.2.3"></a>
 ## [5.2.3](https://github.com/cartant/rxjs-spy/compare/v5.2.2...v5.2.3) (2017-11-24)
