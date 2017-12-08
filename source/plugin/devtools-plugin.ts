@@ -244,7 +244,7 @@ export class DevToolsPlugin extends BasePlugin {
     private batchMessage_(message: Message): void {
 
         // If there are numerous, high-frequency observables, the connection
-        // can become overloaded. Post the message in batches, at a sensible
+        // can become overloaded. Post the messages in batches, at a sensible
         // interval.
 
         if (this.batchTimeoutId_ !== undefined) {
