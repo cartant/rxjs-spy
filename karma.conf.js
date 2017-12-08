@@ -5,22 +5,29 @@ process.env.CHROME_BIN = require("puppeteer").executablePath();
 exports = module.exports = function (config) {
 
     config.set({
-        autoWatch: false,
         basePath: "",
         browsers: ["ChromeHeadless"],
         colors: true,
         concurrency: Infinity,
         exclude: [],
         files: [
-            "node_modules/rxjs/bundles/Rx.js",
-            "bundles/rxjs-spy-test.umd.js"
+            { pattern: "source/**/*-spec.ts", watched: false },
         ],
         frameworks: ["mocha"],
         logLevel: config.LOG_INFO,
+        mime : {
+            "text/x-typescript": ["ts"]
+        },
         port: 9876,
-        preprocessors: {},
+        preprocessors: {
+            "source/**/*-spec.ts": ["webpack"]
+        },
         proxies: {},
         reporters: ["spec"],
-        singleRun: true
+        webpack: require("./webpack.config.test")({}),
+        webpackMiddleware: {
+            noInfo: true,
+            stats: "errors-only"
+        }
     });
 };

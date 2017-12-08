@@ -14,6 +14,7 @@ import { create } from "./spy-factory";
 import { Spy } from "./spy-interface";
 
 import "rxjs/add/operator/mapTo";
+import "./add/operator/tag";
 
 const options = {
     keptDuration: -1,
