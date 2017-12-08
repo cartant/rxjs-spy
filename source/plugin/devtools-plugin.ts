@@ -8,8 +8,9 @@
 import { stringify } from "circular-json";
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
+import { fromPromise } from "rxjs/observable/fromPromise";
 import { filter } from "rxjs/operator/filter";
-import { map } from "rxjs/operator/map";
+import { switchMap } from "rxjs/operator/switchMap";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_BATCH, MESSAGE_BROADCAST, MESSAGE_RESPONSE } from "../devtools/constants";
@@ -66,7 +67,7 @@ export class DevToolsPlugin extends BasePlugin {
     private posts_: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
     private resolveQueue_: { notification: NotificationPayload, resolved: boolean }[];
-    private responses_: Observable<Promise<Response>>;
+    private responses_: Observable<Response>;
     private spy_: Spy;
     private subscription_: Subscription;
 
@@ -89,7 +90,7 @@ export class DevToolsPlugin extends BasePlugin {
             );
 
             const filtered = filter.call(this.posts_, isPostRequest);
-            this.responses_ = map.call(filtered, (request: Post & Request) => {
+            this.responses_ = switchMap.call(filtered, (request: Post & Request) => {
                 const response: Response = {
                     messageType: MESSAGE_RESPONSE,
                     request
@@ -143,7 +144,7 @@ export class DevToolsPlugin extends BasePlugin {
                     if (snapshotPlugin) {
                         const snapshot = snapshotPlugin.snapshotAll();
                         response["snapshot"] = toSnapshot(snapshot);
-                        return snapshot.sourceMapsResolved.then(() => response);
+                        return hide.call(fromPromise(snapshot.sourceMapsResolved.then(() => response)));
                     }
                     response.error = "Cannot find snapshot plugin.";
                     break;
@@ -151,18 +152,14 @@ export class DevToolsPlugin extends BasePlugin {
                     response.error = "Unexpected request.";
                     break;
                 }
-                return Promise.resolve(response);
+                return hide.call(fromPromise(Promise.resolve(response)));
             });
 
-            // The composed observable effects promises and to avoid internal
-            // subscriptions that would be seen by the spy, switchMap is not
-            // used.
-
-            this.subscription_ = hide.call(this.responses_).subscribe((promise: Promise<Response>) => promise.then(response => {
+            this.subscription_ = hide.call(this.responses_).subscribe((response: Response) => {
                 if (this.connection_) {
                     this.connection_.post(response);
                 }
-            }));
+            });
         }
     }
 
