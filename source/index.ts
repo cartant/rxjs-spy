@@ -11,3 +11,27 @@ export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugin";
 export { create } from "./spy-factory";
+
+import {
+    DebugPlugin,
+    DevToolsPlugin,
+    GraphPlugin,
+    LetPlugin,
+    LogPlugin,
+    PausePlugin,
+    SnapshotPlugin,
+    StackTracePlugin,
+    StatsPlugin
+} from "./plugin";
+
+export const plugins = {
+    DebugPlugin,
+    DevToolsPlugin,
+    GraphPlugin,
+    LetPlugin,
+    LogPlugin,
+    PausePlugin,
+    SnapshotPlugin,
+    StackTracePlugin,
+    StatsPlugin
+};
