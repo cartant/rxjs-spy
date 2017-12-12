@@ -11,6 +11,7 @@ export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugin";
 export { create } from "./spy-factory";
+export { inferPath, inferType } from "./util";
 
 import {
     DebugPlugin,

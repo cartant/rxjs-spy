@@ -8,6 +8,7 @@ import { detect } from "./detect";
 import { defaultLogger, toLogger } from "./logger";
 import { PausePlugin } from "./plugin";
 import { SpyCore } from "./spy-core";
+import { inferPath, inferType } from "./util";
 
 export function wrap(core: SpyCore): any {
 
@@ -41,6 +42,9 @@ export function wrap(core: SpyCore): any {
 
             core.flush();
         },
+
+        inferPath,
+        inferType,
 
         let(...args: any[]): void {
 
