@@ -19,8 +19,8 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.58.tgz#5b3881c0be3a646874803fee3197ea7f1ed6df90"
 
 "@types/sinon@^4.0.0":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@types/sinon/-/sinon-4.1.1.tgz#1adf3c8a9359bfa1750a4152cb538cfae4748118"
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/@types/sinon/-/sinon-4.1.2.tgz#9085db9cc3288b0f12daceee20a26c4afd9c2dcd"
 
 "@types/stacktrace-js@^0.0.32":
   version "0.0.32"
