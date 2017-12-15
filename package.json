@@ -6,7 +6,7 @@
   "dependencies": {
     "@types/circular-json": "^0.4.0",
     "@types/stacktrace-js": "^0.0.32",
-    "circular-json": "^0.4.0",
+    "circular-json": "^0.5.0",
     "stacktrace-js": "^2.0.0"
   },
   "description": "A debugging library for RxJS",
