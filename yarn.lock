@@ -15,8 +15,8 @@
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-2.2.44.tgz#1d4a798e53f35212fd5ad4d04050620171cd5b5e"
 
 "@types/node@^8.0.0":
-  version "8.5.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.5.0.tgz#c5be22ffc84b221466fc8dfc0d6b1f88060808ef"
+  version "8.5.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.5.1.tgz#4ec3020bcdfe2abffeef9ba3fbf26fca097514b5"
 
 "@types/sinon@^4.0.0":
   version "4.1.2"
@@ -635,9 +635,9 @@ circular-json@^0.3.1:
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/circular-json/-/circular-json-0.3.3.tgz#815c99ea84f6809529d2f45791bdf82711352d66"
 
-circular-json@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/circular-json/-/circular-json-0.4.0.tgz#c448ea998b7fe31ecf472ec29c6b608e2e2a62fd"
+circular-json@^0.5.0:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/circular-json/-/circular-json-0.5.1.tgz#b8942a09e535863dc21b04417a91971e1d9cd91f"
 
 cli-boxes@^1.0.0:
   version "1.0.0"
@@ -2261,15 +2261,15 @@ karma-mocha@^1.3.0:
   dependencies:
     minimist "1.2.0"
 
-karma-spec-reporter@^0.0.31:
-  version "0.0.31"
-  resolved "https://registry.yarnpkg.com/karma-spec-reporter/-/karma-spec-reporter-0.0.31.tgz#4830dc7148a155c7d7a186e632339a0d80fadec3"
+karma-spec-reporter@^0.0.32:
+  version "0.0.32"
+  resolved "https://registry.yarnpkg.com/karma-spec-reporter/-/karma-spec-reporter-0.0.32.tgz#2e9c7207ea726771260259f82becb543209e440a"
   dependencies:
     colors "^1.1.2"
 
 karma-webpack@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/karma-webpack/-/karma-webpack-2.0.6.tgz#967918e59750ebe0f40829263435fde7ac81bdb4"
+  version "2.0.9"
+  resolved "https://registry.yarnpkg.com/karma-webpack/-/karma-webpack-2.0.9.tgz#61c88091f7dd910635134c032b266a465affb57f"
   dependencies:
     async "~0.9.0"
     loader-utils "^0.2.5"
@@ -3543,6 +3543,10 @@ semver@~4.3.3:
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/semver/-/semver-4.3.6.tgz#300bc6e0e86374f7ba61068b5b1ecd57fc6532da"
 
+serialize-javascript@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-1.4.0.tgz#7c958514db6ac2443a8abc062dc9f7886a7f6005"
+
 set-blocking@^2.0.0, set-blocking@~2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/set-blocking/-/set-blocking-2.0.0.tgz#045f9782d011ae9a6803ddd382b24392b3d890f7"
@@ -4036,10 +4040,10 @@ tslint@^5.1.0:
     tsutils "^2.12.1"
 
 tsutils@^2.12.1:
-  version "2.13.0"
-  resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.13.0.tgz#0f52b6aabbc4216e72796b66db028c6cf173e144"
+  version "2.13.1"
+  resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.13.1.tgz#d6d1cc0f7c04cf9fb3b28a292973cffb9cfbe09a"
   dependencies:
-    tslib "^1.7.1"
+    tslib "^1.8.0"
 
 tty-browserify@0.0.0:
   version "0.0.0"
@@ -4080,7 +4084,7 @@ typescript@~2.6.1:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.6.2.tgz#3c5b6fd7f6de0914269027f03c0946758f7673a4"
 
-uglify-es@^3.2.0:
+uglify-es@^3.2.1:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/uglify-es/-/uglify-es-3.2.2.tgz#15c62b7775002c81b7987a1c49ecd3f126cace73"
   dependencies:
@@ -4109,14 +4113,15 @@ uglifyjs-webpack-plugin@^0.4.6:
     webpack-sources "^1.0.1"
 
 uglifyjs-webpack-plugin@^1.0.1:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/uglifyjs-webpack-plugin/-/uglifyjs-webpack-plugin-1.1.2.tgz#8a9abc238d01a33daaf86fa9a84c7ebc1e67b0f9"
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/uglifyjs-webpack-plugin/-/uglifyjs-webpack-plugin-1.1.4.tgz#e43ad6e736c315024eb99481a7cc9362d6a066be"
   dependencies:
     cacache "^10.0.0"
     find-cache-dir "^1.0.0"
     schema-utils "^0.3.0"
+    serialize-javascript "^1.4.0"
     source-map "^0.6.1"
-    uglify-es "^3.2.0"
+    uglify-es "^3.2.1"
     webpack-sources "^1.0.1"
     worker-farm "^1.4.1"
 
