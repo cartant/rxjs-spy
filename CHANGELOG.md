@@ -1,3 +1,15 @@
+<a name="6.1.0"></a>
+## [6.1.0](https://github.com/cartant/rxjs-spy/compare/v6.0.0...v6.1.0) (2017-12-18)
+
+Fixes:
+
+* When `sourceMaps` are enabled, memory usage has been hugely reduced. The resolution of the stack traces using source maps is now deferred and is wrapped in an observable.
+
+Features:
+
+* Subscription snapshots now include a `mappedStackTrace` observable that resolves a stack trace (if `sourceMaps` is enabled).
+* The `show` command now limits the maximum number of observables that can be logged to the console.
+
 <a name="6.0.0"></a>
 ## [6.0.0](https://github.com/cartant/rxjs-spy/compare/v5.2.3...v6.0.0) (2017-12-07)
 
