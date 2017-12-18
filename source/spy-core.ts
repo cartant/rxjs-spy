@@ -231,9 +231,15 @@ export class SpyCore implements Spy {
         const logger = toLogger(partialLogger || this.defaultLogger_);
         const observableGroupMethod = (filtered.length > 3) ? "groupCollapsed" : "group";
 
+        const maxShown = 20;
+        const notShown = (filtered.length > maxShown) ? filtered.length - maxShown : 0;
+        if (notShown) {
+            filtered.splice(maxShown, notShown);
+        }
+
         snapshot.mapStackTraces(filtered).subscribe(() => {
 
-            logger.group(`${filtered.length} snapshot(s) matching ${matchToString(match)}`);
+            logger.group(`${filtered.length + notShown} snapshot(s) matching ${matchToString(match)}`);
             filtered.forEach((observableSnapshot) => {
 
                 const { subscriptions } = observableSnapshot;
@@ -274,6 +280,9 @@ export class SpyCore implements Spy {
                 logger.groupEnd();
                 logger.groupEnd();
             });
+            if (notShown) {
+                logger.log(`... another ${notShown} snapshot(s) not shown.`);
+            }
             logger.groupEnd();
         });
 
