@@ -231,52 +231,62 @@ export class SpyCore implements Spy {
         const logger = toLogger(partialLogger || this.defaultLogger_);
         const observableGroupMethod = (filtered.length > 3) ? "groupCollapsed" : "group";
 
-        logger.group(`${filtered.length} snapshot(s) matching ${matchToString(match)}`);
-        filtered.forEach((observableSnapshot) => {
+        snapshot.mapStackTraces(filtered).subscribe(() => {
 
-            const { subscriptions } = observableSnapshot;
-            logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
-                `Tag = ${observableSnapshot.tag}` :
-                `Type = ${observableSnapshot.type}`
-            );
-            logger.log("Path =", observableSnapshot.path);
+            logger.group(`${filtered.length} snapshot(s) matching ${matchToString(match)}`);
+            filtered.forEach((observableSnapshot) => {
 
-            const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
-            logger.group(`${subscriptions.size} subscriber(s)`);
-            subscriptions.forEach((subscriptionSnapshot) => {
+                const { subscriptions } = observableSnapshot;
+                logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
+                    `Tag = ${observableSnapshot.tag}` :
+                    `Type = ${observableSnapshot.type}`
+                );
+                logger.log("Path =", observableSnapshot.path);
 
-                const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
-                if (subscriberSnapshot) {
+                const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
+                logger.group(`${subscriptions.size} subscriber(s)`);
+                subscriptions.forEach((subscriptionSnapshot) => {
 
-                    const { values, valuesFlushed } = subscriberSnapshot;
-                    logger[subscriberGroupMethod].call(logger, "Subscriber");
-                    logger.log("Value count =", values.length + valuesFlushed);
-                    if (values.length > 0) {
-                        logger.log("Last value =", values[values.length - 1].value);
-                    }
-                    logSubscription(subscriptionSnapshot);
+                    const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
+                    if (subscriberSnapshot) {
 
-                    const otherSubscriptions = Array
-                        .from(subscriberSnapshot.subscriptions.values())
-                        .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
-                    otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
-                        logger.groupCollapsed("Other subscription");
-                        logSubscription(otherSubscriptionSnapshot);
+                        const { values, valuesFlushed } = subscriberSnapshot;
+                        logger[subscriberGroupMethod].call(logger, "Subscriber");
+                        logger.log("Value count =", values.length + valuesFlushed);
+                        if (values.length > 0) {
+                            logger.log("Last value =", values[values.length - 1].value);
+                        }
+                        logSubscription(subscriptionSnapshot);
+
+                        const otherSubscriptions = Array
+                            .from(subscriberSnapshot.subscriptions.values())
+                            .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
+                        otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
+                            logger.groupCollapsed("Other subscription");
+                            logSubscription(otherSubscriptionSnapshot);
+                            logger.groupEnd();
+                        });
                         logger.groupEnd();
-                    });
-                    logger.groupEnd();
-                } else {
-                    logger.warn("Cannot find subscriber snapshot");
-                }
+                    } else {
+                        logger.warn("Cannot find subscriber snapshot");
+                    }
+                });
+                logger.groupEnd();
+                logger.groupEnd();
             });
             logger.groupEnd();
-            logger.groupEnd();
         });
-        logger.groupEnd();
+
+        function logStackTrace(subscriptionSnapshot: SubscriptionSnapshot): void {
+
+            const { mappedStackTrace, rootSink } = subscriptionSnapshot;
+            const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
+            mapped.subscribe(stackTrace => logger.log("Root subscribe", stackTrace));
+        }
 
         function logSubscription(subscriptionSnapshot: SubscriptionSnapshot): void {
 
-            const { complete, error, rootSink, stackTrace, unsubscribed } = subscriptionSnapshot;
+            const { complete, error, unsubscribed } = subscriptionSnapshot;
             logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
             if (error) {
                 logger.error("Error =", error);
@@ -284,7 +294,7 @@ export class SpyCore implements Spy {
             if (unsubscribed) {
                 logger.log("Unsubscribed =", true);
             }
-            logger.log("Root subscribe", rootSink ? rootSink.stackTrace : stackTrace);
+            logStackTrace(subscriptionSnapshot);
         }
     }
 

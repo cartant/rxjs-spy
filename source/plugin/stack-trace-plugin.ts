@@ -4,22 +4,30 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { parse, StackFrame } from "error-stack-parser";
 import { Observable } from "rxjs/Observable";
-import { get, getSync, StackFrame } from "stacktrace-js";
+import { defer } from "rxjs/observable/defer";
+import { of } from "rxjs/observable/of";
+import { shareReplay } from "rxjs/operator/shareReplay";
+
+// @ts-ignore: Could not find a declaration file for module 'stacktrace-gps'.
+import * as StackTraceGps from "stacktrace-gps";
+
+import { hide } from "../operator/hide";
 import { BasePlugin } from "./plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
 
 export interface StackTraceRef {
-    sourceMapsResolved: Promise<void>;
+    mappedStackTrace: Observable<StackFrame[]>;
     stackTrace: StackFrame[];
 }
 
-export function getSourceMapsResolved(ref: SubscriberRef): Promise<void> {
+export function getMappedStackTrace(ref: SubscriberRef): Observable<StackFrame[]> {
 
     const stackTraceRef = getStackTraceRef(ref);
-    return stackTraceRef ? stackTraceRef.sourceMapsResolved : Promise.resolve();
+    return stackTraceRef ? stackTraceRef.mappedStackTrace : of([]);
 }
 
 export function getStackTrace(ref: SubscriberRef): StackFrame[] {
@@ -41,44 +49,58 @@ function setStackTraceRef(ref: SubscriberRef, value: StackTraceRef): StackTraceR
 
 export class StackTracePlugin extends BasePlugin {
 
+    private sourceCache_: object;
     private sourceMaps_: boolean;
 
     constructor({ sourceMaps = false }: { sourceMaps?: boolean } = {}) {
 
         super("stackTrace");
+
+        this.sourceCache_ = {};
         this.sourceMaps_ = sourceMaps;
     }
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        const stackTraceRef: StackTraceRef = {
-            sourceMapsResolved: Promise.resolve(),
-            stackTrace: getSync(options())
-        };
-        setStackTraceRef(ref, stackTraceRef);
+        const stackFrames = this.getStackFrames_();
 
         if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            stackTraceRef.sourceMapsResolved = get(options())
-                .then((stackFrames) => {
-                    const { stackTrace } = stackTraceRef;
-                    stackTrace.splice(0, stackTrace.length, ...stackFrames);
-                })
-                /*tslint:disable-next-line:no-console*/
-                .catch((error) => console.error("Cannot resolve source maps", error));
+            setStackTraceRef(ref, {
+                mappedStackTrace: hide.call(shareReplay.call(defer(() => {
+                    const gps = new StackTraceGps({ sourceCache: this.sourceCache_ });
+                    return Promise.all(stackFrames.map(stackFrame => gps
+                        .pinpoint(stackFrame)
+                        .catch(() => stackFrame)
+                    ));
+                }), 1)),
+                stackTrace: stackFrames
+            });
+        } else {
+            setStackTraceRef(ref, {
+                mappedStackTrace: hide.call(of(stackFrames)),
+                stackTrace: stackFrames
+            });
         }
     }
-}
 
-function options(): any {
+    teardown(): void {
 
-    let preSubscribeWithSpy = false;
-    return {
-        filter: (stackFrame: StackFrame) => {
-            const result = preSubscribeWithSpy;
-            if (/coreSubscribe_/.test(stackFrame.functionName)) {
-                preSubscribeWithSpy = true;
-            }
-            return result;
+        this.sourceCache_ = {};
+    }
+
+    private getStackFrames_(): StackFrame[] {
+
+        try {
+            throw new Error();
+        } catch (error) {
+            let core = true;
+            return parse(error).filter(stackFrame => {
+                const result = !core;
+                if (/coreSubscribe_/.test(stackFrame.functionName || "")) {
+                    core = false;
+                }
+                return result;
+            });
         }
-    };
+    }
 }

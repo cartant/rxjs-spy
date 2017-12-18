@@ -72,8 +72,7 @@ if (typeof window !== "undefined") {
             subject.complete();
 
             const snapshot = snapshotPlugin.snapshotAll();
-            return snapshot.sourceMapsResolved
-                .then(waitAfterResolved)
+            return waitAfterSnapshot()
                 .then(() => {
 
                     expect(mockConnection.post).to.have.property("callCount", 1);
@@ -103,8 +102,7 @@ if (typeof window !== "undefined") {
             subject.next(person);
 
             const snapshot = snapshotPlugin.snapshotAll();
-            return snapshot.sourceMapsResolved
-                .then(waitAfterResolved)
+            return waitAfterSnapshot()
                 .then(() => {
 
                     expect(mockConnection.post).to.have.property("callCount", 1);
@@ -144,8 +142,7 @@ if (typeof window !== "undefined") {
             });
 
             const snapshot = snapshotPlugin.snapshotAll();
-            return snapshot.sourceMapsResolved
-                .then(waitAfterResolved)
+            return waitAfterSnapshot()
                 .then(() => {
 
                     const [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
@@ -173,7 +170,7 @@ if (typeof window !== "undefined") {
                 spyId: "1"
             });
 
-            return waitAfterResolved()
+            return waitAfterSnapshot()
                 .then(() => {
 
                     const [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
@@ -191,7 +188,7 @@ if (typeof window !== "undefined") {
                         postType: PANEL_MESSAGE,
                         requestType: "log-teardown"
                     });
-                    return waitAfterResolved();
+                    return waitAfterSnapshot();
                 })
                 .then(() => {
 
@@ -222,7 +219,7 @@ if (typeof window !== "undefined") {
                 spyId: "1"
             });
 
-            return waitAfterResolved()
+            return waitAfterSnapshot()
                 .then(() => {
 
                     const [[response]] = mockConnection.post.args.filter(([post]: [any]) => post.messageType === "response");
@@ -241,7 +238,7 @@ if (typeof window !== "undefined") {
                         postType: PANEL_MESSAGE,
                         requestType: "pause-command"
                     });
-                    return waitAfterResolved();
+                    return waitAfterSnapshot();
                 })
                 .then(() => {
 
@@ -260,7 +257,7 @@ if (typeof window !== "undefined") {
                         postType: PANEL_MESSAGE,
                         requestType: "pause-teardown"
                     });
-                    return waitAfterResolved();
+                    return waitAfterSnapshot();
                 })
                 .then(() => {
 
@@ -275,7 +272,7 @@ if (typeof window !== "undefined") {
     });
 }
 
-function waitAfterResolved(): Promise<void> {
+function waitAfterSnapshot(): Promise<void> {
 
     // Notifications are posted to the DevTools in batches, so that large
     // numbers of high-frequency observables won't overload the connection.

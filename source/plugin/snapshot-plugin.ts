@@ -4,16 +4,20 @@
  * found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { StackFrame } from "error-stack-parser";
 import { Observable } from "rxjs/Observable";
+import { forkJoin } from "rxjs/observable/forkJoin";
+import { of } from "rxjs/observable/of";
+import { mapTo } from "rxjs/operator/mapTo";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { StackFrame } from "stacktrace-js";
 import { getGraphRef, GraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { read } from "../match";
+import { hide } from "../operator/hide";
 import { BasePlugin, Notification } from "./plugin";
 import { Spy } from "../spy-interface";
-import { getSourceMapsResolved, getStackTrace } from "./stack-trace-plugin";
+import { getMappedStackTrace, getStackTrace } from "./stack-trace-plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 
@@ -34,6 +38,32 @@ export function getSnapshotRef(ref: SubscriberRef): SnapshotRef {
     return ref[snapshotRefSymbol];
 }
 
+function mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
+function mapStackTraces(subscriberSnapshots: SubscriberSnapshot[]): Observable<void>;
+function mapStackTraces(subscriptionSnapshots: SubscriptionSnapshot[]): Observable<void>;
+function mapStackTraces(snapshots: any[]): Observable<void> {
+
+    const observables: Observable<any>[] = [of(null)];
+
+    snapshots.forEach(snapshot => {
+
+        if (snapshot.subscriptions) {
+            snapshot.subscriptions.forEach(mapSubscriptionStackTraces);
+        } else {
+            mapSubscriptionStackTraces(snapshot);
+        }
+    });
+    return hide.call(mapTo.call(forkJoin(observables), undefined));
+
+    function mapSubscriptionStackTraces(subscriptionSnapshot: SubscriptionSnapshot): void {
+
+        observables.push(subscriptionSnapshot.mappedStackTrace);
+        if (subscriptionSnapshot.rootSink) {
+            observables.push(subscriptionSnapshot.rootSink.mappedStackTrace);
+        }
+    }
+}
+
 function setSnapshotRef(ref: SubscriberRef, value: SnapshotRef): SnapshotRef {
 
     ref[snapshotRefSymbol] = value;
@@ -42,10 +72,12 @@ function setSnapshotRef(ref: SubscriberRef, value: SnapshotRef): SnapshotRef {
 
 export interface Snapshot {
     observables: Map<Observable<any>, ObservableSnapshot>;
-    sourceMapsResolved: Promise<void>;
     subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tick: number;
+    mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
+    mapStackTraces(subscriberSnapshots: SubscriberSnapshot[]): Observable<void>;
+    mapStackTraces(subscriptionSnapshots: SubscriptionSnapshot[]): Observable<void>;
 }
 
 export interface ObservableSnapshot {
@@ -73,10 +105,10 @@ export interface SubscriptionSnapshot {
     flattenings: Map<Subscription, SubscriptionSnapshot>;
     flatteningsFlushed: number;
     id: string;
+    mappedStackTrace: Observable<StackFrame[]>;
     observable: Observable<any>;
     rootSink: SubscriptionSnapshot | undefined;
     sink: SubscriptionSnapshot | undefined;
-    sourceMapsResolved: Promise<void>;
     sources: Map<Subscription, SubscriptionSnapshot>;
     sourcesFlushed: number;
     stackTrace: StackFrame[];
@@ -170,7 +202,6 @@ export class SnapshotPlugin extends BasePlugin {
     } = {}): Snapshot {
 
         const observables = new Map<Observable<any>, ObservableSnapshot>();
-        const promises: Promise<void>[] = [];
         const subscribers = new Map<Subscriber<any>, SubscriberSnapshot>();
         const subscriptions = new Map<Subscription, SubscriptionSnapshot>();
 
@@ -193,19 +224,16 @@ export class SnapshotPlugin extends BasePlugin {
                 valuesFlushed
             } = snapshotRef;
 
-            const sourceMapsResolved = getSourceMapsResolved(ref);
-            promises.push(sourceMapsResolved);
-
             const subscriptionSnapshot: SubscriptionSnapshot = {
                 complete,
                 error,
                 flattenings: new Map<Subscription, SubscriptionSnapshot>(),
                 flatteningsFlushed,
                 id: identify(ref),
+                mappedStackTrace: getMappedStackTrace(ref),
                 observable,
                 rootSink: undefined,
                 sink: undefined,
-                sourceMapsResolved,
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 sourcesFlushed,
                 stackTrace: getStackTrace(ref),
@@ -293,8 +321,8 @@ export class SnapshotPlugin extends BasePlugin {
         }
 
         return {
+            mapStackTraces,
             observables,
-            sourceMapsResolved: Promise.all(promises).then(() => undefined),
             subscribers,
             subscriptions,
             tick: this.spy_.tick

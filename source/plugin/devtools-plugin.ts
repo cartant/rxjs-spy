@@ -10,7 +10,7 @@ import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import { fromPromise } from "rxjs/observable/fromPromise";
 import { filter } from "rxjs/operator/filter";
-import { switchMap } from "rxjs/operator/switchMap";
+import { map } from "rxjs/operator/map";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
 import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_BATCH, MESSAGE_BROADCAST, MESSAGE_RESPONSE } from "../devtools/constants";
@@ -66,7 +66,6 @@ export class DevToolsPlugin extends BasePlugin {
     private connection_: Connection | undefined;
     private posts_: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
-    private resolveQueue_: { notification: NotificationPayload, resolved: boolean }[];
     private responses_: Observable<Response>;
     private spy_: Spy;
     private subscription_: Subscription;
@@ -81,7 +80,6 @@ export class DevToolsPlugin extends BasePlugin {
             this.batchQueue_ = [];
             this.connection_ = extension.connect({ version: spy.version });
             this.plugins_ = new Map<string, PluginRecord>();
-            this.resolveQueue_ = [];
             this.spy_ = spy;
 
             this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
@@ -90,7 +88,7 @@ export class DevToolsPlugin extends BasePlugin {
             );
 
             const filtered = filter.call(this.posts_, isPostRequest);
-            this.responses_ = switchMap.call(filtered, (request: Post & Request) => {
+            this.responses_ = map.call(filtered, (request: Post & Request) => {
                 const response: Response = {
                     messageType: MESSAGE_RESPONSE,
                     request
@@ -144,7 +142,7 @@ export class DevToolsPlugin extends BasePlugin {
                     if (snapshotPlugin) {
                         const snapshot = snapshotPlugin.snapshotAll();
                         response["snapshot"] = toSnapshot(snapshot);
-                        return hide.call(fromPromise(snapshot.sourceMapsResolved.then(() => response)));
+                        return response;
                     }
                     response.error = "Cannot find snapshot plugin.";
                     break;
@@ -152,7 +150,7 @@ export class DevToolsPlugin extends BasePlugin {
                     response.error = "Unexpected request.";
                     break;
                 }
-                return hide.call(fromPromise(Promise.resolve(response)));
+                return response;
             });
 
             this.subscription_ = hide.call(this.responses_).subscribe((response: Response) => {
@@ -165,7 +163,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     afterSubscribe(ref: SubscriptionRef): void {
 
-        this.resolveNotification_({
+        this.batchNotification_({
             notification: "subscribe",
             prefix: "after",
             ref
@@ -174,7 +172,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     afterUnsubscribe(ref: SubscriptionRef): void {
 
-        this.resolveNotification_({
+        this.batchNotification_({
             notification: "unsubscribe",
             prefix: "after",
             ref
@@ -183,7 +181,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeComplete(ref: SubscriptionRef): void {
 
-        this.resolveNotification_({
+        this.batchNotification_({
             notification: "complete",
             prefix: "before",
             ref
@@ -192,7 +190,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeError(ref: SubscriptionRef, error: any): void {
 
-        this.resolveNotification_({
+        this.batchNotification_({
             error,
             notification: "error",
             prefix: "before",
@@ -202,7 +200,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        this.resolveNotification_({
+        this.batchNotification_({
             notification: "next",
             prefix: "before",
             ref,
@@ -212,7 +210,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        this.resolveNotification_({
+        this.batchNotification_({
             notification: "subscribe",
             prefix: "before",
             ref
@@ -221,7 +219,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     beforeUnsubscribe(ref: SubscriptionRef): void {
 
-        this.resolveNotification_({
+        this.batchNotification_({
             notification: "unsubscribe",
             prefix: "before",
             ref
@@ -266,45 +264,23 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
+    private batchNotification_(notificationRef: NotificationRef): void {
+
+        const { connection_ } = this;
+        if (connection_) {
+
+            this.batchMessage_({
+                broadcastType: "notification",
+                messageType: MESSAGE_BROADCAST,
+                notification: this.toNotification_(notificationRef)
+            });
+        }
+    }
+
     private recordPlugin_(spyId: string, pluginId: string, plugin: Plugin): void {
 
         const teardown = this.spy_.plug(plugin);
         this.plugins_.set(pluginId, { plugin, pluginId, spyId, teardown });
-    }
-
-    private resolveNotification_(notificationRef: NotificationRef): void {
-
-        const { connection_, resolveQueue_ } = this;
-        if (connection_) {
-
-            const notification = this.toNotification_(notificationRef);
-            const stackTraceRef = getStackTraceRef(notificationRef.ref);
-
-            // If source maps are enabled queue notifications until their source
-            // maps are resolved and ensure they are batched/broadcast in order
-            // of emission and not order of source map resolution.
-
-            if (stackTraceRef) {
-                const queued = { notification, resolved: false };
-                resolveQueue_.push(queued);
-                stackTraceRef.sourceMapsResolved.then(() => {
-                    queued.resolved = true;
-                    while (resolveQueue_.length && resolveQueue_[0].resolved) {
-                        this.batchMessage_({
-                            broadcastType: "notification",
-                            messageType: MESSAGE_BROADCAST,
-                            notification: resolveQueue_.shift()!.notification
-                        });
-                    }
-                });
-            } else {
-                this.batchMessage_({
-                    broadcastType: "notification",
-                    messageType: MESSAGE_BROADCAST,
-                    notification
-                });
-            }
-        }
     }
 
     private teardownPlugin_(pluginId: string): void {
@@ -427,7 +403,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                 },
                 id: s.id,
                 observable: identify(s.observable),
-                stackTrace: s.stackTrace,
+                stackTrace: s.stackTrace as any,
                 subscriber: identify(s.subscriber),
                 tick: s.tick,
                 timestamp: s.timestamp,
