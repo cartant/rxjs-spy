@@ -9,37 +9,113 @@
     </style>
 </head>
 <body>
+    <div>
+        <span>People</span>
+        <button onclick="startPeople()">Start</button>
+        <button onclick="stop()">Stop</button>
+    </div>
+    <div>
+        <span>Many (without source maps)</span>
+        <button onclick="startMany(false)">Start</button>
+        <button onclick="stop()">Stop</button>
+    </div>
+    <div>
+        <span>Many (with source maps)</span>
+        <button onclick="startMany(true)">Start</button>
+        <button onclick="stop()">Stop</button>
+    </div>
     <script src="../node_modules/core-js/client/core.min.js"></script>
     <script src="../node_modules/rxjs/bundles/Rx.js"></script>
     <script src="../dist/bundles/rxjs-spy.umd.js"></script>
     <script>
 
-        RxSpy.create({ sourceMaps: true });
+        function startPeople() {
 
-    </script>
-    <script>
-
-        (function () {
+            if (window.subscription) {
+                stop();
+            }
+            spy = RxSpy.create({
+                keptDuration: 10e3,
+                sourceMaps: true
+            });
+            window.subscription = new Rx.Subscription(() => spy.teardown());
 
             const interval = new Rx.Observable
                 .interval(2000)
                 .tag("interval");
 
             const subscriber = Rx.Subscriber.create(
-                (value) => {},
-                (error) => {},
+                value => {},
+                error => {},
                 () => {}
             );
-            interval.subscribe(subscriber);
+            window.subscription.add(interval.subscribe(subscriber));
 
             const people = interval
-                .map((value) => {
+                .map(value => {
                     const names = ["alice", "bob"];
                     return names[value % names.length];
                 })
-                .tag("people")
-                .subscribe();
-        })();
+                .tag("people");
+
+            window.subscription.add(people.subscribe());
+        }
+
+        function startMany(sourceMaps) {
+
+            if (window.subscription) {
+                stop();
+            }
+            spy = RxSpy.create({
+                devTools: false,
+                keptDuration: 0,
+                sourceMaps
+            });
+            window.subscription = new Rx.Subscription(() => spy.teardown());
+
+            // https://bugify.cartant.com/issues/4075
+
+            const source = () => Rx.Observable
+                .concat(
+                    Rx.Observable.of(1, 2, 3, 4, 5)
+                        .tag("1")
+                        .tag("1.1")
+                        .tag("1.1.1")
+                        .tag("1.1.1.1"),
+                    Rx.Observable.of(1, 2, 3, 4, 5, Rx.Scheduler.asap)
+                        .tag("2")
+                        .tag("2.2")
+                        .tag("2.2.2")
+                        .tag("2.2.2.2"),
+                    Rx.Observable.never()
+                        .tag("3")
+                        .tag("3.3")
+                        .tag("3.3.3")
+                        .tag("3.3.3.3")
+                )
+                .tag("4")
+                .tag("4.4")
+                .tag("4.4.4")
+                .tag("4.4.4.4");
+
+            const all = [];
+            for (let i = 0; i < 100; ++i) {
+                all.push(source());
+            }
+            const root = Rx.Observable
+                .merge(...all)
+                .tag("5");
+
+            window.subscription.add(root.subscribe());
+        }
+
+        function stop() {
+
+            if (window.subscription) {
+                window.subscription.unsubscribe();
+                window.subscription = null;
+            }
+        }
 
     </script>
 </body>
