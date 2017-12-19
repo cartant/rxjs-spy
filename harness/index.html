@@ -94,7 +94,7 @@
                 stop();
             }
             spy = RxSpy.create({
-                devTools: false,
+                devTools: true,
                 keptDuration: 0,
                 sourceMaps
             });
@@ -125,8 +125,9 @@
                 .tag("4.4.4")
                 .tag("4.4.4.4");
 
+            const iters = 100;
             const all = [];
-            for (let i = 0; i < 100; ++i) {
+            for (let i = 0; i < iters; ++i) {
                 all.push(source());
             }
             const root = Rx.Observable
