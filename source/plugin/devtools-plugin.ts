@@ -61,6 +61,7 @@ interface PluginRecord {
 
 export class DevToolsPlugin extends BasePlugin {
 
+    private readonly batchLimit_ = 1000;
     private batchQueue_: Message[];
     private batchTimeoutId_: any;
     private connection_: Connection | undefined;
@@ -247,6 +248,16 @@ export class DevToolsPlugin extends BasePlugin {
 
         if (this.batchTimeoutId_ !== undefined) {
             this.batchQueue_.push(message);
+            if (this.batchQueue_.length > this.batchLimit_) {
+
+                const { connection_ } = this;
+                if (connection_) {
+                    connection_.post({
+                        messageType: MESSAGE_BATCH,
+                        messages: this.batchQueue_.splice(0, this.batchLimit_)
+                    });
+                }
+            }
         } else {
             this.batchQueue_ = [message];
             this.batchTimeoutId_ = setTimeout(() => {
