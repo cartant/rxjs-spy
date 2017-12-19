@@ -5,24 +5,53 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
     <style>
-        body { font-family: sans-serif; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont,
+                "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+                "Fira Sans", "Droid Sans", "Helvetica Neue",
+                sans-serif;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            left: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+        }
+
+        .control {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+        }
+
+        .desc {
+            flex: 1;
+        }
+
     </style>
 </head>
 <body>
-    <div>
-        <span>People</span>
-        <button onclick="startPeople()">Start</button>
-        <button onclick="stop()">Stop</button>
-    </div>
-    <div>
-        <span>Many (without source maps)</span>
-        <button onclick="startMany(false)">Start</button>
-        <button onclick="stop()">Stop</button>
-    </div>
-    <div>
-        <span>Many (with source maps)</span>
-        <button onclick="startMany(true)">Start</button>
-        <button onclick="stop()">Stop</button>
+    <div class="controls">
+        <div class="control">
+            <span class="desc">People</span>
+            <button onclick="startPeople()">&#9658;</button>
+            <button onclick="stop()">&#9724;</button>
+        </div>
+        <div class="control">
+            <span class="desc">Many (without source maps)</span>
+            <button onclick="startMany(false)">&#9658;</button>
+            <button onclick="stop()">&#9724;</button>
+        </div>
+        <div class="control">
+            <span class="desc">Many (with source maps)</span>
+            <button onclick="startMany(true)">&#9658;</button>
+            <button onclick="stop()">&#9724;</button>
+        </div>
     </div>
     <script src="../node_modules/core-js/client/core.min.js"></script>
     <script src="../node_modules/rxjs/bundles/Rx.js"></script>
