@@ -13,7 +13,16 @@ import { filter } from "rxjs/operator/filter";
 import { map } from "rxjs/operator/map";
 import { Subscriber } from "rxjs/Subscriber";
 import { Subscription } from "rxjs/Subscription";
-import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_BATCH, MESSAGE_BROADCAST, MESSAGE_RESPONSE } from "../devtools/constants";
+
+import {
+    BATCH_MILLISECONDS,
+    BATCH_NOTIFICATIONS,
+    EXTENSION_KEY,
+    MESSAGE_BATCH,
+    MESSAGE_BROADCAST,
+    MESSAGE_RESPONSE
+} from "../devtools/constants";
+
 import { isPostRequest } from "../devtools/guards";
 
 import {
@@ -61,13 +70,13 @@ interface PluginRecord {
 
 export class DevToolsPlugin extends BasePlugin {
 
-    private readonly batchLimit_ = 1000;
     private batchQueue_: Message[];
     private batchTimeoutId_: any;
     private connection_: Connection | undefined;
     private posts_: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
     private responses_: Observable<Response>;
+    private snapshotHinted: boolean;
     private spy_: Spy;
     private subscription_: Subscription;
 
@@ -81,6 +90,7 @@ export class DevToolsPlugin extends BasePlugin {
             this.batchQueue_ = [];
             this.connection_ = extension.connect({ version: spy.version });
             this.plugins_ = new Map<string, PluginRecord>();
+            this.snapshotHinted = false;
             this.spy_ = spy;
 
             this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
@@ -106,11 +116,7 @@ export class DevToolsPlugin extends BasePlugin {
                     const plugin = new PausePlugin(request["spyId"]);
                     this.recordPlugin_(request["spyId"], request.postId, plugin);
                     hide.call(plugin.deck.stats).subscribe((stats: DeckStats) => {
-                        this.batchMessage_({
-                            broadcastType: "deck-stats",
-                            messageType: MESSAGE_BROADCAST,
-                            stats: toStats(request["spyId"], stats)
-                        });
+                        this.batchDeckStats_(toStats(request["spyId"], stats));
                     });
                     response["pluginId"] = request.postId;
                     break;
@@ -139,6 +145,7 @@ export class DevToolsPlugin extends BasePlugin {
                     this.teardownPlugin_(request["pluginId"]);
                     break;
                 case "snapshot":
+                    this.snapshotHinted = false;
                     const snapshotPlugin = this.spy_.find(SnapshotPlugin);
                     if (snapshotPlugin) {
                         const snapshot = snapshotPlugin.snapshotAll();
@@ -240,6 +247,20 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
+    private batchDeckStats_(stats: DeckStatsPayload): void {
+
+        this.batchQueue_ = this.batchQueue_.filter(message =>
+            (message.broadcastType !== "deck-stats") ||
+            (message.stats.id !== stats.id)
+        );
+
+        this.batchMessage_({
+            broadcastType: "deck-stats",
+            messageType: MESSAGE_BROADCAST,
+            stats
+        });
+    }
+
     private batchMessage_(message: Message): void {
 
         // If there are numerous, high-frequency observables, the connection
@@ -248,16 +269,6 @@ export class DevToolsPlugin extends BasePlugin {
 
         if (this.batchTimeoutId_ !== undefined) {
             this.batchQueue_.push(message);
-            if (this.batchQueue_.length > this.batchLimit_) {
-
-                const { connection_ } = this;
-                if (connection_) {
-                    connection_.post({
-                        messageType: MESSAGE_BATCH,
-                        messages: this.batchQueue_.splice(0, this.batchLimit_)
-                    });
-                }
-            }
         } else {
             this.batchQueue_ = [message];
             this.batchTimeoutId_ = setTimeout(() => {
@@ -280,11 +291,25 @@ export class DevToolsPlugin extends BasePlugin {
         const { connection_ } = this;
         if (connection_) {
 
-            this.batchMessage_({
-                broadcastType: "notification",
-                messageType: MESSAGE_BROADCAST,
-                notification: this.toNotification_(notificationRef)
-            });
+            if (this.snapshotHinted) {
+                return;
+            }
+
+            const count = this.batchQueue_.reduce((c, message) => (message.broadcastType === "notification") ? c + 1 : c, 0);
+            if (count > BATCH_NOTIFICATIONS) {
+                this.batchQueue_ = this.batchQueue_.filter(message => message.broadcastType !== "notification");
+                this.batchMessage_({
+                    broadcastType: "snapshot-hint",
+                    messageType: MESSAGE_BROADCAST
+                });
+                this.snapshotHinted = true;
+            } else {
+                this.batchMessage_({
+                    broadcastType: "notification",
+                    messageType: MESSAGE_BROADCAST,
+                    notification: this.toNotification_(notificationRef)
+                });
+            }
         }
     }
 

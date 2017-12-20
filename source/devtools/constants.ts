@@ -5,6 +5,7 @@
  */
 
 export const BATCH_MILLISECONDS = 40;
+export const BATCH_NOTIFICATIONS = 100;
 
 export const CONTENT_BACKGROUND_CONNECT = "content-background-connect";
 export const CONTENT_MESSAGE = "content-message";
