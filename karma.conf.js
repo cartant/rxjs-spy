@@ -6,9 +6,15 @@ exports = module.exports = function (config) {
 
     config.set({
         basePath: "",
-        browsers: ["ChromeHeadless"],
+        browsers: ["ChromeHeadlessNoSandbox"],
         colors: true,
         concurrency: Infinity,
+        customLaunchers: {
+            ChromeHeadlessNoSandbox: {
+                base: "ChromeHeadless",
+                flags: ["--no-sandbox"]
+            }
+        },
         exclude: [],
         files: [
             { pattern: "source/**/*-spec.ts", watched: false },
