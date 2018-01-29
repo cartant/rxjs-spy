@@ -1,5 +1,6 @@
 # rxjs-spy
 
+[![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cartant/rxjs-spy/blob/master/LICENSE)
 [![NPM version](https://img.shields.io/npm/v/rxjs-spy.svg)](https://www.npmjs.com/package/rxjs-spy)
 [![Downloads](http://img.shields.io/npm/dm/rxjs-spy.svg)](https://npmjs.org/package/rxjs-spy)
 [![Build status](https://img.shields.io/travis/cartant/rxjs-spy.svg)](http://travis-ci.org/cartant/rxjs-spy)
