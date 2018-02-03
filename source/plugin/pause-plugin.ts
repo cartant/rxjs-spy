@@ -31,7 +31,7 @@ interface State {
 
 export class Deck {
 
-    public teardown: Teardown;
+    public teardown: Teardown | undefined;
 
     private match_: Match;
     private paused_ = true;

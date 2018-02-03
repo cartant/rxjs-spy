@@ -72,25 +72,26 @@ export class DevToolsPlugin extends BasePlugin {
     private batchQueue_: Message[];
     private batchTimeoutId_: any;
     private connection_: Connection | undefined;
-    private posts_: Observable<Post>;
+    private posts_!: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
-    private responses_: Observable<Response>;
-    private snapshotHinted: boolean;
+    private responses_!: Observable<Response>;
+    private snapshotHinted_: boolean;
     private spy_: Spy;
-    private subscription_: Subscription;
+    private subscription_!: Subscription;
 
     constructor(spy: Spy) {
 
         super("devTools");
 
+        this.batchQueue_ = [];
+        this.plugins_ = new Map<string, PluginRecord>();
+        this.snapshotHinted_ = false;
+        this.spy_ = spy;
+
         if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
 
             const extension = window[EXTENSION_KEY] as Extension;
-            this.batchQueue_ = [];
             this.connection_ = extension.connect({ version: spy.version });
-            this.plugins_ = new Map<string, PluginRecord>();
-            this.snapshotHinted = false;
-            this.spy_ = spy;
 
             this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
                 this.connection_.subscribe((post) => observer.next(post)) :
@@ -144,7 +145,7 @@ export class DevToolsPlugin extends BasePlugin {
                     this.teardownPlugin_(request["pluginId"]);
                     break;
                 case "snapshot":
-                    this.snapshotHinted = false;
+                    this.snapshotHinted_ = false;
                     const snapshotPlugin = this.spy_.find(SnapshotPlugin);
                     if (snapshotPlugin) {
                         const snapshot = snapshotPlugin.snapshotAll();
@@ -290,7 +291,7 @@ export class DevToolsPlugin extends BasePlugin {
         const { connection_ } = this;
         if (connection_) {
 
-            if (this.snapshotHinted) {
+            if (this.snapshotHinted_) {
                 return;
             }
 
@@ -301,7 +302,7 @@ export class DevToolsPlugin extends BasePlugin {
                     broadcastType: "snapshot-hint",
                     messageType: MESSAGE_BROADCAST
                 });
-                this.snapshotHinted = true;
+                this.snapshotHinted_ = true;
             } else {
                 this.batchMessage_({
                     broadcastType: "notification",
