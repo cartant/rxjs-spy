@@ -32,7 +32,7 @@ For more detail regarding how the library works and what it can do, you can have
 Install the package using NPM:
 
 ```
-npm install rxjs-spy --save
+npm install rxjs-spy --save-dev
 ```
 
 And import the functions for use with TypeScript or ES2015:
