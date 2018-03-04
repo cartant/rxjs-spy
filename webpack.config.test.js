@@ -7,7 +7,7 @@ module.exports = env => {
 
     return {
         context: path.join(__dirname, "./"),
-        devtool: undefined,
+        mode: "development",
         module: {
             rules: [{
                 test: /\.ts$/,
