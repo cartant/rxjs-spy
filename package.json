@@ -13,7 +13,7 @@
   "description": "A debugging library for RxJS",
   "devDependencies": {
     "@types/chai": "^4.0.0",
-    "@types/mocha": "^2.2.41",
+    "@types/mocha": "^5.0.0",
     "@types/node": "^9.0.0",
     "@types/sinon": "^4.0.0",
     "chai": "^4.0.0",
