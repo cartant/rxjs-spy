@@ -5,18 +5,16 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
+import { interval } from "rxjs";
+import { mapTo } from "rxjs/operators";
 import { identify } from "./identify";
-
-import "rxjs/add/observable/interval";
-import "rxjs/add/operator/mapTo";
 
 describe("identify", () => {
 
     it("should identify objects", () => {
 
-        const source = Observable.interval(1000);
-        const mapped = source.mapTo(0);
+        const source = interval(1000);
+        const mapped = source.pipe(mapTo(0));
 
         const sourceId = identify(source);
         const mappedId = identify(mapped);
@@ -30,8 +28,8 @@ describe("identify", () => {
 
     it("should return any already-assigned identity", () => {
 
-        const source = Observable.interval(1000);
-        const mapped = source.mapTo(0);
+        const source = interval(1000);
+        const mapped = source.pipe(mapTo(0));
 
         const sourceId = identify(source);
         const mappedId = identify(mapped);

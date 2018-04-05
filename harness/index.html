@@ -51,89 +51,100 @@
         </div>
     </div>
     <script src="../node_modules/core-js/client/core.min.js"></script>
-    <script src="../node_modules/rxjs/bundles/Rx.js"></script>
+    <script src="../node_modules/rxjs/bundles/rxjs.umd.js"></script>
     <script src="../dist/bundles/rxjs-spy.umd.js"></script>
     <script>
+
+        const { rxjs, rxjsSpy } = window;
 
         function startPeople() {
 
             if (window.subscription) {
                 stop();
             }
-            spy = RxSpy.create({
+
+            const { interval, Subscriber, Subscription } = rxjs;
+            const { map } = rxjs.operators;
+            const { create } = rxjsSpy;
+            const { tag } = rxjsSpy.operators;
+
+            const spy = create({
                 devTools: true,
                 keptDuration: 10e3,
                 sourceMaps: true
             });
-            window.subscription = new Rx.Subscription(() => spy.teardown());
+            window.subscription = new Subscription(() => spy.teardown());
 
-            const interval = new Rx.Observable
-                .interval(2000)
-                .tag("interval");
-
-            const subscriber = Rx.Subscriber.create(
+            const source = interval(2000).pipe(tag("interval"));
+            const subscriber = Subscriber.create(
                 value => {},
                 error => {},
                 () => {}
             );
-            window.subscription.add(interval.subscribe(subscriber));
+            window.subscription.add(source.subscribe(subscriber));
 
-            const people = interval
-                .map(value => {
+            const people = source.pipe(
+                map(value => {
                     const names = ["alice", "bob"];
                     return names[value % names.length];
-                })
-                .tag("people");
-
+                }),
+                tag("people")
+            );
             window.subscription.add(people.subscribe());
         }
 
         function startMany(sourceMaps) {
 
+            const { asapScheduler, concat, merge, NEVER, of, Subscriber, Subscription } = rxjs;
+            const { map } = rxjs.operators;
+            const { create } = rxjsSpy;
+            const { tag } = rxjsSpy.operators;
+
             if (window.subscription) {
                 stop();
             }
-            spy = RxSpy.create({
+            const spy = create({
                 devTools: true,
                 keptDuration: 0,
                 sourceMaps
             });
-            window.subscription = new Rx.Subscription(() => spy.teardown());
+            window.subscription = new Subscription(() => spy.teardown());
 
             // https://bugify.cartant.com/issues/4075
 
-            const source = () => Rx.Observable
-                .concat(
-                    Rx.Observable.of(1, 2, 3, 4, 5)
-                        .tag("1")
-                        .tag("1.1")
-                        .tag("1.1.1")
-                        .tag("1.1.1.1"),
-                    Rx.Observable.of(1, 2, 3, 4, 5, Rx.Scheduler.asap)
-                        .tag("2")
-                        .tag("2.2")
-                        .tag("2.2.2")
-                        .tag("2.2.2.2"),
-                    Rx.Observable.never()
-                        .tag("3")
-                        .tag("3.3")
-                        .tag("3.3.3")
-                        .tag("3.3.3.3")
+            const source = () => concat(
+                of(1, 2, 3, 4, 5).pipe(
+                    tag("1"),
+                    tag("1.1"),
+                    tag("1.1.1"),
+                    tag("1.1.1.1")
+                ),
+                of(1, 2, 3, 4, 5, asapScheduler).pipe(
+                    tag("2"),
+                    tag("2.2"),
+                    tag("2.2.2"),
+                    tag("2.2.2.2")
+                ),
+                NEVER.pipe(
+                    tag("3"),
+                    tag("3.3"),
+                    tag("3.3.3"),
+                    tag("3.3.3.3")
                 )
-                .tag("4")
-                .tag("4.4")
-                .tag("4.4.4")
-                .tag("4.4.4.4");
+            ).pipe(
+                tag("4"),
+                tag("4.4"),
+                tag("4.4.4"),
+                tag("4.4.4.4")
+            );
 
             const iters = 100;
             const all = [];
             for (let i = 0; i < iters; ++i) {
                 all.push(source());
             }
-            const root = Rx.Observable
-                .merge(...all)
-                .tag("5");
 
+            const root = merge(...all).pipe(tag("5"));
             window.subscription.add(root.subscribe());
         }
 

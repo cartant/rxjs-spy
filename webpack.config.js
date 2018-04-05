@@ -37,7 +37,7 @@ module.exports = env => {
         },
         output: {
             filename,
-            library: "RxSpy",
+            library: "rxjsSpy",
             libraryTarget: "umd",
             path: path.resolve(__dirname, "./bundles")
         },

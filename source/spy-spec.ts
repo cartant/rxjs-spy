@@ -5,15 +5,13 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
+import { mapTo } from "rxjs/operators";
 import * as sinon from "sinon";
+import { tag }  from "./operators";
 import { Plugin } from "./plugin";
 import { create } from "./spy-factory";
 import { Spy } from "./spy-interface";
-
-import "rxjs/add/operator/mapTo";
-import "./add/operator/tag";
 
 const options = {
     keptDuration: -1,
@@ -55,11 +53,11 @@ describe("spy", () => {
         it("should apply the selector to the tagged observable", () => {
 
             spy = create({ defaultPlugins: false, ...options });
-            spy.let("people", (source) => source.mapTo("bob"));
+            spy.let("people", (source) => source.pipe(mapTo("bob")));
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+            const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
             subject.next("alice");
             expect(values).to.deep.equal(["bob"]);
@@ -79,7 +77,7 @@ describe("spy", () => {
                 log(...args: any[]): void { calls.push(args); }
             });
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
@@ -107,7 +105,7 @@ describe("spy", () => {
                 log(...args: any[]): void { calls.push(args); }
             });
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe; matching /.+/"]);
         });
@@ -122,7 +120,7 @@ describe("spy", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+            const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
             subject.next("alice");
             subject.next("bob");
@@ -138,7 +136,7 @@ describe("spy", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            const subscription = subject.tag("people").subscribe((value) => values.push(value));
+            const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
             subject.next("alice");
             subject.next("bob");
@@ -180,7 +178,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.mapTo("mallory").subscribe();
+            const subscription = subject.pipe(mapTo("mallory")).subscribe();
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
@@ -227,7 +225,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.subscribe();
+            const subscription = subject.subscribe(() => {}, () => {});
             expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
@@ -240,7 +238,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
@@ -254,7 +252,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
@@ -271,7 +269,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe(() => {}, () => {});
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
@@ -319,7 +317,7 @@ describe("spy", () => {
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
 
             spy.show("people", {
                 log(...args: any[]): void { calls.push(args); }
@@ -336,7 +334,7 @@ describe("spy", () => {
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
 
             spy.show({
                 log(...args: any[]): void { calls.push(args); }

@@ -5,20 +5,15 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-
-import "rxjs/add/observable/from";
-import "rxjs/add/operator/toArray";
-import "rxjs/add/operator/toPromise";
-import "./tag";
+import { from } from "rxjs";
+import { toArray } from "rxjs/operators";
+import { tag } from "./tag";
 
 describe("tag", () => {
 
     it("should attach a tag", () => {
 
-        const source = Observable
-            .from(["alice", "bob"])
-            .tag("people");
+        const source = from(["alice", "bob"]).pipe(tag("people"));
 
         expect(source).to.have.property("operator");
         expect(source["operator"]).to.have.property("tag", "people");
@@ -26,10 +21,8 @@ describe("tag", () => {
 
     it("should do nothing else", () => {
 
-        return Observable
-            .from(["alice", "bob"])
-            .tag("people")
-            .toArray()
+        return from(["alice", "bob"])
+            .pipe(tag("people"), toArray())
             .toPromise()
             .then(value => expect(value).to.deep.equal(["alice", "bob"]));
     });

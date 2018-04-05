@@ -3,16 +3,18 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Notification } from "rxjs/Notification";
-import { Observable } from "rxjs/Observable";
-import { dematerialize } from "rxjs/operator/dematerialize";
-import { materialize } from "rxjs/operator/materialize";
-import { Subject } from "rxjs/Subject";
-import { Subscriber } from "rxjs/Subscriber";
-import { Subscription } from "rxjs/Subscription";
+import {
+    Notification,
+    Observable,
+    Subject,
+    Subscriber,
+    Subscription
+} from "rxjs";
+
+import { dematerialize, materialize } from "rxjs/operators";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { hide } from "../operator/hide";
+import { hide } from "../operators";
 import { BasePlugin } from "./plugin";
 import { Teardown } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
@@ -112,7 +114,10 @@ export class Deck {
                 this.states_.set(observable, state);
             }
 
-            state.subscription_ = hide.call(materialize.call(source)).subscribe({
+            state.subscription_ = source.pipe(
+                materialize(),
+                hide()
+            ).subscribe({
                 next: (notification: any) => {
                     if (this.paused_) {
                         state!.notifications_.push(notification);
@@ -124,7 +129,9 @@ export class Deck {
             });
             this.broadcast_();
 
-            return dematerialize.call(state.subject_.asObservable());
+            return state.subject_.asObservable().pipe(
+                dematerialize()
+            );
         };
     }
 

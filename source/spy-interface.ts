@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { PartialLogger } from "./logger";
 import { Auditor } from "./auditor";
 import { Match } from "./match";

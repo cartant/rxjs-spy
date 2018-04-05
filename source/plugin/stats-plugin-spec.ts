@@ -5,17 +5,12 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { NEVER, Subject, timer } from "rxjs";
+import { map, switchMap } from "rxjs/operators";
 import { GraphPlugin } from "./graph-plugin";
 import { StatsPlugin } from "./stats-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
-
-import "rxjs/add/observable/never";
-import "rxjs/add/observable/timer";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/switchMap";
 
 describe("StatsPlugin", () => {
 
@@ -60,7 +55,7 @@ describe("StatsPlugin", () => {
     it("should count root/leaf subscribes", () => {
 
         const subject = new Subject<number>();
-        const mapped = subject.map(value => value);
+        const mapped = subject.pipe(map(value => value));
 
         let stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(0);
@@ -88,7 +83,7 @@ describe("StatsPlugin", () => {
     it("should count flattened subscribes", () => {
 
         const subject = new Subject<number>();
-        const mapped = subject.switchMap(value => Observable.never<number>());
+        const mapped = subject.pipe(switchMap(value => NEVER));
 
         let stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(0);
@@ -138,7 +133,7 @@ describe("StatsPlugin", () => {
     it("should count errors", () => {
 
         const subject = new Subject<number>();
-        const subscription = subject.subscribe();
+        const subscription = subject.subscribe(() => {}, () => {});
 
         let stats = statsPlugin.stats;
         expect(stats.errors).to.equal(0);
@@ -176,7 +171,7 @@ describe("StatsPlugin", () => {
 
     it("should determine the timespan between the first and last notification", (callback: any) => {
 
-        Observable.timer(10).subscribe(
+        timer(10).subscribe(
             () => {
                 const stats = statsPlugin.stats;
                 expect(stats.timespan).to.not.be.below(10);
@@ -189,8 +184,8 @@ describe("StatsPlugin", () => {
     it("should determine the maximum and total depth", () => {
 
         const subject = new Subject<number>();
-        const mapped = subject.map(value => value);
-        const remapped = mapped.map(value => value);
+        const mapped = subject.pipe(map(value => value));
+        const remapped = mapped.pipe(map(value => value));
 
         let stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(0);

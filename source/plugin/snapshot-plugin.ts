@@ -4,16 +4,12 @@
  */
 
 import { StackFrame } from "error-stack-parser";
-import { Observable } from "rxjs/Observable";
-import { forkJoin } from "rxjs/observable/forkJoin";
-import { of } from "rxjs/observable/of";
-import { mapTo } from "rxjs/operator/mapTo";
-import { Subscriber } from "rxjs/Subscriber";
-import { Subscription } from "rxjs/Subscription";
+import { forkJoin, Observable, of, Subscriber, Subscription } from "rxjs";
+import { mapTo } from "rxjs/operators";
 import { getGraphRef, GraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { read } from "../match";
-import { hide } from "../operator/hide";
+import { hide } from "../operators";
 import { BasePlugin, Notification } from "./plugin";
 import { Spy } from "../spy-interface";
 import { getMappedStackTrace, getStackTrace } from "./stack-trace-plugin";
@@ -52,7 +48,10 @@ function mapStackTraces(snapshots: any[]): Observable<void> {
             mapSubscriptionStackTraces(snapshot);
         }
     });
-    return hide.call(mapTo.call(forkJoin(observables), undefined));
+    return forkJoin(observables).pipe(
+        mapTo(undefined),
+        hide()
+    );
 
     function mapSubscriptionStackTraces(subscriptionSnapshot: SubscriptionSnapshot): void {
 

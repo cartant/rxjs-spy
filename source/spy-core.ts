@@ -3,11 +3,14 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { Subscriber } from "rxjs/Subscriber";
-import { Subscription } from "rxjs/Subscription";
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    Subscriber,
+    Subscription
+} from "rxjs";
+
 import { Auditor } from "./auditor";
 import { detect, hook } from "./detect";
 import { Detector } from "./detector";
@@ -15,7 +18,7 @@ import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
-import { hide } from "./operator/hide";
+import { hide } from "./operators";
 
 import {
     DebugPlugin,
@@ -504,7 +507,7 @@ export class SpyCore implements Spy {
 
                     let source = this.preSelectSubject.asObservable();
                     selectors.forEach(selector => source = selector!(source));
-                    this.postSelectSubscription = hide.call(source).subscribe({
+                    this.postSelectSubscription = source.pipe(hide()).subscribe({
                         complete: () => this.postSelectSubscriber.complete(),
                         error: (error: any) => this.postSelectSubscriber.error(error),
                         next: (value: any) => this.postSelectSubscriber.next(value)
@@ -539,7 +542,7 @@ export class SpyCore implements Spy {
             preSelectObserver.complete.bind(preSelectObserver)
         );
 
-        const pluginsSubscription = hide.call(spy_.pluginsSubject_).subscribe({
+        const pluginsSubscription = spy_.pluginsSubject_.pipe(hide()).subscribe({
             next: (plugins: any) => preSelectObserver.let(plugins)
         });
 

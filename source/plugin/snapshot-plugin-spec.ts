@@ -5,20 +5,14 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { combineLatest, of, Subject } from "rxjs";
+import { map, mergeMap, switchMap } from "rxjs/operators";
 import { GraphPlugin } from "./graph-plugin";
+import { tag } from "../operators";
 import { SnapshotPlugin, SubscriptionSnapshot } from "./snapshot-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { toSubscriber } from "../util";
-
-import "rxjs/add/observable/combineLatest";
-import "rxjs/add/observable/of";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/mergeMap";
-import "rxjs/add/operator/switchMap";
-import "../add/operator/tag";
 
 describe("SnapshotPlugin", () => {
 
@@ -251,7 +245,7 @@ describe("SnapshotPlugin", () => {
         it("should spy on sources and sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.map((value) => value);
+            const mapped = subject.pipe(map((value) => value));
             const subscription = mapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -275,7 +269,7 @@ describe("SnapshotPlugin", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
-            const combined = Observable.combineLatest(subject1, subject2);
+            const combined = combineLatest(subject1, subject2);
             const subscription = combined.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -300,8 +294,8 @@ describe("SnapshotPlugin", () => {
         it("should spy on flattenings", () => {
 
             const subject = new Subject<number>();
-            const outer = subject.tag("outer");
-            const composed = outer.mergeMap((value) => Observable.of(value).tag("inner"));
+            const outer = subject.pipe(tag("outer"));
+            const composed = outer.pipe(mergeMap((value) => of(value).pipe(tag("inner"))));
             const subscription = composed.subscribe();
 
             let snapshot = plugin.snapshotAll();
@@ -333,7 +327,7 @@ describe("SnapshotPlugin", () => {
         it("should determine a subscription's sink subscription", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.map((value) => value);
+            const mapped = subject.pipe(map((value) => value));
             const subscription = mapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -357,8 +351,8 @@ describe("SnapshotPlugin", () => {
         it("should determine a subscription's root sink subscription", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.map((value) => value);
-            const remapped = mapped.map((value) => value);
+            const mapped = subject.pipe(map((value) => value));
+            const remapped = mapped.pipe(map((value) => value));
             const subscription = remapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -388,7 +382,7 @@ describe("SnapshotPlugin", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
-            const combined = Observable.combineLatest(subject1, subject2);
+            const combined = combineLatest(subject1, subject2);
             const subscription = combined.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -419,8 +413,8 @@ describe("SnapshotPlugin", () => {
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
             const innerSubject2 = new Subject<number>();
-            const composed1 = outerSubject.switchMap((value) => innerSubject1);
-            const composed2 = outerSubject.switchMap((value) => innerSubject2);
+            const composed1 = outerSubject.pipe(switchMap((value) => innerSubject1));
+            const composed2 = outerSubject.pipe(switchMap((value) => innerSubject2));
             const subscription1 = composed1.subscribe();
             const subscription2 = composed2.subscribe();
 

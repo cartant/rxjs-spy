@@ -5,16 +5,14 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
 import { identify } from "../identify";
 import { LogPlugin } from "./log-plugin";
+import { tag } from "../operators";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
-
-import "../add/operator/tag";
 
 const options = {
     defaultPlugins: false,
@@ -51,7 +49,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
@@ -72,7 +70,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string | null>();
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
 
             calls = [];
 
@@ -87,7 +85,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string | undefined>();
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
 
             calls = [];
 
@@ -102,7 +100,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.tag("people").subscribe();
+            const subscription = subject.pipe(tag("people")).subscribe();
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
@@ -117,7 +115,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.tag("people").subscribe((value) => {}, (error) => {});
+            const subscription = subject.pipe(tag("people")).subscribe((value) => {}, (error) => {});
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
@@ -172,7 +170,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next; value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Type = subject; notification = next; value =", "alice"]);
         });
 
         it("should match subscriber ids", () => {
@@ -189,7 +187,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next; value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Type = subject; notification = next; value =", "alice"]);
         });
 
         it("should match subscription ids", () => {
@@ -206,7 +204,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = Subject; notification = next; value =", "alice"]);
+            expect(calls[0]).to.deep.equal(["Type = subject; notification = next; value =", "alice"]);
         });
     });
 });

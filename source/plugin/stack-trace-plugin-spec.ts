@@ -5,15 +5,13 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
+import { map } from "rxjs/operators";
 import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
-
-import "rxjs/add/operator/map";
 
 describe("StackTracePlugin", () => {
 
@@ -39,7 +37,7 @@ describe("StackTracePlugin", () => {
     it("should determine the stack traces", () => {
 
         const subject = new Subject<number>();
-        const mapped = subject.map((value) => value);
+        const mapped = subject.pipe(map((value) => value));
         const subscription = mapped.subscribe();
 
         const subjectSubscriptionRef = subscriberRefsPlugin.get(subject);

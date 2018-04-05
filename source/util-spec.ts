@@ -5,13 +5,10 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { interval, Subject } from "rxjs";
+import { mapTo } from "rxjs/operators";
+import { tag } from "./operators";
 import { inferPath, inferType } from "./util";
-
-import "rxjs/add/observable/interval";
-import "rxjs/add/operator/mapTo";
-import "./add/operator/tag";
 
 describe("util", () => {
 
@@ -19,8 +16,12 @@ describe("util", () => {
 
         it("should infer a composed observable's path", () => {
 
-            const source = Observable.interval(1000).tag("interval").mapTo(0).tag("map");
-            expect(inferPath(source)).to.equal("/interval/tag/mapTo/tag");
+            const source = interval(1000).pipe(
+                tag("interval"),
+                mapTo(0),
+                tag("map")
+            );
+            expect(inferPath(source)).to.equal("/observable/tag/mapTo/tag");
         });
     });
 
@@ -28,20 +29,20 @@ describe("util", () => {
 
         it("should infer an observable's type", () => {
 
-            const source = Observable.interval(1000);
-            expect(inferType(source)).to.equal("interval");
+            const source = interval(1000);
+            expect(inferType(source)).to.equal("observable");
         });
 
         it("should infer an operator's type", () => {
 
-            const source = Observable.interval(1000).mapTo(0);
+            const source = interval(1000).pipe(mapTo(0));
             expect(inferType(source)).to.equal("mapTo");
         });
 
         it("should infer a subject's type", () => {
 
             const source = new Subject<number>();
-            expect(inferType(source)).to.equal("Subject");
+            expect(inferType(source)).to.equal("subject");
         });
     });
 });

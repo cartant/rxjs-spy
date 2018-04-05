@@ -5,16 +5,13 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { BehaviorSubject, Subject } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import { Detector } from "./detector";
+import { tag } from "./operators";
 import { SnapshotPlugin } from "./plugin/snapshot-plugin";
 import { create } from "./spy-factory";
 import { Spy } from "./spy-interface";
-
-import "rxjs/add/operator/mergeMap";
-import "./add/operator/tag";
 
 const options = {
     keptDuration: -1,
@@ -43,7 +40,7 @@ describe("detector", () => {
     it("should detect subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
-        const source = subject.tag("source");
+        const source = subject.pipe(tag("source"));
 
         subject.next();
 
@@ -69,8 +66,10 @@ describe("detector", () => {
     it("should detect flattening subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
-        const source = subject.tag("source");
-        const merged = source.mergeMap((value) => new BehaviorSubject<number>(value).tag("merge"));
+        const source = subject.pipe(tag("source"));
+        const merged = source.pipe(
+            mergeMap((value) => new BehaviorSubject<number>(value).pipe(tag("merge")))
+        );
         const subscription = merged.subscribe();
 
         subject.next();

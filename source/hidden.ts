@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 
 export function hidden<T>(observable: Observable<T>): boolean {
 

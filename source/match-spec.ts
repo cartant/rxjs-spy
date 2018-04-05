@@ -5,14 +5,11 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
+import { from, Observable, of } from "rxjs";
 import * as sinon from "sinon";
 import { identify } from "./identify";
 import { matches, read, toString } from "./match";
-
-import "rxjs/add/observable/from";
-import "rxjs/add/observable/of";
-import "./add/operator/tag";
+import { tag } from "./operators";
 
 describe("match", () => {
 
@@ -22,34 +19,32 @@ describe("match", () => {
 
         beforeEach(() => {
 
-            source = Observable
-                .from(["alice", "bob"])
-                .tag("people");
+            source = from(["alice", "bob"]).pipe(tag("people"));
         });
 
         it("should match an observable", () => {
 
             expect(matches(source, source)).to.be.true;
-            expect(matches(Observable.of("mallory"), source)).to.be.false;
+            expect(matches(of("mallory"), source)).to.be.false;
         });
 
         it("should match a string tag", () => {
 
             expect(matches(source, "people")).to.be.true;
-            expect(matches(Observable.of("mallory"), "people")).to.be.false;
+            expect(matches(of("mallory"), "people")).to.be.false;
         });
 
         it("should match a string identity", () => {
 
             const identity = identify(source);
             expect(matches(source, identity)).to.be.true;
-            expect(matches(Observable.of("mallory"), identity)).to.be.false;
+            expect(matches(of("mallory"), identity)).to.be.false;
         });
 
         it("should match a regular expression", () => {
 
             expect(matches(source, /^people$/)).to.be.true;
-            expect(matches(Observable.of("mallory"), /^people$/)).to.be.false;
+            expect(matches(of("mallory"), /^people$/)).to.be.false;
         });
 
         it("should match a predicate", () => {
@@ -59,7 +54,7 @@ describe("match", () => {
             }
 
             expect(matches(source, predicate)).to.be.true;
-            expect(matches(Observable.of("mallory"), predicate)).to.be.false;
+            expect(matches(of("mallory"), predicate)).to.be.false;
         });
 
         it("should pass the observable to the predicate", () => {

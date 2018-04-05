@@ -5,20 +5,15 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-
-import "rxjs/add/observable/from";
-import "rxjs/add/operator/toArray";
-import "rxjs/add/operator/toPromise";
-import "./hide";
+import { from } from "rxjs";
+import { toArray } from "rxjs/operators";
+import { hide } from "./hide";
 
 describe("hide", () => {
 
     it("should attach a hide operator", () => {
 
-        const source = Observable
-            .from(["alice", "bob"])
-            .hide();
+        const source = from(["alice", "bob"]).pipe(hide());
 
         expect(source).to.have.property("operator");
         expect(source["operator"]).to.have.property("hide", true);
@@ -26,10 +21,8 @@ describe("hide", () => {
 
     it("should do nothing else", () => {
 
-        return Observable
-            .from(["alice", "bob"])
-            .hide()
-            .toArray()
+        return from(["alice", "bob"])
+            .pipe(hide(), toArray())
             .toPromise()
             .then(value => expect(value).to.deep.equal(["alice", "bob"]));
     });

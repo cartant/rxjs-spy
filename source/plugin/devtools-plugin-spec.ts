@@ -5,7 +5,7 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
 import * as sinon from "sinon";
 import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools/constants";
 import { Connection, Extension } from "../devtools/interfaces";

@@ -5,22 +5,14 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
-import { Subject } from "rxjs/Subject";
-import { Subscription } from "rxjs/Subscription";
+import { combineLatest, NEVER, Observable, Observer, Subject, Subscription } from "rxjs";
+import { map, mergeMap, switchMap } from "rxjs/operators";
 import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
+import { tag } from "../operators";
 import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
-
-import "rxjs/add/observable/combineLatest";
-import "rxjs/add/observable/never";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/mergeMap";
-import "rxjs/add/operator/switchMap";
-import "../add/operator/tag";
 
 describe("GraphPlugin", () => {
 
@@ -73,7 +65,7 @@ describe("GraphPlugin", () => {
             it("should flush errored root subscriptions", () => {
 
                 const subject = new Subject<number>();
-                const subscription = subject.subscribe();
+                const subscription = subject.subscribe(() => {}, () => {});
 
                 const { sentinel } = getGraphRef(subscriberRefsPlugin.get(subject));
                 expect(sentinel.sources).to.have.length(1);
@@ -110,7 +102,7 @@ describe("GraphPlugin", () => {
 
                 const source1 = new Subject<number>();
                 const source2 = new Subject<number>();
-                const combined = Observable.combineLatest(source1, source1);
+                const combined = combineLatest(source1, source1);
                 const subscription = combined.subscribe();
 
                 const sourceGraphRef = getGraphRef(subscriberRefsPlugin.get(source1));
@@ -139,8 +131,8 @@ describe("GraphPlugin", () => {
 
                 const source1 = new Subject<number>();
                 const source2 = new Subject<number>();
-                const combined = Observable.combineLatest(source1, source1);
-                const subscription = combined.subscribe();
+                const combined = combineLatest(source1, source1);
+                const subscription = combined.subscribe(() => {}, () => {});
 
                 const sourceGraphRef = getGraphRef(subscriberRefsPlugin.get(source1));
                 const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
@@ -168,8 +160,8 @@ describe("GraphPlugin", () => {
 
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
-                const outer = subject.tag("outer");
-                const composed = outer.mergeMap((value) => inner);
+                const outer = subject.pipe(tag("outer"));
+                const composed = outer.pipe(mergeMap((value) => inner));
                 const subscription = composed.subscribe();
 
                 subject.next(0);
@@ -194,9 +186,9 @@ describe("GraphPlugin", () => {
 
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
-                const outer = subject.tag("outer");
-                const composed = outer.mergeMap((value) => inner);
-                const subscription = composed.subscribe();
+                const outer = subject.pipe(tag("outer"));
+                const composed = outer.pipe(mergeMap((value) => inner));
+                const subscription = composed.subscribe(() => {}, () => {});
 
                 subject.next(0);
 
@@ -248,7 +240,7 @@ describe("GraphPlugin", () => {
                     inner.subscribe(observer);
                     return () => {};
                 });
-                const subscription = custom.subscribe();
+                const subscription = custom.subscribe(() => {}, () => {});
 
                 const innerGraphRef = getGraphRef(subscriberRefsPlugin.get(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
@@ -328,7 +320,7 @@ describe("GraphPlugin", () => {
         it("should graph sources and sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.map((value) => value);
+            const mapped = subject.pipe(map((value) => value));
             const subscription = mapped.subscribe();
 
             const subjectSubscriberRef = subscriberRefsPlugin.get(subject);
@@ -352,7 +344,7 @@ describe("GraphPlugin", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
-            const combined = Observable.combineLatest(subject1, subject2);
+            const combined = combineLatest(subject1, subject2);
             const subscription = combined.subscribe();
 
             const subject1SubscriberRef = subscriberRefsPlugin.get(subject1);
@@ -384,13 +376,13 @@ describe("GraphPlugin", () => {
         it("should graph flattenings", () => {
 
             const subject = new Subject<number>();
-            const outer = subject.tag("outer");
+            const outer = subject.pipe(tag("outer"));
             const merges: Observable<number>[] = [];
-            const composed = outer.mergeMap((value) => {
-                const m = Observable.never<number>().tag("inner");
+            const composed = outer.pipe(mergeMap((value) => {
+                const m = NEVER.pipe(tag("inner"));
                 merges.push(m);
                 return m;
-            });
+            }));
             const subscription = composed.subscribe();
 
             const subjectSubscriberRef = subscriberRefsPlugin.get(subject);
@@ -425,8 +417,8 @@ describe("GraphPlugin", () => {
 
         it("should graph custom observables", () => {
 
-            const inner1 = Observable.never<number>();
-            const inner2 = Observable.never<number>();
+            const inner1 = NEVER;
+            const inner2 = NEVER;
 
             const custom = Observable.create((observer: Observer<number>) => {
 
@@ -466,7 +458,7 @@ describe("GraphPlugin", () => {
         it("should determine sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.map((value) => value);
+            const mapped = subject.pipe(map((value) => value));
             const subscription = mapped.subscribe();
 
             const subjectSubscriberRef = subscriberRefsPlugin.get(subject);
@@ -484,8 +476,8 @@ describe("GraphPlugin", () => {
         it("should determine root sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.map((value) => value);
-            const remapped = mapped.map((value) => value);
+            const mapped = subject.pipe(map((value) => value));
+            const remapped = mapped.pipe(map((value) => value));
             const subscription = remapped.subscribe();
 
             const subjectSubscriberRef = subscriberRefsPlugin.get(subject);
@@ -508,7 +500,7 @@ describe("GraphPlugin", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
-            const combined = Observable.combineLatest(subject1, subject2);
+            const combined = combineLatest(subject1, subject2);
             const subscription = combined.subscribe();
 
             const subject1SubscriberRef = subscriberRefsPlugin.get(subject1);
@@ -532,8 +524,8 @@ describe("GraphPlugin", () => {
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
             const innerSubject2 = new Subject<number>();
-            const composed1 = outerSubject.switchMap((value) => innerSubject1);
-            const composed2 = outerSubject.switchMap((value) => innerSubject2);
+            const composed1 = outerSubject.pipe(switchMap((value) => innerSubject1));
+            const composed2 = outerSubject.pipe(switchMap((value) => innerSubject2));
             const subscription1 = composed1.subscribe();
             const subscription2 = composed2.subscribe();
 
@@ -556,7 +548,7 @@ describe("GraphPlugin", () => {
         it("should determine the depth", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.map((value) => value);
+            const mapped = subject.pipe(map((value) => value));
             const subscription = mapped.subscribe();
 
             const subjectSubscriberRef = subscriberRefsPlugin.get(subject);
@@ -575,13 +567,13 @@ describe("GraphPlugin", () => {
         it("should indicate flattened subscriptions", () => {
 
             const subject = new Subject<number>();
-            const outer = subject.tag("outer");
+            const outer = subject.pipe(tag("outer"));
             const merges: Observable<number>[] = [];
-            const composed = outer.mergeMap((value) => {
-                const m = Observable.never<number>().tag("inner");
+            const composed = outer.pipe(mergeMap((value) => {
+                const m = NEVER.pipe(tag("inner"));
                 merges.push(m);
                 return m;
-            });
+            }));
             const subscription = composed.subscribe();
 
             const outerSubscriberRef = subscriberRefsPlugin.get(outer);

@@ -3,9 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subscriber } from "rxjs/Subscriber";
-import { Subscription } from "rxjs/Subscription";
+import { Observable, Subscriber, Subscription } from "rxjs";
 
 export interface SubscriberRef {
     observable: Observable<any>;

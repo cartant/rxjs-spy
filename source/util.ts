@@ -3,10 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable } from "rxjs/Observable";
-import { PartialObserver } from "rxjs/Observer";
-import { Subscriber } from "rxjs/Subscriber";
-import { rxSubscriber as rxSubscriberSymbol } from "rxjs/symbol/rxSubscriber";
+import { Observable, PartialObserver, Subscriber } from "rxjs";
 
 export function inferPath(observable: Observable<any>): string {
 
@@ -24,10 +21,9 @@ export function inferType(observable: Observable<any>): string {
 
     const prototype = Object.getPrototypeOf(operator ? operator : observable);
     if (prototype.constructor && prototype.constructor.name) {
-        return prototype.constructor.name.replace(
-            /^([\w])(\w+)(Observable|Operator)$/,
-            (match: string, p1: string, p2: string) => `${p1.toLowerCase()}${p2}`
-        );
+        let { name } = prototype.constructor;
+        name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
+        return name.replace(/^(\w+)(Observable|Operator)$/, (match: string, p: string) => p);
     }
     return "unknown";
 }
@@ -47,6 +43,7 @@ const empty = {
     next(value: any): void {},
     complete(): void {}
 };
+const SubscriberSymbol = Symbol.for("rxSubscriber");
 
 // https://github.com/ReactiveX/rxjs/blob/master/src/util/toSubscriber.ts
 //
@@ -65,8 +62,8 @@ export function toSubscriber<T>(
         if (nextOrObserver instanceof Subscriber) {
             return nextOrObserver as Subscriber<T>;
         }
-        if (nextOrObserver[rxSubscriberSymbol]) {
-            return nextOrObserver[rxSubscriberSymbol]();
+        if (nextOrObserver[SubscriberSymbol]) {
+            return nextOrObserver[SubscriberSymbol]();
         }
     }
 

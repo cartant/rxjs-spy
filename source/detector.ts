@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Subscription } from "rxjs/Subscription";
+import { Subscription } from "rxjs";
 
 import {
     ObservableSnapshot,

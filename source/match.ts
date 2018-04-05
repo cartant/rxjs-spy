@@ -3,10 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable } from "rxjs/Observable";
-import { Operator } from "rxjs/Operator";
-import { Subscriber } from "rxjs/Subscriber";
-import { Subscription } from "rxjs/Subscription";
+import { Observable, Operator, Subscriber, Subscription } from "rxjs";
 import { identify } from "./identify";
 import { isSubscriptionRef, SubscriberRef, SubscriptionRef } from "./subscription-ref";
 import { isObservable } from "./util";

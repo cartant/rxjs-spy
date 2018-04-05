@@ -3,10 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable } from "rxjs/Observable";
-import { merge } from "rxjs/observable/merge";
-import { never } from "rxjs/observable/never";
-import { Subscriber } from "rxjs/Subscriber";
+import { merge, NEVER, Observable, Subscriber } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
 import { SubscriptionRef } from "../subscription-ref";
@@ -25,7 +22,7 @@ export class LetPlugin extends BasePlugin {
         super(`let(${matchToString(match)})`);
 
         this.match_ = match;
-        this.select_ = complete ? select : source => merge(never(), select(source));
+        this.select_ = complete ? select : source => merge(NEVER, select(source));
     }
 
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {

@@ -5,14 +5,11 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import { of, Subject } from "rxjs";
 import { LetPlugin } from "./let-plugin";
+import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
-
-import "rxjs/add/observable/of";
-import "../add/operator/tag";
 
 describe("LetPlugin", () => {
 
@@ -35,7 +32,7 @@ describe("LetPlugin", () => {
 
         const values: any[] = [];
         const subject = new Subject<string>();
-        const subscription = subject.tag("people").subscribe((value) => values.push(value));
+        const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);
@@ -50,7 +47,7 @@ describe("LetPlugin", () => {
 
         const values: any[] = [];
         const subject = new Subject<string>();
-        const subscription = subject.tag("people").subscribe((value) => values.push(value));
+        const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const selected = new Subject<string>();
         spy.plug(new LetPlugin("people", () => selected));
@@ -68,10 +65,10 @@ describe("LetPlugin", () => {
 
         const values: any[] = [];
         const subject = new Subject<string>();
-        const subscription = subject.tag("people").subscribe((value) => values.push(value));
+        const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const selected = new Subject<string>();
-        spy.plug(new LetPlugin("people", () => Observable.of("bob")));
+        spy.plug(new LetPlugin("people", () => of("bob")));
 
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);
@@ -84,10 +81,10 @@ describe("LetPlugin", () => {
 
         const values: any[] = [];
         const subject = new Subject<string>();
-        const subscription = subject.tag("people").subscribe((value) => values.push(value));
+        const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const selected = new Subject<string>();
-        spy.plug(new LetPlugin("people", () => Observable.of("bob"), { complete: false }));
+        spy.plug(new LetPlugin("people", () => of("bob"), { complete: false }));
 
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);

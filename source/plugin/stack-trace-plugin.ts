@@ -4,15 +4,13 @@
  */
 
 import { parse, StackFrame } from "error-stack-parser";
-import { Observable } from "rxjs/Observable";
-import { defer } from "rxjs/observable/defer";
-import { of } from "rxjs/observable/of";
-import { shareReplay } from "rxjs/operator/shareReplay";
+import { defer, Observable, of } from "rxjs";
+import { shareReplay } from "rxjs/operators";
 
 // @ts-ignore: Could not find a declaration file for module 'stacktrace-gps'.
 import * as StackTraceGps from "stacktrace-gps";
 
-import { hide } from "../operator/hide";
+import { hide } from "../operators";
 import { BasePlugin } from "./plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
@@ -65,18 +63,21 @@ export class StackTracePlugin extends BasePlugin {
 
         if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
             setStackTraceRef(ref, {
-                mappedStackTrace: hide.call(shareReplay.call(defer(() => {
+                mappedStackTrace: defer(() => {
                     const gps = new StackTraceGps({ sourceCache: this.sourceCache_ });
                     return Promise.all(stackFrames.map(stackFrame => gps
                         .pinpoint(stackFrame)
                         .catch(() => stackFrame)
                     ));
-                }), 1)),
+                }).pipe(
+                    shareReplay(1),
+                    hide()
+                ),
                 stackTrace: stackFrames
             });
         } else {
             setStackTraceRef(ref, {
-                mappedStackTrace: hide.call(of(stackFrames)),
+                mappedStackTrace: of(stackFrames).pipe(hide()),
                 stackTrace: stackFrames
             });
         }

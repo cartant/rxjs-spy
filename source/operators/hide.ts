@@ -4,9 +4,7 @@
  */
 /*tslint:disable:no-use-before-declare*/
 
-import { Operator } from "rxjs/Operator";
-import { Observable } from "rxjs/Observable";
-import { Subscriber } from "rxjs/Subscriber";
+import { Observable, Operator, Subscriber } from "rxjs";
 
 export function hide<T>(): (source: Observable<T>) => Observable<T> {
 

@@ -5,13 +5,16 @@
 /*tslint:disable:no-debugger*/
 
 import { stringify } from "circular-json";
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
-import { fromPromise } from "rxjs/observable/fromPromise";
-import { filter } from "rxjs/operator/filter";
-import { map } from "rxjs/operator/map";
-import { Subscriber } from "rxjs/Subscriber";
-import { Subscription } from "rxjs/Subscription";
+
+import {
+    from,
+    Observable,
+    Observer,
+    Subscriber,
+    Subscription
+} from "rxjs";
+
+import { filter, map } from "rxjs/operators";
 
 import {
     BATCH_MILLISECONDS,
@@ -43,7 +46,7 @@ import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { LogPlugin } from "./log-plugin";
 import { read } from "../match";
-import { hide } from "../operator/hide";
+import { hide } from "../operators";
 import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
@@ -98,70 +101,72 @@ export class DevToolsPlugin extends BasePlugin {
                 () => {}
             );
 
-            const filtered = filter.call(this.posts_, isPostRequest);
-            this.responses_ = map.call(filtered, (request: Post & Request) => {
-                const response: Response = {
-                    messageType: MESSAGE_RESPONSE,
-                    request
-                };
-                switch (request.requestType) {
-                case "log":
-                    this.recordPlugin_(request["spyId"], request.postId, new LogPlugin(this.spy_, request["spyId"]));
-                    response["pluginId"] = request.postId;
-                    break;
-                case "log-teardown":
-                    this.teardownPlugin_(request["pluginId"]);
-                    break;
-                case "pause":
-                    const plugin = new PausePlugin(request["spyId"]);
-                    this.recordPlugin_(request["spyId"], request.postId, plugin);
-                    hide.call(plugin.deck.stats).subscribe((stats: DeckStats) => {
-                        this.batchDeckStats_(toStats(request["spyId"], stats));
-                    });
-                    response["pluginId"] = request.postId;
-                    break;
-                case "pause-command":
-                    const pluginRecord = this.plugins_.get(request["pluginId"]) as PluginRecord | undefined;
-                    if (pluginRecord) {
-                        const { deck } = pluginRecord.plugin as PausePlugin;
-                        switch (request["command"]) {
-                        case "clear":
-                        case "pause":
-                        case "resume":
-                        case "skip":
-                        case "step":
-                            deck[request["command"]]();
-                            break;
-                        case "inspect":
-                            response.error = "Not implemented.";
-                            break;
-                        default:
-                            response.error = "Unexpected command.";
-                            break;
+            this.responses_ = this.posts_.pipe(
+                filter(isPostRequest),
+                map((request: Post & Request) => {
+                    const response: Response = {
+                        messageType: MESSAGE_RESPONSE,
+                        request
+                    };
+                    switch (request.requestType) {
+                    case "log":
+                        this.recordPlugin_(request["spyId"], request.postId, new LogPlugin(this.spy_, request["spyId"]));
+                        response["pluginId"] = request.postId;
+                        break;
+                    case "log-teardown":
+                        this.teardownPlugin_(request["pluginId"]);
+                        break;
+                    case "pause":
+                        const plugin = new PausePlugin(request["spyId"]);
+                        this.recordPlugin_(request["spyId"], request.postId, plugin);
+                        plugin.deck.stats.pipe(hide()).subscribe((stats: DeckStats) => {
+                            this.batchDeckStats_(toStats(request["spyId"], stats));
+                        });
+                        response["pluginId"] = request.postId;
+                        break;
+                    case "pause-command":
+                        const pluginRecord = this.plugins_.get(request["pluginId"]) as PluginRecord | undefined;
+                        if (pluginRecord) {
+                            const { deck } = pluginRecord.plugin as PausePlugin;
+                            switch (request["command"]) {
+                            case "clear":
+                            case "pause":
+                            case "resume":
+                            case "skip":
+                            case "step":
+                                deck[request["command"]]();
+                                break;
+                            case "inspect":
+                                response.error = "Not implemented.";
+                                break;
+                            default:
+                                response.error = "Unexpected command.";
+                                break;
+                            }
                         }
+                        break;
+                    case "pause-teardown":
+                        this.teardownPlugin_(request["pluginId"]);
+                        break;
+                    case "snapshot":
+                        this.snapshotHinted_ = false;
+                        const snapshotPlugin = this.spy_.find(SnapshotPlugin);
+                        if (snapshotPlugin) {
+                            const snapshot = snapshotPlugin.snapshotAll();
+                            response["snapshot"] = toSnapshot(snapshot);
+                            return response;
+                        }
+                        response.error = "Cannot find snapshot plugin.";
+                        break;
+                    default:
+                        response.error = "Unexpected request.";
+                        break;
                     }
-                    break;
-                case "pause-teardown":
-                    this.teardownPlugin_(request["pluginId"]);
-                    break;
-                case "snapshot":
-                    this.snapshotHinted_ = false;
-                    const snapshotPlugin = this.spy_.find(SnapshotPlugin);
-                    if (snapshotPlugin) {
-                        const snapshot = snapshotPlugin.snapshotAll();
-                        response["snapshot"] = toSnapshot(snapshot);
-                        return response;
-                    }
-                    response.error = "Cannot find snapshot plugin.";
-                    break;
-                default:
-                    response.error = "Unexpected request.";
-                    break;
-                }
-                return response;
-            });
+                    return response;
+                })
+            );
 
-            this.subscription_ = hide.call(this.responses_).subscribe((response: Response) => {
+            this.subscription_ = this.responses_.pipe(hide()).subscribe((response: Response) => {
                 if (this.connection_) {
                     this.connection_.post(response);
                 }

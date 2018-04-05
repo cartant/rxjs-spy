@@ -5,21 +5,19 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
+import { from } from "rxjs";
 import { hidden } from "./hidden";
-
-import "rxjs/add/observable/from";
-import "./add/operator/hide";
+import { hide } from "./operators";
 
 describe("hidden", () => {
 
     it("should return true if hidden", () => {
 
-        expect(hidden(Observable.from([]).hide())).to.be.true;
+        expect(hidden(from([]).pipe(hide()))).to.be.true;
     });
 
     it("should return false if not hidden", () => {
 
-        expect(hidden(Observable.from([]))).to.be.false;
+        expect(hidden(from([]))).to.be.false;
     });
 });
