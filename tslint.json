@@ -18,6 +18,7 @@
     "comment-format": { "severity": "off" },
     "completed-docs": { "severity": "off" },
     "curly": { "severity": "error" },
+    "deprecation": { "severity": "warning" },
     "eofline": { "severity": "off" },
     "file-header": { "severity": "off" },
     "forin": { "severity": "error" },
