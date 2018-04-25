@@ -59,7 +59,7 @@
   },
   "private": true,
   "publishConfig": {
-    "tag": "rc"
+    "tag": "latest"
   },
   "repository": {
     "type": "git",
