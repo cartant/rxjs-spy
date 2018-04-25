@@ -20,7 +20,7 @@ Have a look at the this page's source:
 
     (function () {
 
-        var interval = new Rx.Observable
+        var interval = new rxjs.Observable
             .interval(2000)
             .tag("interval");
 
@@ -140,7 +140,7 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
     (function () {
 
-        var interval = new Rx.Observable
+        var interval = new rxjs.Observable
             .interval(2000)
             .tag("interval");
 
