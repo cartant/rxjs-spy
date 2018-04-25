@@ -45,8 +45,8 @@ const spy = create();
 Or `require` the module for use with Node or a CommonJS bundler:
 
 ```js
-const rxjsSpy = require("rxjs-spy");
-const spy = rxjsSpy.create();
+const { create } = require("rxjs-spy");
+const spy = create();
 ```
 
 Or include the UMD bundle for use as a `script`:
@@ -55,7 +55,8 @@ Or include the UMD bundle for use as a `script`:
 <script src="https://unpkg.com/rxjs/bundles/Rx.min.js"></script>
 <script src="https://unpkg.com/rxjs-spy"></script>
 <script>
-var spy = RxSpy.create();
+const { create } = rxjsSpy;
+const spy = create();
 </script>
 ```
 
@@ -103,7 +104,7 @@ spy.log(tag => tag === "some-tag");
 
 ## Module API
 
-The methods in the module API are callable via imports, requires or the UMD `RxSpy` global. Most methods return a teardown function that will undo the API method's action when called.
+The methods in the module API are callable via imports, requires or the UMD `rxjsSpy` global. Most methods return a teardown function that will undo the API method's action when called.
 
 * [`create`](#module-create)
 * [`Spy.show`](#module-show)

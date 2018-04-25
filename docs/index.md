@@ -13,7 +13,7 @@ Have a look at the this page's source:
 ```html
 <script>
 
-    var spy = RxSpy.create();
+    var spy = rxjsSpy.create();
 
 </script>
 <script>
@@ -129,11 +129,11 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
     ga('send', 'pageview');
 </script>
 <script src="https://unpkg.com/core-js/client/core.js"></script>
-<script src="https://unpkg.com/rxjs@5/bundles/Rx.js"></script>
-<script src="https://unpkg.com/rxjs-spy@6.0.0-rc.3/bundles/rxjs-spy.umd.js"></script>
+<script src="https://unpkg.com/rxjs@6/bundles/rxjs.umd.js"></script>
+<script src="https://unpkg.com/rxjs-spy@7/bundles/rxjs-spy.umd.js"></script>
 <script>
 
-    var spy = RxSpy.create();
+    var spy = rxjsSpy.create();
 
 </script>
 <script>
