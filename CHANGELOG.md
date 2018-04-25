@@ -4,6 +4,7 @@
 Breaking changes:
 
 * Upgrade to RxJS version 6.
+* Rename the UMD global to `rxjsSpy`.
 
 <a name="6.1.0"></a>
 ## [6.1.0](https://github.com/cartant/rxjs-spy/compare/v6.0.0...v6.1.0) (2017-12-18)
