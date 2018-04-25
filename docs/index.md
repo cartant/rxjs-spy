@@ -19,18 +19,16 @@ Have a look at the this page's source:
 <script>
 
     (function () {
-
-        var interval = new rxjs.Observable
-            .interval(2000)
-            .tag("interval");
-
-        var people = interval
-            .map(function (value) {
+        var interval = rxjs.interval(2000).pipe(
+            rxjsSpy.operators.tag("interval")
+        );
+        var people = interval.pipe(
+            rxjs.operators.map(function (value) {
                 const names = ["alice", "bob"];
                 return names[value % names.length];
-            })
-            .tag("people")
-            .subscribe();
+            }),
+            rxjsSpy.operators.tag("people")
+        ).subscribe();
     })();
 
 </script>
@@ -139,18 +137,16 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 <script>
 
     (function () {
-
-        var interval = new rxjs.Observable
-            .interval(2000)
-            .tag("interval");
-
-        var people = interval
-            .map(function (value) {
+        var interval = rxjs.interval(2000).pipe(
+            rxjsSpy.operators.tag("interval")
+        );
+        var people = interval.pipe(
+            rxjs.operators.map(function (value) {
                 const names = ["alice", "bob"];
                 return names[value % names.length];
-            })
-            .tag("people")
-            .subscribe();
+            }),
+            rxjsSpy.operators.tag("people")
+        ).subscribe();
     })();
 
 </script>
