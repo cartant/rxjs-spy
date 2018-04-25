@@ -1,3 +1,10 @@
+<a name="7.0.0"></a>
+## [7.0.0](https://github.com/cartant/rxjs-spy/compare/v6.1.0...v7.0.0) (2018-04-25)
+
+Breaking changes:
+
+* Upgrade to RxJS version 6.
+
 <a name="6.1.0"></a>
 ## [6.1.0](https://github.com/cartant/rxjs-spy/compare/v6.0.0...v6.1.0) (2017-12-18)
 
