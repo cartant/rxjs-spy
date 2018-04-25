@@ -52,8 +52,8 @@ const spy = create();
 Or include the UMD bundle for use as a `script`:
 
 ```html
-<script src="https://unpkg.com/rxjs@6/bundles/rxjs.umd.js"></script>
-<script src="https://unpkg.com/rxjs-spy@7/bundles/rxjs-spy.umd.js"></script>
+<script src="https://unpkg.com/rxjs@6/bundles/rxjs.umd.min.js"></script>
+<script src="https://unpkg.com/rxjs-spy@7/bundles/rxjs-spy.min.umd.js"></script>
 <script>
 const { create } = rxjsSpy;
 const spy = create();
