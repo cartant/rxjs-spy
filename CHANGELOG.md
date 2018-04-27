@@ -1,7 +1,14 @@
+<a name="7.0.1"></a>
+## [7.0.1](https://github.com/cartant/rxjs-spy/compare/v7.0.0...v7.0.1) (2018-04-27)
+
+### Fixes:
+
+* Fix RxJS peer dependency. ([164068c](https://github.com/cartant/rxjs-spy/commit/164068c))
+
 <a name="7.0.0"></a>
 ## [7.0.0](https://github.com/cartant/rxjs-spy/compare/v6.1.0...v7.0.0) (2018-04-25)
 
-Breaking changes:
+### Breaking changes:
 
 * Upgrade to RxJS version 6.
 * Rename the UMD global to `rxjsSpy`.
@@ -9,11 +16,11 @@ Breaking changes:
 <a name="6.1.0"></a>
 ## [6.1.0](https://github.com/cartant/rxjs-spy/compare/v6.0.0...v6.1.0) (2017-12-18)
 
-Fixes:
+### Fixes:
 
 * When `sourceMaps` are enabled, memory usage has been hugely reduced. The resolution of the stack traces using source maps is now deferred and is wrapped in an observable.
 
-Features:
+### Features:
 
 * Subscription snapshots now include a `mappedStackTrace` observable that resolves a stack trace (if `sourceMaps` is enabled).
 * The `show` command now limits the maximum number of observables that can be logged to the console.
@@ -21,7 +28,7 @@ Features:
 <a name="6.0.0"></a>
 ## [6.0.0](https://github.com/cartant/rxjs-spy/compare/v5.2.3...v6.0.0) (2017-12-07)
 
-Breaking changes:
+### Breaking changes:
 
 * The module API has been replaced with a factory and a class/interface. Instead of calling a `spy` method, call `create` which will return a instance that implements the `Spy` interface.
 * The `plugins` option has been removed and `defaultPlugins: boolean` has been added.
@@ -34,7 +41,7 @@ Breaking changes:
 * The console global - `rxSpy` - won't exist until `create` has been called.
 * `undefined` is favoured for return values, etc. rather than `null`.
 
-Fixes:
+### Fixes:
 
 * When calling `show`, `console.error` is no longer used for the unsubscribed indicator.
 * For memory reasons, raw snapshots, etc. are no longer logged to the console when calling `show` or `log`.
@@ -42,11 +49,11 @@ Fixes:
 * Patching of `Observable.prototype` has been removed.
 * The `GraphPlugin` now uses a single `setInterval` when cleaning up unsubscribed subscription refs.
 
-Non-breaking changes:
+### Non-breaking changes:
 
 * Switched to Webpack.
 
-Features:
+### Features:
 
 * When logging, if the observable does not have a tag, its type is logged instead.
 * Options have been added to the `LetPlugin` so that completions from the selected observable can be ignored - so it's possible to return something like `Observable.of(42)` without having the spied-upon observable complete.
