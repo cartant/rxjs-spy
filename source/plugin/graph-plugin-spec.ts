@@ -211,7 +211,7 @@ describe("GraphPlugin", () => {
             it("should flush completed custom source subscriptions", () => {
 
                 const inner = new Subject<number>();
-                const custom = Observable.create((observer: Observer<number>) => {
+                const custom = new Observable<number>(observer => {
                     inner.subscribe(observer);
                     return () => {};
                 });
@@ -236,7 +236,7 @@ describe("GraphPlugin", () => {
             it("should flush errored custom source subscriptions", () => {
 
                 const inner = new Subject<number>();
-                const custom = Observable.create((observer: Observer<number>) => {
+                const custom = new Observable<number>(observer => {
                     inner.subscribe(observer);
                     return () => {};
                 });
@@ -262,7 +262,7 @@ describe("GraphPlugin", () => {
 
                 const inner = new Subject<number>();
                 let innerSubscription: Subscription = undefined!;
-                const custom = Observable.create((observer: Observer<number>) => {
+                const custom = new Observable<number>(observer => {
                     innerSubscription = inner.subscribe(observer);
                     return () => {};
                 });
@@ -420,7 +420,7 @@ describe("GraphPlugin", () => {
             const inner1 = NEVER;
             const inner2 = NEVER;
 
-            const custom = Observable.create((observer: Observer<number>) => {
+            const custom = new Observable<number>(observer => {
 
                 inner1.subscribe(observer);
                 inner2.subscribe(observer);

@@ -96,7 +96,7 @@ export class DevToolsPlugin extends BasePlugin {
             const extension = window[EXTENSION_KEY] as Extension;
             this.connection_ = extension.connect({ version: spy.version });
 
-            this.posts_ = Observable.create((observer: Observer<Post>) => this.connection_ ?
+            this.posts_ = new Observable<Post>(observer => this.connection_ ?
                 this.connection_.subscribe((post) => observer.next(post)) :
                 () => {}
             );
