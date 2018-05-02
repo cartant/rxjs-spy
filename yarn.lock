@@ -31,9 +31,9 @@
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-5.2.0.tgz#b3c8e69f038835db1a7fdc0b3d879fc50506e29e"
 
-"@types/node@^9.0.0":
-  version "9.6.8"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-9.6.8.tgz#32e3d3ef9ea285caeec70a05ab157847920a3fe4"
+"@types/node@^10.0.0":
+  version "10.0.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.0.2.tgz#180046ebbc37de8b64777765c2486ebecb59448e"
 
 "@types/sinon@^4.0.0":
   version "4.3.1"
@@ -3017,8 +3017,8 @@ got@^7.0.0:
     url-to-options "^1.0.1"
 
 got@^8.2.0:
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/got/-/got-8.3.0.tgz#6ba26e75f8a6cc4c6b3eb1fe7ce4fec7abac8533"
+  version "8.3.1"
+  resolved "https://registry.yarnpkg.com/got/-/got-8.3.1.tgz#093324403d4d955f5a16a7a8d39955d055ae10ed"
   dependencies:
     "@sindresorhus/is" "^0.7.0"
     cacheable-request "^2.1.1"
@@ -5866,8 +5866,8 @@ rx-lite@*, rx-lite@^4.0.8:
   resolved "https://registry.yarnpkg.com/rx-lite/-/rx-lite-4.0.8.tgz#0b1e11af8bc44836f04a6407e92da42467b79444"
 
 rxjs-tslint-rules@^4.0.0:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/rxjs-tslint-rules/-/rxjs-tslint-rules-4.0.2.tgz#e513b7eff61d313f66d6c4c8362d4ddd0d95283c"
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/rxjs-tslint-rules/-/rxjs-tslint-rules-4.1.1.tgz#b8519227e59a5d9e0a7063c125f973675a62b91a"
   dependencies:
     decamelize "^2.0.0"
     resolve "^1.4.0"
@@ -6008,8 +6008,8 @@ signal-exit@^3.0.0, signal-exit@^3.0.2:
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
 
 sinon@^5.0.0:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/sinon/-/sinon-5.0.1.tgz#e399e00b30df53abf816f16cfc8f3aa0a480ada2"
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/sinon/-/sinon-5.0.2.tgz#1d54bd6fa3d736053333f02e6e11def4fe7a2a9c"
   dependencies:
     "@sinonjs/formatio" "^2.0.0"
     diff "^3.1.0"
