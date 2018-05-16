@@ -1,3 +1,10 @@
+<a name="6.1.1"></a>
+## [6.1.1](https://github.com/cartant/rxjs-spy/compare/v6.1.0...v6.1.1) (2018-05-16)
+
+Fixes:
+
+* Log config-related warnings only once. ([5461b9d](https://github.com/cartant/rxjs-spy/commit/5461b9d))
+
 <a name="6.1.0"></a>
 ## [6.1.0](https://github.com/cartant/rxjs-spy/compare/v6.0.0...v6.1.0) (2017-12-18)
 
