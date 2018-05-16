@@ -188,8 +188,7 @@ export class SnapshotPlugin extends BasePlugin {
         if (graphRef) {
             this.sentinel_ = graphRef.sentinel;
         } else {
-            /*tslint:disable-next-line:no-console*/
-            console.warn("Graphing is not enabled.");
+            this.spy_.warn(console, "Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
         }
     }
 

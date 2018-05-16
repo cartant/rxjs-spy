@@ -9,7 +9,6 @@ import { BehaviorSubject, Subject } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { Detector } from "./detector";
 import { tag } from "./operators";
-import { SnapshotPlugin } from "./plugin/snapshot-plugin";
 import { create } from "./spy-factory";
 import { Spy } from "./spy-interface";
 
@@ -34,7 +33,7 @@ describe("detector", () => {
     beforeEach(() => {
 
         spy = create({ ...options });
-        detector = new Detector(spy.find(SnapshotPlugin));
+        detector = new Detector(spy);
     });
 
     it("should detect subscriptions and unsubscriptions", () => {

@@ -13,6 +13,8 @@ import {
     SubscriptionSnapshot
 } from "./plugin/snapshot-plugin";
 
+import { Spy } from "./spy-interface";
+
 export interface Detected {
     flatteningSubscriptions: SubscriptionSnapshot[];
     flatteningUnsubscriptions: SubscriptionSnapshot[];
@@ -38,20 +40,21 @@ export class Detector {
 
     private detectorRecords_: Map<string, DetectorRecord>;
     private snapshotPlugin_: SnapshotPlugin | undefined;
+    private spy_: Spy;
 
-    constructor(snapshotPlugin: SnapshotPlugin | undefined) {
+    constructor(spy: Spy) {
 
         this.detectorRecords_ = new Map<string, DetectorRecord>();
-        this.snapshotPlugin_ = snapshotPlugin;
+        this.snapshotPlugin_ = spy.find(SnapshotPlugin);
+        this.spy_ = spy;
     }
 
     detect(id: string): Detected | undefined {
 
-        const { detectorRecords_, snapshotPlugin_ } = this;
+        const { detectorRecords_, snapshotPlugin_, spy_ } = this;
 
         if (!snapshotPlugin_) {
-            /*tslint:disable-next-line:no-console*/
-            console.warn("Snapshotting is not enabled.");
+            spy_.warn(console, "Snapshotting is not enabled.");
             return undefined;
         }
 

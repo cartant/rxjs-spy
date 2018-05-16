@@ -55,6 +55,7 @@ export class SpyCore implements Spy {
     private teardown_: Teardown | undefined;
     private tick_: number;
     private undos_: Plugin[];
+    private warned_: { [key: string]: boolean };
 
     constructor(options: {
         [key: string]: any,
@@ -95,8 +96,9 @@ export class SpyCore implements Spy {
         this.pluginsSubject_ = new BehaviorSubject(this.plugins_);
         this.tick_ = 0;
         this.undos_ = [];
+        this.warned_ = {};
 
-        const detector = new Detector(this.find(SnapshotPlugin));
+        const detector = new Detector(this);
         hook((id) => this.detect_(id, detector));
 
         if (typeof window !== "undefined") {
@@ -221,8 +223,7 @@ export class SpyCore implements Spy {
 
         const snapshotPlugin = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
-            /*tslint:disable-next-line:no-console*/
-            console.warn("Snapshotting is not enabled.");
+            this.warn(console, "Snapshotting is not enabled.");
             return;
         }
 
@@ -313,8 +314,7 @@ export class SpyCore implements Spy {
 
         const statsPlugin = this.find(StatsPlugin);
         if (!statsPlugin) {
-            /*tslint:disable-next-line:no-console*/
-            console.warn("Stats are not enabled.");
+            this.warn(console, "Stats are not enabled.");
             return;
         }
 
@@ -361,6 +361,14 @@ export class SpyCore implements Spy {
             this.pluginsSubject_.next(this.plugins_);
             this.undos_ = this.undos_.filter((u) => u !== plugin);
         });
+    }
+
+    warn(logger: PartialLogger, message: any, ...args: any[]): void {
+
+        if (!this.warned_[message]) {
+            toLogger(logger).warn(message, ...args);
+            this.warned_[message] = true;
+        }
     }
 
     /*tslint:disable-next-line:member-ordering*/
