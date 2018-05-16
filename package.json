@@ -58,7 +58,9 @@
     "rxjs": "^5.0.0"
   },
   "private": true,
-  "publishConfig": {},
+  "publishConfig": {
+    "tag": "v6"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/cartant/rxjs-spy.git"
