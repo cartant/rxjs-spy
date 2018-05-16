@@ -1,3 +1,10 @@
+<a name="7.0.2"></a>
+## [7.0.2](https://github.com/cartant/rxjs-spy/compare/v7.0.1...v7.0.2) (2018-05-16)
+
+### Fixes:
+
+* Log config-related warnings only once. ([891c861](https://github.com/cartant/rxjs-spy/commit/891c861))
+
 <a name="7.0.1"></a>
 ## [7.0.1](https://github.com/cartant/rxjs-spy/compare/v7.0.0...v7.0.1) (2018-04-27)
 
