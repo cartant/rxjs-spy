@@ -401,6 +401,28 @@ describe("spy", () => {
             expect(spy).to.have.property("version", require("../package.json").version);
         });
     });
+
+    describe("warn", () => {
+
+        it("should warn only once per message", () => {
+
+            const logger = {
+                log: sinon.stub(),
+                warn: sinon.stub()
+            };
+
+            spy = create({ defaultPlugins: false, ...options });
+
+            spy.warn(logger, "there's a problem");
+            expect(logger.warn.callCount).to.equal(1);
+
+            spy.warn(logger, "there's a problem");
+            expect(logger.warn.callCount).to.equal(1);
+
+            spy.warn(logger, "there's another problem");
+            expect(logger.warn.callCount).to.equal(2);
+        });
+    });
 });
 
 function stubPlugin(): Plugin {

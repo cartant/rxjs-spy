@@ -40,4 +40,5 @@ export interface Spy {
     stats(partialLogger?: PartialLogger): void;
     teardown(): void;
     unplug(...plugins: Plugin[]): void;
+    warn(logger: PartialLogger, message: any, ...args: any[]): void;
 }
