@@ -80,5 +80,5 @@
   },
   "typings": "./dist/index.d.ts",
   "unpkg": "./bundles/rxjs-spy.min.umd.js",
-  "version": "6.1.0"
+  "version": "6.1.1"
 }
