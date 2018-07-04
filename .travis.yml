@@ -1,6 +1,7 @@
 language: node_js
 node_js:
   - "8"
+  - "10"
 # https://github.com/greenkeeperio/greenkeeper-lockfile/issues/98
 before_install:
   - export PATH=$PATH:`yarn global bin`
