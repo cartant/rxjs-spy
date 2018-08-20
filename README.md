@@ -64,22 +64,7 @@ const spy = create();
 
 `rxjs-spy` introduces a `tag` operator that can be used to identify observables. It attaches a string tag to an observable; it performs no additional processing and does not alter the observable's behaviour or value in any way.
 
-The `tag` operator can be used via a patched `Observable` prototype:
-
-```js
-import "rxjs-spy/add/operator/tag";
-const source = Observable.of("some-value").tag("some-tag");
-```
-
-Or by importing the `tag` function:
-
-```js
-import { tag } from "rxjs-spy/operator/tag";
-let source = Observable.of("some-value");
-source = tag.call(source, "some-tag");
-```
-
-Or by using the lettable/pipeable operator:
+The `tag` operator can be used with pipe:
 
 ```js
 import { tag } from "rxjs-spy/operators/tag";
