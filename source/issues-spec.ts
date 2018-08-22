@@ -7,6 +7,7 @@
 import { expect } from "chai";
 import { concat, NEVER, of } from "rxjs";
 import { share } from "rxjs/operators";
+import { hide } from "./operators";
 import { create } from "./spy-factory";
 import { Spy } from "./spy-interface";
 
@@ -32,6 +33,23 @@ describe("issues", () => {
 
             const source = concat(of("foo"), NEVER);
             const shared = source.pipe(share());
+
+            const values: string[] = [];
+            let subscription = shared.subscribe(value => values.push(value));
+            subscription.unsubscribe();
+
+            expect(values).to.deep.equal(["foo"]);
+
+            subscription = shared.subscribe(value => values.push(value));
+            subscription.unsubscribe();
+
+            expect(values).to.deep.equal(["foo", "foo"]);
+        });
+
+        it("should resubscribe to a hidden, shared source", () => {
+
+            const source = concat(of("foo"), NEVER);
+            const shared = source.pipe(share(), hide());
 
             const values: string[] = [];
             let subscription = shared.subscribe(value => values.push(value));
