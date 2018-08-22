@@ -23,13 +23,6 @@ describe("detector", () => {
     let detector: Detector;
     let spy: Spy;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     beforeEach(() => {
 
         spy = create({ ...options });
@@ -91,5 +84,12 @@ describe("detector", () => {
         expect(detected.flatteningUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });

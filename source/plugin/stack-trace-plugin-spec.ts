@@ -19,13 +19,6 @@ describe("StackTracePlugin", () => {
     let stackTracePlugin: StackTracePlugin;
     let subscriberRefsPlugin: SubscriberRefsPlugin;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     beforeEach(() => {
 
         stackTracePlugin = new StackTracePlugin();
@@ -51,5 +44,12 @@ describe("StackTracePlugin", () => {
 
         expect(mappedStackTrace).to.exist;
         expect(mappedStackTrace).to.not.be.empty;
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });

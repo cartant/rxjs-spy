@@ -29,13 +29,6 @@ describe("GraphPlugin", () => {
 
         function test(duration: number): void {
 
-            afterEach(() => {
-
-                if (spy) {
-                    spy.teardown();
-                }
-            });
-
             beforeEach(() => {
 
                 graphPlugin = new GraphPlugin({ keptDuration: duration });
@@ -283,6 +276,13 @@ describe("GraphPlugin", () => {
                 }
                 return delay(duration).then(() => expect(sinkGraphRef.sources).to.have.length(0));
             });
+
+            afterEach(() => {
+
+                if (spy) {
+                    spy.teardown();
+                }
+            });
         }
 
         describe("with zero duration", () => {
@@ -301,13 +301,6 @@ describe("GraphPlugin", () => {
         let graphPlugin: GraphPlugin;
         let spy: Spy;
         let subscriberRefsPlugin: SubscriberRefsPlugin;
-
-        afterEach(() => {
-
-            if (spy) {
-                spy.teardown();
-            }
-        });
 
         beforeEach(() => {
 
@@ -591,6 +584,13 @@ describe("GraphPlugin", () => {
             flattenedSubscriberRef = outerGraphRef.flattenings[1];
             flattenedGraphRef = getGraphRef(flattenedSubscriberRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
+        });
+
+        afterEach(() => {
+
+            if (spy) {
+                spy.teardown();
+            }
         });
     });
 });

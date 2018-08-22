@@ -15,13 +15,6 @@ describe("LetPlugin", () => {
 
     let spy: Spy;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     it("should apply the selector to a tag's source", () => {
 
         const selected = new Subject<string>();
@@ -89,5 +82,12 @@ describe("LetPlugin", () => {
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);
         expect(subscription).to.have.property("closed", false);
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });

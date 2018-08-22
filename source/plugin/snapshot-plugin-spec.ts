@@ -21,13 +21,6 @@ describe("SnapshotPlugin", () => {
     let plugin: SnapshotPlugin;
     let spy: Spy;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
@@ -507,6 +500,13 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot).to.have.property("subscriber", subscriber);
             expect(subscriberSnapshot).to.have.property("subscriptions");
         });
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });
 

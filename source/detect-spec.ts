@@ -10,11 +10,6 @@ import { detect, hook } from "./detect";
 
 describe("detect", () => {
 
-    afterEach(() => {
-
-        hook(undefined);
-    });
-
     it("should do nothing if there is no hook", () => {
 
         detect("");
@@ -29,5 +24,10 @@ describe("detect", () => {
 
         expect(stub).to.have.property("calledOnce", true);
         expect(stub.calledWith("")).to.be.true;
+    });
+
+    afterEach(() => {
+
+        hook(undefined);
     });
 });

@@ -19,13 +19,6 @@ describe("PausePlugin", () => {
     let plugin: PausePlugin;
     let spy: Spy;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
@@ -287,6 +280,13 @@ describe("PausePlugin", () => {
             deck.resume();
             expect(values).to.deep.equal(["alice"]);
         });
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });
 

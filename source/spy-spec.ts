@@ -23,13 +23,6 @@ describe("spy", () => {
 
     let spy: Spy;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     describe("flush", () => {
 
         let plugin: Plugin;
@@ -420,6 +413,13 @@ describe("spy", () => {
             spy.warn(logger, "there's another problem");
             expect(logger.warn.callCount).to.equal(2);
         });
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });
 

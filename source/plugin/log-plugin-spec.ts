@@ -25,13 +25,6 @@ describe("LogPlugin", () => {
     let spy: Spy;
     let subscriberRefsPlugin: SubscriberRefsPlugin;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     describe("tags", () => {
 
         beforeEach(() => {
@@ -206,5 +199,12 @@ describe("LogPlugin", () => {
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Type = subject; notification = next; value =", "alice"]);
         });
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });

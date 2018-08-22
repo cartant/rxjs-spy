@@ -17,13 +17,6 @@ describe("StatsPlugin", () => {
     let spy: Spy;
     let statsPlugin: StatsPlugin;
 
-    afterEach(() => {
-
-        if (spy) {
-            spy.teardown();
-        }
-    });
-
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
@@ -216,5 +209,12 @@ describe("StatsPlugin", () => {
         expect(stats.unsubscribes).to.equal(5);
         expect(stats.maxDepth).to.equal(3);
         expect(stats.totalDepth).to.equal(5);
+    });
+
+    afterEach(() => {
+
+        if (spy) {
+            spy.teardown();
+        }
     });
 });

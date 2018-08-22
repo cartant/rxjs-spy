@@ -28,17 +28,6 @@ if (typeof window !== "undefined") {
         let snapshotPlugin: SnapshotPlugin;
         let spy: Spy;
 
-        afterEach(() => {
-
-            if (spy) {
-                spy.teardown();
-            }
-            expect(mockExtension.connect).to.have.property("callCount", 1);
-            expect(mockConnection.disconnect).to.have.property("callCount", 1);
-
-            window[EXTENSION_KEY] = undefined;
-        });
-
         beforeEach(() => {
 
             mockUnsubscribe = sinon.stub();
@@ -267,6 +256,17 @@ if (typeof window !== "undefined") {
                     const found = spy.find(PausePlugin)!;
                     expect(found).to.not.exist;
                 });
+        });
+
+        afterEach(() => {
+
+            if (spy) {
+                spy.teardown();
+            }
+            expect(mockExtension.connect).to.have.property("callCount", 1);
+            expect(mockConnection.disconnect).to.have.property("callCount", 1);
+
+            window[EXTENSION_KEY] = undefined;
         });
     });
 }
