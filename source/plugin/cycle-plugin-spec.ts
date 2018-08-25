@@ -43,22 +43,22 @@ describe("CyclePlugin", () => {
         const subject2 = new Subject<number>();
 
         subject1.subscribe(value => {
-            if (value === 0) {
-                subject2.next(1);
+            if (value < 10) {
+                subject2.next(value + 1);
             }
         });
         subject2.subscribe(value => {
-            if (value === 1) {
-                subject1.next(2);
+            if (value < 10) {
+                subject1.next(value + 1);
             }
         });
         subject1.next(0);
 
-        expect(stubs.warn.called).to.be.true;
+        expect(stubs.warn).to.have.property("calledOnce", true);
         const [message] = stubs.warn.firstCall.args;
         expect(message).to.match(/^Cyclic next detected/);
         expect(message).to.match(/type = subject/);
-        expect(message).to.match(/value = 2/);
+        expect(message).to.match(/value = \d+/);
         expect(message).to.match(/cycle-plugin-spec\.(js|ts)/);
     });
 

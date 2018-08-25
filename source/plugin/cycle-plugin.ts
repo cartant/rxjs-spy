@@ -10,7 +10,8 @@ import { getStackTrace } from "./stack-trace-plugin";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 
-const cycleSymbol = Symbol("cycle");
+const cycleDetectedSymbol = Symbol("cycleDetected");
+const cycleWarnedSymbol = Symbol("cycleWarned");
 
 export class CyclePlugin extends BasePlugin {
 
@@ -38,15 +39,18 @@ export class CyclePlugin extends BasePlugin {
         const { observable, subscription } = ref;
 
         if (nexts_.indexOf(ref) !== -1) {
-            if (!subscription[cycleSymbol]) {
-                const stackFrames = getStackTrace(ref);
-                if (stackFrames.length === 0) {
-                    spy_.warnOnce(console, "Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
+            if (!subscription[cycleDetectedSymbol]) {
+                subscription[cycleDetectedSymbol] = true;
+                if (nexts_.findIndex(n => n.subscription[cycleWarnedSymbol]) === -1) {
+                    subscription[cycleWarnedSymbol] = true;
+                    const stackFrames = getStackTrace(ref);
+                    if (stackFrames.length === 0) {
+                        spy_.warnOnce(console, "Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
+                    }
+                    const stackTrace = stackFrames.length ? `\n${stackFrames.join("\n")}` : "";
+                    const type = inferType(observable);
+                    logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
                 }
-                const stackTrace = stackFrames.length ? `\n${stackFrames.join("\n")}` : "";
-                const type = inferType(observable);
-                logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
-                subscription[cycleSymbol] = true;
             }
         }
         nexts_.push(ref);
