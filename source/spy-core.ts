@@ -532,7 +532,10 @@ export class SpyCore implements Spy {
 
         notify_(
             (plugin) => plugin.beforeSubscribe(ref),
-            () => subscriber.add(observableSubscribe.call(observable, preSelectObserver)),
+            () => {
+                subscriber.add(observableSubscribe.call(observable, preSelectObserver));
+                subscriber.add(() => preSelectObserver.unsubscribe());
+            },
             (plugin) => plugin.afterSubscribe(ref)
         );
         return subscriber;
