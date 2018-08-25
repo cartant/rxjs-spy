@@ -20,6 +20,7 @@ import { Match, matches, toString as matchToString } from "./match";
 import { hide } from "./operators";
 
 import {
+    CyclePlugin,
     DebugPlugin,
     Deck,
     DevToolsPlugin,
@@ -86,6 +87,7 @@ export class SpyCore implements Spy {
                 new StackTracePlugin(options as Options),
                 new GraphPlugin(options as Options),
                 new SnapshotPlugin(this, options as Options),
+                new CyclePlugin(this, this.defaultLogger_),
                 new StatsPlugin(this)
             ];
             if (options.devTools !==  false) {
