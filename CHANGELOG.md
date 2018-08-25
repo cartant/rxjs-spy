@@ -1,3 +1,10 @@
+<a name="7.0.4"></a>
+## [7.0.4](https://github.com/cartant/rxjs-spy/compare/v7.0.3...v7.0.4) (2018-08-25)
+
+### Fixes:
+
+* Teardown the internal subscription in spy implementation of `subscribe`. ([27fc0aa](https://github.com/cartant/rxjs-spy/commit/27fc0aa))
+
 <a name="7.0.3"></a>
 ## [7.0.3](https://github.com/cartant/rxjs-spy/compare/v7.0.2...v7.0.3) (2018-08-25)
 
