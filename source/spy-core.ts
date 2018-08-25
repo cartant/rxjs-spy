@@ -7,12 +7,11 @@ import {
     BehaviorSubject,
     Observable,
     Subject,
-    Subscriber,
     Subscription
 } from "rxjs";
 
 import { Auditor } from "./auditor";
-import { detect, hook } from "./detect";
+import { hook } from "./detect";
 import { Detector } from "./detector";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
@@ -397,30 +396,38 @@ export class SpyCore implements Spy {
         };
 
         const subscriber = toSubscriber.apply(undefined, args);
-        identify(observable);
-        identify(subscriber);
-
         const ref: SubscriptionRef = {
             observable,
             subscriber,
-            subscription: undefined!,
+            subscription: new Subscription(),
             timestamp: Date.now(),
             unsubscribed: false
         };
+
+        identify(observable);
+        identify(subscriber);
         identify(ref);
 
-        interface PostSelectObserver {
-            complete: () => void;
-            error: (error: any) => void;
-            next: (value: any) => void;
-            unsubscribed: boolean;
-        }
+        const subscriberUnsubscribe = subscriber.unsubscribe;
+        subscriber.unsubscribe = () => {
+            if (!subscriber.closed) {
+                notify_(
+                    (plugin) => plugin.beforeUnsubscribe(ref),
+                    () => {
+                        ref.subscription.unsubscribe();
+                        ref.unsubscribed = true;
+                        subscriberUnsubscribe.call(subscriber);
+                    },
+                    (plugin) => plugin.afterUnsubscribe(ref)
+                );
+            } else {
+                subscriberUnsubscribe.call(subscriber);
+            }
+        };
 
-        /*tslint:disable:no-invalid-this*/
-        const postSelectObserver: PostSelectObserver = {
+        const postSelectObserver = {
 
-            complete(this: PostSelectObserver): void {
-
+            complete(): void {
                 notify_(
                     (plugin) => plugin.beforeComplete(ref),
                     () => subscriber.complete(),
@@ -428,8 +435,7 @@ export class SpyCore implements Spy {
                 );
             },
 
-            error(this: PostSelectObserver, error: any): void {
-
+            error(error: any): void {
                 if (!(error instanceof Error)) {
                     /*tslint:disable-next-line:no-console*/
                     console.warn("Value passed as error notification is not an Error instance =", error);
@@ -441,166 +447,95 @@ export class SpyCore implements Spy {
                 );
             },
 
-            next(this: PostSelectObserver, value: any): void {
-
+            next(value: any): void {
                 notify_(
                     (plugin) => plugin.beforeNext(ref, value),
                     () => subscriber.next(value),
                     (plugin) => plugin.afterNext(ref, value)
                 );
-            },
-
-            unsubscribed: false
+            }
         };
-        /*tslint:enable:no-invalid-this*/
-        const postSelectSubscriber = toSubscriber(
-            postSelectObserver.next.bind(postSelectObserver),
-            postSelectObserver.error.bind(postSelectObserver),
-            postSelectObserver.complete.bind(postSelectObserver)
-        );
 
-        interface PreSelectObserver {
-            complete: () => void;
-            completed: boolean;
-            error: (error: any) => void;
-            errored: boolean;
-            let: (plugins: Plugin[]) => void;
-            next: (value: any) => void;
-            postSelectSubscriber: Subscriber<any>;
-            postSelectSubscription: Subscription | undefined;
-            preSelectSubject: Subject<any> | undefined;
-            unsubscribed: boolean;
-        }
+        const preSelectObserver = {
 
-        /*tslint:disable:no-invalid-this*/
-        const preSelectObserver: PreSelectObserver = {
-
-            complete(this: PreSelectObserver): void {
-
+            complete(): void {
                 this.completed = true;
-
                 if (this.preSelectSubject) {
                     this.preSelectSubject.complete();
                 } else {
-                    this.postSelectSubscriber.complete();
+                    this.postSelectObserver.complete();
                 }
             },
 
             completed: false,
 
-            error(this: PreSelectObserver, error: any): void {
-
+            error(error: any): void {
                 this.errored = true;
-
                 if (this.preSelectSubject) {
                     this.preSelectSubject.error(error);
                 } else {
-                    this.postSelectSubscriber.error(error);
+                    this.postSelectObserver.error(error);
                 }
             },
 
             errored: false,
 
-            let(this: PreSelectObserver, plugins: Plugin[]): void {
-
+            let(plugins: Plugin[]): void {
                 const selectors = plugins.map((plugin) => plugin.select(ref)).filter(Boolean);
                 if (selectors.length > 0) {
-
                     if (!this.preSelectSubject) {
                         this.preSelectSubject = new Subject<any>();
                     }
                     if (this.postSelectSubscription) {
                         this.postSelectSubscription.unsubscribe();
                     }
-
                     let source = this.preSelectSubject.asObservable();
                     selectors.forEach(selector => source = selector!(source));
-                    this.postSelectSubscription = source.pipe(hide()).subscribe({
-                        complete: () => this.postSelectSubscriber.complete(),
-                        error: (error: any) => this.postSelectSubscriber.error(error),
-                        next: (value: any) => this.postSelectSubscriber.next(value)
-                    });
-
+                    this.postSelectSubscription = source.pipe(hide()).subscribe(postSelectObserver);
                 } else if (this.postSelectSubscription) {
-
                     this.postSelectSubscription.unsubscribe();
                     this.postSelectSubscription = undefined;
                     this.preSelectSubject = undefined;
                 }
             },
 
-            next(this: PreSelectObserver, value: any): void {
-
+            next(value: any): void {
                 if (this.preSelectSubject) {
                     this.preSelectSubject.next(value);
                 } else {
-                    this.postSelectSubscriber.next(value);
+                    this.postSelectObserver.next(value);
                 }
             },
 
-            postSelectSubscriber,
-            postSelectSubscription: undefined,
-            preSelectSubject: undefined,
+            postSelectObserver,
+            postSelectSubscription: undefined as Subscription | undefined,
+            preSelectSubject: undefined as Subject<any> | undefined,
+
+            unsubscribe(): void {
+                if (!this.unsubscribed) {
+                    this.unsubscribed = true;
+                    if (!this.completed && !this.errored) {
+                        if (this.postSelectSubscription) {
+                            this.postSelectSubscription.unsubscribe();
+                            this.postSelectSubscription = undefined;
+                        }
+                    }
+                }
+            },
+
             unsubscribed: false
         };
-        /*tslint:enable:no-invalid-this*/
-        const preSelectSubscriber = toSubscriber(
-            preSelectObserver.next.bind(preSelectObserver),
-            preSelectObserver.error.bind(preSelectObserver),
-            preSelectObserver.complete.bind(preSelectObserver)
-        );
 
-        const pluginsSubscription = spy_.pluginsSubject_.pipe(hide()).subscribe({
+        subscriber.add(spy_.pluginsSubject_.pipe(hide()).subscribe({
             next: (plugins: any) => preSelectObserver.let(plugins)
-        });
-
-        const preSelectUnsubscribe = preSelectSubscriber.unsubscribe;
-        preSelectSubscriber.unsubscribe = () => {
-
-            if (!preSelectObserver.unsubscribed) {
-
-                preSelectObserver.unsubscribed = true;
-
-                if (!preSelectObserver.completed && !preSelectObserver.errored) {
-                    if (preSelectObserver.postSelectSubscription) {
-                        preSelectObserver.postSelectSubscription.unsubscribe();
-                        preSelectObserver.postSelectSubscription = undefined;
-                    }
-                    preSelectObserver.postSelectSubscriber.unsubscribe();
-                }
-            }
-            preSelectUnsubscribe.call(preSelectSubscriber);
-        };
-        subscriber.add(preSelectSubscriber);
-
-        const postSelectUnsubscribe = postSelectSubscriber.unsubscribe;
-        postSelectSubscriber.unsubscribe = () => {
-
-            if (!postSelectObserver.unsubscribed) {
-
-                postSelectObserver.unsubscribed = true;
-
-                notify_(
-                    (plugin) => plugin.beforeUnsubscribe(ref),
-                    () => {
-                        postSelectUnsubscribe.call(postSelectSubscriber);
-                        pluginsSubscription.unsubscribe();
-                        ref.unsubscribed = true;
-                    },
-                    (plugin) => plugin.afterUnsubscribe(ref)
-                );
-
-            } else {
-                postSelectUnsubscribe.call(postSelectSubscriber);
-            }
-        };
+        }));
 
         notify_(
             (plugin) => plugin.beforeSubscribe(ref),
-            () => ref.subscription = observableSubscribe.call(observable, preSelectSubscriber),
+            () => subscriber.add(observableSubscribe.call(observable, preSelectObserver)),
             (plugin) => plugin.afterSubscribe(ref)
         );
-        return ref.subscription;
+        return subscriber;
     }
 
     private detect_(id: string, detector: Detector): void {

@@ -3,7 +3,6 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable } from "rxjs";
 import { BasePlugin, Notification } from "./plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 
@@ -88,11 +87,7 @@ export class GraphPlugin extends BasePlugin {
 
         const { notifications_, sentinel_ } = this;
         notifications_.pop();
-
-        const length = notifications_.length;
-        if ((length === 0) || (notifications_[length - 1].notification !== "unsubscribe")) {
-            this.flush_(ref);
-        }
+        this.flush_(ref);
     }
 
     beforeNext(ref: SubscriptionRef, value: any): void {
@@ -190,9 +185,6 @@ export class GraphPlugin extends BasePlugin {
             if (sourceIndex !== -1) {
                 sources.splice(sourceIndex, 1);
                 ++link.sourcesFlushed;
-            }
-            if (sink && sink.unsubscribed) {
-                this.flush_(sink);
             }
         };
 
