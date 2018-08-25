@@ -222,7 +222,7 @@ export class SpyCore implements Spy {
 
         const snapshotPlugin = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
-            this.warn(console, "Snapshotting is not enabled.");
+            this.warnOnce(console, "Snapshotting is not enabled.");
             return;
         }
 
@@ -313,7 +313,7 @@ export class SpyCore implements Spy {
 
         const statsPlugin = this.find(StatsPlugin);
         if (!statsPlugin) {
-            this.warn(console, "Stats are not enabled.");
+            this.warnOnce(console, "Stats are not enabled.");
             return;
         }
 
@@ -362,7 +362,13 @@ export class SpyCore implements Spy {
         });
     }
 
+    /** @deprecated Use warnOnce */
     warn(logger: PartialLogger, message: any, ...args: any[]): void {
+
+        this.warnOnce(logger, message, ...args);
+    }
+
+    warnOnce(logger: PartialLogger, message: any, ...args: any[]): void {
 
         if (!this.warned_[message]) {
             toLogger(logger).warn(message, ...args);

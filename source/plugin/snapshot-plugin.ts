@@ -188,7 +188,7 @@ export class SnapshotPlugin extends BasePlugin {
         if (graphRef) {
             this.sentinel_ = graphRef.sentinel;
         } else {
-            this.spy_.warn(console, "Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
+            this.spy_.warnOnce(console, "Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
         }
     }
 

@@ -54,7 +54,7 @@ export class Detector {
         const { detectorRecords_, snapshotPlugin_, spy_ } = this;
 
         if (!snapshotPlugin_) {
-            spy_.warn(console, "Snapshotting is not enabled.");
+            spy_.warnOnce(console, "Snapshotting is not enabled.");
             return undefined;
         }
 

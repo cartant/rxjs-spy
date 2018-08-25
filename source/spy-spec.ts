@@ -393,7 +393,7 @@ describe("spy", () => {
         });
     });
 
-    describe("warn", () => {
+    describe("warnOnce", () => {
 
         it("should warn only once per message", () => {
 
@@ -404,13 +404,13 @@ describe("spy", () => {
 
             spy = create({ defaultPlugins: false, ...options });
 
-            spy.warn(logger, "there's a problem");
+            spy.warnOnce(logger, "there's a problem");
             expect(logger.warn.callCount).to.equal(1);
 
-            spy.warn(logger, "there's a problem");
+            spy.warnOnce(logger, "there's a problem");
             expect(logger.warn.callCount).to.equal(1);
 
-            spy.warn(logger, "there's another problem");
+            spy.warnOnce(logger, "there's another problem");
             expect(logger.warn.callCount).to.equal(2);
         });
     });

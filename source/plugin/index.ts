@@ -3,6 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+export * from "./cycle-plugin";
 export * from "./debug-plugin";
 export * from "./devtools-plugin";
 export * from "./graph-plugin";
