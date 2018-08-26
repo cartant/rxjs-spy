@@ -1,3 +1,10 @@
+<a name="7.1.0"></a>
+## [7.1.0](https://github.com/cartant/rxjs-spy/compare/v7.0.4...v7.1.0) (2018-08-26)
+
+### Features:
+
+* Added a `CyclePlugin` to detect cyclic `next` notifications. ([ff62d8d](https://github.com/cartant/rxjs-spy/commit/ff62d8d))
+
 <a name="7.0.4"></a>
 ## [7.0.4](https://github.com/cartant/rxjs-spy/compare/v7.0.3...v7.0.4) (2018-08-25)
 
