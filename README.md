@@ -56,7 +56,7 @@ Or include the UMD bundle for use as a `script`:
 <script src="https://unpkg.com/rxjs-spy@7/bundles/rxjs-spy.min.umd.js"></script>
 <script>
 const { create } = rxjsSpy;
-const spy = create();
+create();
 </script>
 ```
 
