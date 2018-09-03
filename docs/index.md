@@ -13,7 +13,7 @@ Have a look at the this page's source:
 ```html
 <script>
 
-    var spy = rxjsSpy.create();
+    rxjsSpy.create();
 
 </script>
 <script>
@@ -131,7 +131,7 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 <script src="https://unpkg.com/rxjs-spy@7/bundles/rxjs-spy.umd.js"></script>
 <script>
 
-    var spy = rxjsSpy.create();
+    rxjsSpy.create();
 
 </script>
 <script>
