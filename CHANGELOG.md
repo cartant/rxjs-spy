@@ -1,3 +1,10 @@
+<a name="7.2.0"></a>
+## [7.2.0](https://github.com/cartant/rxjs-spy/compare/v7.1.1...v7.2.0) (2018-09-03)
+
+### Features:
+
+* Added a `global` option to `create` so that a name other than `spy` can be specified for the global that's used in the console. ([9b8b74c](https://github.com/cartant/rxjs-spy/commit/9b8b74c))
+
 <a name="7.1.1"></a>
 ## [7.1.1](https://github.com/cartant/rxjs-spy/compare/v7.1.0...v7.1.1) (2018-09-03)
 
