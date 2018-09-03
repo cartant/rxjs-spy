@@ -9,12 +9,16 @@ import { PausePlugin } from "./plugin";
 import { SpyCore } from "./spy-core";
 import { inferPath, inferType } from "./util";
 
-export function wrap(core: SpyCore): any {
+export function wrap(
+    core: SpyCore,
+    deprecation: () => void = () => {}
+): any {
 
     return {
 
         deck(call?: number): any {
 
+            deprecation();
             const pausePlugins = core.findAll(PausePlugin);
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
@@ -29,16 +33,19 @@ export function wrap(core: SpyCore): any {
 
         debug(...args: any[]): void {
 
+            deprecation();
             core.debug.apply(core, args);
         },
 
         detect(id: string = ""): void {
 
+            deprecation();
             detect(id);
         },
 
         flush(): void {
 
+            deprecation();
             core.flush();
         },
 
@@ -47,26 +54,31 @@ export function wrap(core: SpyCore): any {
 
         let(...args: any[]): void {
 
+            deprecation();
             core.let.apply(core, args);
         },
 
         log(...args: any[]): void {
 
+            deprecation();
             core.log.apply(core, args);
         },
 
         pause(...args: any[]): any {
 
+            deprecation();
             return core.pause.apply(core, args);
         },
 
         show(...args: any[]): void {
 
+            deprecation();
             core.show.apply(core, args);
         },
 
         stats(): void {
 
+            deprecation();
             core.stats();
         },
 

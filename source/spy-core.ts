@@ -43,6 +43,7 @@ import { isObservable, toSubscriber } from "./util";
 
 declare const __RX_SPY_VERSION__: string;
 const observableSubscribe = Observable.prototype.subscribe;
+const previousWindow: Record<string, any> = {};
 
 export class SpyCore implements Spy {
 
@@ -103,13 +104,30 @@ export class SpyCore implements Spy {
         hook((id) => this.detect_(id, detector));
 
         if (typeof window !== "undefined") {
-            window["rxSpy"] = wrap(this);
+            ["rxSpy", "spy"].forEach(key => {
+                if (window.hasOwnProperty(key)) {
+                    this.defaultLogger_.log(`Overwriting window.${key}`);
+                    previousWindow[key] = window[key];
+                }
+                window[key] = wrap(this, key === "spy" ?
+                    undefined :
+                    () => this.warnOnce(this.defaultLogger_, `${key} is deprecated; use spy instead`)
+                );
+            });
         }
 
         this.teardown_ = () => {
 
             if (typeof window !== "undefined") {
-                delete window["rxSpy"];
+                ["rxSpy", "spy"].forEach(key => {
+                    if (previousWindow.hasOwnProperty(key)) {
+                        this.defaultLogger_.log(`Restoring window.${key}`);
+                        window[key] = previousWindow[key];
+                        delete previousWindow[key];
+                    } else {
+                        delete window[key];
+                    }
+                });
             }
 
             hook(undefined);

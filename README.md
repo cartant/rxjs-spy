@@ -85,7 +85,7 @@ spy.log(/^some-tag$/);
 spy.log(tag => tag === "some-tag");
 ```
 
-`rxjs-spy` exposes a module API intended to be called from code and a console API - via the `rxSpy` global - intended for interactive use via the browser's console.
+`rxjs-spy` exposes a module API intended to be called from code and a console API - via the `spy` global - intended for interactive use via the browser's console.
 
 ## Module API
 
@@ -389,12 +389,12 @@ import { detect } from "rxjs-spy/detect";
 
 ## Console API
 
-The methods in the console API are callable via the `rxSpy` global (note the lower-case `r`) and are intended to be used interactively in the browser's console.
+The methods in the console API are callable via the `spy` global and are intended to be used interactively in the browser's console.
 
 They are identical to the methods in the spy instances created using the module API except for the fact that they do not return teardown functions. Instead, calls can be undone using the `undo` API method.
 
-* [`rxSpy.undo`](#console-undo)
-* [`rxSpy.deck`](#console-deck)
+* [`spy.undo`](#console-undo)
+* [`spy.deck`](#console-deck)
 
 <a name="console-undo"></a>
 

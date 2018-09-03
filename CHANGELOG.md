@@ -66,7 +66,7 @@
 * The `subscribers` map has been removed from the `observable` snapshot and replaced with a `subscriptions` map.
 * In the snapshots, `merges` has been renamed to `flattenings`.
 * It's no longer possible to undo the entire spy via the console.
-* The console global - `rxSpy` - won't exist until `create` has been called.
+* The console global - `spy` - won't exist until `create` has been called.
 * `undefined` is favoured for return values, etc. rather than `null`.
 
 ### Fixes:
