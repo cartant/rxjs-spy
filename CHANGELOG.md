@@ -1,3 +1,10 @@
+<a name="7.1.1"></a>
+## [7.1.1](https://github.com/cartant/rxjs-spy/compare/v7.1.0...v7.1.1) (2018-09-03)
+
+### Non-breaking changes:
+
+* Renamed the `rxSpy` global (as used in the console) to `spy`. Using `rxSpy` is still supported, but it's deprecated. ([8dab99b](https://github.com/cartant/rxjs-spy/commit/8dab99b))
+
 <a name="7.1.0"></a>
 ## [7.1.0](https://github.com/cartant/rxjs-spy/compare/v7.0.4...v7.1.0) (2018-08-26)
 
