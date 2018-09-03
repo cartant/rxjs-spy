@@ -27,9 +27,9 @@
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.1.tgz#53f349bb986ab273d601175aa1b25a655ab90ee3"
 
-"@phenomnomnominal/tsquery@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@phenomnomnominal/tsquery/-/tsquery-2.0.0.tgz#5255dd899f247858dad7b4664e8d0ee994a8711c"
+"@phenomnomnominal/tsquery@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@phenomnomnominal/tsquery/-/tsquery-1.0.5.tgz#ba75d8e403f23a67b49d983b763918f6505441e4"
   dependencies:
     esquery "^1.0.1"
 
@@ -2455,8 +2455,8 @@ karma-spec-reporter@^0.0.32:
     colors "^1.1.2"
 
 karma-webpack@^3.0.0:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/karma-webpack/-/karma-webpack-3.0.2.tgz#1cc2bce45df3a8d0bc6cc3f7ee8f3f979eeff91d"
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/karma-webpack/-/karma-webpack-3.0.0.tgz#bf009c5b73c667c11c015717e9e520f581317c44"
   dependencies:
     async "^2.0.0"
     babel-runtime "^6.0.0"
@@ -3753,14 +3753,13 @@ run-queue@^1.0.0, run-queue@^1.0.3:
     aproba "^1.1.1"
 
 rxjs-tslint-rules@^4.0.0:
-  version "4.8.0"
-  resolved "https://registry.yarnpkg.com/rxjs-tslint-rules/-/rxjs-tslint-rules-4.8.0.tgz#c2c2c6d49e2ccf887458f91d80cee3e86dd0c9fa"
+  version "4.7.2"
+  resolved "https://registry.yarnpkg.com/rxjs-tslint-rules/-/rxjs-tslint-rules-4.7.2.tgz#b06fb896ba06c0c5503a77848c3a07a2b0175ec9"
   dependencies:
-    "@phenomnomnominal/tsquery" "^2.0.0"
+    "@phenomnomnominal/tsquery" "^1.0.5"
     decamelize "^2.0.0"
     resolve "^1.4.0"
     tslib "^1.8.0"
-    tsutils "^3.0.0"
 
 rxjs@^6.0.0, rxjs@^6.1.0:
   version "6.3.1"
@@ -4344,12 +4343,6 @@ tslint@^5.1.0:
 tsutils@^2.27.2:
   version "2.29.0"
   resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.29.0.tgz#32b488501467acbedd4b85498673a0812aca0b99"
-  dependencies:
-    tslib "^1.8.1"
-
-tsutils@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-3.0.0.tgz#0c5070a17a0503e056da038c48b5a1870a50a9ad"
   dependencies:
     tslib "^1.8.1"
 
