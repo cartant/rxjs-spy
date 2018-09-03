@@ -64,6 +64,7 @@ export class SpyCore implements Spy {
         defaultLogger?: PartialLogger,
         defaultPlugins?: boolean,
         devTools?: boolean,
+        global?: string,
         plugins?: Plugin[],
         warning?: boolean
     } = {}) {
@@ -104,14 +105,14 @@ export class SpyCore implements Spy {
         hook((id) => this.detect_(id, detector));
 
         if (typeof window !== "undefined") {
-            ["rxSpy", "spy"].forEach(key => {
+            [options.global || "spy", "rxSpy"].forEach(key => {
                 if (window.hasOwnProperty(key)) {
                     this.defaultLogger_.log(`Overwriting window.${key}`);
                     previousWindow[key] = window[key];
                 }
-                window[key] = wrap(this, key === "spy" ?
-                    undefined :
-                    () => this.warnOnce(this.defaultLogger_, `${key} is deprecated; use spy instead`)
+                window[key] = wrap(this, key === "rxSpy" ?
+                    () => this.warnOnce(this.defaultLogger_, `${key} is deprecated; use spy instead`) :
+                    undefined
                 );
             });
         }
@@ -119,7 +120,7 @@ export class SpyCore implements Spy {
         this.teardown_ = () => {
 
             if (typeof window !== "undefined") {
-                ["rxSpy", "spy"].forEach(key => {
+                [options.global || "spy", "rxSpy"].forEach(key => {
                     if (previousWindow.hasOwnProperty(key)) {
                         this.defaultLogger_.log(`Restoring window.${key}`);
                         window[key] = previousWindow[key];

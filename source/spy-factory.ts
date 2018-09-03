@@ -12,6 +12,7 @@ export function create(options: {
     [key: string]: any,
     defaultLogger?: PartialLogger,
     defaultPlugins?: boolean,
+    global?: string,
     warning?: boolean
 } = {}): Spy {
 

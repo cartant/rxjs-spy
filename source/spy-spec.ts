@@ -415,6 +415,25 @@ describe("spy", () => {
         });
     });
 
+    if (typeof window !== "undefined") {
+
+        describe("window", () => {
+
+            it("should create a global named 'spy' by default", () => {
+
+                spy = create({ ...options });
+                expect(window).to.have.property("spy");
+            });
+
+            it("should create a global with the specified name", () => {
+
+                spy = create({ global: "_spy", ...options });
+                expect(window).to.not.have.property("spy");
+                expect(window).to.have.property("_spy");
+            });
+        });
+    }
+
     afterEach(() => {
 
         if (spy) {
