@@ -32,7 +32,7 @@
     "rxjs-tslint-rules": "^4.0.0",
     "sinon": "^6.0.0",
     "superstatic": "^6.0.0",
-    "ts-loader": "^4.0.0",
+    "ts-loader": "^5.0.0",
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
     "typescript": "~3.0.1",
