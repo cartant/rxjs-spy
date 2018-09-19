@@ -1,3 +1,10 @@
+<a name="7.2.1"></a>
+## [7.2.1](https://github.com/cartant/rxjs-spy/compare/v7.2.0...v7.2.1) (2018-09-20)
+
+### Non-breaking changes:
+
+* Don't warn if non-`Error` values are passed to `error` notifications. Use linting to avoid this. See the `rxjs-throw-error` rule in [`rxjs-tslint-rules`](https://github.com/cartant/rxjs-tslint-rules) and the `throw-error` rule in [`tslint-etc`](https://github.com/cartant/tslint-etc). ([16c1779](https://github.com/cartant/rxjs-spy/commit/16c1779))
+
 <a name="7.2.0"></a>
 ## [7.2.0](https://github.com/cartant/rxjs-spy/compare/v7.1.1...v7.2.0) (2018-09-03)
 
