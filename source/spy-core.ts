@@ -463,10 +463,6 @@ export class SpyCore implements Spy {
             },
 
             error(error: any): void {
-                if (!(error instanceof Error)) {
-                    /*tslint:disable-next-line:no-console*/
-                    console.warn("Value passed as error notification is not an Error instance =", error);
-                }
                 notify_(
                     (plugin) => plugin.beforeError(ref, error),
                     () => subscriber.error(error),
