@@ -3,17 +3,19 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, Operator, Subscriber, Subscription } from "rxjs";
+import { Observable, Subscriber, Subscription } from "rxjs";
 import { identify } from "./identify";
-import { isSubscriptionRef, SubscriberRef, SubscriptionRef } from "./subscription-ref";
+import { isSubscriptionRef, SubscriberRef } from "./subscription-ref";
 import { isObservable } from "./util";
 
-export type MatchPredicate = (tag: string | undefined, observable?: Observable<any>) => boolean;
+export type MatchPredicate = (value: string | undefined, observable?: Observable<any>) => boolean;
 export type Match = Observable<any> | string | RegExp | MatchPredicate;
 
+export function matches<T>(observable: Observable<T>, match: Match, value?: string): boolean;
 export function matches<T>(observable: Observable<T>, match: Match): boolean;
+export function matches(subscriberRef: SubscriberRef, match: Match, value?: string): boolean;
 export function matches(subscriberRef: SubscriberRef, match: Match): boolean;
-export function matches<T>(arg: Observable<T> | SubscriberRef, match: Match): boolean {
+export function matches<T>(arg: Observable<T> | SubscriberRef, match: Match, value?: string): boolean {
 
     let observable: Observable<T>;
     let subscriber: Subscriber<T> | undefined = undefined;
@@ -34,7 +36,7 @@ export function matches<T>(arg: Observable<T> | SubscriberRef, match: Match): bo
     const observableId = identify(observable);
     const subscriberId = subscriber ? identify(subscriber) : undefined;
     const subscriptionId = subscription ? identify(subscription) : undefined;
-    const tag = read(observable);
+    const tag = value || read(observable);
 
     if (typeof match === "function") {
         return match(tag, observable);

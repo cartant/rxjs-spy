@@ -31,7 +31,8 @@ export interface Spy {
     findAll(): Plugin[];
     flush(): void;
     let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
-    log(match: Match, partialLogger?: PartialLogger): Teardown;
+    log(tagMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
+    log(tagMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;
     pause(match: Match): Deck;
     plug(...plugins: Plugin[]): Teardown;

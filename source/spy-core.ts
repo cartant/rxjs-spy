@@ -195,19 +195,36 @@ export class SpyCore implements Spy {
         return this.plug(new LetPlugin(match, select, options));
     }
 
-    log(match: Match, partialLogger?: PartialLogger): Teardown;
+    log(tagMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
+    log(tagMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;
-    log(match: any, partialLogger?: PartialLogger): Teardown {
+    log(...args: any[]): Teardown {
 
-        const anyTagged = /.+/;
-        if (!match) {
-            match = anyTagged;
-        } else if (typeof match.log === "function") {
-            partialLogger = match;
-            match = anyTagged;
+        let tagMatch: Match = /.+/;
+        let notificationMatch: Match = /.+/;
+        let predicate: (notification: Notification) => boolean = () => true;
+        let partialLogger: PartialLogger = this.defaultLogger_;
+
+        if (args.length === 1) {
+            const [arg] = args;
+            if (typeof arg.log === "function") {
+                partialLogger = arg;
+            } else {
+                tagMatch = arg;
+            }
+        } else if (args.length === 2) {
+            let arg: any;
+            [tagMatch, arg] = args;
+            if (typeof arg.log === "function") {
+                partialLogger = arg;
+            } else {
+                notificationMatch = arg;
+            }
+        } else if (args.length === 3) {
+            [tagMatch, notificationMatch, partialLogger] = args;
         }
 
-        return this.plug(new LogPlugin(this, match, partialLogger || this.defaultLogger_));
+        return this.plug(new LogPlugin(this, tagMatch, notificationMatch, partialLogger));
     }
 
     pause(match: Match): Deck {

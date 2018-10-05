@@ -3,7 +3,6 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, Subscriber } from "rxjs";
 import { Auditor } from "../auditor";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
@@ -16,15 +15,51 @@ export class LogPlugin extends BasePlugin {
 
     private auditor_: Auditor;
     private logger_: Logger;
-    private match_: Match;
+    private notificationMatch_: Match;
+    private tagMatch_: Match;
 
-    constructor(spy: Spy, match: Match, partialLogger: PartialLogger = defaultLogger) {
+    constructor(
+        spy: Spy,
+        tagMatch: Match,
+        partialLogger?: PartialLogger
+    );
+    constructor(
+        spy: Spy,
+        tagMatch: Match,
+        notifcationMatch: Match,
+        partialLogger?: PartialLogger
+    );
+    constructor(
+        spy: Spy,
+        tagMatch: Match,
+        ...args: any[]
+    ) {
 
-        super(`log(${matchToString(match)})`);
+        super(`log(${matchToString(tagMatch)})`);
 
         this.auditor_ = spy.auditor;
-        this.logger_ = toLogger(partialLogger);
-        this.match_ = match;
+        this.tagMatch_ = tagMatch;
+
+        const defaultMatch = /.+/;
+        switch (args.length) {
+        case 0:
+            this.notificationMatch_ = defaultMatch;
+            this.logger_ = toLogger(defaultLogger);
+            break;
+        case 1:
+            if (typeof args[0] === "function") {
+                this.notificationMatch_ = args[0];
+                this.logger_ = toLogger(defaultLogger);
+            } else {
+                this.notificationMatch_ = defaultMatch;
+                this.logger_ = toLogger(args[0]);
+            }
+            break;
+        default:
+            this.notificationMatch_ = args[0];
+            this.logger_ = toLogger(args[1]);
+            break;
+        }
     }
 
     beforeComplete(ref: SubscriptionRef): void {
@@ -58,9 +93,9 @@ export class LogPlugin extends BasePlugin {
         param?: any
     ): void {
 
-        const { auditor_, match_ } = this;
+        const { auditor_, notificationMatch_, tagMatch_ } = this;
 
-        if (matches(ref, match_)) {
+        if (matches(ref, tagMatch_) && matches(ref, notificationMatch_, notification)) {
 
             auditor_.audit(this, (ignored) => {
 
@@ -69,7 +104,7 @@ export class LogPlugin extends BasePlugin {
                 const tag = read(observable);
                 const type = inferType(observable);
 
-                const matching = (typeof match_ === "string") ? "" : `; matching ${matchToString(match_)}`;
+                const matching = (typeof tagMatch_ === "string") ? "" : `; matching ${matchToString(tagMatch_)}`;
                 const audit  = (ignored === 0) ? "" : `; ignored ${ignored}`;
                 const description = tag ?
                     `Tag = ${tag}; notification = ${notification}${matching}${audit}` :

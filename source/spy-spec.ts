@@ -102,6 +102,25 @@ describe("spy", () => {
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe; matching /.+/"]);
         });
+
+        it("should support a notification match", () => {
+
+            spy = create({ defaultPlugins: false, ...options });
+
+            const subject = new Subject<string>();
+            const calls: any[][] = [];
+
+            spy.log(/people/, /next/, {
+                log(...args: any[]): void { calls.push(args); }
+            });
+
+            const subscription = subject.pipe(tag("people")).subscribe();
+            subject.next("alice");
+            subscription.unsubscribe();
+
+            expect(calls).to.not.be.empty;
+            expect(calls[0]).to.deep.equal(["Tag = people; notification = next; matching /people/; value =", "alice"]);
+        });
     });
 
     describe("pause", () => {
