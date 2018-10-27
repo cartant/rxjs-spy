@@ -30,7 +30,7 @@
     "rimraf": "^2.6.1",
     "rxjs": "^6.0.0",
     "rxjs-tslint-rules": "^4.0.0",
-    "sinon": "^7.0.0",
+    "sinon": "^7.1.0",
     "superstatic": "^6.0.0",
     "ts-loader": "^5.0.0",
     "tslib": "^1.6.1",
