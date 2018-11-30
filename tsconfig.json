@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "sourceMap": false,
     "strict": true,
+    "strictBindCallApply": false,
     "suppressImplicitAnyIndexErrors": true,
     "target": "es5"
   },
