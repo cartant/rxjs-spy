@@ -111,7 +111,7 @@ export class SpyCore implements Spy {
                     previousWindow[key] = window[key];
                 }
                 window[key] = wrap(this, key === "rxSpy" ?
-                    () => this.warnOnce(this.defaultLogger_, `${key} is deprecated; use spy instead`) :
+                    () => this.warnOnce(this.defaultLogger_, `window.${key} is deprecated and has been renamed; use window.spy instead`) :
                     undefined
                 );
             });
