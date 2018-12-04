@@ -1,3 +1,10 @@
+<a name="7.3.1"></a>
+## [7.3.1](https://github.com/cartant/rxjs-spy/compare/v7.3.0...v7.3.1) (2018-12-04)
+
+### Fixes
+
+* Make the `rxSpy`-is-deprecated message comprehensible. ([b6f2a10](https://github.com/cartant/rxjs-spy/commit/b6f2a10))
+
 <a name="7.3.0"></a>
 ## [7.3.0](https://github.com/cartant/rxjs-spy/compare/v7.2.1...v7.3.0) (2018-10-06)
 
