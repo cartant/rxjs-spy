@@ -70,6 +70,12 @@ export function wrap(
             return core.pause.apply(core, args);
         },
 
+        query(...args: any[]): void {
+
+            deprecation();
+            core.query.apply(core, args);
+        },
+
         show(...args: any[]): void {
 
             deprecation();
