@@ -64,6 +64,12 @@ export function wrap(
             core.log.apply(core, args);
         },
 
+        maxLogged(...args: any[]): void {
+
+            deprecation();
+            core.maxLogged.apply(core, args);
+        },
+
         pause(...args: any[]): any {
 
             deprecation();

@@ -54,6 +54,7 @@ export class SpyCore implements Spy {
 
     private auditor_: Auditor;
     private defaultLogger_: PartialLogger;
+    private maxLogged_ = 20;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
     private teardown_: Teardown | undefined;
@@ -230,6 +231,11 @@ export class SpyCore implements Spy {
         return this.plug(new LogPlugin(this, tagMatch, notificationMatch, partialLogger));
     }
 
+    maxLogged(value: number): void {
+
+        this.maxLogged_ = Math.max(value, 1);
+    }
+
     pause(match: Match): Deck {
 
         const pausePlugin = new PausePlugin(match);
@@ -321,10 +327,10 @@ export class SpyCore implements Spy {
                 }
             });
 
-            const maxLogged = 20;
-            const notLogged = (found.length > maxLogged) ? found.length - maxLogged : 0;
+            const { maxLogged_ } = this;
+            const notLogged = (found.length > maxLogged_) ? found.length - maxLogged_ : 0;
             if (notLogged) {
-                found.splice(maxLogged, notLogged);
+                found.splice(maxLogged_, notLogged);
             }
 
             logger.group(`${found.length + notLogged} snapshot(s) found`);
@@ -398,10 +404,10 @@ export class SpyCore implements Spy {
             .filter((observableSnapshot) => matches(observableSnapshot.observable, match));
         const logger = toLogger(partialLogger || this.defaultLogger_);
 
-        const maxLogged = 20;
-        const notLogged = (matched.length > maxLogged) ? matched.length - maxLogged : 0;
+        const { maxLogged_ } = this;
+        const notLogged = (matched.length > maxLogged_) ? matched.length - maxLogged_ : 0;
         if (notLogged) {
-            matched.splice(maxLogged, notLogged);
+            matched.splice(maxLogged_, notLogged);
         }
 
         snapshot.mapStackTraces(matched).subscribe(() => {
