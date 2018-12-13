@@ -1,3 +1,10 @@
+<a name="7.5.0"></a>
+## [7.5.0](https://github.com/cartant/rxjs-spy/compare/v7.4.0...v7.5.0) (2018-12-13)
+
+### Features
+
+* Add a `maxLogged` method to the spy. ([284fdbc](https://github.com/cartant/rxjs-spy/commit/284fdbc))
+
 <a name="7.4.0"></a>
 ## [7.4.0](https://github.com/cartant/rxjs-spy/compare/v7.3.1...v7.4.0) (2018-12-13)
 
