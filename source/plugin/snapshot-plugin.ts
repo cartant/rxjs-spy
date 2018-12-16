@@ -21,6 +21,7 @@ const snapshotRefSymbol = Symbol("snapshotRef");
 export interface SnapshotRef {
     complete: boolean;
     error: any;
+    query: Record<string, any>;
     tick: number;
     timestamp: number;
     unsubscribed: boolean;
@@ -105,6 +106,7 @@ export interface SubscriptionSnapshot {
     id: string;
     mappedStackTrace: Observable<StackFrame[]>;
     observable: Observable<any>;
+    query: Record<string, any>;
     rootSink: SubscriptionSnapshot | undefined;
     sink: SubscriptionSnapshot | undefined;
     sources: Map<Subscription, SubscriptionSnapshot>;
@@ -177,6 +179,7 @@ export class SnapshotPlugin extends BasePlugin {
         const snapshotRef = setSnapshotRef(ref, {
             complete: false,
             error: undefined,
+            query: {},
             tick: this.spy_.tick,
             timestamp: Date.now(),
             unsubscribed: false,
@@ -229,6 +232,7 @@ export class SnapshotPlugin extends BasePlugin {
                 id: identify(ref),
                 mappedStackTrace: getMappedStackTrace(ref),
                 observable,
+                query: snapshotRef.query,
                 rootSink: undefined,
                 sink: undefined,
                 sources: new Map<Subscription, SubscriptionSnapshot>(),

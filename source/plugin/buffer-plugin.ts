@@ -75,6 +75,7 @@ export class BufferPlugin extends BasePlugin {
             const type = inferType(sink.observable);
             logger_.warn(`Excessive buffering detected; type = ${type}; count = ${bufferCount}${stackTrace}`);
         }
+        sinkSnapshotRef.query.buffered = bufferCount;
     }
 
     afterSubscribe(ref: SubscriptionRef): void {

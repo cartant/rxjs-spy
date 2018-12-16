@@ -301,6 +301,7 @@ export class SpyCore implements Spy {
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
                         if (predicate({
+                            ...subscriptionSnapshot.query,
                             complete: subscriptionSnapshot.complete,
                             error: subscriptionSnapshot.error,
                             idle: (Date.now() - subscriptionSnapshot.timestamp) / 1e3,
