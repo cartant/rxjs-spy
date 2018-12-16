@@ -305,7 +305,7 @@ export class SpyCore implements Spy {
                             error: subscriptionSnapshot.error,
                             incomplete: !subscriptionSnapshot.complete && !subscriptionSnapshot.error,
                             path: observableSnapshot.path,
-                            root: subscriptionSnapshot.sink === subscriptionSnapshot.rootSink,
+                            root: !subscriptionSnapshot.sink,
                             tag: observableSnapshot.tag,
                             type: observableSnapshot.type,
                             unsubscribed: subscriptionSnapshot.unsubscribed
