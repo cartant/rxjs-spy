@@ -5,6 +5,8 @@
 
 import { BasePlugin, Notification } from "./plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { Logger } from "../logger";
+import { inferType } from "../util";
 
 const graphRefSymbol = Symbol("graphRef");
 
@@ -24,6 +26,29 @@ export interface GraphRef {
 export function getGraphRef(ref: SubscriberRef): GraphRef {
 
     return ref[graphRefSymbol];
+}
+
+export function logGraph(ref: SubscriptionRef, {
+    all = false,
+    logger = console
+}: {
+    all?: boolean,
+    logger?: Logger
+}): void {
+
+    if (all) {
+        const { sentinel } = getGraphRef(ref);
+        sentinel.sources.forEach(source => log("", source, "root"));
+    } else {
+        log("", ref, "ref");
+    }
+
+    function log(indent: string, source: SubscriptionRef, kind: string): void {
+        logger.log(`${indent}${inferType(source.observable)} (${kind})`);
+        const graphRef = getGraphRef(source);
+        graphRef.sources.forEach(source => log(`${indent}  `, source, "source"));
+        graphRef.flattenings.forEach(flattening => log(`${indent}  `, flattening, "flattening"));
+    }
 }
 
 function setGraphRef(ref: SubscriberRef, value: GraphRef): GraphRef {
