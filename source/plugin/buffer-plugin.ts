@@ -56,7 +56,7 @@ export class BufferPlugin extends BasePlugin {
 
         const { bufferThreshold_, logger_, spy_ } = this;
         const bufferCount = inputCount - outputCount;
-        if ((bufferCount > bufferThreshold_) && !sink[bufferWarnedSymbol]) {
+        if ((bufferCount >= bufferThreshold_) && !sink[bufferWarnedSymbol]) {
             sink[bufferWarnedSymbol] = true;
             const stackFrames = getStackTrace(sinkGraphRef.rootSink || sink);
             if (stackFrames.length === 0) {

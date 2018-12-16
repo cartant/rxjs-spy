@@ -39,7 +39,7 @@ describe("BufferPlugin", () => {
             warn: sinon.stub()
         };
         const plugin = new BufferPlugin(spy, {
-            bufferThreshold: 1,
+            bufferThreshold: 2,
             logger: stubs as any
         });
         spy.plug(plugin);
