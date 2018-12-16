@@ -3,18 +3,28 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { getGraphRef } from "./graph-plugin";
+import { getGraphRef, GraphRef } from "./graph-plugin";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { BasePlugin } from "./plugin";
-import { getSnapshotRef } from "./snapshot-plugin";
+import { getSnapshotRef, SnapshotRef } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
 import { getStackTrace } from "./stack-trace-plugin";
-import { SubscriptionRef } from "../subscription-ref";
+import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 
-const bufferSinkSymbol = Symbol("bufferSink");
-const bufferWarnedSymbol = Symbol("bufferWarned");
+interface BufferRef {
+    sink: SubscriberRef;
+    sinkGraphRef: GraphRef;
+    sinkSnapshotRef: SnapshotRef;
+    sources: SubscriberRef[];
+    warned: boolean;
+}
 
+const bufferHigherOrderSymbol = Symbol("bufferHigherOrder");
+const bufferRefSymbol = Symbol("bufferRef");
+
+const higherOrderRegExp = /^(zip)$/;
+const subscriptions: SubscriberRef[] = [];
 const unboundedRegExp = /^(buffer|bufferTime|bufferToggle|bufferWhen|delay|delayWhen|mergeMap|zip)$/;
 
 export class BufferPlugin extends BasePlugin {
@@ -40,25 +50,23 @@ export class BufferPlugin extends BasePlugin {
 
     afterNext(ref: SubscriptionRef, value: any): void {
 
-        const sink: SubscriptionRef = ref[bufferSinkSymbol];
-        if (!sink) {
+        const bufferRef: BufferRef = ref[bufferRefSymbol];
+        if (!bufferRef) {
             return;
         }
 
-        const sinkGraphRef = getGraphRef(sink);
-        const sinkSnapshotRef = getSnapshotRef(sink);
-
-        const inputCount = sinkGraphRef.sources.reduce((count, sourceSubscriptionRef) => {
-            const sourceSnapshotRef = getSnapshotRef(sourceSubscriptionRef);
-            return Math.max(count, sourceSnapshotRef.values.length + sourceSnapshotRef.valuesFlushed);
+        const { sink, sinkGraphRef, sinkSnapshotRef, sources } = bufferRef;
+        const inputCount = sources.reduce((count, source) => {
+            const snapshotRef = getSnapshotRef(source);
+            return Math.max(count, snapshotRef.values.length + snapshotRef.valuesFlushed);
         }, 0);
         const flatteningsCount = sinkGraphRef.flattenings.length + sinkGraphRef.flatteningsFlushed;
         const outputCount = flatteningsCount || sinkSnapshotRef.values.length + sinkSnapshotRef.valuesFlushed;
 
         const { bufferThreshold_, logger_, spy_ } = this;
         const bufferCount = inputCount - outputCount;
-        if ((bufferCount >= bufferThreshold_) && !sink[bufferWarnedSymbol]) {
-            sink[bufferWarnedSymbol] = true;
+        if ((bufferCount >= bufferThreshold_) && !bufferRef.warned) {
+            bufferRef.warned = true;
             const stackFrames = getStackTrace(sinkGraphRef.rootSink || sink);
             if (stackFrames.length === 0) {
                 spy_.warnOnce(console, "Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
@@ -70,6 +78,23 @@ export class BufferPlugin extends BasePlugin {
     }
 
     afterSubscribe(ref: SubscriptionRef): void {
+
+        subscriptions.pop();
+    }
+
+    beforeSubscribe(ref: SubscriberRef): void {
+
+        subscriptions.push(ref);
+
+        const length = subscriptions.length;
+        if (length > 1) {
+            const bufferRef = subscriptions[length - 2][bufferHigherOrderSymbol];
+            if (bufferRef) {
+                bufferRef.sources.push(ref);
+                ref[bufferRefSymbol] = bufferRef;
+                return;
+            }
+        }
 
         const graphRef = getGraphRef(ref);
         if (!graphRef) {
@@ -88,6 +113,22 @@ export class BufferPlugin extends BasePlugin {
             return;
         }
 
-        ref[bufferSinkSymbol] = sink;
+        let bufferRef = sink[bufferRefSymbol];
+        if (!bufferRef) {
+            bufferRef = sink[bufferRefSymbol] = {
+                sink,
+                sinkGraphRef: getGraphRef(sink),
+                sinkSnapshotRef: getSnapshotRef(sink),
+                sources: [],
+                warned: false
+            };
+        }
+
+        if (higherOrderRegExp.test(inferType(sink.observable))) {
+            ref[bufferHigherOrderSymbol] = bufferRef;
+        } else {
+            bufferRef.sources.push(ref);
+            ref[bufferRefSymbol] = bufferRef;
+        }
     }
 }

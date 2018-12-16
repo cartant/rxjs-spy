@@ -116,7 +116,7 @@ describe("BufferPlugin", () => {
         subscription.unsubscribe();
     });
 
-    it.skip("should be detect buffering within zip", () => {
+    it("should be detect buffering within zip", () => {
 
         const subject = new Subject<number>();
         const zipped = zip(subject, NEVER);
