@@ -95,7 +95,7 @@ export class SpyCore implements Spy {
                 new GraphPlugin(options as Options),
                 new SnapshotPlugin(this, options as Options),
                 new BufferPlugin(this, { ...options, logger: this.defaultLogger_ }),
-                new CyclePlugin(this, this.defaultLogger_),
+                new CyclePlugin(this, { ...options, logger: this.defaultLogger_ }),
                 new StatsPlugin(this)
             ];
             if (options.devTools !==  false) {

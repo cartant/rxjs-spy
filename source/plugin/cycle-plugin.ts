@@ -10,20 +10,28 @@ import { getStackTrace } from "./stack-trace-plugin";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 
-const cycleDetectedSymbol = Symbol("cycleDetected");
+const cycleCountSymbol = Symbol("cycleCount");
 const cycleWarnedSymbol = Symbol("cycleWarned");
 
 export class CyclePlugin extends BasePlugin {
 
+    private cycleThreshold_: number;
     private logger_: Logger;
     private nexts_: SubscriptionRef[] = [];
     private spy_: Spy;
 
-    constructor(spy: Spy, partialLogger: PartialLogger) {
+    constructor(spy: Spy, {
+        cycleThreshold = 100,
+        logger
+    }: {
+        cycleThreshold?: number,
+        logger: PartialLogger
+    }) {
 
         super("cycle");
 
-        this.logger_ = toLogger(partialLogger);
+        this.cycleThreshold_ = cycleThreshold;
+        this.logger_ = toLogger(logger);
         this.spy_ = spy;
     }
 
@@ -35,12 +43,12 @@ export class CyclePlugin extends BasePlugin {
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
-        const { logger_, nexts_, spy_ } = this;
+        const { cycleThreshold_, logger_, nexts_, spy_ } = this;
         const { observable, subscription } = ref;
 
         if (nexts_.indexOf(ref) !== -1) {
-            if (!subscription[cycleDetectedSymbol]) {
-                subscription[cycleDetectedSymbol] = true;
+            const cycleCount = subscription[cycleCountSymbol] = (subscription[cycleCountSymbol] || 0) + 1;
+            if (cycleCount >= cycleThreshold_) {
                 if (nexts_.findIndex(n => n.subscription[cycleWarnedSymbol]) === -1) {
                     subscription[cycleWarnedSymbol] = true;
                     const stackFrames = getStackTrace(ref);

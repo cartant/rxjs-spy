@@ -33,7 +33,10 @@ describe("CyclePlugin", () => {
             log: sinon.stub(),
             warn: sinon.stub()
         };
-        const plugin = new CyclePlugin(spy, stubs as any);
+        const plugin = new CyclePlugin(spy, {
+            cycleThreshold: 1,
+            logger: stubs as any
+        });
         spy.plug(plugin);
     });
 
