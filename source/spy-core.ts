@@ -263,7 +263,6 @@ export class SpyCore implements Spy {
             error: any;
             idle: number;
             incomplete: boolean;
-            path: string;
             root: boolean;
             tag: string | undefined;
             type: string;
@@ -306,7 +305,6 @@ export class SpyCore implements Spy {
                             error: subscriptionSnapshot.error,
                             idle: (Date.now() - subscriptionSnapshot.timestamp) / 1e3,
                             incomplete: !subscriptionSnapshot.complete && !subscriptionSnapshot.error,
-                            path: observableSnapshot.path,
                             root: !subscriptionSnapshot.sink,
                             tag: observableSnapshot.tag,
                             type: observableSnapshot.type,
