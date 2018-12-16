@@ -385,27 +385,27 @@ describe("GraphPlugin", () => {
             const outerGraphRef = getGraphRef(outerSubscriberRef);
             expect(outerGraphRef).to.have.property("sink", composedSubscriberRef);
             expect(outerGraphRef).to.have.property("sources");
-            expect(outerGraphRef.flattenings).to.be.empty;
             expect(outerGraphRef.sources).to.not.be.empty;
             expect(hasSource(outerGraphRef, subjectSubscriberRef)).to.be.true;
 
             const composedGraphRef = getGraphRef(composedSubscriberRef);
             expect(composedGraphRef).to.have.property("sink", undefined);
             expect(composedGraphRef).to.have.property("sources");
+            expect(composedGraphRef.flattenings).to.be.empty;
             expect(composedGraphRef.sources).to.not.be.empty;
             expect(hasSource(composedGraphRef, subjectSubscriberRef)).to.be.true;
             expect(hasSource(composedGraphRef, outerSubscriberRef)).to.be.true;
 
             subject.next(0);
 
-            expect(outerGraphRef.flattenings).to.not.be.empty;
-            expect(outerGraphRef.flattenings).to.contain(subscriberRefsPlugin.get(merges[0]));
+            expect(composedGraphRef.flattenings).to.not.be.empty;
+            expect(composedGraphRef.flattenings).to.contain(subscriberRefsPlugin.get(merges[0]));
 
             subject.next(1);
 
-            expect(outerGraphRef.flattenings).to.not.be.empty;
-            expect(outerGraphRef.flattenings).to.contain(subscriberRefsPlugin.get(merges[0]));
-            expect(outerGraphRef.flattenings).to.contain(subscriberRefsPlugin.get(merges[1]));
+            expect(composedGraphRef.flattenings).to.not.be.empty;
+            expect(composedGraphRef.flattenings).to.contain(subscriberRefsPlugin.get(merges[0]));
+            expect(composedGraphRef.flattenings).to.contain(subscriberRefsPlugin.get(merges[1]));
         });
 
         it("should graph custom observables", () => {
@@ -569,19 +569,19 @@ describe("GraphPlugin", () => {
             }));
             const subscription = composed.subscribe();
 
-            const outerSubscriberRef = subscriberRefsPlugin.get(outer);
-            const outerGraphRef = getGraphRef(outerSubscriberRef);
-            expect(outerGraphRef).to.have.property("flattened", false);
+            const composedSubscriberRef = subscriberRefsPlugin.get(composed);
+            const composedGraphRef = getGraphRef(composedSubscriberRef);
+            expect(composedGraphRef).to.have.property("flattened", false);
 
             subject.next(0);
 
-            let flattenedSubscriberRef = outerGraphRef.flattenings[0];
+            let flattenedSubscriberRef = composedGraphRef.flattenings[0];
             let flattenedGraphRef = getGraphRef(flattenedSubscriberRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
 
             subject.next(1);
 
-            flattenedSubscriberRef = outerGraphRef.flattenings[1];
+            flattenedSubscriberRef = composedGraphRef.flattenings[1];
             flattenedGraphRef = getGraphRef(flattenedSubscriberRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
         });

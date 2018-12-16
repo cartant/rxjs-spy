@@ -138,17 +138,24 @@ export class GraphPlugin extends BasePlugin {
             sourcesFlushed: 0
         });
 
+        // Note that for next notifications, the notifications_ array will
+        // contain sources and for subscribe notifications, it will contain
+        // sinks.
+
         const length = notifications_.length;
         if ((length > 0) && (notifications_[length - 1].notification === "next")) {
 
-            const { ref: sinkRef } = notifications_[length - 1];
-            const sinkGraphRef = getGraphRef(sinkRef);
-            sinkGraphRef.flattenings.push(ref as SubscriptionRef);
-            graphRef.link = sinkGraphRef;
-            graphRef.flattened = true;
-            graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
-            graphRef.sink = sinkRef as SubscriptionRef;
-
+            const { ref: sourceRef } = notifications_[length - 1];
+            const sourceGraphRef = getGraphRef(sourceRef);
+            const sinkRef = sourceGraphRef.sink;
+            if (sinkRef) {
+                const sinkGraphRef = getGraphRef(sinkRef);
+                sinkGraphRef.flattenings.push(ref as SubscriptionRef);
+                graphRef.link = sinkGraphRef;
+                graphRef.flattened = true;
+                graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
+                graphRef.sink = sinkRef as SubscriptionRef;
+            }
         } else {
             for (let n = length - 1; n > -1; --n) {
                 if (notifications_[n].notification === "subscribe") {

@@ -292,29 +292,29 @@ describe("SnapshotPlugin", () => {
             const subscription = composed.subscribe();
 
             let snapshot = plugin.snapshotAll();
-            let outerSnapshot = get(snapshot.observables, outer);
-            let outerSubscription = getAt(outerSnapshot.subscriptions, 0);
-            let outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
+            let composedSnapshot = get(snapshot.observables, composed);
+            let composedSubscription = getAt(composedSnapshot.subscriptions, 0);
+            let composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(outerSubscription.flattenings).to.have.property("size", 0);
-
-            subject.next(0);
-
-            snapshot = plugin.snapshotAll();
-            outerSnapshot = get(snapshot.observables, outer);
-            outerSubscription = getAt(outerSnapshot.subscriptions, 0);
-            outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
-
-            expect(outerSubscription.flattenings).to.have.property("size", 1);
+            expect(composedSubscription.flattenings).to.have.property("size", 0);
 
             subject.next(0);
 
             snapshot = plugin.snapshotAll();
-            outerSnapshot = get(snapshot.observables, outer);
-            outerSubscription = getAt(outerSnapshot.subscriptions, 0);
-            outerSubscriber = get(snapshot.subscribers, outerSubscription.subscriber);
+            composedSnapshot = get(snapshot.observables, composed);
+            composedSubscription = getAt(composedSnapshot.subscriptions, 0);
+            composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(outerSubscription.flattenings).to.have.property("size", 2);
+            expect(composedSubscription.flattenings).to.have.property("size", 1);
+
+            subject.next(0);
+
+            snapshot = plugin.snapshotAll();
+            composedSnapshot = get(snapshot.observables, composed);
+            composedSubscription = getAt(composedSnapshot.subscriptions, 0);
+            composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
+
+            expect(composedSubscription.flattenings).to.have.property("size", 2);
         });
 
         it("should determine a subscription's sink subscription", () => {

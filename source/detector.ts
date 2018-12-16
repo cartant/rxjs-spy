@@ -144,14 +144,12 @@ export class Detector {
         const { flattenings, subscriptionSnapshot } = subscriptionRecord;
 
         snapshot.subscriptions.forEach((s) => {
-            if (s.rootSink === subscriptionSnapshot) {
-                s.flattenings.forEach((f) => {
-                    const { subscription } = f;
-                    if (!subscription.closed) {
-                        flattenings.set(subscription, f);
-                    }
-                });
-            }
+            s.flattenings.forEach((f) => {
+                const { subscription } = f;
+                if (!subscription.closed) {
+                    flattenings.set(subscription, f);
+                }
+            });
         });
     }
 

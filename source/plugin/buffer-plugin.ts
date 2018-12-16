@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { getGraphRef, logGraph } from "./graph-plugin";
+import { getGraphRef } from "./graph-plugin";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { BasePlugin } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
@@ -45,7 +45,6 @@ export class BufferPlugin extends BasePlugin {
             return;
         }
 
-        const sourceGraphRef = getGraphRef(ref);
         const sinkGraphRef = getGraphRef(sink);
         const sinkSnapshotRef = getSnapshotRef(sink);
 
@@ -53,7 +52,7 @@ export class BufferPlugin extends BasePlugin {
             const sourceSnapshotRef = getSnapshotRef(sourceSubscriptionRef);
             return Math.max(count, sourceSnapshotRef.values.length + sourceSnapshotRef.valuesFlushed);
         }, 0);
-        const flatteningsCount = sourceGraphRef.flattenings.length + sourceGraphRef.flatteningsFlushed;
+        const flatteningsCount = sinkGraphRef.flattenings.length + sinkGraphRef.flatteningsFlushed;
         const outputCount = flatteningsCount || sinkSnapshotRef.values.length + sinkSnapshotRef.valuesFlushed;
 
         const { bufferThreshold_, logger_, spy_ } = this;
