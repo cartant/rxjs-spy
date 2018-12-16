@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { getGraphRef } from "./graph-plugin";
+import { getGraphRef, logGraph } from "./graph-plugin";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { BasePlugin } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
@@ -15,7 +15,7 @@ import { inferType } from "../util";
 const bufferSinkSymbol = Symbol("bufferSink");
 const bufferWarnedSymbol = Symbol("bufferWarned");
 
-const unboundedRegExp = /^(buffer|bufferTime|bufferToggle|bufferWhen|delay|delayWhen|zip)$/;
+const unboundedRegExp = /^(buffer|bufferTime|bufferToggle|bufferWhen|delay|delayWhen|mergeMap|zip)$/;
 
 export class BufferPlugin extends BasePlugin {
 
@@ -45,6 +45,7 @@ export class BufferPlugin extends BasePlugin {
             return;
         }
 
+        const sourceGraphRef = getGraphRef(ref);
         const sinkGraphRef = getGraphRef(sink);
         const sinkSnapshotRef = getSnapshotRef(sink);
 
@@ -52,7 +53,8 @@ export class BufferPlugin extends BasePlugin {
             const sourceSnapshotRef = getSnapshotRef(sourceSubscriptionRef);
             return Math.max(count, sourceSnapshotRef.values.length + sourceSnapshotRef.valuesFlushed);
         }, 0);
-        const outputCount = sinkSnapshotRef.values.length + sinkSnapshotRef.valuesFlushed;
+        const flatteningsCount = sourceGraphRef.flattenings.length + sourceGraphRef.flatteningsFlushed;
+        const outputCount = flatteningsCount || sinkSnapshotRef.values.length + sinkSnapshotRef.valuesFlushed;
 
         const { bufferThreshold_, logger_, spy_ } = this;
         const bufferCount = inputCount - outputCount;
