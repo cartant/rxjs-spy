@@ -261,8 +261,8 @@ export class SpyCore implements Spy {
         predicate: (record: {
             complete: boolean;
             error: any;
-            idle: number;
             incomplete: boolean;
+            quiet: number;
             root: boolean;
             tag: string | undefined;
             type: string;
@@ -304,8 +304,8 @@ export class SpyCore implements Spy {
                             ...subscriptionSnapshot.query,
                             complete: subscriptionSnapshot.complete,
                             error: subscriptionSnapshot.error,
-                            idle: (Date.now() - subscriptionSnapshot.timestamp) / 1e3,
                             incomplete: !subscriptionSnapshot.complete && !subscriptionSnapshot.error,
+                            quiet: (Date.now() - subscriptionSnapshot.timestamp) / 1e3,
                             root: !subscriptionSnapshot.sink,
                             tag: observableSnapshot.tag,
                             type: observableSnapshot.type,
