@@ -12,7 +12,7 @@ import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
 import { BasePlugin } from "./plugin";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
 
@@ -21,24 +21,24 @@ export interface StackTraceRef {
     stackTrace: StackFrame[];
 }
 
-export function getMappedStackTrace(ref: SubscriberRef): Observable<StackFrame[]> {
+export function getMappedStackTrace(ref: SubscriptionRef): Observable<StackFrame[]> {
 
     const stackTraceRef = getStackTraceRef(ref);
     return stackTraceRef ? stackTraceRef.mappedStackTrace : of([]);
 }
 
-export function getStackTrace(ref: SubscriberRef): StackFrame[] {
+export function getStackTrace(ref: SubscriptionRef): StackFrame[] {
 
     const stackTraceRef = getStackTraceRef(ref);
     return stackTraceRef ? stackTraceRef.stackTrace : [];
 }
 
-export function getStackTraceRef(ref: SubscriberRef): StackTraceRef {
+export function getStackTraceRef(ref: SubscriptionRef): StackTraceRef {
 
     return ref[stackTraceRefSymbol];
 }
 
-function setStackTraceRef(ref: SubscriberRef, value: StackTraceRef): StackTraceRef {
+function setStackTraceRef(ref: SubscriptionRef, value: StackTraceRef): StackTraceRef {
 
     ref[stackTraceRefSymbol] = value;
     return value;
@@ -57,7 +57,7 @@ export class StackTracePlugin extends BasePlugin {
         this.sourceMaps_ = sourceMaps;
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         const stackFrames = this.getStackFrames_();
 

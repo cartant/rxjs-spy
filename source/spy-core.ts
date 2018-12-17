@@ -32,7 +32,6 @@ import {
     ObservableSnapshot,
     PausePlugin,
     Plugin,
-    Snapshot,
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin,
@@ -42,8 +41,8 @@ import {
 
 import { wrap } from "./spy-console";
 import { Ctor, Options, Spy, Teardown } from "./spy-interface";
-import { SubscriberRef, SubscriptionRef } from "./subscription-ref";
-import { isObservable, toSubscriber } from "./util";
+import { SubscriptionRef } from "./subscription-ref";
+import { toSubscriber } from "./util";
 
 declare const __RX_SPY_VERSION__: string;
 const observableSubscribe = Observable.prototype.subscribe;

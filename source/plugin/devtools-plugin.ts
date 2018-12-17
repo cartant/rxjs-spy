@@ -52,14 +52,14 @@ import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
 import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 
 interface NotificationRef {
     error?: any;
     notification: Notification;
     prefix: "after" | "before";
-    ref: SubscriberRef;
+    ref: SubscriptionRef;
     value?: any;
 }
 
@@ -221,7 +221,7 @@ export class DevToolsPlugin extends BasePlugin {
         });
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         this.batchNotification_({
             notification: "subscribe",
@@ -369,9 +369,9 @@ function orNull(value: any): any {
     return  (value === undefined) ? null : value;
 }
 
-function toGraph(subscriberRef: SubscriberRef): GraphPayload | undefined {
+function toGraph(subscriptionRef: SubscriptionRef): GraphPayload | undefined {
 
-    const graphRef = getGraphRef(subscriberRef);
+    const graphRef = getGraphRef(subscriptionRef);
 
     if (!graphRef) {
         return undefined;

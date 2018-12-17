@@ -4,7 +4,7 @@
  */
 
 import { Observable, Subscriber, Subscription } from "rxjs";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 
 export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
 
@@ -20,7 +20,7 @@ export interface Plugin {
     beforeComplete(ref: SubscriptionRef): void;
     beforeError(ref: SubscriptionRef, error: any): void;
     beforeNext(ref: SubscriptionRef, value: any): void;
-    beforeSubscribe(ref: SubscriberRef): void;
+    beforeSubscribe(ref: SubscriptionRef): void;
     beforeUnsubscribe(ref: SubscriptionRef): void;
     flush(): void;
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined;
@@ -39,7 +39,7 @@ export class BasePlugin implements Plugin {
     beforeComplete(ref: SubscriptionRef): void {}
     beforeError(ref: SubscriptionRef, error: any): void {}
     beforeNext(ref: SubscriptionRef, value: any): void {}
-    beforeSubscribe(ref: SubscriberRef): void {}
+    beforeSubscribe(ref: SubscriptionRef): void {}
     beforeUnsubscribe(ref: SubscriptionRef): void {}
     flush(): void {}
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }

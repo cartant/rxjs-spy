@@ -4,7 +4,7 @@
  */
 
 import { BasePlugin, Notification } from "./plugin";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 import { Logger } from "../logger";
 import { inferType } from "../util";
 
@@ -23,7 +23,7 @@ export interface GraphRef {
     sourcesFlushed: number;
 }
 
-export function getGraphRef(ref: SubscriberRef): GraphRef {
+export function getGraphRef(ref: SubscriptionRef): GraphRef {
 
     return ref[graphRefSymbol];
 }
@@ -51,7 +51,7 @@ export function logGraph(ref: SubscriptionRef, {
     }
 }
 
-function setGraphRef(ref: SubscriberRef, value: GraphRef): GraphRef {
+function setGraphRef(ref: SubscriptionRef, value: GraphRef): GraphRef {
 
     ref[graphRefSymbol] = value;
     return value;
@@ -64,7 +64,7 @@ export class GraphPlugin extends BasePlugin {
     private keptDuration_: number;
     private notifications_: {
         notification: Notification;
-        ref: SubscriberRef;
+        ref: SubscriptionRef;
     }[];
     private sentinel_: GraphRef;
 
@@ -121,7 +121,7 @@ export class GraphPlugin extends BasePlugin {
         notifications_.push({ notification: "next", ref });
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         const { notifications_, sentinel_ } = this;
 

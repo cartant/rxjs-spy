@@ -9,14 +9,14 @@ import { BasePlugin } from "./plugin";
 import { getSnapshotRef, SnapshotRef } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
 import { getStackTrace } from "./stack-trace-plugin";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 
 interface BufferRef {
-    sink: SubscriberRef;
+    sink: SubscriptionRef;
     sinkGraphRef: GraphRef;
     sinkSnapshotRef: SnapshotRef;
-    sources: SubscriberRef[];
+    sources: SubscriptionRef[];
     warned: boolean;
 }
 
@@ -24,7 +24,7 @@ const bufferHigherOrderSymbol = Symbol("bufferHigherOrder");
 const bufferRefSymbol = Symbol("bufferRef");
 
 const higherOrderRegExp = /^(zip)$/;
-const subscriptions: SubscriberRef[] = [];
+const subscriptions: SubscriptionRef[] = [];
 const unboundedRegExp = /^(buffer|bufferTime|bufferToggle|bufferWhen|delay|delayWhen|mergeMap|zip)$/;
 
 export class BufferPlugin extends BasePlugin {
@@ -83,7 +83,7 @@ export class BufferPlugin extends BasePlugin {
         subscriptions.pop();
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         subscriptions.push(ref);
 

@@ -9,7 +9,7 @@ import { Subject } from "rxjs";
 import { identify } from "../identify";
 import { LogPlugin } from "./log-plugin";
 import { tag } from "../operators";
-import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
+import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
@@ -23,7 +23,7 @@ describe("LogPlugin", () => {
 
     let calls: any[][];
     let spy: Spy;
-    let subscriberRefsPlugin: SubscriberRefsPlugin;
+    let subscriptionRefsPlugin: SubscriptionRefsPlugin;
 
     describe("tags", () => {
 
@@ -143,9 +143,9 @@ describe("LogPlugin", () => {
 
         beforeEach(() => {
 
-            subscriberRefsPlugin = new SubscriberRefsPlugin();
+            subscriptionRefsPlugin = new SubscriptionRefsPlugin();
             spy = create(options);
-            spy.plug(subscriberRefsPlugin);
+            spy.plug(subscriptionRefsPlugin);
             calls = [];
         });
 
@@ -154,7 +154,7 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             const subscription = subject.subscribe();
 
-            const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
+            const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
             spy.plug(new LogPlugin(spy, identify(subscriptionRef.observable), {
                 log(...args: any[]): void { calls.push(args); }
             }));
@@ -171,7 +171,7 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             const subscription = subject.subscribe();
 
-            const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
+            const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
             spy.plug(new LogPlugin(spy, identify(subscriptionRef.subscriber), {
                 log(...args: any[]): void { calls.push(args); }
             }));
@@ -188,7 +188,7 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             const subscription = subject.subscribe();
 
-            const subscriptionRef = subscriberRefsPlugin.get(subject) as SubscriptionRef;
+            const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
             spy.plug(new LogPlugin(spy, identify(subscriptionRef.subscription), {
                 log(...args: any[]): void { calls.push(args); }
             }));

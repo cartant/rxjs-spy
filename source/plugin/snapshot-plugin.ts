@@ -13,7 +13,7 @@ import { hide } from "../operators";
 import { BasePlugin, Notification } from "./plugin";
 import { Spy } from "../spy-interface";
 import { getMappedStackTrace, getStackTrace } from "./stack-trace-plugin";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 
 const snapshotRefSymbol = Symbol("snapshotRef");
@@ -29,7 +29,7 @@ export interface SnapshotRef {
     valuesFlushed: number;
 }
 
-export function getSnapshotRef(ref: SubscriberRef): SnapshotRef {
+export function getSnapshotRef(ref: SubscriptionRef): SnapshotRef {
 
     return ref[snapshotRefSymbol];
 }
@@ -63,7 +63,7 @@ function mapStackTraces(snapshots: any[]): Observable<void> {
     }
 }
 
-function setSnapshotRef(ref: SubscriberRef, value: SnapshotRef): SnapshotRef {
+function setSnapshotRef(ref: SubscriptionRef, value: SnapshotRef): SnapshotRef {
 
     ref[snapshotRefSymbol] = value;
     return value;
@@ -174,7 +174,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         const snapshotRef = setSnapshotRef(ref, {
             complete: false,

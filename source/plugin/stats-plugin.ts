@@ -7,7 +7,7 @@ import { Observable, Subscriber } from "rxjs";
 import { getGraphRef } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 import { Spy } from "../spy-interface";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 
 export interface Stats {
     completes: number;
@@ -91,7 +91,7 @@ export class StatsPlugin extends BasePlugin {
         this.all_();
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
         const { stats_ } = this;
         ++stats_.subscribes;
         this.all_();

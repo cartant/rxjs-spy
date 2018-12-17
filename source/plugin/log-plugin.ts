@@ -8,7 +8,7 @@ import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Notification } from "./plugin";
 import { Spy } from "../spy-interface";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 
 export class LogPlugin extends BasePlugin {
@@ -77,7 +77,7 @@ export class LogPlugin extends BasePlugin {
         this.log_(ref, "next", value);
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         this.log_(ref, "subscribe");
     }
@@ -88,7 +88,7 @@ export class LogPlugin extends BasePlugin {
     }
 
     private log_(
-        ref: SubscriberRef,
+        ref: SubscriptionRef,
         notification: Notification,
         param?: any
     ): void {

@@ -5,7 +5,7 @@
 
 import { Observable, Subscriber, Subscription } from "rxjs";
 import { identify } from "./identify";
-import { isSubscriptionRef, SubscriberRef } from "./subscription-ref";
+import { SubscriptionRef } from "./subscription-ref";
 import { isObservable } from "./util";
 
 export type MatchPredicate = (value: string | undefined, observable?: Observable<any>) => boolean;
@@ -13,9 +13,9 @@ export type Match = Observable<any> | string | RegExp | MatchPredicate;
 
 export function matches<T>(observable: Observable<T>, match: Match, value?: string): boolean;
 export function matches<T>(observable: Observable<T>, match: Match): boolean;
-export function matches(subscriberRef: SubscriberRef, match: Match, value?: string): boolean;
-export function matches(subscriberRef: SubscriberRef, match: Match): boolean;
-export function matches<T>(arg: Observable<T> | SubscriberRef, match: Match, value?: string): boolean {
+export function matches(subscriptionRef: SubscriptionRef, match: Match, value?: string): boolean;
+export function matches(subscriptionRef: SubscriptionRef, match: Match): boolean;
+export function matches<T>(arg: Observable<T> | SubscriptionRef, match: Match, value?: string): boolean {
 
     let observable: Observable<T>;
     let subscriber: Subscriber<T> | undefined = undefined;
@@ -26,7 +26,7 @@ export function matches<T>(arg: Observable<T> | SubscriberRef, match: Match, val
     } else {
         observable = arg.observable;
         subscriber = arg.subscriber;
-        subscription = isSubscriptionRef(arg) ? arg.subscription : undefined;
+        subscription = arg.subscription;
     }
 
     if (isObservable(match)) {

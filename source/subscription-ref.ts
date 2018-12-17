@@ -5,17 +5,10 @@
 
 import { Observable, Subscriber, Subscription } from "rxjs";
 
-export interface SubscriberRef {
+export interface SubscriptionRef {
     observable: Observable<any>;
     subscriber: Subscriber<any>;
+    subscription: Subscription;
     timestamp: number;
     unsubscribed: boolean;
-}
-
-export interface SubscriptionRef extends SubscriberRef {
-    subscription: Subscription;
-}
-
-export function isSubscriptionRef(subscriberRef: SubscriberRef): subscriberRef is SubscriptionRef {
-    return subscriberRef && subscriberRef["subscription"];
 }

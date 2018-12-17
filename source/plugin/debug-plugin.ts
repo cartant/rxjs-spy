@@ -7,19 +7,19 @@
 import { Observable, Subscriber } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin, Notification } from "./plugin";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriptionRef } from "../subscription-ref";
 
 export class DebugPlugin extends BasePlugin {
 
     private notifications_: Notification[];
-    private matcher_: (ref: SubscriberRef, notification: Notification) => boolean;
+    private matcher_: (ref: SubscriptionRef, notification: Notification) => boolean;
 
     constructor(match: Match, notifications: Notification[]) {
 
         super(`debug(${matchToString(match)})`);
 
         this.notifications_ = notifications;
-        this.matcher_ = (ref: SubscriberRef, notification: Notification) => matches(ref, match) && (this.notifications_.indexOf(notification) !== -1);
+        this.matcher_ = (ref: SubscriptionRef, notification: Notification) => matches(ref, match) && (this.notifications_.indexOf(notification) !== -1);
     }
 
     beforeComplete(ref: SubscriptionRef): void {
@@ -49,7 +49,7 @@ export class DebugPlugin extends BasePlugin {
         }
     }
 
-    beforeSubscribe(ref: SubscriberRef): void {
+    beforeSubscribe(ref: SubscriptionRef): void {
 
         const { matcher_ } = this;
 

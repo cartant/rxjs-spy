@@ -8,7 +8,7 @@ import { expect } from "chai";
 import { Subject } from "rxjs";
 import { map } from "rxjs/operators";
 import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
-import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
+import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
@@ -17,14 +17,14 @@ describe("StackTracePlugin", () => {
 
     let spy: Spy;
     let stackTracePlugin: StackTracePlugin;
-    let subscriberRefsPlugin: SubscriberRefsPlugin;
+    let subscriptionRefsPlugin: SubscriptionRefsPlugin;
 
     beforeEach(() => {
 
         stackTracePlugin = new StackTracePlugin();
-        subscriberRefsPlugin = new SubscriberRefsPlugin();
+        subscriptionRefsPlugin = new SubscriptionRefsPlugin();
         spy = create({ defaultPlugins: false, warning: false });
-        spy.plug(stackTracePlugin, subscriberRefsPlugin);
+        spy.plug(stackTracePlugin, subscriptionRefsPlugin);
     });
 
     it("should determine the stack traces", () => {
@@ -33,8 +33,8 @@ describe("StackTracePlugin", () => {
         const mapped = subject.pipe(map((value) => value));
         const subscription = mapped.subscribe();
 
-        const subjectSubscriptionRef = subscriberRefsPlugin.get(subject);
-        const mappedSubscriptionRef = subscriberRefsPlugin.get(mapped);
+        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+        const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
 
         const subjectStackTrace = getStackTrace(subjectSubscriptionRef);
         const mappedStackTrace = getStackTrace(mappedSubscriptionRef);
