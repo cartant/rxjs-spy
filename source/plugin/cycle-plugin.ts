@@ -5,6 +5,7 @@
 
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { BasePlugin } from "./plugin";
+import { getSnapshotRef } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
 import { getStackTrace } from "./stack-trace-plugin";
 import { SubscriptionRef } from "../subscription-ref";
@@ -59,6 +60,10 @@ export class CyclePlugin extends BasePlugin {
                     const type = inferType(observable);
                     logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
                 }
+            }
+            const snapshotRef = getSnapshotRef(ref);
+            if (snapshotRef) {
+                snapshotRef.query.cycle = { count: cycleCount };
             }
         }
         nexts_.push(ref);
