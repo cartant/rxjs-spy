@@ -350,6 +350,7 @@ export class SpyCore implements Spy {
                     `Tag = ${observableSnapshot.tag}` :
                     `Type = ${observableSnapshot.type}`
                 );
+                logger.log("Observable ID =", observableSnapshot.id);
                 logger.log("Path =", observableSnapshot.path);
 
                 const { subs } = find;
@@ -359,12 +360,13 @@ export class SpyCore implements Spy {
 
                     const subscriptionSnapshot = sub.subscription;
                     const subscriberSnapshot = sub.subscriber;
-                    const { values, valuesFlushed } = subscriberSnapshot;
+                    const { id, values, valuesFlushed } = subscriberSnapshot;
                     logger[subscriberGroupMethod].call(logger, "Subscriber");
                     logger.log("Value count =", values.length + valuesFlushed);
                     if (values.length > 0) {
                         logger.log("Last value =", values[values.length - 1].value);
                     }
+                    logger.log("Subscriber ID =", id);
                     logSubscription(logger, subscriptionSnapshot);
 
                     const otherSubscriptions = Array
@@ -428,6 +430,7 @@ export class SpyCore implements Spy {
                     `Tag = ${observableSnapshot.tag}` :
                     `Type = ${observableSnapshot.type}`
                 );
+                logger.log("Observable ID =", observableSnapshot.id);
                 logger.log("Path =", observableSnapshot.path);
 
                 const { subscriptions } = observableSnapshot;
@@ -438,12 +441,13 @@ export class SpyCore implements Spy {
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
 
-                        const { values, valuesFlushed } = subscriberSnapshot;
+                        const { id, values, valuesFlushed } = subscriberSnapshot;
                         logger[subscriberGroupMethod].call(logger, "Subscriber");
                         logger.log("Value count =", values.length + valuesFlushed);
                         if (values.length > 0) {
                             logger.log("Last value =", values[values.length - 1].value);
                         }
+                        logger.log("Subscriber ID =", id);
                         logSubscription(logger, subscriptionSnapshot);
 
                         const otherSubscriptions = Array
@@ -734,11 +738,11 @@ export class SpyCore implements Spy {
             function logSubscription(logger: Logger, name: string, subscription: SubscriptionSnapshot): void {
 
                 logger.group(name);
-                logger.log("Root subscribe", subscription.rootSink ?
+                logger.log("Root subscribe at", subscription.rootSink ?
                     subscription.rootSink.stackTrace :
                     subscription.stackTrace
                 );
-                logger.log("Subscribe", subscription.stackTrace);
+                logger.log("Subscribe at", subscription.stackTrace);
                 logger.groupEnd();
             }
         });
@@ -749,12 +753,13 @@ function logStackTrace(logger: Logger, subscriptionSnapshot: SubscriptionSnapsho
 
     const { mappedStackTrace, rootSink } = subscriptionSnapshot;
     const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
-    mapped.subscribe(stackTrace => logger.log("Root subscribe", stackTrace));
+    mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
 }
 
 function logSubscription(logger: Logger, subscriptionSnapshot: SubscriptionSnapshot): void {
 
-    const { complete, error, unsubscribed } = subscriptionSnapshot;
+    const { complete, error, id, unsubscribed } = subscriptionSnapshot;
+    logger.log("Subscription ID =", id);
     logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
     if (error) {
         logger.error("Error =", error);
