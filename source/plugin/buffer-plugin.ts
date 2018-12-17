@@ -85,8 +85,14 @@ export class BufferPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriptionRef): void {
 
-        subscriptions.push(ref);
+        const snapshotRef = getSnapshotRef(ref);
+        if (!snapshotRef) {
+            this.spy_.warnOnce(console, "Snapshotting is not enabled; add the SnapshotPlugin before the BufferPlugin.");
+            return;
+        }
+        snapshotRef.query.buffer = {};
 
+        subscriptions.push(ref);
         const length = subscriptions.length;
         if (length > 1) {
             const bufferRef = subscriptions[length - 2][bufferHigherOrderSymbol];
@@ -105,12 +111,6 @@ export class BufferPlugin extends BasePlugin {
 
         const { sink } = graphRef;
         if (!sink || !unboundedRegExp.test(inferType(sink.observable))) {
-            return;
-        }
-
-        const sinkSnapshotRef = getSnapshotRef(sink);
-        if (!sinkSnapshotRef) {
-            this.spy_.warnOnce(console, "Snapshotting is not enabled; add the SnapshotPlugin before the BufferPlugin.");
             return;
         }
 

@@ -68,4 +68,12 @@ export class CyclePlugin extends BasePlugin {
         }
         nexts_.push(ref);
     }
+
+    beforeSubscribe(ref: SubscriptionRef): void {
+
+        const snapshotRef = getSnapshotRef(ref);
+        if (snapshotRef) {
+            snapshotRef.query.cycle = {};
+        }
+    }
 }
