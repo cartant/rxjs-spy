@@ -229,7 +229,7 @@ export class SnapshotPlugin extends BasePlugin {
                 error,
                 flattenings: new Map<Subscription, SubscriptionSnapshot>(),
                 flatteningsFlushed,
-                id: identify(ref),
+                id: identify(subscription),
                 mappedStackTrace: getMappedStackTrace(ref),
                 observable,
                 query: snapshotRef.query,

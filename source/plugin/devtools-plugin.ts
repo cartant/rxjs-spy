@@ -337,7 +337,7 @@ export class DevToolsPlugin extends BasePlugin {
     private toNotification_(notificationRef: NotificationRef): NotificationPayload {
 
         const { error, notification, prefix, ref, value } = notificationRef;
-        const { observable, subscriber } = ref;
+        const { observable, subscriber, subscription } = ref;
 
         return {
             id: identify({}),
@@ -353,7 +353,7 @@ export class DevToolsPlugin extends BasePlugin {
             subscription: {
                 error,
                 graph: orNull(toGraph(ref)),
-                id: identify(ref),
+                id: identify(subscription),
                 stackTrace: orNull(getStackTrace(ref))
             },
             tick: this.spy_.tick,
@@ -388,9 +388,9 @@ function toGraph(subscriptionRef: SubscriptionRef): GraphPayload | undefined {
     return {
         flattenings: flattenings.map(identify),
         flatteningsFlushed,
-        rootSink: rootSink ? identify(rootSink) : null,
-        sink: sink ? identify(sink) : null,
-        sources: sources.map(identify),
+        rootSink: rootSink ? identify(rootSink.subscription) : null,
+        sink: sink ? identify(sink.subscription) : null,
+        sources: sources.map(source => identify(source.subscription)),
         sourcesFlushed
     };
 }
@@ -435,8 +435,8 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                         .from(s.flattenings.values())
                         .map(s => s.id),
                     flatteningsFlushed: s.flatteningsFlushed,
-                    rootSink: s.rootSink ? identify(s.rootSink) : null,
-                    sink: s.sink ? identify(s.sink) : null,
+                    rootSink: s.rootSink ? identify(s.rootSink.subscription) : null,
+                    sink: s.sink ? identify(s.sink.subscription) : null,
                     sources: Array
                         .from(s.sources.values())
                         .map(s => s.id),

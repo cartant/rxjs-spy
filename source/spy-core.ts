@@ -567,7 +567,7 @@ export class SpyCore implements Spy {
 
         identify(observable);
         identify(subscriber);
-        identify(ref);
+        identify(ref.subscription);
 
         const subscriberUnsubscribe = subscriber.unsubscribe;
         subscriber.unsubscribe = () => {
