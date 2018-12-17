@@ -257,19 +257,7 @@ export class SpyCore implements Spy {
     }
 
     query(
-        predicate: (record: {
-            complete: boolean;
-            error: any;
-            incomplete: boolean;
-            observable: string;
-            quiet: number;
-            root: boolean;
-            subscriber: string;
-            subscription: string;
-            tag: string | undefined;
-            type: string;
-            unsubscribed: boolean;
-        }) => boolean,
+        predicate: (record: Record<string, any>) => boolean,
         partialLogger?: PartialLogger
     ): void {
 
@@ -302,20 +290,10 @@ export class SpyCore implements Spy {
 
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
-                        if (predicate({
-                            ...subscriptionSnapshot.query,
-                            complete: subscriptionSnapshot.complete,
-                            error: subscriptionSnapshot.error,
-                            incomplete: !subscriptionSnapshot.complete && !subscriptionSnapshot.error,
-                            observable: identify(subscriptionSnapshot.observable),
-                            quiet: (Date.now() - subscriptionSnapshot.timestamp) / 1e3,
-                            root: !subscriptionSnapshot.sink,
-                            subscriber: identify(subscriptionSnapshot.subscriber),
-                            subscription: identify(subscriptionSnapshot.subscription),
-                            tag: observableSnapshot.tag,
-                            type: observableSnapshot.type,
-                            unsubscribed: subscriptionSnapshot.unsubscribed
-                        })) {
+                        if (predicate(toRecord(
+                            observableSnapshot,
+                            subscriptionSnapshot
+                        ))) {
                             if (!find) {
                                 find = {
                                     observable: observableSnapshot,
@@ -350,7 +328,6 @@ export class SpyCore implements Spy {
                     `Tag = ${observableSnapshot.tag}` :
                     `Type = ${observableSnapshot.type}`
                 );
-                logger.log("Observable ID =", observableSnapshot.id);
                 logger.log("Path =", observableSnapshot.path);
 
                 const { subs } = find;
@@ -366,15 +343,14 @@ export class SpyCore implements Spy {
                     if (values.length > 0) {
                         logger.log("Last value =", values[values.length - 1].value);
                     }
-                    logger.log("Subscriber ID =", id);
-                    logSubscription(logger, subscriptionSnapshot);
+                    logSubscription(logger, observableSnapshot, subscriptionSnapshot);
 
                     const otherSubscriptions = Array
                         .from(subscriberSnapshot.subscriptions.values())
                         .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
                     otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
                         logger.groupCollapsed("Other subscription");
-                        logSubscription(logger, otherSubscriptionSnapshot);
+                        logSubscription(logger, observableSnapshot, otherSubscriptionSnapshot);
                         logger.groupEnd();
                     });
                     logger.groupEnd();
@@ -430,7 +406,6 @@ export class SpyCore implements Spy {
                     `Tag = ${observableSnapshot.tag}` :
                     `Type = ${observableSnapshot.type}`
                 );
-                logger.log("Observable ID =", observableSnapshot.id);
                 logger.log("Path =", observableSnapshot.path);
 
                 const { subscriptions } = observableSnapshot;
@@ -447,15 +422,14 @@ export class SpyCore implements Spy {
                         if (values.length > 0) {
                             logger.log("Last value =", values[values.length - 1].value);
                         }
-                        logger.log("Subscriber ID =", id);
-                        logSubscription(logger, subscriptionSnapshot);
+                        logSubscription(logger, observableSnapshot, subscriptionSnapshot);
 
                         const otherSubscriptions = Array
                             .from(subscriberSnapshot.subscriptions.values())
                             .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
                         otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
                             logger.groupCollapsed("Other subscription");
-                            logSubscription(logger, otherSubscriptionSnapshot);
+                            logSubscription(logger, observableSnapshot, otherSubscriptionSnapshot);
                             logger.groupEnd();
                         });
                         logger.groupEnd();
@@ -749,18 +723,25 @@ export class SpyCore implements Spy {
     }
 }
 
-function logStackTrace(logger: Logger, subscriptionSnapshot: SubscriptionSnapshot): void {
+function logStackTrace(
+    logger: Logger,
+    subscriptionSnapshot: SubscriptionSnapshot
+): void {
 
     const { mappedStackTrace, rootSink } = subscriptionSnapshot;
     const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
     mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
 }
 
-function logSubscription(logger: Logger, subscriptionSnapshot: SubscriptionSnapshot): void {
+function logSubscription(
+    logger: Logger,
+    observableSnapshot: ObservableSnapshot,
+    subscriptionSnapshot: SubscriptionSnapshot
+): void {
 
     const { complete, error, id, unsubscribed } = subscriptionSnapshot;
-    logger.log("Subscription ID =", id);
     logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
+    logger.log("Query =", toRecord(observableSnapshot, subscriptionSnapshot));
     if (error) {
         logger.error("Error =", error);
     }
@@ -768,4 +749,25 @@ function logSubscription(logger: Logger, subscriptionSnapshot: SubscriptionSnaps
         logger.log("Unsubscribed =", true);
     }
     logStackTrace(logger, subscriptionSnapshot);
+}
+
+function toRecord(
+    observableSnapshot: ObservableSnapshot,
+    subscriptionSnapshot: SubscriptionSnapshot
+): Record<string, any> {
+
+    return {
+        ...subscriptionSnapshot.query,
+        complete: subscriptionSnapshot.complete,
+        error: subscriptionSnapshot.error,
+        incomplete: !subscriptionSnapshot.complete && !subscriptionSnapshot.error,
+        observable: identify(subscriptionSnapshot.observable),
+        quiet: (Date.now() - subscriptionSnapshot.timestamp) / 1e3,
+        root: !subscriptionSnapshot.sink,
+        subscriber: identify(subscriptionSnapshot.subscriber),
+        subscription: identify(subscriptionSnapshot.subscription),
+        tag: observableSnapshot.tag,
+        type: observableSnapshot.type,
+        unsubscribed: subscriptionSnapshot.unsubscribed
+    };
 }
