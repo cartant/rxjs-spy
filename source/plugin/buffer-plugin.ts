@@ -90,7 +90,7 @@ export class BufferPlugin extends BasePlugin {
             this.spy_.warnOnce(console, "Snapshotting is not enabled; add the SnapshotPlugin before the BufferPlugin.");
             return;
         }
-        snapshotRef.query.buffer = {};
+        snapshotRef.query.buffer = { count: 0 };
 
         subscriptions.push(ref);
         const length = subscriptions.length;

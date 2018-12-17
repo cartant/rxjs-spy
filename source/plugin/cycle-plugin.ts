@@ -73,7 +73,7 @@ export class CyclePlugin extends BasePlugin {
 
         const snapshotRef = getSnapshotRef(ref);
         if (snapshotRef) {
-            snapshotRef.query.cycle = {};
+            snapshotRef.query.cycle = { count: 0 };
         }
     }
 }
