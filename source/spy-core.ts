@@ -261,8 +261,11 @@ export class SpyCore implements Spy {
             complete: boolean;
             error: any;
             incomplete: boolean;
+            observable: string;
             quiet: number;
             root: boolean;
+            subscriber: string;
+            subscription: string;
             tag: string | undefined;
             type: string;
             unsubscribed: boolean;
@@ -304,8 +307,11 @@ export class SpyCore implements Spy {
                             complete: subscriptionSnapshot.complete,
                             error: subscriptionSnapshot.error,
                             incomplete: !subscriptionSnapshot.complete && !subscriptionSnapshot.error,
+                            observable: identify(subscriptionSnapshot.observable),
                             quiet: (Date.now() - subscriptionSnapshot.timestamp) / 1e3,
                             root: !subscriptionSnapshot.sink,
+                            subscriber: identify(subscriptionSnapshot.subscriber),
+                            subscription: identify(subscriptionSnapshot.subscription),
                             tag: observableSnapshot.tag,
                             type: observableSnapshot.type,
                             unsubscribed: subscriptionSnapshot.unsubscribed
