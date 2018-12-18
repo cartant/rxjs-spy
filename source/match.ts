@@ -9,7 +9,7 @@ import { SubscriptionRef } from "./subscription-ref";
 import { isObservable } from "./util";
 
 export type MatchPredicate = (value: string | undefined, observable?: Observable<any>) => boolean;
-export type Match = Observable<any> | string | RegExp | MatchPredicate;
+export type Match = Observable<any> | number | string | RegExp | MatchPredicate;
 
 export function matches<T>(observable: Observable<T>, match: Match, value?: string): boolean;
 export function matches<T>(observable: Observable<T>, match: Match): boolean;
@@ -42,8 +42,8 @@ export function matches<T>(arg: Observable<T> | SubscriptionRef, match: Match, v
         return match(tag, observable);
     }
     if (typeof match === "number") {
-        // tslint:disable-next-line:triple-equals
-        return (match == observableId) || (match == subscriberId) || (match == subscriptionId);
+        const text = match.toString();
+        return (text === observableId) || (text === subscriberId) || (text === subscriptionId);
     }
     if (typeof match === "string") {
         return (match === observableId) || (match === subscriberId) || (match === subscriptionId) || (match === tag);

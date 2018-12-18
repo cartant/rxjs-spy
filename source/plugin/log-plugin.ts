@@ -4,6 +4,7 @@
  */
 
 import { Auditor } from "../auditor";
+import { identify } from "../identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { BasePlugin, Notification } from "./plugin";
@@ -100,15 +101,21 @@ export class LogPlugin extends BasePlugin {
             auditor_.audit(this, (ignored) => {
 
                 const { logger_ } = this;
-                const { observable, subscriber } = ref;
+                const { observable } = ref;
+                const id = identify(observable);
                 const tag = read(observable);
                 const type = inferType(observable);
 
-                const matching = (typeof tagMatch_ === "string") ? "" : `; matching ${matchToString(tagMatch_)}`;
+                let identifier = tag ? `Tag = ${tag}` : `ID = ${id}`;
+                if ((typeof tagMatch_ === "number") || (typeof tagMatch_ === "string")) {
+                    if (tagMatch_.toString() === id) {
+                        identifier = `ID = ${id}`;
+                    }
+                }
+
+                const matching = (typeof tagMatch_ === "object") ? `; matching ${matchToString(tagMatch_)}` : "";
                 const audit  = (ignored === 0) ? "" : `; ignored ${ignored}`;
-                const description = tag ?
-                    `Tag = ${tag}; notification = ${notification}${matching}${audit}` :
-                    `Type = ${type}; notification = ${notification}${matching}${audit}`;
+                const description = `${identifier}; notification = ${notification}${matching}${audit}`;
 
                 switch (notification) {
                 case "error":
