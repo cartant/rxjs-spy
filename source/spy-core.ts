@@ -555,12 +555,6 @@ export class SpyCore implements Spy {
                 SpyCore.spy_ = spy_;
             }
         }
-        const notify_ = (before: (plugin: Plugin) => void, block: () => void, after: (plugin: Plugin) => void) => {
-            ++spy_.tick_;
-            spy_.plugins_.forEach(before);
-            block();
-            spy_.plugins_.forEach(after);
-        };
 
         const subscriber = toSubscriber.apply(undefined, args);
         const ref: SubscriptionRef = {
@@ -572,12 +566,20 @@ export class SpyCore implements Spy {
             subscribeTimestamp: Date.now(),
             subscriber,
             subscription: new Subscription(),
+            tick: 0,
             unsubscribeTimestamp: 0
         };
 
         identify(observable);
         identify(subscriber);
         identify(ref.subscription);
+
+        const notify_ = (before: (plugin: Plugin) => void, block: () => void, after: (plugin: Plugin) => void) => {
+            ref.tick = ++spy_.tick_;
+            spy_.plugins_.forEach(before);
+            block();
+            spy_.plugins_.forEach(after);
+        };
 
         const subscriberUnsubscribe = subscriber.unsubscribe;
         subscriber.unsubscribe = () => {

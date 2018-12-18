@@ -487,6 +487,7 @@ describe("SnapshotPlugin", () => {
                 subscribeTimestamp: Date.now(),
                 subscriber,
                 subscription,
+                tick: 0,
                 unsubscribeTimestamp: 0
             });
 
@@ -513,6 +514,7 @@ describe("SnapshotPlugin", () => {
                 subscribeTimestamp: Date.now(),
                 subscriber,
                 subscription,
+                tick: 0,
                 unsubscribeTimestamp: 0
             });
 

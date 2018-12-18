@@ -14,5 +14,6 @@ export interface SubscriptionRef {
     subscribeTimestamp: number;
     subscriber: Subscriber<any>;
     subscription: Subscription;
+    tick: number;
     unsubscribeTimestamp: number;
 }

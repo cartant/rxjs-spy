@@ -21,7 +21,6 @@ const snapshotRefSymbol = Symbol("snapshotRef");
 export interface SnapshotRef {
     error: any;
     query: Record<string, any>;
-    tick: number;
     values: { tick: number; timestamp: number; value: any; }[];
     valuesFlushed: number;
 }
@@ -140,30 +139,16 @@ export class SnapshotPlugin extends BasePlugin {
         this.spy_ = spy;
     }
 
-    afterUnsubscribe(ref: SubscriptionRef): void {
-
-        const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = this.spy_.tick;
-    }
-
-    beforeComplete(ref: SubscriptionRef): void {
-
-        const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = this.spy_.tick;
-    }
-
     beforeError(ref: SubscriptionRef, error: any): void {
 
         const snapshotRef = getSnapshotRef(ref);
         snapshotRef.error = error;
-        snapshotRef.tick = this.spy_.tick;
     }
 
     beforeNext(ref: SubscriptionRef, value: any): void {
 
         const tick = this.spy_.tick;
         const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = tick;
         snapshotRef.values.push({ tick, timestamp: Date.now(), value });
 
         const { keptValues_ } = this;
@@ -179,7 +164,6 @@ export class SnapshotPlugin extends BasePlugin {
         const snapshotRef = setSnapshotRef(ref, {
             error: undefined,
             query: {},
-            tick: this.spy_.tick,
             values: [],
             valuesFlushed: 0
         });
@@ -214,6 +198,7 @@ export class SnapshotPlugin extends BasePlugin {
                 subscribeTimestamp,
                 subscriber,
                 subscription,
+                tick,
                 unsubscribeTimestamp
             } = ref;
 
@@ -223,7 +208,6 @@ export class SnapshotPlugin extends BasePlugin {
             const snapshotRef = getSnapshotRef(ref);
             const {
                 error,
-                tick,
                 values,
                 valuesFlushed
             } = snapshotRef;
