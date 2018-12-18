@@ -41,6 +41,10 @@ export function matches<T>(arg: Observable<T> | SubscriptionRef, match: Match, v
     if (typeof match === "function") {
         return match(tag, observable);
     }
+    if (typeof match === "number") {
+        // tslint:disable-next-line:triple-equals
+        return (match == observableId) || (match == subscriberId) || (match == subscriptionId);
+    }
     if (typeof match === "string") {
         return (match === observableId) || (match === subscriberId) || (match === subscriptionId) || (match === tag);
     }

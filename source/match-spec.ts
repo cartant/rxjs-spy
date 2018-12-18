@@ -41,6 +41,13 @@ describe("match", () => {
             expect(matches(of("mallory"), identity)).to.be.false;
         });
 
+        it("should match a numeric identity", () => {
+
+            const identity = parseInt(identify(source), 10);
+            expect(matches(source, identity as any)).to.be.true;
+            expect(matches(of("mallory"), identity as any)).to.be.false;
+        });
+
         it("should match a regular expression", () => {
 
             expect(matches(source, /^people$/)).to.be.true;
