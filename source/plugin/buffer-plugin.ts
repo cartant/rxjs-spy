@@ -75,7 +75,7 @@ export class BufferPlugin extends BasePlugin {
             const type = inferType(sink.observable);
             logger_.warn(`Excessive buffering detected; type = ${type}; count = ${bufferCount}${stackTrace}`);
         }
-        sinkSnapshotRef.query.buffer = { count: bufferCount };
+        sinkSnapshotRef.query.bufferCount = bufferCount;
     }
 
     afterSubscribe(ref: SubscriptionRef): void {
@@ -90,7 +90,7 @@ export class BufferPlugin extends BasePlugin {
             this.spy_.warnOnce(console, "Snapshotting is not enabled; add the SnapshotPlugin before the BufferPlugin.");
             return;
         }
-        snapshotRef.query.buffer = { count: 0 };
+        snapshotRef.query.bufferCount = 0;
 
         subscriptions.push(ref);
         const length = subscriptions.length;

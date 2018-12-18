@@ -19,12 +19,9 @@ import { inferPath, inferType } from "../util";
 const snapshotRefSymbol = Symbol("snapshotRef");
 
 export interface SnapshotRef {
-    complete: boolean;
     error: any;
     query: Record<string, any>;
     tick: number;
-    timestamp: number;
-    unsubscribed: boolean;
     values: { tick: number; timestamp: number; value: any; }[];
     valuesFlushed: number;
 }
@@ -99,12 +96,15 @@ export interface SubscriberSnapshot {
 }
 
 export interface SubscriptionSnapshot {
-    complete: boolean;
+    completeTimestamp: number;
     error: any;
+    errorTimestamp: number;
     flattenings: Map<Subscription, SubscriptionSnapshot>;
     flatteningsFlushed: number;
     id: string;
     mappedStackTrace: Observable<StackFrame[]>;
+    nextCount: number;
+    nextTimestamp: number;
     observable: Observable<any>;
     query: Record<string, any>;
     rootSink: SubscriptionSnapshot | undefined;
@@ -112,11 +112,13 @@ export interface SubscriptionSnapshot {
     sources: Map<Subscription, SubscriptionSnapshot>;
     sourcesFlushed: number;
     stackTrace: StackFrame[];
+    subscribeTimestamp: number;
     subscriber: Subscriber<any>;
     subscription: Subscription;
     tick: number;
-    timestamp: number;
-    unsubscribed: boolean;
+    unsubscribeTimestamp: number;
+    values: { tick: number; timestamp: number; value: any; }[];
+    valuesFlushed: number;
 }
 
 export class SnapshotPlugin extends BasePlugin {
@@ -142,21 +144,19 @@ export class SnapshotPlugin extends BasePlugin {
 
         const snapshotRef = getSnapshotRef(ref);
         snapshotRef.tick = this.spy_.tick;
-        snapshotRef.unsubscribed = true;
     }
 
     beforeComplete(ref: SubscriptionRef): void {
 
         const snapshotRef = getSnapshotRef(ref);
         snapshotRef.tick = this.spy_.tick;
-        snapshotRef.complete = true;
     }
 
     beforeError(ref: SubscriptionRef, error: any): void {
 
         const snapshotRef = getSnapshotRef(ref);
-        snapshotRef.tick = this.spy_.tick;
         snapshotRef.error = error;
+        snapshotRef.tick = this.spy_.tick;
     }
 
     beforeNext(ref: SubscriptionRef, value: any): void {
@@ -177,12 +177,9 @@ export class SnapshotPlugin extends BasePlugin {
     beforeSubscribe(ref: SubscriptionRef): void {
 
         const snapshotRef = setSnapshotRef(ref, {
-            complete: false,
             error: undefined,
             query: {},
             tick: this.spy_.tick,
-            timestamp: Date.now(),
-            unsubscribed: false,
             values: [],
             valuesFlushed: 0
         });
@@ -208,29 +205,39 @@ export class SnapshotPlugin extends BasePlugin {
         const subscriptionRefs = this.getSubscriptionRefs_();
         subscriptionRefs.forEach((unused, ref) => {
 
-            const { observable, subscriber, subscription } = ref;
+            const {
+                completeTimestamp,
+                errorTimestamp,
+                nextCount,
+                nextTimestamp,
+                observable,
+                subscribeTimestamp,
+                subscriber,
+                subscription,
+                unsubscribeTimestamp
+            } = ref;
 
             const graphRef = getGraphRef(ref);
             const { flatteningsFlushed, sourcesFlushed } = graphRef;
 
             const snapshotRef = getSnapshotRef(ref);
             const {
-                complete,
                 error,
                 tick,
-                timestamp,
-                unsubscribed,
                 values,
                 valuesFlushed
             } = snapshotRef;
 
             const subscriptionSnapshot: SubscriptionSnapshot = {
-                complete,
+                completeTimestamp,
                 error,
+                errorTimestamp,
                 flattenings: new Map<Subscription, SubscriptionSnapshot>(),
                 flatteningsFlushed,
                 id: identify(subscription),
                 mappedStackTrace: getMappedStackTrace(ref),
+                nextCount,
+                nextTimestamp,
                 observable,
                 query: snapshotRef.query,
                 rootSink: undefined,
@@ -238,11 +245,13 @@ export class SnapshotPlugin extends BasePlugin {
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 sourcesFlushed,
                 stackTrace: getStackTrace(ref),
+                subscribeTimestamp,
                 subscriber,
                 subscription,
                 tick,
-                timestamp,
-                unsubscribed
+                unsubscribeTimestamp,
+                values,
+                valuesFlushed
             };
             subscriptions.set(subscription, subscriptionSnapshot);
 

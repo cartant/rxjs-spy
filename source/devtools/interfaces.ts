@@ -126,14 +126,19 @@ export interface SubscriberSnapshot {
 }
 
 export interface SubscriptionSnapshot {
-    complete: boolean;
+    completeTimestamp: number;
     error?: any;
+    errorTimestamp: number;
     graph: Graph | null;
     id: string;
+    nextCount: number;
+    nextTimestamp: number;
     observable: string;
     stackTrace: StackFrame[];
+    subscribeTimestamp: number;
     subscriber: string;
     tick: number;
-    timestamp: number;
-    unsubscribed: boolean;
+    unsubscribeTimestamp: number;
+    values: { tick: number; timestamp: number; value: { json: string }; }[];
+    valuesFlushed: number;
 }

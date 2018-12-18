@@ -63,7 +63,7 @@ export class CyclePlugin extends BasePlugin {
             }
             const snapshotRef = getSnapshotRef(ref);
             if (snapshotRef) {
-                snapshotRef.query.cycle = { count: cycleCount };
+                snapshotRef.query.cycleCount = cycleCount;
             }
         }
         nexts_.push(ref);
@@ -73,7 +73,7 @@ export class CyclePlugin extends BasePlugin {
 
         const snapshotRef = getSnapshotRef(ref);
         if (snapshotRef) {
-            snapshotRef.query.cycle = { count: 0 };
+            snapshotRef.query.cycleCount = 0;
         }
     }
 }

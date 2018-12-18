@@ -428,8 +428,9 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
         subscriptions: Array
             .from(snapshot.subscriptions.values())
             .map((s) => ({
-                complete: s.complete,
+                completeTimestamp: s.completeTimestamp,
                 error: s.error,
+                errorTimestamp: s.errorTimestamp,
                 graph: {
                     flattenings: Array
                         .from(s.flattenings.values())
@@ -443,12 +444,20 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                     sourcesFlushed: s.sourcesFlushed
                 },
                 id: s.id,
+                nextCount: s.nextCount,
+                nextTimestamp: s.nextTimestamp,
                 observable: identify(s.observable),
                 stackTrace: s.stackTrace as any,
+                subscribeTimestamp: s.subscribeTimestamp,
                 subscriber: identify(s.subscriber),
                 tick: s.tick,
-                timestamp: s.timestamp,
-                unsubscribed: s.unsubscribed
+                unsubscribeTimestamp: s.unsubscribeTimestamp,
+                values: s.values.map(v => ({
+                    tick: v.tick,
+                    timestamp: v.timestamp,
+                    value: toValue(v.value)
+                })),
+                valuesFlushed: s.valuesFlushed
             })),
         tick: snapshot.tick
     };

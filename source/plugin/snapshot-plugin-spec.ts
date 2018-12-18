@@ -58,9 +58,10 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
             const subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
-            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("completeTimestamp", 0);
             expect(subscriptionSnapshot).to.have.property("error", undefined);
-            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
+            expect(subscriptionSnapshot).to.have.property("errorTimestamp", 0);
+            expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp", 0);
         });
 
         it("should spy on unsubscriptions", () => {
@@ -78,9 +79,10 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
             let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
-            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("completeTimestamp", 0);
             expect(subscriptionSnapshot).to.have.property("error", undefined);
-            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
+            expect(subscriptionSnapshot).to.have.property("errorTimestamp", 0);
+            expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp", 0);
 
             subscription.unsubscribe();
 
@@ -94,9 +96,11 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
             subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
-            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("completeTimestamp", 0);
             expect(subscriptionSnapshot).to.have.property("error", undefined);
-            expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
+            expect(subscriptionSnapshot).to.have.property("errorTimestamp", 0);
+            expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp");
+            expect(subscriptionSnapshot.unsubscribeTimestamp).to.be.above(0);
         });
 
         it("should spy on completions", () => {
@@ -114,9 +118,10 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
             let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
-            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("completeTimestamp", 0);
             expect(subscriptionSnapshot).to.have.property("error", undefined);
-            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
+            expect(subscriptionSnapshot).to.have.property("errorTimestamp", 0);
+            expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp", 0);
 
             subject.complete();
 
@@ -130,9 +135,12 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
             subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
-            expect(subscriptionSnapshot).to.have.property("complete", true);
+            expect(subscriptionSnapshot).to.have.property("completeTimestamp");
             expect(subscriptionSnapshot).to.have.property("error", undefined);
-            expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
+            expect(subscriptionSnapshot).to.have.property("errorTimestamp", 0);
+            expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp");
+            expect(subscriptionSnapshot.completeTimestamp).to.be.above(0);
+            expect(subscriptionSnapshot.unsubscribeTimestamp).to.be.above(0);
         });
 
         it("should spy on errors", () => {
@@ -150,9 +158,10 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
             let subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
-            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("completeTimestamp", 0);
             expect(subscriptionSnapshot).to.have.property("error", undefined);
-            expect(subscriptionSnapshot).to.have.property("unsubscribed", false);
+            expect(subscriptionSnapshot).to.have.property("errorTimestamp", 0);
+            expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp", 0);
 
             const error = new Error("Boom!");
             subject.error(error);
@@ -167,9 +176,12 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.subscriptions).to.have.property("size", 1);
 
             subscriptionSnapshot = getAt(snapshot.subscriptions, 0);
-            expect(subscriptionSnapshot).to.have.property("complete", false);
+            expect(subscriptionSnapshot).to.have.property("completeTimestamp", 0);
             expect(subscriptionSnapshot).to.have.property("error", error);
-            expect(subscriptionSnapshot).to.have.property("unsubscribed", true);
+            expect(subscriptionSnapshot).to.have.property("errorTimestamp");
+            expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp");
+            expect(subscriptionSnapshot.errorTimestamp).to.be.above(0);
+            expect(subscriptionSnapshot.unsubscribeTimestamp).to.be.above(0);
         });
 
         it("should spy on values", () => {
@@ -467,11 +479,15 @@ describe("SnapshotPlugin", () => {
             const subscription = subject.subscribe(subscriber);
 
             let observableSnapshot = plugin.snapshotObservable({
+                completeTimestamp: 0,
+                errorTimestamp: 0,
+                nextCount: 0,
+                nextTimestamp: 0,
                 observable: subject,
+                subscribeTimestamp: Date.now(),
                 subscriber,
                 subscription,
-                timestamp: Date.now(),
-                unsubscribed: false
+                unsubscribeTimestamp: 0
             });
 
             expect(observableSnapshot).to.exist;
@@ -489,11 +505,15 @@ describe("SnapshotPlugin", () => {
             const subscription = subject.subscribe(subscriber);
 
             let subscriberSnapshot = plugin.snapshotSubscriber({
+                completeTimestamp: 0,
+                errorTimestamp: 0,
+                nextCount: 0,
+                nextTimestamp: 0,
                 observable: subject,
+                subscribeTimestamp: Date.now(),
                 subscriber,
                 subscription,
-                timestamp: Date.now(),
-                unsubscribed: false
+                unsubscribeTimestamp: 0
             });
 
             expect(subscriberSnapshot).to.exist;

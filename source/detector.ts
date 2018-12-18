@@ -160,8 +160,8 @@ export class Detector {
 
         snapshot.observables.forEach((observableSnapshot) => {
             observableSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
-                const { complete, error, sink, subscription } = subscriptionSnapshot;
-                if (!complete && !error && !sink && !subscription.closed) {
+                const { completeTimestamp, errorTimestamp, sink, subscription } = subscriptionSnapshot;
+                if (!completeTimestamp && !errorTimestamp && !sink && !subscription.closed) {
                     const subscriptionRecord = {
                         flattenings: new Map<Subscription, SubscriptionSnapshot>(),
                         subscriptionSnapshot

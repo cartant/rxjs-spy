@@ -199,7 +199,11 @@ export class GraphPlugin extends BasePlugin {
         const graphRef = getGraphRef(ref);
         const { flattenings, sources } = graphRef;
 
-        if (!ref.unsubscribed || !flattenings.every(ref => ref.unsubscribed) || !sources.every(ref => ref.unsubscribed)) {
+        if (
+            (ref.unsubscribeTimestamp === 0) ||
+            flattenings.some(ref => ref.unsubscribeTimestamp === 0) ||
+            sources.some(ref => ref.unsubscribeTimestamp === 0)
+        ) {
             return;
         }
 

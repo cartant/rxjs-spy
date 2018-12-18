@@ -6,9 +6,13 @@
 import { Observable, Subscriber, Subscription } from "rxjs";
 
 export interface SubscriptionRef {
+    completeTimestamp: number;
+    errorTimestamp: number;
+    nextCount: number;
+    nextTimestamp: number;
     observable: Observable<any>;
+    subscribeTimestamp: number;
     subscriber: Subscriber<any>;
     subscription: Subscription;
-    timestamp: number;
-    unsubscribed: boolean;
+    unsubscribeTimestamp: number;
 }

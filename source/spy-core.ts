@@ -43,6 +43,7 @@ import { wrap } from "./spy-console";
 import { Ctor, Options, Spy, Teardown } from "./spy-interface";
 import { SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
+import { buffer } from "rxjs/operators";
 
 declare const __RX_SPY_VERSION__: string;
 const observableSubscribe = Observable.prototype.subscribe;
@@ -563,11 +564,15 @@ export class SpyCore implements Spy {
 
         const subscriber = toSubscriber.apply(undefined, args);
         const ref: SubscriptionRef = {
+            completeTimestamp: 0,
+            errorTimestamp: 0,
+            nextCount: 0,
+            nextTimestamp: 0,
             observable,
+            subscribeTimestamp: Date.now(),
             subscriber,
             subscription: new Subscription(),
-            timestamp: Date.now(),
-            unsubscribed: false
+            unsubscribeTimestamp: 0
         };
 
         identify(observable);
@@ -581,7 +586,7 @@ export class SpyCore implements Spy {
                     (plugin) => plugin.beforeUnsubscribe(ref),
                     () => {
                         ref.subscription.unsubscribe();
-                        ref.unsubscribed = true;
+                        ref.unsubscribeTimestamp = Date.now();
                         subscriberUnsubscribe.call(subscriber);
                     },
                     (plugin) => plugin.afterUnsubscribe(ref)
@@ -596,7 +601,10 @@ export class SpyCore implements Spy {
             complete(): void {
                 notify_(
                     (plugin) => plugin.beforeComplete(ref),
-                    () => subscriber.complete(),
+                    () => {
+                        subscriber.complete();
+                        ref.completeTimestamp = Date.now();
+                    },
                     (plugin) => plugin.afterComplete(ref)
                 );
             },
@@ -604,7 +612,10 @@ export class SpyCore implements Spy {
             error(error: any): void {
                 notify_(
                     (plugin) => plugin.beforeError(ref, error),
-                    () => subscriber.error(error),
+                    () => {
+                        subscriber.error(error);
+                        ref.errorTimestamp = Date.now();
+                    },
                     (plugin) => plugin.afterError(ref, error)
                 );
             },
@@ -612,7 +623,11 @@ export class SpyCore implements Spy {
             next(value: any): void {
                 notify_(
                     (plugin) => plugin.beforeNext(ref, value),
-                    () => subscriber.next(value),
+                    () => {
+                        subscriber.next(value);
+                        ++ref.nextCount;
+                        ref.nextTimestamp = Date.now();
+                    },
                     (plugin) => plugin.afterNext(ref, value)
                 );
             }
@@ -761,17 +776,23 @@ function logSubscription(
     subscriptionSnapshot: SubscriptionSnapshot
 ): void {
 
-    const { complete, error, id, unsubscribed } = subscriptionSnapshot;
-    logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
+    const {
+        completeTimestamp,
+        error,
+        errorTimestamp,
+        unsubscribeTimestamp
+    } = subscriptionSnapshot;
+
+    logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
     logger.log("Query =", toRecord(
         observableSnapshot,
         subscriberSnapshot,
         subscriptionSnapshot
     ));
-    if (error) {
-        logger.error("Error =", error);
+    if (errorTimestamp) {
+        logger.error("Error =", error || "unknown");
     }
-    if (unsubscribed) {
+    if (unsubscribeTimestamp) {
         logger.log("Unsubscribed =", true);
     }
     logStackTrace(logger, subscriptionSnapshot);
@@ -784,24 +805,41 @@ function toRecord(
 ): Record<string, any> {
 
     const now = Date.now();
+    const {
+        completeTimestamp,
+        error,
+        errorTimestamp,
+        nextCount,
+        nextTimestamp,
+        observable,
+        sink,
+        subscribeTimestamp,
+        subscriber,
+        subscription,
+        unsubscribeTimestamp
+    } = subscriptionSnapshot;
+
+    function age(timestamp: number): number | undefined {
+        return timestamp ? ((now - timestamp) / 1e3) : undefined;
+    }
+
     return {
         ...subscriptionSnapshot.query,
-        age: {
-            complete: undefined,
-            error: undefined,
-            next: 0,
-            subscribe: (now - subscriptionSnapshot.timestamp) / 1e3,
-            unsubscribe: undefined
-        },
-        complete: subscriptionSnapshot.complete,
-        error: subscriptionSnapshot.error,
-        incomplete: !subscriptionSnapshot.complete && !subscriptionSnapshot.error,
-        observable: identify(subscriptionSnapshot.observable),
-        root: !subscriptionSnapshot.sink,
-        subscriber: identify(subscriptionSnapshot.subscriber),
-        subscription: identify(subscriptionSnapshot.subscription),
+        complete: completeTimestamp !== 0,
+        completeAge: age(completeTimestamp),
+        error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
+        errorAge: age(errorTimestamp),
+        incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
+        nextAge: age(nextTimestamp),
+        nextCount,
+        observable: identify(observable),
+        root: !sink,
+        subscribeAge: age(subscribeTimestamp),
+        subscriber: identify(subscriber),
+        subscription: identify(subscription),
         tag: observableSnapshot.tag,
         type: observableSnapshot.type,
-        unsubscribed: subscriptionSnapshot.unsubscribed
+        unsubscribeAge: age(unsubscribeTimestamp),
+        unsubscribed: unsubscribeTimestamp !== 0
     };
 }
