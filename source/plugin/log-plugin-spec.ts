@@ -163,7 +163,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = subject; notification = next; value =", "alice"]);
+            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionRef.observable)}; notification = next; value =`, "alice"]);
         });
 
         it("should match subscriber ids", () => {
@@ -180,7 +180,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = subject; notification = next; value =", "alice"]);
+            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionRef.observable)}; notification = next; value =`, "alice"]);
         });
 
         it("should match subscription ids", () => {
@@ -197,7 +197,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["Type = subject; notification = next; value =", "alice"]);
+            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionRef.observable)}; notification = next; value =`, "alice"]);
         });
     });
 

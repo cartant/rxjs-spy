@@ -108,7 +108,7 @@ export class LogPlugin extends BasePlugin {
 
                 let identifier = tag ? `Tag = ${tag}` : `ID = ${id}`;
                 if ((typeof tagMatch_ === "number") || (typeof tagMatch_ === "string")) {
-                    if (tagMatch_.toString() === id) {
+                    if (tagMatch_.toString() !== tag) {
                         identifier = `ID = ${id}`;
                     }
                 }

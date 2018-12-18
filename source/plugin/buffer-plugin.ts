@@ -57,11 +57,10 @@ export class BufferPlugin extends BasePlugin {
 
         const { sink, sinkGraphRef, sinkSnapshotRef, sources } = bufferRef;
         const inputCount = sources.reduce((count, source) => {
-            const snapshotRef = getSnapshotRef(source);
-            return Math.max(count, snapshotRef.values.length + snapshotRef.valuesFlushed);
+            return Math.max(count, source.nextCount);
         }, 0);
         const flatteningsCount = sinkGraphRef.flattenings.length + sinkGraphRef.flatteningsFlushed;
-        const outputCount = flatteningsCount || sinkSnapshotRef.values.length + sinkSnapshotRef.valuesFlushed;
+        const outputCount = flatteningsCount || sink.nextCount;
 
         const { bufferThreshold_, logger_, spy_ } = this;
         const bufferCount = inputCount - outputCount;
@@ -75,7 +74,9 @@ export class BufferPlugin extends BasePlugin {
             const type = inferType(sink.observable);
             logger_.warn(`Excessive buffering detected; type = ${type}; count = ${bufferCount}${stackTrace}`);
         }
-        sinkSnapshotRef.query.bufferCount = bufferCount;
+        if (sinkSnapshotRef) {
+            sinkSnapshotRef.query.bufferCount = bufferCount;
+        }
     }
 
     afterSubscribe(ref: SubscriptionRef): void {
@@ -86,11 +87,9 @@ export class BufferPlugin extends BasePlugin {
     beforeSubscribe(ref: SubscriptionRef): void {
 
         const snapshotRef = getSnapshotRef(ref);
-        if (!snapshotRef) {
-            this.spy_.warnOnce(console, "Snapshotting is not enabled; add the SnapshotPlugin before the BufferPlugin.");
-            return;
+        if (snapshotRef) {
+            snapshotRef.query.bufferCount = 0;
         }
-        snapshotRef.query.bufferCount = 0;
 
         subscriptions.push(ref);
         const length = subscriptions.length;
@@ -105,7 +104,7 @@ export class BufferPlugin extends BasePlugin {
 
         const graphRef = getGraphRef(ref);
         if (!graphRef) {
-            this.spy_.warnOnce(console, "Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
+            this.spy_.warnOnce(console, "Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");
             return;
         }
 
