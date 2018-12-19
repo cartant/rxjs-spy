@@ -55,7 +55,7 @@ export class SpyCore implements Spy {
 
     private auditor_: Auditor;
     private defaultLogger_: PartialLogger;
-    private expressions_: Record<string, (record: Record<string, any>) => any>;
+    private derivations_: Record<string, (record: Record<string, any>) => any>;
     private maxLogged_ = 20;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
@@ -88,7 +88,7 @@ export class SpyCore implements Spy {
 
         this.auditor_ = new Auditor(options.audit || 0);
         this.defaultLogger_ = options.defaultLogger || defaultLogger;
-        this.expressions_ = {};
+        this.derivations_ = {};
         if (options.defaultPlugins ===  false) {
             this.plugins_ = [];
         } else {
@@ -264,7 +264,7 @@ export class SpyCore implements Spy {
         partialLogger?: PartialLogger
     ): void;
     query(
-        expressions: Record<string, (record: Record<string, any>) => any>
+        derivations: Record<string, (record: Record<string, any>) => any>
     ): void;
     query(
         arg: string | ((record: Record<string, any>) => boolean) | Record<string, (record: Record<string, any>) => any>,
@@ -272,7 +272,7 @@ export class SpyCore implements Spy {
     ): void {
 
         if ((typeof arg !== "string") && (typeof arg !== "function")) {
-            this.expressions_ = arg;
+            this.derivations_ = arg;
             return;
         }
         const predicate = (typeof arg === "function") ? arg : compile(arg).func;
