@@ -49,6 +49,9 @@ declare const __RX_SPY_VERSION__: string;
 const observableSubscribe = Observable.prototype.subscribe;
 const previousWindow: Record<string, any> = {};
 
+type QueryPredicate = (record: Record<string, any>) => boolean;
+type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
+
 export class SpyCore implements Spy {
 
     private static spy_: SpyCore | undefined = undefined;
@@ -259,23 +262,18 @@ export class SpyCore implements Spy {
         return () => this.unplug(...plugins);
     }
 
-    query(
-        predicate: string | ((record: Record<string, any>) => boolean),
-        partialLogger?: PartialLogger
-    ): void;
-    query(
-        derivations: Record<string, (record: Record<string, any>) => any>
-    ): void;
-    query(
-        arg: string | ((record: Record<string, any>) => boolean) | Record<string, (record: Record<string, any>) => any>,
-        partialLogger?: PartialLogger
-    ): void {
+    query(predicate: string | QueryPredicate, partialLogger?: PartialLogger): void;
+    query(derivations: QueryDerivations): void;
+    query(arg: string | QueryPredicate | QueryDerivations, partialLogger?: PartialLogger): void {
 
         if ((typeof arg !== "string") && (typeof arg !== "function")) {
             this.derivations_ = arg;
             return;
         }
-        const predicate = (typeof arg === "function") ? arg : compile(arg).func;
+
+        const { func: predicate, keys } = (typeof arg === "string") ?
+            compile(arg) :
+            { func: arg, keys: [] };
 
         const snapshotPlugin = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
@@ -364,7 +362,8 @@ export class SpyCore implements Spy {
                         logger,
                         observableSnapshot,
                         subscriberSnapshot,
-                        subscriptionSnapshot
+                        subscriptionSnapshot,
+                        keys
                     );
 
                     const otherSubscriptions = Array
@@ -376,7 +375,8 @@ export class SpyCore implements Spy {
                             logger,
                             observableSnapshot,
                             subscriberSnapshot,
-                            otherSubscriptionSnapshot
+                            otherSubscriptionSnapshot,
+                            keys
                         );
                         logger.groupEnd();
                     });
@@ -789,7 +789,8 @@ export class SpyCore implements Spy {
         logger: Logger,
         observableSnapshot: ObservableSnapshot,
         subscriberSnapshot: SubscriberSnapshot,
-        subscriptionSnapshot: SubscriptionSnapshot
+        subscriptionSnapshot: SubscriptionSnapshot,
+        keys: string[] = []
     ): void {
 
         const {
@@ -798,13 +799,21 @@ export class SpyCore implements Spy {
             errorTimestamp,
             unsubscribeTimestamp
         } = subscriptionSnapshot;
-
-        logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
-        logger.log("Query =", this.toRecord_(
+        const record = this.toRecord_(
             observableSnapshot,
             subscriberSnapshot,
             subscriptionSnapshot
-        ));
+        );
+
+        logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
+        if (keys.length > 0) {
+            logger.group("Query match");
+            keys.sort().forEach(key => logger.log(`${key} =`, record[key]));
+            logger.groupEnd();
+        }
+        logger.groupCollapsed("Query record");
+        Object.keys(record).sort().forEach(key => logger.log(`${key} =`, record[key]));
+        logger.groupEnd();
         if (errorTimestamp) {
             logger.error("Error =", error || "unknown");
         }
