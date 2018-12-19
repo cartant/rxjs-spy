@@ -58,7 +58,7 @@ export class SpyCore implements Spy {
 
     private auditor_: Auditor;
     private defaultLogger_: PartialLogger;
-    private derivations_: Record<string, (record: Record<string, any>) => any>;
+    private derivations_: QueryDerivations;
     private maxLogged_ = 20;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
