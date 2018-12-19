@@ -834,6 +834,7 @@ export class SpyCore implements Spy {
             subscription,
             unsubscribeTimestamp
         } = subscriptionSnapshot;
+        const { derivations_ } = this;
 
         function age(timestamp: number): number | undefined {
             return timestamp ? ((now - timestamp) / 1e3) : undefined;
@@ -845,6 +846,7 @@ export class SpyCore implements Spy {
             completeAge: age(completeTimestamp),
             error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
             errorAge: age(errorTimestamp),
+            frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
             incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
             nextAge: age(nextTimestamp),
             nextCount,
@@ -859,6 +861,10 @@ export class SpyCore implements Spy {
             unsubscribed: unsubscribeTimestamp !== 0
         };
 
-        return record;
+        const derived = {};
+        Object.keys(derivations_).forEach(key => {
+            derived[key] = derivations_[key](record);
+        });
+        return { ...derived, ...record };
     }
 }
