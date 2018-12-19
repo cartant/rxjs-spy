@@ -13,6 +13,7 @@ import {
 import { Auditor } from "./auditor";
 import { hook } from "./detect";
 import { Detector } from "./detector";
+import { compile } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
@@ -43,7 +44,6 @@ import { wrap } from "./spy-console";
 import { Ctor, Options, Spy, Teardown } from "./spy-interface";
 import { SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
-import { buffer } from "rxjs/operators";
 
 declare const __RX_SPY_VERSION__: string;
 const observableSubscribe = Observable.prototype.subscribe;
@@ -55,6 +55,7 @@ export class SpyCore implements Spy {
 
     private auditor_: Auditor;
     private defaultLogger_: PartialLogger;
+    private expressions_: Record<string, (record: Record<string, any>) => any>;
     private maxLogged_ = 20;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
@@ -87,6 +88,7 @@ export class SpyCore implements Spy {
 
         this.auditor_ = new Auditor(options.audit || 0);
         this.defaultLogger_ = options.defaultLogger || defaultLogger;
+        this.expressions_ = {};
         if (options.defaultPlugins ===  false) {
             this.plugins_ = [];
         } else {
@@ -258,9 +260,22 @@ export class SpyCore implements Spy {
     }
 
     query(
-        predicate: (record: Record<string, any>) => boolean,
+        predicate: string | ((record: Record<string, any>) => boolean),
+        partialLogger?: PartialLogger
+    ): void;
+    query(
+        expressions: Record<string, (record: Record<string, any>) => any>
+    ): void;
+    query(
+        arg: string | ((record: Record<string, any>) => boolean) | Record<string, (record: Record<string, any>) => any>,
         partialLogger?: PartialLogger
     ): void {
+
+        if ((typeof arg !== "string") && (typeof arg !== "function")) {
+            this.expressions_ = arg;
+            return;
+        }
+        const predicate = (typeof arg === "function") ? arg : compile(arg).func;
 
         const snapshotPlugin = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
@@ -291,7 +306,7 @@ export class SpyCore implements Spy {
 
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
-                        if (predicate(toRecord(
+                        if (predicate(this.toRecord_(
                             observableSnapshot,
                             subscriberSnapshot,
                             subscriptionSnapshot
@@ -345,7 +360,7 @@ export class SpyCore implements Spy {
                     if (values.length > 0) {
                         logger.log("Last value =", values[values.length - 1].value);
                     }
-                    logSubscription(
+                    this.logSubscription_(
                         logger,
                         observableSnapshot,
                         subscriberSnapshot,
@@ -357,7 +372,7 @@ export class SpyCore implements Spy {
                         .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
                     otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
                         logger.groupCollapsed("Other subscription");
-                        logSubscription(
+                        this.logSubscription_(
                             logger,
                             observableSnapshot,
                             subscriberSnapshot,
@@ -434,7 +449,7 @@ export class SpyCore implements Spy {
                         if (values.length > 0) {
                             logger.log("Last value =", values[values.length - 1].value);
                         }
-                        logSubscription(
+                        this.logSubscription_(
                             logger,
                             observableSnapshot,
                             subscriberSnapshot,
@@ -446,7 +461,7 @@ export class SpyCore implements Spy {
                             .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
                         otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
                             logger.groupCollapsed("Other subscription");
-                            logSubscription(
+                            this.logSubscription_(
                                 logger,
                                 observableSnapshot,
                                 subscriberSnapshot,
@@ -759,89 +774,91 @@ export class SpyCore implements Spy {
             }
         });
     }
-}
 
-function logStackTrace(
-    logger: Logger,
-    subscriptionSnapshot: SubscriptionSnapshot
-): void {
+    private logStackTrace_(
+        logger: Logger,
+        subscriptionSnapshot: SubscriptionSnapshot
+    ): void {
 
-    const { mappedStackTrace, rootSink } = subscriptionSnapshot;
-    const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
-    mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
-}
-
-function logSubscription(
-    logger: Logger,
-    observableSnapshot: ObservableSnapshot,
-    subscriberSnapshot: SubscriberSnapshot,
-    subscriptionSnapshot: SubscriptionSnapshot
-): void {
-
-    const {
-        completeTimestamp,
-        error,
-        errorTimestamp,
-        unsubscribeTimestamp
-    } = subscriptionSnapshot;
-
-    logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
-    logger.log("Query =", toRecord(
-        observableSnapshot,
-        subscriberSnapshot,
-        subscriptionSnapshot
-    ));
-    if (errorTimestamp) {
-        logger.error("Error =", error || "unknown");
-    }
-    if (unsubscribeTimestamp) {
-        logger.log("Unsubscribed =", true);
-    }
-    logStackTrace(logger, subscriptionSnapshot);
-}
-
-function toRecord(
-    observableSnapshot: ObservableSnapshot,
-    subscriberSnapshot: SubscriberSnapshot,
-    subscriptionSnapshot: SubscriptionSnapshot
-): Record<string, any> {
-
-    const now = Date.now();
-    const {
-        completeTimestamp,
-        error,
-        errorTimestamp,
-        nextCount,
-        nextTimestamp,
-        observable,
-        sink,
-        subscribeTimestamp,
-        subscriber,
-        subscription,
-        unsubscribeTimestamp
-    } = subscriptionSnapshot;
-
-    function age(timestamp: number): number | undefined {
-        return timestamp ? ((now - timestamp) / 1e3) : undefined;
+        const { mappedStackTrace, rootSink } = subscriptionSnapshot;
+        const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
+        mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
     }
 
-    return {
-        ...subscriptionSnapshot.query,
-        complete: completeTimestamp !== 0,
-        completeAge: age(completeTimestamp),
-        error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
-        errorAge: age(errorTimestamp),
-        incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
-        nextAge: age(nextTimestamp),
-        nextCount,
-        observable: identify(observable),
-        root: !sink,
-        subscribeAge: age(subscribeTimestamp),
-        subscriber: identify(subscriber),
-        subscription: identify(subscription),
-        tag: observableSnapshot.tag,
-        type: observableSnapshot.type,
-        unsubscribeAge: age(unsubscribeTimestamp),
-        unsubscribed: unsubscribeTimestamp !== 0
-    };
+    private logSubscription_(
+        logger: Logger,
+        observableSnapshot: ObservableSnapshot,
+        subscriberSnapshot: SubscriberSnapshot,
+        subscriptionSnapshot: SubscriptionSnapshot
+    ): void {
+
+        const {
+            completeTimestamp,
+            error,
+            errorTimestamp,
+            unsubscribeTimestamp
+        } = subscriptionSnapshot;
+
+        logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
+        logger.log("Query =", this.toRecord_(
+            observableSnapshot,
+            subscriberSnapshot,
+            subscriptionSnapshot
+        ));
+        if (errorTimestamp) {
+            logger.error("Error =", error || "unknown");
+        }
+        if (unsubscribeTimestamp) {
+            logger.log("Unsubscribed =", true);
+        }
+        this.logStackTrace_(logger, subscriptionSnapshot);
+    }
+
+    private toRecord_(
+        observableSnapshot: ObservableSnapshot,
+        subscriberSnapshot: SubscriberSnapshot,
+        subscriptionSnapshot: SubscriptionSnapshot
+    ): Record<string, any> {
+
+        const now = Date.now();
+        const {
+            completeTimestamp,
+            error,
+            errorTimestamp,
+            nextCount,
+            nextTimestamp,
+            observable,
+            sink,
+            subscribeTimestamp,
+            subscriber,
+            subscription,
+            unsubscribeTimestamp
+        } = subscriptionSnapshot;
+
+        function age(timestamp: number): number | undefined {
+            return timestamp ? ((now - timestamp) / 1e3) : undefined;
+        }
+
+        const record = {
+            ...subscriptionSnapshot.query,
+            complete: completeTimestamp !== 0,
+            completeAge: age(completeTimestamp),
+            error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
+            errorAge: age(errorTimestamp),
+            incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
+            nextAge: age(nextTimestamp),
+            nextCount,
+            observable: identify(observable),
+            root: !sink,
+            subscribeAge: age(subscribeTimestamp),
+            subscriber: identify(subscriber),
+            subscription: identify(subscription),
+            tag: observableSnapshot.tag,
+            type: observableSnapshot.type,
+            unsubscribeAge: age(unsubscribeTimestamp),
+            unsubscribed: unsubscribeTimestamp !== 0
+        };
+
+        return record;
+    }
 }
