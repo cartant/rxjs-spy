@@ -30,9 +30,18 @@ export function toLogger(partialLogger: PartialLogger): Logger {
         partialLogger.group &&
         partialLogger.groupCollapsed &&
         partialLogger.groupEnd &&
+        partialLogger.log &&
         partialLogger.warn) {
 
-        return partialLogger as Logger;
+        const logger = partialLogger as Logger;
+        return {
+            error(...args: any[]): void { logger.error(...args); },
+            group(...args: any[]): void { logger.group(...args); },
+            groupCollapsed(...args: any[]): void { logger.groupCollapsed(...args); },
+            groupEnd(): void { logger.groupEnd(); },
+            log(...args: any[]): void { logger.log(...args); },
+            warn(...args: any[]): void { logger.warn(...args); }
+        };
     }
 
     const spaces = 2;
