@@ -348,10 +348,11 @@ export class SpyCore implements Spy {
             found.forEach(find => {
                 const observableSnapshot = find.observable;
                 logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
-                    `Tag = ${observableSnapshot.tag}` :
-                    `Type = ${observableSnapshot.type}`
+                    `ID = ${observableSnapshot.id}; tag = ${observableSnapshot.tag}` :
+                    `ID = ${observableSnapshot.id}`
                 );
                 logger.log("Path =", observableSnapshot.path);
+                logger.log("Type =", observableSnapshot.type);
 
                 const { subs } = find;
                 const subscriberGroupMethod = (find.subs.length > 3) ? "groupCollapsed" : "group";
@@ -442,6 +443,9 @@ export class SpyCore implements Spy {
                     `Type = ${observableSnapshot.type}`
                 );
                 logger.log("Path =", observableSnapshot.path);
+                if (observableSnapshot.tag) {
+                    logger.log("Type =", observableSnapshot.type);
+                }
 
                 const { subscriptions } = observableSnapshot;
                 const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
