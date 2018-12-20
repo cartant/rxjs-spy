@@ -53,8 +53,30 @@ type QueryPredicate = (record: Record<string, any>) => boolean;
 type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
 
 const defaultDerivations: QueryDerivations = {
-    blocking: record => record.sourceNextAge > record.nextAge
+    blocking: record => record.sourceNextAge > record.nextAge,
+    file: record => (name: string) => matchStackTrace(record, "fileName", name),
+    func: record => (name: string) => matchStackTrace(record, "functionName", name)
 };
+
+function matchStackTrace(
+    record: Record<string, any>,
+    property: string,
+    name: string
+): boolean {
+    const [stackFrame] = record.stackTrace;
+    if (!stackFrame) {
+        return false;
+    }
+    const value: string = stackFrame[property];
+    switch (property) {
+    case "fileName":
+        return value.endsWith(name);
+    case "functionName":
+        return value === name;
+    default:
+        return false;
+    }
+}
 
 export class SpyCore implements Spy {
 
@@ -794,7 +816,7 @@ export class SpyCore implements Spy {
         observableSnapshot: ObservableSnapshot,
         subscriberSnapshot: SubscriberSnapshot,
         subscriptionSnapshot: SubscriptionSnapshot,
-        keys: string[] = []
+        queryKeys: string[] = []
     ): void {
 
         const {
@@ -810,13 +832,19 @@ export class SpyCore implements Spy {
         );
 
         logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
-        if (keys.length > 0) {
+        queryKeys = queryKeys
+            .sort()
+            .filter(key => !["function", "undefined"].includes(typeof record[key]));
+        if (queryKeys.length > 0) {
             logger.group("Query match");
-            keys.sort().forEach(key => logger.log(`${key} =`, record[key]));
+            queryKeys.forEach(key => logger.log(`${key} =`, record[key]));
             logger.groupEnd();
         }
         logger.groupCollapsed("Query record");
-        Object.keys(record).sort().forEach(key => logger.log(`${key} =`, record[key]));
+        Object.keys(record)
+            .sort()
+            .filter(key => !["function", "undefined"].includes(typeof record[key]))
+            .forEach(key => logger.log(`${key} =`, record[key]));
         logger.groupEnd();
         if (errorTimestamp) {
             logger.error("Error =", error || "unknown");
@@ -850,6 +878,7 @@ export class SpyCore implements Spy {
             sink,
             sources,
             sourcesFlushed,
+            stackTrace,
             subscribeTimestamp,
             subscriber,
             subscription,
@@ -880,6 +909,7 @@ export class SpyCore implements Spy {
             sourceNextAge: age(sourcesArray.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
             sourceNextCount: sourcesArray.length + sourcesFlushed,
             sources: sourcesArray.map(source => source.id),
+            stackTrace,
             subscribeAge: age(subscribeTimestamp),
             subscriber: identify(subscriber),
             subscription: identify(subscription),
