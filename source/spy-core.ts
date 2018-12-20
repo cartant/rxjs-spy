@@ -439,13 +439,11 @@ export class SpyCore implements Spy {
             matched.forEach((observableSnapshot) => {
 
                 logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
-                    `Tag = ${observableSnapshot.tag}` :
-                    `Type = ${observableSnapshot.type}`
+                    `Tag = ${observableSnapshot.tag}; ID = ${observableSnapshot.id}` :
+                    `ID = ${observableSnapshot.id}`
                 );
                 logger.log("Path =", observableSnapshot.path);
-                if (observableSnapshot.tag) {
-                    logger.log("Type =", observableSnapshot.type);
-                }
+                logger.log("Type =", observableSnapshot.type);
 
                 const { subscriptions } = observableSnapshot;
                 const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
