@@ -337,7 +337,7 @@ describe("spy", () => {
 
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["1 snapshot(s) matching people"]);
-            expect(calls[1]).to.deep.equal(["  Tag = people"]);
+            expect(calls[1][0]).to.match(/Tag = people/);
         });
 
         it("should show snapshotted information all/any tagged observables", () => {
@@ -354,7 +354,7 @@ describe("spy", () => {
 
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["1 snapshot(s) matching /.+/"]);
-            expect(calls[1]).to.deep.equal(["  Tag = people"]);
+            expect(calls[1][0]).to.match(/Tag = people/);
         });
     });
 
