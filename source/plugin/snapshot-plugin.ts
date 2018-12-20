@@ -100,6 +100,7 @@ export interface SubscriptionSnapshot {
     errorTimestamp: number;
     flats: Map<Subscription, SubscriptionSnapshot>;
     flatsFlushed: number;
+    flattened: boolean;
     id: string;
     mappedStackTrace: Observable<StackFrame[]>;
     nextCount: number;
@@ -203,7 +204,7 @@ export class SnapshotPlugin extends BasePlugin {
             } = ref;
 
             const graphRef = getGraphRef(ref);
-            const { flatsFlushed, sourcesFlushed } = graphRef;
+            const { flatsFlushed, flattened, sourcesFlushed } = graphRef;
 
             const snapshotRef = getSnapshotRef(ref);
             const {
@@ -218,6 +219,7 @@ export class SnapshotPlugin extends BasePlugin {
                 errorTimestamp,
                 flats: new Map<Subscription, SubscriptionSnapshot>(),
                 flatsFlushed,
+                flattened,
                 id: identify(subscription),
                 mappedStackTrace: getMappedStackTrace(ref),
                 nextCount,
