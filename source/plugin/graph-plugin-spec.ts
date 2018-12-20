@@ -149,7 +149,7 @@ describe("GraphPlugin", () => {
                 });
             });
 
-            it("should flush completed flattening subscriptions", () => {
+            it("should flush completed flat subscriptions", () => {
 
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
@@ -163,19 +163,19 @@ describe("GraphPlugin", () => {
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
                 const { sentinel } = innerGraphRef;
 
-                expect(sinkGraphRef.flattenings).to.have.length(1);
+                expect(sinkGraphRef.flats).to.have.length(1);
 
                 inner.complete();
 
                 if (duration === 0) {
-                    expect(sinkGraphRef.flattenings).to.have.length(0);
+                    expect(sinkGraphRef.flats).to.have.length(0);
                 } else {
-                    expect(sinkGraphRef.flattenings).to.have.length(1);
+                    expect(sinkGraphRef.flats).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(sinkGraphRef.flattenings).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRef.flats).to.have.length(0));
             });
 
-            it("should flush errored flattening subscriptions", () => {
+            it("should flush errored flat subscriptions", () => {
 
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
@@ -189,16 +189,16 @@ describe("GraphPlugin", () => {
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
                 const { sentinel } = innerGraphRef;
 
-                expect(sinkGraphRef.flattenings).to.have.length(1);
+                expect(sinkGraphRef.flats).to.have.length(1);
 
                 inner.error(new Error("Boom!"));
 
                 if (duration === 0) {
-                    expect(sinkGraphRef.flattenings).to.have.length(0);
+                    expect(sinkGraphRef.flats).to.have.length(0);
                 } else {
-                    expect(sinkGraphRef.flattenings).to.have.length(1);
+                    expect(sinkGraphRef.flats).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(sinkGraphRef.flattenings).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRef.flats).to.have.length(0));
             });
 
             it("should flush completed custom source subscriptions", () => {
@@ -366,7 +366,7 @@ describe("GraphPlugin", () => {
             expect(hasSource(combinedGraphRef, subject2SubscriptionRef)).to.be.true;
         });
 
-        it("should graph flattenings", () => {
+        it("should graph flats", () => {
 
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
@@ -391,21 +391,21 @@ describe("GraphPlugin", () => {
             const composedGraphRef = getGraphRef(composedSubscriptionRef);
             expect(composedGraphRef).to.have.property("sink", undefined);
             expect(composedGraphRef).to.have.property("sources");
-            expect(composedGraphRef.flattenings).to.be.empty;
+            expect(composedGraphRef.flats).to.be.empty;
             expect(composedGraphRef.sources).to.not.be.empty;
             expect(hasSource(composedGraphRef, subjectSubscriptionRef)).to.be.true;
             expect(hasSource(composedGraphRef, outerSubscriptionRef)).to.be.true;
 
             subject.next(0);
 
-            expect(composedGraphRef.flattenings).to.not.be.empty;
-            expect(composedGraphRef.flattenings).to.contain(subscriptionRefsPlugin.get(merges[0]));
+            expect(composedGraphRef.flats).to.not.be.empty;
+            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.get(merges[0]));
 
             subject.next(1);
 
-            expect(composedGraphRef.flattenings).to.not.be.empty;
-            expect(composedGraphRef.flattenings).to.contain(subscriptionRefsPlugin.get(merges[0]));
-            expect(composedGraphRef.flattenings).to.contain(subscriptionRefsPlugin.get(merges[1]));
+            expect(composedGraphRef.flats).to.not.be.empty;
+            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.get(merges[0]));
+            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.get(merges[1]));
         });
 
         it("should graph custom observables", () => {
@@ -512,7 +512,7 @@ describe("GraphPlugin", () => {
             expect(combinedGraphRef).to.have.property("rootSink", undefined);
         });
 
-        it("should determine root sinks for flattenings", () => {
+        it("should determine root sinks for flats", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
@@ -575,13 +575,13 @@ describe("GraphPlugin", () => {
 
             subject.next(0);
 
-            let flattenedSubscriptionRef = composedGraphRef.flattenings[0];
+            let flattenedSubscriptionRef = composedGraphRef.flats[0];
             let flattenedGraphRef = getGraphRef(flattenedSubscriptionRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
 
             subject.next(1);
 
-            flattenedSubscriptionRef = composedGraphRef.flattenings[1];
+            flattenedSubscriptionRef = composedGraphRef.flats[1];
             flattenedGraphRef = getGraphRef(flattenedSubscriptionRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
         });

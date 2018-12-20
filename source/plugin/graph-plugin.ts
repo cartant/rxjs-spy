@@ -12,9 +12,9 @@ const graphRefSymbol = Symbol("graphRef");
 
 export interface GraphRef {
     depth: number;
+    flats: SubscriptionRef[];
+    flatsFlushed: number;
     flattened: boolean;
-    flattenings: SubscriptionRef[];
-    flatteningsFlushed: number;
     link: GraphRef;
     rootSink: SubscriptionRef | undefined;
     sentinel: GraphRef;
@@ -47,7 +47,7 @@ export function logGraph(ref: SubscriptionRef, {
         logger.log(`${indent}${inferType(source.observable)} (${kind})`);
         const graphRef = getGraphRef(source);
         graphRef.sources.forEach(source => log(`${indent}  `, source, "source"));
-        graphRef.flattenings.forEach(flattening => log(`${indent}  `, flattening, "flattening"));
+        graphRef.flats.forEach(flat => log(`${indent}  `, flat, "flat"));
     }
 }
 
@@ -82,9 +82,9 @@ export class GraphPlugin extends BasePlugin {
         this.notifications_ = [];
         this.sentinel_ = {
             depth: 0,
+            flats: [],
+            flatsFlushed: 0,
             flattened: false,
-            flattenings: [],
-            flatteningsFlushed: 0,
             link: undefined!,
             rootSink: undefined,
             sentinel: undefined!,
@@ -127,9 +127,9 @@ export class GraphPlugin extends BasePlugin {
 
         const graphRef = setGraphRef(ref, {
             depth: 1,
+            flats: [],
+            flatsFlushed: 0,
             flattened: false,
-            flattenings: [],
-            flatteningsFlushed: 0,
             link: sentinel_,
             rootSink: undefined,
             sentinel: sentinel_,
@@ -150,7 +150,7 @@ export class GraphPlugin extends BasePlugin {
             const sinkRef = sourceGraphRef.sink;
             if (sinkRef) {
                 const sinkGraphRef = getGraphRef(sinkRef);
-                sinkGraphRef.flattenings.push(ref as SubscriptionRef);
+                sinkGraphRef.flats.push(ref as SubscriptionRef);
                 graphRef.link = sinkGraphRef;
                 graphRef.flattened = true;
                 graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
@@ -197,11 +197,11 @@ export class GraphPlugin extends BasePlugin {
     private flush_(ref: SubscriptionRef): void {
 
         const graphRef = getGraphRef(ref);
-        const { flattenings, sources } = graphRef;
+        const { flats, sources } = graphRef;
 
         if (
             (ref.unsubscribeTimestamp === 0) ||
-            flattenings.some(ref => ref.unsubscribeTimestamp === 0) ||
+            flats.some(ref => ref.unsubscribeTimestamp === 0) ||
             sources.some(ref => ref.unsubscribeTimestamp === 0)
         ) {
             return;
@@ -211,11 +211,11 @@ export class GraphPlugin extends BasePlugin {
         const { link, sink } = graphRef;
 
         const flush = () => {
-            const { flattenings, sources } = link;
-            const flatteningIndex = flattenings.indexOf(ref);
-            if (flatteningIndex !== -1) {
-                flattenings.splice(flatteningIndex, 1);
-                ++link.flatteningsFlushed;
+            const { flats, sources } = link;
+            const flatIndex = flats.indexOf(ref);
+            if (flatIndex !== -1) {
+                flats.splice(flatIndex, 1);
+                ++link.flatsFlushed;
             }
             const sourceIndex = sources.indexOf(ref);
             if (sourceIndex !== -1) {

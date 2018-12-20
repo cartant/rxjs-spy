@@ -378,16 +378,16 @@ function toGraph(subscriptionRef: SubscriptionRef): GraphPayload | undefined {
     }
 
     const {
-        flattenings,
-        flatteningsFlushed,
+        flats,
+        flatsFlushed,
         rootSink,
         sink,
         sources,
         sourcesFlushed
     } = graphRef;
     return {
-        flattenings: flattenings.map(identify),
-        flatteningsFlushed,
+        flats: flats.map(identify),
+        flatsFlushed,
         rootSink: rootSink ? identify(rootSink.subscription) : null,
         sink: sink ? identify(sink.subscription) : null,
         sources: sources.map(source => identify(source.subscription)),
@@ -432,10 +432,10 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                 error: s.error,
                 errorTimestamp: s.errorTimestamp,
                 graph: {
-                    flattenings: Array
-                        .from(s.flattenings.values())
+                    flats: Array
+                        .from(s.flats.values())
                         .map(s => s.id),
-                    flatteningsFlushed: s.flatteningsFlushed,
+                    flatsFlushed: s.flatsFlushed,
                     rootSink: s.rootSink ? identify(s.rootSink.subscription) : null,
                     sink: s.sink ? identify(s.sink.subscription) : null,
                     sources: Array

@@ -59,8 +59,8 @@ export class BufferPlugin extends BasePlugin {
         const inputCount = sources.reduce((count, source) => {
             return Math.max(count, source.nextCount);
         }, 0);
-        const flatteningsCount = sinkGraphRef.flattenings.length + sinkGraphRef.flatteningsFlushed;
-        const outputCount = flatteningsCount || sink.nextCount;
+        const flatsCount = sinkGraphRef.flats.length + sinkGraphRef.flatsFlushed;
+        const outputCount = flatsCount || sink.nextCount;
 
         const { bufferThreshold_, logger_, spy_ } = this;
         const bufferCount = inputCount - outputCount;

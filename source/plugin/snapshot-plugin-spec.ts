@@ -296,7 +296,7 @@ describe("SnapshotPlugin", () => {
             expect(hasSource(combinedSubscriptionSnapshot, subject2SubscriptionSnapshot)).to.be.true;
         });
 
-        it("should spy on flattenings", () => {
+        it("should spy on flats", () => {
 
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
@@ -308,7 +308,7 @@ describe("SnapshotPlugin", () => {
             let composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             let composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(composedSubscription.flattenings).to.have.property("size", 0);
+            expect(composedSubscription.flats).to.have.property("size", 0);
 
             subject.next(0);
 
@@ -317,7 +317,7 @@ describe("SnapshotPlugin", () => {
             composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(composedSubscription.flattenings).to.have.property("size", 1);
+            expect(composedSubscription.flats).to.have.property("size", 1);
 
             subject.next(0);
 
@@ -326,7 +326,7 @@ describe("SnapshotPlugin", () => {
             composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(composedSubscription.flattenings).to.have.property("size", 2);
+            expect(composedSubscription.flats).to.have.property("size", 2);
         });
 
         it("should determine a subscription's sink subscription", () => {
@@ -413,7 +413,7 @@ describe("SnapshotPlugin", () => {
             expect(combinedSubscription).to.have.property("rootSink", undefined);
         });
 
-        it("should determine root sinks for flattenings", () => {
+        it("should determine root sinks for flats", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();

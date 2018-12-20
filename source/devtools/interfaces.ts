@@ -20,8 +20,8 @@ export interface Extension {
 }
 
 export interface Graph {
-    flattenings: string[];
-    flatteningsFlushed: number;
+    flats: string[];
+    flatsFlushed: number;
     rootSink: string | null;
     sink: string | null;
     sources: string[];

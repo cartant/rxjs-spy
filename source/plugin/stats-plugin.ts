@@ -56,14 +56,14 @@ export class StatsPlugin extends BasePlugin {
         const { stats_ } = this;
         const graphRef = getGraphRef(ref);
         if (graphRef) {
-            const { depth, flattened, flattenings, flatteningsFlushed, rootSink, sources, sourcesFlushed } = graphRef;
+            const { depth, flattened, flats, flatsFlushed, rootSink, sources, sourcesFlushed } = graphRef;
             if (!rootSink) {
                 stats_.rootSubscribes += 1;
             }
             if (flattened) {
                 stats_.flattenedSubscribes += 1;
             }
-            if ((flattenings.length + flatteningsFlushed + sources.length + sourcesFlushed) === 0) {
+            if ((flats.length + flatsFlushed + sources.length + sourcesFlushed) === 0) {
                 if (stats_.maxDepth < depth) {
                     stats_.maxDepth = depth;
                 }

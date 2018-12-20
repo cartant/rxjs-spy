@@ -761,11 +761,11 @@ export class SpyCore implements Spy {
                 detected.unsubscriptions.forEach((s) => {
                     logSubscription(logger, "Unsubscription", s);
                 });
-                detected.flatteningSubscriptions.forEach((s) => {
-                    logSubscription(logger, "Flattening subscription", s);
+                detected.flatSubscriptions.forEach((s) => {
+                    logSubscription(logger, "Flat subscription", s);
                 });
-                detected.flatteningUnsubscriptions.forEach((s) => {
-                    logSubscription(logger, "Flattening unsubscription", s);
+                detected.flatUnsubscriptions.forEach((s) => {
+                    logSubscription(logger, "Flat unsubscription", s);
                 });
                 logger.groupEnd();
             }
@@ -852,8 +852,8 @@ export class SpyCore implements Spy {
             completeTimestamp,
             error,
             errorTimestamp,
-            flattenings,
-            flatteningsFlushed,
+            flats,
+            flatsFlushed,
             nextCount,
             nextTimestamp,
             observable,
@@ -868,7 +868,7 @@ export class SpyCore implements Spy {
         } = subscriptionSnapshot;
         const { derivations_ } = this;
 
-        const flatteningsArray = Array.from(flattenings.values());
+        const flatsArray = Array.from(flats.values());
         const sourcesArray = Array.from(sources.values());
 
         const record = {
@@ -877,10 +877,10 @@ export class SpyCore implements Spy {
             completeAge: age(completeTimestamp),
             error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
             errorAge: age(errorTimestamp),
-            flatCount: flatteningsArray.length + flatteningsFlushed,
-            flatNextAge: age(flatteningsArray.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
-            flatNextCount: flatteningsArray.reduce((total, flat) => total + flat.nextCount, 0),
-            flats: flatteningsArray.map(flat => flat.id),
+            flatCount: flatsArray.length + flatsFlushed,
+            flatNextAge: age(flatsArray.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
+            flatNextCount: flatsArray.reduce((total, flat) => total + flat.nextCount, 0),
+            flats: flatsArray.map(flat => flat.id),
             frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
             incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
             nextAge: age(nextTimestamp),

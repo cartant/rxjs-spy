@@ -98,8 +98,8 @@ export interface SubscriptionSnapshot {
     completeTimestamp: number;
     error: any;
     errorTimestamp: number;
-    flattenings: Map<Subscription, SubscriptionSnapshot>;
-    flatteningsFlushed: number;
+    flats: Map<Subscription, SubscriptionSnapshot>;
+    flatsFlushed: number;
     id: string;
     mappedStackTrace: Observable<StackFrame[]>;
     nextCount: number;
@@ -203,7 +203,7 @@ export class SnapshotPlugin extends BasePlugin {
             } = ref;
 
             const graphRef = getGraphRef(ref);
-            const { flatteningsFlushed, sourcesFlushed } = graphRef;
+            const { flatsFlushed, sourcesFlushed } = graphRef;
 
             const snapshotRef = getSnapshotRef(ref);
             const {
@@ -216,8 +216,8 @@ export class SnapshotPlugin extends BasePlugin {
                 completeTimestamp,
                 error,
                 errorTimestamp,
-                flattenings: new Map<Subscription, SubscriptionSnapshot>(),
-                flatteningsFlushed,
+                flats: new Map<Subscription, SubscriptionSnapshot>(),
+                flatsFlushed,
                 id: identify(subscription),
                 mappedStackTrace: getMappedStackTrace(ref),
                 nextCount,
@@ -284,7 +284,7 @@ export class SnapshotPlugin extends BasePlugin {
             if (graphRef.rootSink) {
                 subscriptionSnapshot.rootSink = subscriptions.get(graphRef.rootSink.subscription)!;
             }
-            graphRef.flattenings.forEach((m) => subscriptionSnapshot.flattenings.set(m.subscription, subscriptions.get(m.subscription)!));
+            graphRef.flats.forEach((m) => subscriptionSnapshot.flats.set(m.subscription, subscriptions.get(m.subscription)!));
             graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s.subscription, subscriptions.get(s.subscription)!));
         });
 
@@ -340,7 +340,7 @@ export class SnapshotPlugin extends BasePlugin {
         map.set(ref, true);
 
         const graphRef = getGraphRef(ref);
-        graphRef.flattenings.forEach((m) => this.addSubscriptionRefs_(m, map));
+        graphRef.flats.forEach((m) => this.addSubscriptionRefs_(m, map));
         graphRef.sources.forEach((s) => this.addSubscriptionRefs_(s, map));
     }
 

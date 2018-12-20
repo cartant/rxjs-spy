@@ -16,8 +16,8 @@ import {
 import { Spy } from "./spy-interface";
 
 export interface Detected {
-    flatteningSubscriptions: SubscriptionSnapshot[];
-    flatteningUnsubscriptions: SubscriptionSnapshot[];
+    flatSubscriptions: SubscriptionSnapshot[];
+    flatUnsubscriptions: SubscriptionSnapshot[];
     subscriptions: SubscriptionSnapshot[];
     unsubscriptions: SubscriptionSnapshot[];
 }
@@ -32,7 +32,7 @@ interface SnapshotRecord {
 }
 
 interface SubscriptionRecord {
-    flattenings: Map<Subscription, SubscriptionSnapshot>;
+    flats: Map<Subscription, SubscriptionSnapshot>;
     subscriptionSnapshot: SubscriptionSnapshot;
 }
 
@@ -84,8 +84,8 @@ export class Detector {
 
         const subscriptions: SubscriptionRecord[] = [];
         const unsubscriptions: SubscriptionRecord[] = [];
-        const flatteningSubscriptions: SubscriptionSnapshot[] = [];
-        const flatteningUnsubscriptions: SubscriptionSnapshot[] = [];
+        const flatSubscriptions: SubscriptionSnapshot[] = [];
+        const flatUnsubscriptions: SubscriptionSnapshot[] = [];
 
         const { rootSubscriptions: previousSubscriptions } = previous;
         const { rootSubscriptions: currentSubscriptions } = current;
@@ -101,17 +101,17 @@ export class Detector {
             const previous = previousSubscriptions.get(key);
             if (previous) {
 
-                const { flattenings: previousFlattenings } = previous;
-                const { flattenings: currentFlattenings } = current;
+                const { flats: previousFlats } = previous;
+                const { flats: currentFlats } = current;
 
-                previousFlattenings.forEach((flattening, key) => {
-                    if (!currentFlattenings.has(key)) {
-                        flatteningUnsubscriptions.push(flattening);
+                previousFlats.forEach((flat, key) => {
+                    if (!currentFlats.has(key)) {
+                        flatUnsubscriptions.push(flat);
                     }
                 });
-                currentFlattenings.forEach((flattening, key) => {
-                    if (!previousFlattenings.has(key)) {
-                        flatteningSubscriptions.push(flattening);
+                currentFlats.forEach((flat, key) => {
+                    if (!previousFlats.has(key)) {
+                        flatSubscriptions.push(flat);
                     }
                 });
             } else {
@@ -120,8 +120,8 @@ export class Detector {
         });
 
         if (
-            flatteningSubscriptions.length === 0 &&
-            flatteningUnsubscriptions.length === 0 &&
+            flatSubscriptions.length === 0 &&
+            flatUnsubscriptions.length === 0 &&
             subscriptions.length === 0 &&
             unsubscriptions.length === 0
         ) {
@@ -129,25 +129,25 @@ export class Detector {
         }
 
         return {
-            flatteningSubscriptions,
-            flatteningUnsubscriptions,
+            flatSubscriptions,
+            flatUnsubscriptions,
             subscriptions: subscriptions.map((s) => s.subscriptionSnapshot),
             unsubscriptions: unsubscriptions.map((s) => s.subscriptionSnapshot)
         };
     }
 
-    private findFlatteningSubscriptions_(
+    private findFlatSubscriptions_(
         snapshot: Snapshot,
         subscriptionRecord: SubscriptionRecord
     ): void {
 
-        const { flattenings, subscriptionSnapshot } = subscriptionRecord;
+        const { flats, subscriptionSnapshot } = subscriptionRecord;
 
         snapshot.subscriptions.forEach((s) => {
-            s.flattenings.forEach((f) => {
+            s.flats.forEach((f) => {
                 const { subscription } = f;
                 if (!subscription.closed) {
-                    flattenings.set(subscription, f);
+                    flats.set(subscription, f);
                 }
             });
         });
@@ -163,10 +163,10 @@ export class Detector {
                 const { completeTimestamp, errorTimestamp, sink, subscription } = subscriptionSnapshot;
                 if (!completeTimestamp && !errorTimestamp && !sink && !subscription.closed) {
                     const subscriptionRecord = {
-                        flattenings: new Map<Subscription, SubscriptionSnapshot>(),
+                        flats: new Map<Subscription, SubscriptionSnapshot>(),
                         subscriptionSnapshot
                     };
-                    this.findFlatteningSubscriptions_(snapshot, subscriptionRecord);
+                    this.findFlatSubscriptions_(snapshot, subscriptionRecord);
                     rootSubscriptions.set(subscription, subscriptionRecord);
                 }
             });

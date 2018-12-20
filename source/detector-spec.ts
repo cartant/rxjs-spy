@@ -55,7 +55,7 @@ describe("detector", () => {
         expect(detected.unsubscriptions).to.have.length(1);
     });
 
-    it("should detect flattening subscriptions and unsubscriptions", () => {
+    it("should detect flat subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
         const source = subject.pipe(tag("source"));
@@ -73,15 +73,15 @@ describe("detector", () => {
         subject.next();
 
         detected = detector.detect(id)!;
-        expect(detected.flatteningSubscriptions).to.have.length(1);
-        expect(detected.flatteningUnsubscriptions).to.be.empty;
+        expect(detected.flatSubscriptions).to.have.length(1);
+        expect(detected.flatUnsubscriptions).to.be.empty;
 
         subject.next();
 
         detected = detector.detect(id)!;
         expect(detected).to.exist;
-        expect(detected.flatteningSubscriptions).to.have.length(1);
-        expect(detected.flatteningUnsubscriptions).to.be.empty;
+        expect(detected.flatSubscriptions).to.have.length(1);
+        expect(detected.flatUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
     });
