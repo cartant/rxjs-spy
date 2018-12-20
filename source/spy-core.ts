@@ -54,29 +54,11 @@ type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
 
 const defaultDerivations: QueryDerivations = {
     blocking: record => record.sourceNextAge > record.nextAge,
-    file: record => (name: string | RegExp) => matchStackTrace(record, "fileName", name),
-    func: record => (name: string | RegExp) => matchStackTrace(record, "functionName", name)
+    file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
+    flat: record => (match: number | string) => matchSource(record, "flats", match),
+    func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
+    source: record => (match: number | string) => matchSource(record, "sources", match)
 };
-
-function matchStackTrace(
-    record: Record<string, any>,
-    property: string,
-    name: string | RegExp
-): boolean {
-    const [stackFrame] = record.stackTrace;
-    if (!stackFrame) {
-        return false;
-    }
-    const value: string = stackFrame[property];
-    switch (property) {
-    case "fileName":
-        return (typeof name === "string") ? value.endsWith(name) : name.test(value);
-    case "functionName":
-        return (typeof name === "string") ? (value === name) : name.test(value);
-    default:
-        return false;
-    }
-}
 
 export class SpyCore implements Spy {
 
@@ -897,7 +879,7 @@ export class SpyCore implements Spy {
             errorAge: age(errorTimestamp),
             flatCount: flatteningsArray.length + flatteningsFlushed,
             flatNextAge: age(flatteningsArray.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
-            flatNextCount: flatteningsArray.length + flatteningsFlushed,
+            flatNextCount: flatteningsArray.reduce((total, flat) => total + flat.nextCount, 0),
             flats: flatteningsArray.map(flat => flat.id),
             frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
             incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
@@ -907,7 +889,7 @@ export class SpyCore implements Spy {
             root: !sink,
             sourceCount: sourcesArray.length + sourcesFlushed,
             sourceNextAge: age(sourcesArray.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
-            sourceNextCount: sourcesArray.length + sourcesFlushed,
+            sourceNextCount: sourcesArray.reduce((total, source) => total + source.nextCount, 0),
             sources: sourcesArray.map(source => source.id),
             stackTrace,
             subscribeAge: age(subscribeTimestamp),
@@ -930,4 +912,36 @@ export class SpyCore implements Spy {
         });
         return { ...defaultDerived, ...derived, ...record };
     }
+}
+
+function matchStackTrace(
+    record: Record<string, any>,
+    property: string,
+    match: string | RegExp
+): boolean {
+    const [stackFrame] = record.stackTrace;
+    if (!stackFrame) {
+        return false;
+    }
+    const value: string = stackFrame[property];
+    switch (property) {
+    case "fileName":
+        return (typeof match === "string") ? value.endsWith(match) : match.test(value);
+    case "functionName":
+        return (typeof match === "string") ? (value === match) : match.test(value);
+    default:
+        return false;
+    }
+}
+
+function matchSource(
+    record: Record<string, any>,
+    property: string,
+    match: number | string
+): boolean {
+    const ids: string[] = record[property];
+    if (typeof match === "number") {
+        match = match.toString();
+    }
+    return ids.some(id => id === match);
 }
