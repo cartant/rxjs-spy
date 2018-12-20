@@ -52,6 +52,10 @@ const previousWindow: Record<string, any> = {};
 type QueryPredicate = (record: Record<string, any>) => boolean;
 type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
 
+const defaultDerivations: QueryDerivations = {
+    blocking: record => record.sourceNextAge > record.nextAge
+};
+
 export class SpyCore implements Spy {
 
     private static spy_: SpyCore | undefined = undefined;
@@ -830,14 +834,22 @@ export class SpyCore implements Spy {
     ): Record<string, any> {
 
         const now = Date.now();
+        function age(timestamp: number): number | undefined {
+            return timestamp ? ((now - timestamp) / 1e3) : undefined;
+        }
+
         const {
             completeTimestamp,
             error,
             errorTimestamp,
+            flattenings,
+            flatteningsFlushed,
             nextCount,
             nextTimestamp,
             observable,
             sink,
+            sources,
+            sourcesFlushed,
             subscribeTimestamp,
             subscriber,
             subscription,
@@ -845,9 +857,8 @@ export class SpyCore implements Spy {
         } = subscriptionSnapshot;
         const { derivations_ } = this;
 
-        function age(timestamp: number): number | undefined {
-            return timestamp ? ((now - timestamp) / 1e3) : undefined;
-        }
+        const flatteningsArray = Array.from(flattenings.values());
+        const sourcesArray = Array.from(sources.values());
 
         const record = {
             ...subscriptionSnapshot.query,
@@ -855,12 +866,18 @@ export class SpyCore implements Spy {
             completeAge: age(completeTimestamp),
             error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
             errorAge: age(errorTimestamp),
+            flats: flatteningsArray.map(flat => flat.id),
+            flatNextAge: age(flatteningsArray.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
+            flatNextCount: flatteningsArray.length + flatteningsFlushed,
             frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
             incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
             nextAge: age(nextTimestamp),
             nextCount,
             observable: identify(observable),
             root: !sink,
+            sources: sourcesArray.map(source => source.id),
+            sourceNextAge: age(sourcesArray.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
+            sourceNextCount: sourcesArray.length + sourcesFlushed,
             subscribeAge: age(subscribeTimestamp),
             subscriber: identify(subscriber),
             subscription: identify(subscription),
@@ -870,10 +887,15 @@ export class SpyCore implements Spy {
             unsubscribed: unsubscribeTimestamp !== 0
         };
 
+        const defaultDerived = {};
+        Object.keys(defaultDerivations).forEach(key => {
+            defaultDerived[key] = defaultDerivations[key](record);
+        });
+
         const derived = {};
         Object.keys(derivations_).forEach(key => {
             derived[key] = derivations_[key](record);
         });
-        return { ...derived, ...record };
+        return { ...defaultDerived, ...derived, ...record };
     }
 }
