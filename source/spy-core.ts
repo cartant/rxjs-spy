@@ -54,14 +54,14 @@ type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
 
 const defaultDerivations: QueryDerivations = {
     blocking: record => record.sourceNextAge > record.nextAge,
-    file: record => (name: string) => matchStackTrace(record, "fileName", name),
-    func: record => (name: string) => matchStackTrace(record, "functionName", name)
+    file: record => (name: string | RegExp) => matchStackTrace(record, "fileName", name),
+    func: record => (name: string | RegExp) => matchStackTrace(record, "functionName", name)
 };
 
 function matchStackTrace(
     record: Record<string, any>,
     property: string,
-    name: string
+    name: string | RegExp
 ): boolean {
     const [stackFrame] = record.stackTrace;
     if (!stackFrame) {
@@ -70,9 +70,9 @@ function matchStackTrace(
     const value: string = stackFrame[property];
     switch (property) {
     case "fileName":
-        return value.endsWith(name);
+        return (typeof name === "string") ? value.endsWith(name) : name.test(value);
     case "functionName":
-        return value === name;
+        return (typeof name === "string") ? (value === name) : name.test(value);
     default:
         return false;
     }

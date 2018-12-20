@@ -30,4 +30,11 @@ describe("expression", () => {
             file: (name: string) => name === "a"
         })).to.be.true;
     });
+
+    it("should support regular expressions", () => {
+        const { func } = compile(`file(/a/)`);
+        expect(func({
+            file: (name: RegExp) => name.test("abc")
+        })).to.be.true;
+    });
 });
