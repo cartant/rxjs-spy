@@ -861,6 +861,7 @@ export class SpyCore implements Spy {
             nextCount,
             nextTimestamp,
             observable,
+            rootSink,
             sink,
             sources,
             sourcesFlushed,
@@ -882,24 +883,26 @@ export class SpyCore implements Spy {
             error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
             errorAge: age(errorTimestamp),
             flatCount: flatsArray.length + flatsFlushed,
+            flatIds: flatsArray.map(flat => flat.id),
             flatNextAge: age(flatsArray.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
             flatNextCount: flatsArray.reduce((total, flat) => total + flat.nextCount, 0),
-            flats: flatsArray.map(flat => flat.id),
             flattened,
             frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
             incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
             nextAge: age(nextTimestamp),
             nextCount,
-            observable: identify(observable),
+            observableId: identify(observable),
             root: !sink,
+            rootSinkId: rootSink ? rootSink.id : undefined,
+            sinkId: sink ? sink.id : undefined,
             sourceCount: sourcesArray.length + sourcesFlushed,
+            sourceIds: sourcesArray.map(source => source.id),
             sourceNextAge: age(sourcesArray.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
             sourceNextCount: sourcesArray.reduce((total, source) => total + source.nextCount, 0),
-            sources: sourcesArray.map(source => source.id),
             stackTrace,
             subscribeAge: age(subscribeTimestamp),
-            subscriber: identify(subscriber),
-            subscription: identify(subscription),
+            subscriberId: identify(subscriber),
+            subscriptionId: identify(subscription),
             tag: observableSnapshot.tag,
             type: observableSnapshot.type,
             unsubscribeAge: age(unsubscribeTimestamp),
@@ -920,13 +923,13 @@ export class SpyCore implements Spy {
 }
 
 function matchId(
-    { observable, subscriber, subscription }: Record<string, any>,
+    { observableId, subscriberId, subscriptionId }: Record<string, any>,
     match: number | string
 ): boolean {
     if (typeof match === "number") {
         match = match.toString();
     }
-    return (match === observable) || (match === subscriber) || (match === subscription);
+    return (match === observableId) || (match === subscriberId) || (match === subscriptionId);
 }
 
 function matchStackTrace(
