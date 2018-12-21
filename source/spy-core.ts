@@ -874,8 +874,8 @@ export class SpyCore implements Spy {
         } = subscriptionSnapshot;
         const { derivations_ } = this;
 
-        const flatsArray = Array.from(flats.values());
-        const sourcesArray = Array.from(sources.values());
+        const flatSnapshots = Array.from(flats.values());
+        const sourceSnapshots = Array.from(sources.values());
 
         const record = {
             ...subscriptionSnapshot.query,
@@ -883,10 +883,10 @@ export class SpyCore implements Spy {
             completeAge: age(completeTimestamp),
             error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
             errorAge: age(errorTimestamp),
-            flatCount: flatsArray.length + flatsFlushed,
-            flatIds: flatsArray.map(flat => flat.id),
-            flatNextAge: age(flatsArray.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
-            flatNextCount: flatsArray.reduce((total, flat) => total + flat.nextCount, 0),
+            flatCount: flatSnapshots.length + flatsFlushed,
+            flatIds: flatSnapshots.map(flat => flat.id),
+            flatNextAge: age(flatSnapshots.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
+            flatNextCount: flatSnapshots.reduce((total, flat) => total + flat.nextCount, 0),
             flattened,
             frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
             incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
@@ -898,10 +898,10 @@ export class SpyCore implements Spy {
             sinkId: sink ? sink.id : undefined,
             sinkNextAge: sink ? age(sink.nextTimestamp) : undefined,
             sinkNextCount: sink ? sink.nextCount : 0,
-            sourceCount: sourcesArray.length + sourcesFlushed,
-            sourceIds: sourcesArray.map(source => source.id),
-            sourceNextAge: age(sourcesArray.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
-            sourceNextCount: sourcesArray.reduce((total, source) => total + source.nextCount, 0),
+            sourceCount: sourceSnapshots.length + sourcesFlushed,
+            sourceIds: sourceSnapshots.map(source => source.id),
+            sourceNextAge: age(sourceSnapshots.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
+            sourceNextCount: sourceSnapshots.reduce((total, source) => total + source.nextCount, 0),
             stackTrace,
             subscribeAge: age(subscribeTimestamp),
             subscriberId: identify(subscriber),
