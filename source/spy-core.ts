@@ -45,7 +45,7 @@ import { Ctor, Options, Spy, Teardown } from "./spy-interface";
 import { SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
 
-declare const __RX_SPY_VERSION__: string;
+declare const __RXJS_SPY_VERSION__: string;
 const observableSubscribe = Observable.prototype.subscribe;
 const previousWindow: Record<string, any> = {};
 
@@ -180,7 +180,7 @@ export class SpyCore implements Spy {
 
     get version(): string {
 
-        return __RX_SPY_VERSION__;
+        return __RXJS_SPY_VERSION__;
     }
 
     debug(match: Match, ...notifications: Notification[]): Teardown {
