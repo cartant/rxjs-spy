@@ -53,6 +53,7 @@ type QueryPredicate = (record: Record<string, any>) => boolean;
 type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
 
 const defaultDerivations: QueryDerivations = {
+    blocked: ({ nextAge, sinkNextAge }) => nextAge > sinkNextAge,
     blocking: ({ nextAge, sourceNextAge }) => sourceNextAge > nextAge,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     flat: record => (match: number | string) => matchSource(record, "flats", match),
@@ -895,6 +896,8 @@ export class SpyCore implements Spy {
             root: !sink,
             rootSinkId: rootSink ? rootSink.id : undefined,
             sinkId: sink ? sink.id : undefined,
+            sinkNextAge: sink ? age(sink.nextTimestamp) : undefined,
+            sinkNextCount: sink ? sink.nextCount : 0,
             sourceCount: sourcesArray.length + sourcesFlushed,
             sourceIds: sourcesArray.map(source => source.id),
             sourceNextAge: age(sourcesArray.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
