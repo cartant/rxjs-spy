@@ -53,10 +53,11 @@ type QueryPredicate = (record: Record<string, any>) => boolean;
 type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
 
 const defaultDerivations: QueryDerivations = {
-    blocking: record => record.sourceNextAge > record.nextAge,
+    blocking: ({ nextAge, sourceNextAge }) => sourceNextAge > nextAge,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     flat: record => (match: number | string) => matchSource(record, "flats", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
+    id: record => (match: number | string) => matchId(record, match),
     source: record => (match: number | string) => matchSource(record, "sources", match)
 };
 
@@ -916,6 +917,16 @@ export class SpyCore implements Spy {
         });
         return { ...defaultDerived, ...derived, ...record };
     }
+}
+
+function matchId(
+    { observable, subscriber, subscription }: Record<string, any>,
+    match: number | string
+): boolean {
+    if (typeof match === "number") {
+        match = match.toString();
+    }
+    return (match === observable) || (match === subscriber) || (match === subscription);
 }
 
 function matchStackTrace(
