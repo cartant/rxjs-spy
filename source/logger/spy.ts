@@ -4,6 +4,10 @@
  */
 /*tslint:disable:no-console no-invalid-this*/
 
+// This file is named `spy.ts` instead of `logger.ts` because this file's name
+// is written to the console in Chrome - just after each message - so it might
+// as well be a name that's specific to the tool itself.
+
 export interface PartialLogger {
     readonly error?: (message?: any, ...args: any[]) => void;
     readonly group?: (title?: string) => void;
