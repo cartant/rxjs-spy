@@ -23,24 +23,6 @@ describe("spy", () => {
 
     let spy: Spy;
 
-    describe("flush", () => {
-
-        let plugin: Plugin;
-
-        beforeEach(() => {
-
-            plugin = stubPlugin();
-            spy = create({ defaultPlugins: false, ...options });
-            spy.plug(plugin);
-        });
-
-        it("should call the plugin's flush method", () => {
-
-            spy.flush();
-            expect(plugin.flush).to.have.property("called", true);
-        });
-    });
-
     describe("let", () => {
 
         it("should apply the selector to the tagged observable", () => {
@@ -474,7 +456,6 @@ function stubPlugin(): Plugin {
         beforeNext: sinon.stub(),
         beforeSubscribe: sinon.stub(),
         beforeUnsubscribe: sinon.stub(),
-        flush: sinon.stub(),
         select: sinon.stub().returns(undefined),
         teardown: sinon.stub()
     } as any;

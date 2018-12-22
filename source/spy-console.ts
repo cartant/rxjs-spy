@@ -43,12 +43,6 @@ export function wrap(
             detect(id);
         },
 
-        flush(): void {
-
-            deprecation();
-            core.flush();
-        },
-
         inferPath,
         inferType,
 

@@ -22,7 +22,6 @@ export interface Plugin {
     beforeNext(ref: SubscriptionRef, value: any): void;
     beforeSubscribe(ref: SubscriptionRef): void;
     beforeUnsubscribe(ref: SubscriptionRef): void;
-    flush(): void;
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined;
     teardown(): void;
 }
@@ -41,7 +40,6 @@ export class BasePlugin implements Plugin {
     beforeNext(ref: SubscriptionRef, value: any): void {}
     beforeSubscribe(ref: SubscriptionRef): void {}
     beforeUnsubscribe(ref: SubscriptionRef): void {}
-    flush(): void {}
     select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }
     teardown(): void {}
 }

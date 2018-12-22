@@ -206,11 +206,6 @@ export class SpyCore implements Spy {
             this.plugins_;
     }
 
-    flush(): void {
-
-        this.plugins_.forEach((plugin) => plugin.flush());
-    }
-
     let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
 
         return this.plug(new LetPlugin(match, select, options));

@@ -97,7 +97,6 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.pause`](#module-pause)
 * [`Spy.let`](#module-let)
 * [`Spy.debug`](#module-debug)
-* [`Spy.flush`](#module-flush)
 * [`Spy.plug`](#module-plug)
 * [`Spy.unplug`](#module-unplug)
 * [`Spy.find`](#module-find)
@@ -129,7 +128,6 @@ interface Spy {
   find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
   findAll<T extends Plugin>(ctor: Ctor<T>): T[];
   findAll(): Plugin[];
-  flush(): void;
   let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
@@ -283,20 +281,6 @@ Wires up an instance of the debug plugin for matching observables.
 Whenever one of the specified notifications occurs, a `debugger` statement in the plugin will pause execution. If no notifications are specified in the call, execution will be paused when any of the notifications occurs.
 
 This method returns a teardown function.
-
-<a name="module-flush"></a>
-
-### flush
-
-```ts
-interface Spy {
-  flush(): void;
-}
-```
-
-Calling `flush` will see `flush` called on each plugin.
-
-If snapshotting is enabled, calling `flush` will release excess values and completed or errored obervables from within snapshots.
 
 <a name="module-plug"></a>
 
