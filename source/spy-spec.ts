@@ -394,28 +394,6 @@ describe("spy", () => {
         });
     });
 
-    describe("warnOnce", () => {
-
-        it("should warn only once per message", () => {
-
-            const logger = {
-                log: sinon.stub(),
-                warn: sinon.stub()
-            };
-
-            spy = create({ defaultPlugins: false, ...options });
-
-            spy.warnOnce(logger, "there's a problem");
-            expect(logger.warn.callCount).to.equal(1);
-
-            spy.warnOnce(logger, "there's a problem");
-            expect(logger.warn.callCount).to.equal(1);
-
-            spy.warnOnce(logger, "there's another problem");
-            expect(logger.warn.callCount).to.equal(2);
-        });
-    });
-
     if (typeof window !== "undefined") {
 
         describe("window", () => {

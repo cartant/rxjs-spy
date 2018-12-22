@@ -4,9 +4,16 @@
  */
 
 import { Observable, Subscriber, Subscription } from "rxjs";
+import { PartialLogger } from "../logger";
+import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 
 export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
+
+export interface PluginOptions {
+    logger: PartialLogger;
+    spy: Spy;
+}
 
 export interface Plugin {
 

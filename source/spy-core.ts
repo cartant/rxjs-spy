@@ -67,7 +67,7 @@ export class SpyCore implements Spy {
     private static spy_: SpyCore | undefined = undefined;
 
     private auditor_: Auditor;
-    private defaultLogger_: PartialLogger;
+    private defaultLogger_: Logger;
     private derivations_: QueryDerivations;
     private maxLogged_ = 20;
     private plugins_: Plugin[];
@@ -75,7 +75,6 @@ export class SpyCore implements Spy {
     private teardown_: Teardown | undefined;
     private tick_: number;
     private undos_: Plugin[];
-    private warned_: { [key: string]: boolean };
 
     constructor(options: {
         [key: string]: any,
@@ -100,7 +99,7 @@ export class SpyCore implements Spy {
         Observable.prototype.subscribe = SpyCore.coreSubscribe_;
 
         this.auditor_ = new Auditor(options.audit || 0);
-        this.defaultLogger_ = options.defaultLogger || defaultLogger;
+        this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
         this.derivations_ = {};
         if (options.defaultPlugins ===  false) {
             this.plugins_ = [];
@@ -120,7 +119,6 @@ export class SpyCore implements Spy {
         this.pluginsSubject_ = new BehaviorSubject(this.plugins_);
         this.tick_ = 0;
         this.undos_ = [];
-        this.warned_ = {};
 
         const detector = new Detector(this);
         hook((id) => this.detect_(id, detector));
@@ -132,7 +130,7 @@ export class SpyCore implements Spy {
                     previousWindow[key] = window[key];
                 }
                 window[key] = wrap(this, key === "rxSpy" ?
-                    () => this.warnOnce(this.defaultLogger_, `window.${key} is deprecated and has been renamed; use window.spy instead`) :
+                    () => this.defaultLogger_.warnOnce(`window.${key} is deprecated and has been renamed; use window.spy instead`) :
                     undefined
                 );
             });
@@ -166,6 +164,11 @@ export class SpyCore implements Spy {
     get auditor(): Auditor {
 
         return this.auditor_;
+    }
+
+    get logger(): Logger {
+
+        return this.defaultLogger_;
     }
 
     get tick(): number {
@@ -282,7 +285,7 @@ export class SpyCore implements Spy {
 
         const snapshotPlugin = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
-            this.warnOnce(console, "Snapshotting is not enabled.");
+            this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
         }
 
@@ -413,7 +416,7 @@ export class SpyCore implements Spy {
 
         const snapshotPlugin = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
-            this.warnOnce(console, "Snapshotting is not enabled.");
+            this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
         }
 
@@ -496,7 +499,7 @@ export class SpyCore implements Spy {
 
         const statsPlugin = this.find(StatsPlugin);
         if (!statsPlugin) {
-            this.warnOnce(console, "Stats are not enabled.");
+            this.defaultLogger_.warnOnce("Stats are not enabled.");
             return;
         }
 
@@ -543,20 +546,6 @@ export class SpyCore implements Spy {
             this.pluginsSubject_.next(this.plugins_);
             this.undos_ = this.undos_.filter((u) => u !== plugin);
         });
-    }
-
-    /** @deprecated Use warnOnce */
-    warn(logger: PartialLogger, message: any, ...args: any[]): void {
-
-        this.warnOnce(logger, message, ...args);
-    }
-
-    warnOnce(logger: PartialLogger, message: any, ...args: any[]): void {
-
-        if (!this.warned_[message]) {
-            toLogger(logger).warn(message, ...args);
-            this.warned_[message] = true;
-        }
     }
 
     /*tslint:disable-next-line:member-ordering*/

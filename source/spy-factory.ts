@@ -4,7 +4,6 @@
  */
 
 import { PartialLogger } from "./logger";
-import { Plugin } from "./plugin";
 import { SpyCore } from "./spy-core";
 import { Spy } from "./spy-interface";
 

@@ -11,6 +11,7 @@ export interface PartialLogger {
     readonly groupEnd?: () => void;
     readonly log: (message?: any, ...args: any[]) => void;
     readonly warn?: (message?: any, ...args: any[]) => void;
+    readonly warnOnce?: (message?: any, ...args: any[]) => void;
 }
 
 export interface Logger extends PartialLogger {
@@ -20,11 +21,16 @@ export interface Logger extends PartialLogger {
     readonly groupEnd: () => void;
     readonly log: (message?: any, ...args: any[]) => void;
     readonly warn: (message?: any, ...args: any[]) => void;
+    readonly warnOnce: (message?: any, ...args: any[]) => void;
 }
 
-export const defaultLogger = console;
+export const defaultLogger = toLogger(console);
 
 export function toLogger(partialLogger: PartialLogger): Logger {
+
+    if (partialLogger.warnOnce) {
+        return partialLogger as Logger;
+    }
 
     if (partialLogger.error &&
         partialLogger.group &&
@@ -40,7 +46,8 @@ export function toLogger(partialLogger: PartialLogger): Logger {
             groupCollapsed(...args: any[]): void { logger.groupCollapsed(...args); },
             groupEnd(): void { logger.groupEnd(); },
             log(...args: any[]): void { logger.log(...args); },
-            warn(...args: any[]): void { logger.warn(...args); }
+            warn(...args: any[]): void { logger.warn(...args); },
+            warnOnce
         };
     }
 
@@ -48,42 +55,30 @@ export function toLogger(partialLogger: PartialLogger): Logger {
     let indent = 0;
 
     return {
-
         error(message?: any, ...args: any[]): void {
-
             call("error", message, ...args);
         },
-
         group(title?: string): void {
-
             call("log", title);
             indent += spaces;
         },
-
         groupCollapsed(title?: string): void {
-
             call("log", title);
             indent += spaces;
         },
-
         groupEnd(): void {
-
             indent = Math.max(0, indent - spaces);
         },
-
         log(message?: any, ...args: any[]): void {
-
             call("log", message, ...args);
         },
-
         warn(message?: any, ...args: any[]): void {
-
             call("warn", message, ...args);
-        }
+        },
+        warnOnce
     };
 
     function call(method: string, message?: any, ...args: any[]): void {
-
         const padding = " ".repeat(indent);
         if (message) {
             message = padding + message;
@@ -91,5 +86,17 @@ export function toLogger(partialLogger: PartialLogger): Logger {
             message = padding;
         }
         (partialLogger[method] || partialLogger.log).call(partialLogger, message, ...args);
+    }
+}
+
+const warnedSymbol = Symbol("warned");
+function warnOnce(this: any, message?: any, ...args: any[]): void {
+    let warned: { [key: string]: boolean } = this[warnedSymbol];
+    if (!warned) {
+        warned = this[warnedSymbol] = {};
+    }
+    if (!warned[message]) {
+        this.warn(message, ...args);
+        warned[message] = true;
     }
 }

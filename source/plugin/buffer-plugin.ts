@@ -68,7 +68,7 @@ export class BufferPlugin extends BasePlugin {
             bufferRef.warned = true;
             const stackFrames = getStackTrace(sinkGraphRef.rootSink || sink);
             if (stackFrames.length === 0) {
-                spy_.warnOnce(console, "Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
+                spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
             }
             const stackTrace = stackFrames.length ? `; subscribed at\n${stackFrames.join("\n")}` : "";
             const type = inferType(sink.observable);
@@ -104,7 +104,7 @@ export class BufferPlugin extends BasePlugin {
 
         const graphRef = getGraphRef(ref);
         if (!graphRef) {
-            this.spy_.warnOnce(console, "Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");
+            this.spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");
             return;
         }
 

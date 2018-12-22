@@ -54,7 +54,7 @@ export class CyclePlugin extends BasePlugin {
                     subscription[cycleWarnedSymbol] = true;
                     const stackFrames = getStackTrace(ref);
                     if (stackFrames.length === 0) {
-                        spy_.warnOnce(console, "Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
+                        spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
                     }
                     const stackTrace = stackFrames.length ? `; subscribed at\n${stackFrames.join("\n")}` : "";
                     const type = inferType(observable);

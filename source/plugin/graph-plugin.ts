@@ -5,7 +5,7 @@
 
 import { BasePlugin, Notification } from "./plugin";
 import { SubscriptionRef } from "../subscription-ref";
-import { Logger } from "../logger";
+import { defaultLogger, Logger } from "../logger";
 import { inferType } from "../util";
 
 const graphRefSymbol = Symbol("graphRef");
@@ -30,7 +30,7 @@ export function getGraphRef(ref: SubscriptionRef): GraphRef {
 
 export function logGraph(ref: SubscriptionRef, {
     all = false,
-    logger = console
+    logger = defaultLogger
 }: {
     all?: boolean,
     logger?: Logger

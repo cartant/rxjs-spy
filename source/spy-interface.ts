@@ -4,7 +4,7 @@
  */
 
 import { Observable } from "rxjs";
-import { PartialLogger } from "./logger";
+import { PartialLogger, Logger } from "./logger";
 import { Auditor } from "./auditor";
 import { Match } from "./match";
 import { Deck, Notification, Plugin } from "./plugin";
@@ -23,6 +23,7 @@ export interface Teardown {
 
 export interface Spy {
     readonly auditor: Auditor;
+    readonly logger: Logger;
     readonly tick: number;
     readonly version: string;
     debug(match: Match, ...notifications: Notification[]): Teardown;
@@ -40,7 +41,4 @@ export interface Spy {
     stats(partialLogger?: PartialLogger): void;
     teardown(): void;
     unplug(...plugins: Plugin[]): void;
-    /** @deprecated Use warnOnce */
-    warn(logger: PartialLogger, message: any, ...args: any[]): void;
-    warnOnce(logger: PartialLogger, message: any, ...args: any[]): void;
 }
