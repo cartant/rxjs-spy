@@ -4367,6 +4367,14 @@ tslib@^1.6.1, tslib@^1.8.0, tslib@^1.8.1, tslib@^1.9.0:
   version "1.9.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
 
+tslint-etc@^1.2.11:
+  version "1.2.11"
+  resolved "https://registry.yarnpkg.com/tslint-etc/-/tslint-etc-1.2.11.tgz#ba1596f9021e263e4f84a9121b90a3d2f6222959"
+  dependencies:
+    "@phenomnomnominal/tsquery" "^3.0.0"
+    tslib "^1.8.0"
+    tsutils "^3.0.0"
+
 tslint@^5.1.0:
   version "5.12.0"
   resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.12.0.tgz#47f2dba291ed3d580752d109866fb640768fca36"
