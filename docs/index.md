@@ -72,7 +72,7 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
     For example, the following call will replace the value emitted from the people observable:
 
-        spy.pipe({ match: "people", operator: source => source.mapTo("mallory") });
+        spy.pipe("people", source => source.mapTo("mallory"));
 
     Note that the changes will be seen by both current and future subscribers to the observable.
 

@@ -28,10 +28,7 @@ describe("spy", () => {
         it("should apply the operator to the tagged observable", () => {
 
             spy = create({ defaultPlugins: false, ...options });
-            spy.pipe({
-                match: "people",
-                operator: (source) => source.pipe(mapTo("bob"))
-            });
+            spy.pipe("people", source => source.pipe(mapTo("bob")));
 
             const values: any[] = [];
             const subject = new Subject<string>();

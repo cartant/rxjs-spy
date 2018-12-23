@@ -202,24 +202,6 @@ export class SpyCore implements Spy {
             this.plugins_;
     }
 
-    pipe({
-        complete,
-        match,
-        operator
-    }: {
-        complete?: boolean
-        match: Match,
-        operator: (source: Observable<any>) => Observable<any>
-    }): Teardown {
-
-        return this.plug(new PipePlugin({
-            complete,
-            match,
-            operator,
-            spy: this
-        }));
-    }
-
     log(observableMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(observableMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;
@@ -270,6 +252,16 @@ export class SpyCore implements Spy {
         const deck = pausePlugin.deck;
         deck.teardown = teardown;
         return deck;
+    }
+
+    pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, complete?: boolean): Teardown {
+
+        return this.plug(new PipePlugin({
+            complete,
+            match,
+            operator,
+            spy: this
+        }));
     }
 
     plug(...plugins: Plugin[]): Teardown {

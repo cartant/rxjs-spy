@@ -29,15 +29,7 @@ export interface Spy {
     log(observableMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;
     pause(match: Match): Deck;
-    pipe({
-        complete,
-        match,
-        operator
-    }: {
-        complete?: boolean
-        match: Match,
-        operator: (source: Observable<any>) => Observable<any>
-    }): Teardown;
+    pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, complete?: boolean): Teardown;
     plug(...plugins: Plugin[]): Teardown;
     show(match: Match, partialLogger?: PartialLogger): void;
     show(partialLogger?: PartialLogger): void;
