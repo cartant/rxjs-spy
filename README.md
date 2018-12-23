@@ -95,7 +95,7 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.show`](#module-show)
 * [`Spy.log`](#module-log)
 * [`Spy.pause`](#module-pause)
-* [`Spy.let`](#module-let)
+* [`Spy.pipe`](#module-pipe)
 * [`Spy.debug`](#module-debug)
 * [`Spy.plug`](#module-plug)
 * [`Spy.unplug`](#module-unplug)
@@ -128,10 +128,10 @@ interface Spy {
   find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
   findAll<T extends Plugin>(ctor: Ctor<T>): T[];
   findAll(): Plugin[];
-  let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
   pause(match: Match): Deck;
+  pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
   plug(...plugins: Plugin[]): Teardown;
   show(match: Match, partialLogger?: PartialLogger): void;
   show(partialLogger?: PartialLogger): void;
@@ -241,25 +241,25 @@ interface Deck {
 
 Calling `step` will release a single paused notification. The other methods to what their names suggest. Calling `resume` will play all buffered notifications before resuming.
 
-<a name="module-let"></a>
+<a name="module-pipe"></a>
 
-### let
+### pipe
 
 ```ts
 interface Spy {
-  let(
+  pipe(
     match: string | RegExp | MatchPredicate | Observable<any>,
-    select: (source: Observable<any>) => Observable<any>,
+    operator: (source: Observable<any>) => Observable<any>,
     options?: Options
   ): Teardown;
 }
 ```
 
-Wires up an instance of the let plugin for matching observables.
+Wires up an instance of the pipe plugin for matching observables.
 
-This is equivalent to the `let` operator. All subscriptions to matching observables will instead be made to the observable returned by the specified `select` function.
+This analogous to the `Observable.prototype.pipe` method. All subscriptions to matching observables will instead be made to the observable returned by the specified `operator` function.
 
-If `complete` option is `false`, completion notifications received from the selected observable will not be forwarded to subscribers.
+If `complete` option is `false`, completion notifications received from the souce observable will not be forwarded to subscribers.
 
 This method returns a teardown function.
 

@@ -27,7 +27,7 @@ import {
     Deck,
     DevToolsPlugin,
     GraphPlugin,
-    LetPlugin,
+    PipePlugin,
     LogPlugin,
     Notification,
     ObservableSnapshot,
@@ -209,9 +209,9 @@ export class SpyCore implements Spy {
             this.plugins_;
     }
 
-    let(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
+    pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
 
-        return this.plug(new LetPlugin(match, operator, options));
+        return this.plug(new PipePlugin(match, operator, options));
     }
 
     log(tagMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
@@ -609,7 +609,7 @@ export class SpyCore implements Spy {
             }
         };
 
-        const postOperationObserver = {
+        const postOpObserver = {
 
             complete(): void {
                 notify_(
@@ -646,14 +646,14 @@ export class SpyCore implements Spy {
             }
         };
 
-        const preOperationObserver = {
+        const preOpObserver = {
 
             complete(): void {
                 this.completed = true;
-                if (this.preOperationSubject) {
-                    this.preOperationSubject.complete();
+                if (this.preOpSubject) {
+                    this.preOpSubject.complete();
                 } else {
-                    this.postOperationObserver.complete();
+                    this.postOpObserver.complete();
                 }
             },
 
@@ -661,53 +661,53 @@ export class SpyCore implements Spy {
 
             error(error: any): void {
                 this.errored = true;
-                if (this.preOperationSubject) {
-                    this.preOperationSubject.error(error);
+                if (this.preOpSubject) {
+                    this.preOpSubject.error(error);
                 } else {
-                    this.postOperationObserver.error(error);
+                    this.postOpObserver.error(error);
                 }
             },
 
             errored: false,
 
-            let(plugins: Plugin[]): void {
+            next(value: any): void {
+                if (this.preOpSubject) {
+                    this.preOpSubject.next(value);
+                } else {
+                    this.postOpObserver.next(value);
+                }
+            },
+
+            pipe(plugins: Plugin[]): void {
                 const operators = plugins.map((plugin) => plugin.operator(ref)).filter(Boolean);
                 if (operators.length > 0) {
-                    if (!this.preOperationSubject) {
-                        this.preOperationSubject = new Subject<any>();
+                    if (!this.preOpSubject) {
+                        this.preOpSubject = new Subject<any>();
                     }
-                    if (this.postOperationSubscription) {
-                        this.postOperationSubscription.unsubscribe();
+                    if (this.postOpSubscription) {
+                        this.postOpSubscription.unsubscribe();
                     }
-                    let source = this.preOperationSubject.asObservable();
+                    let source = this.preOpSubject.asObservable();
                     operators.forEach(operator => source = operator!(source));
-                    this.postOperationSubscription = source.pipe(hide()).subscribe(postOperationObserver);
-                } else if (this.postOperationSubscription) {
-                    this.postOperationSubscription.unsubscribe();
-                    this.postOperationSubscription = undefined;
-                    this.preOperationSubject = undefined;
+                    this.postOpSubscription = source.pipe(hide()).subscribe(postOpObserver);
+                } else if (this.postOpSubscription) {
+                    this.postOpSubscription.unsubscribe();
+                    this.postOpSubscription = undefined;
+                    this.preOpSubject = undefined;
                 }
             },
 
-            next(value: any): void {
-                if (this.preOperationSubject) {
-                    this.preOperationSubject.next(value);
-                } else {
-                    this.postOperationObserver.next(value);
-                }
-            },
-
-            postOperationObserver: postOperationObserver,
-            postOperationSubscription: undefined as Subscription | undefined,
-            preOperationSubject: undefined as Subject<any> | undefined,
+            postOpObserver: postOpObserver,
+            postOpSubscription: undefined as Subscription | undefined,
+            preOpSubject: undefined as Subject<any> | undefined,
 
             unsubscribe(): void {
                 if (!this.unsubscribed) {
                     this.unsubscribed = true;
                     if (!this.completed && !this.errored) {
-                        if (this.postOperationSubscription) {
-                            this.postOperationSubscription.unsubscribe();
-                            this.postOperationSubscription = undefined;
+                        if (this.postOpSubscription) {
+                            this.postOpSubscription.unsubscribe();
+                            this.postOpSubscription = undefined;
                         }
                     }
                 }
@@ -717,14 +717,14 @@ export class SpyCore implements Spy {
         };
 
         subscriber.add(spy_.pluginsSubject_.pipe(hide()).subscribe({
-            next: (plugins: any) => preOperationObserver.let(plugins)
+            next: (plugins: any) => preOpObserver.pipe(plugins)
         }));
 
         notify_(
             (plugin) => plugin.beforeSubscribe(ref),
             () => {
-                subscriber.add(observableSubscribe.call(observable, preOperationObserver));
-                subscriber.add(() => preOperationObserver.unsubscribe());
+                subscriber.add(observableSubscribe.call(observable, preOpObserver));
+                subscriber.add(() => preOpObserver.unsubscribe());
             },
             (plugin) => plugin.afterSubscribe(ref)
         );

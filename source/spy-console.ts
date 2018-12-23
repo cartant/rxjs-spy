@@ -13,11 +13,8 @@ export function wrap(
     core: SpyCore,
     deprecation: () => void = () => {}
 ): any {
-
     return {
-
         deck(call?: number): any {
-
             deprecation();
             const pausePlugins = core.findAll(PausePlugin);
             if (call === undefined) {
@@ -30,66 +27,45 @@ export function wrap(
                 return pausePlugin ? pausePlugin.deck : undefined;
             }
         },
-
         debug(...args: any[]): void {
-
             deprecation();
             core.debug.apply(core, args);
         },
-
         detect(id: string = ""): void {
-
             deprecation();
             detect(id);
         },
-
         inferPath,
         inferType,
-
-        let(...args: any[]): void {
-
-            deprecation();
-            core.let.apply(core, args);
-        },
-
         log(...args: any[]): void {
-
             deprecation();
             core.log.apply(core, args);
         },
-
         maxLogged(...args: any[]): void {
-
             deprecation();
             core.maxLogged.apply(core, args);
         },
-
         pause(...args: any[]): any {
-
             deprecation();
             return core.pause.apply(core, args);
         },
-
+        pipe(...args: any[]): void {
+            deprecation();
+            core.pipe.apply(core, args);
+        },
         query(...args: any[]): void {
-
             deprecation();
             core.query.apply(core, args);
         },
-
         show(...args: any[]): void {
-
             deprecation();
             core.show.apply(core, args);
         },
-
         stats(): void {
-
             deprecation();
             core.stats();
         },
-
         undo(...args: any[]): void {
-
             if (args.length === 0) {
                 const logger = toLogger(defaultLogger);
                 logger.group(`${core.undos.length} undo(s)`);

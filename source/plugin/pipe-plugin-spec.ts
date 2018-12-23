@@ -6,19 +6,19 @@
 
 import { expect } from "chai";
 import { of, Subject } from "rxjs";
-import { LetPlugin } from "./let-plugin";
+import { PipePlugin } from "./pipe-plugin";
 import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 
-describe("LetPlugin", () => {
+describe("PipePlugin", () => {
 
     let spy: Spy;
 
     it("should apply the operator to a tag's source", () => {
 
         const operated = new Subject<string>();
-        const plugin = new LetPlugin("people", () => operated);
+        const plugin = new PipePlugin("people", () => operated);
 
         spy = create({ defaultPlugins: false, warning: false });
         spy.plug(plugin);
@@ -43,7 +43,7 @@ describe("LetPlugin", () => {
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const operated = new Subject<string>();
-        spy.plug(new LetPlugin("people", () => operated));
+        spy.plug(new PipePlugin("people", () => operated));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);
@@ -61,7 +61,7 @@ describe("LetPlugin", () => {
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const operated = new Subject<string>();
-        spy.plug(new LetPlugin("people", () => of("bob")));
+        spy.plug(new PipePlugin("people", () => of("bob")));
 
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);
@@ -77,7 +77,7 @@ describe("LetPlugin", () => {
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const operated = new Subject<string>();
-        spy.plug(new LetPlugin("people", () => of("bob"), { complete: false }));
+        spy.plug(new PipePlugin("people", () => of("bob"), { complete: false }));
 
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);

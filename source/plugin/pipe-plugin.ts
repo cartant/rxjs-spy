@@ -8,7 +8,7 @@ import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
 import { SubscriptionRef } from "../subscription-ref";
 
-export class LetPlugin extends BasePlugin {
+export class PipePlugin extends BasePlugin {
 
     private match_: Match;
     private operator_: (source: Observable<any>) => Observable<any>;
@@ -19,7 +19,7 @@ export class LetPlugin extends BasePlugin {
         { complete = true }: { complete?: boolean } = {}
     ) {
 
-        super(`let(${matchToString(match)})`);
+        super(`pipe(${matchToString(match)})`);
 
         this.match_ = match;
         this.operator_ = complete ? operator : source => merge(NEVER, operator(source));

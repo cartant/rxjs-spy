@@ -68,11 +68,11 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
         spy.undo(3);
 
-1. The spy API can modify the a tagged observable using the `let` method. The method behaves in a similar manner to the RxJS `let` operator.
+1. The spy API can modify the a tagged observable using the `pipe` method. The method behaves in a similar manner to the RxJS `Observable.prototype.pipe` method.
 
     For example, the following call will replace the value emitted from the people observable:
 
-        spy.let("people", source => source.mapTo("mallory"));
+        spy.pipe("people", source => source.mapTo("mallory"));
 
     Note that the changes will be seen by both current and future subscribers to the observable.
 
