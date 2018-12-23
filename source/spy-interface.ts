@@ -22,7 +22,6 @@ export interface Spy {
     readonly logger: Logger;
     readonly tick: number;
     readonly version: string;
-    debug(match: Match, ...notifications: Notification[]): Teardown;
     find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined;
     findAll<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
     findAll(): Plugin[];

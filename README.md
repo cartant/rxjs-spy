@@ -96,7 +96,6 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.log`](#module-log)
 * [`Spy.pause`](#module-pause)
 * [`Spy.pipe`](#module-pipe)
-* [`Spy.debug`](#module-debug)
 * [`Spy.plug`](#module-plug)
 * [`Spy.unplug`](#module-unplug)
 * [`Spy.find`](#module-find)
@@ -124,7 +123,6 @@ Calling `create` attaches the spy to `Observable.prototype.subscribe` and return
 ```ts
 interface Spy {
   readonly tick: number;
-  debug(match: Match, ...notifications: Notification[]): Teardown;
   find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
   findAll<T extends Plugin>(ctor: Ctor<T>): T[];
   findAll(): Plugin[];
@@ -260,25 +258,6 @@ Wires up an instance of the pipe plugin for matching observables.
 This analogous to the `Observable.prototype.pipe` method. All subscriptions to matching observables will instead be made to the observable returned by the specified `operator` function.
 
 If `complete` option is `false`, completion notifications received from the souce observable will not be forwarded to subscribers.
-
-This method returns a teardown function.
-
-<a name="module-debug"></a>
-
-### debug
-
-```ts
-interface Spy {
-  debug(
-    match: string | RegExp | MatchPredicate | Observable<any>,
-    ...notifications: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
-  ): Teardown;
-}
-```
-
-Wires up an instance of the debug plugin for matching observables.
-
-Whenever one of the specified notifications occurs, a `debugger` statement in the plugin will pause execution. If no notifications are specified in the call, execution will be paused when any of the notifications occurs.
 
 This method returns a teardown function.
 

@@ -13,7 +13,6 @@ export { inferPath, inferType } from "./util";
 import { hide, tag } from "./operators";
 
 import {
-    DebugPlugin,
     DevToolsPlugin,
     GraphPlugin,
     LogPlugin,
@@ -25,7 +24,6 @@ import {
 } from "./plugin";
 
 export const plugins = {
-    DebugPlugin,
     DevToolsPlugin,
     GraphPlugin,
     LogPlugin,

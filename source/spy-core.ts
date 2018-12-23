@@ -23,7 +23,6 @@ import { hide } from "./operators";
 import {
     BufferPlugin,
     CyclePlugin,
-    DebugPlugin,
     Deck,
     DevToolsPlugin,
     GraphPlugin,
@@ -186,18 +185,6 @@ export class SpyCore implements Spy {
     get version(): string {
 
         return __RXJS_SPY_VERSION__;
-    }
-
-    debug(match: Match, ...notifications: Notification[]): Teardown {
-
-        if (notifications.length === 0) {
-            notifications = ["complete", "error", "next", "subscribe", "unsubscribe"];
-        }
-        return this.plug(new DebugPlugin({
-            match,
-            notifications,
-            spy: this
-        }));
     }
 
     find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined {

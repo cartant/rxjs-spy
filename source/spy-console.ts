@@ -27,10 +27,6 @@ export function wrap(
                 return pausePlugin ? pausePlugin.deck : undefined;
             }
         },
-        debug(...args: any[]): void {
-            deprecation();
-            core.debug.apply(core, args);
-        },
         detect(id: string = ""): void {
             deprecation();
             detect(id);

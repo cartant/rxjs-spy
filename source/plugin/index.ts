@@ -5,7 +5,6 @@
 
 export * from "./buffer-plugin";
 export * from "./cycle-plugin";
-export * from "./debug-plugin";
 export * from "./devtools-plugin";
 export * from "./graph-plugin";
 export * from "./log-plugin";
