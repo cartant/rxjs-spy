@@ -123,13 +123,21 @@ Calling `create` attaches the spy to `Observable.prototype.subscribe` and return
 ```ts
 interface Spy {
   readonly tick: number;
-  find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
-  findAll<T extends Plugin>(ctor: Ctor<T>): T[];
+  find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined;
+  findAll<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
   findAll(): Plugin[];
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
   pause(match: Match): Deck;
-  pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
+  pipe({
+    complete,
+    match,
+    operator
+  }: {
+    complete?: boolean
+    match: Match,
+    operator: (source: Observable<any>) => Observable<any>
+  }): Teardown;
   plug(...plugins: Plugin[]): Teardown;
   show(match: Match, partialLogger?: PartialLogger): void;
   show(partialLogger?: PartialLogger): void;
@@ -245,11 +253,15 @@ Calling `step` will release a single paused notification. The other methods to w
 
 ```ts
 interface Spy {
-  pipe(
-    match: string | RegExp | MatchPredicate | Observable<any>,
-    operator: (source: Observable<any>) => Observable<any>,
-    options?: Options
-  ): Teardown;
+  pipe({
+    complete,
+    match,
+    operator
+  }: {
+    complete?: boolean
+    match: Match,
+    operator: (source: Observable<any>) => Observable<any>
+  }): Teardown;
 }
 ```
 
@@ -291,7 +303,9 @@ Removes the specified plugin(s).
 
 ```ts
 interface Spy {
-  find<T extends Plugin>(constructor: { new (...args: any[]): T }): T | undefined;
+  find<P extends Plugin, O extends PluginOptions>(
+    ctor: PluginCtor<P, O>
+  ): P | undefined;
 }
 ```
 
@@ -303,8 +317,10 @@ Returns the first plugin matching the specified constructor/class.
 
 ```ts
 interface Spy {
-  findAll<T extends Plugin>(constructor: { new (...args: any[]): T }): T[];
-  findAll(): T[];
+  findAll<P extends Plugin, O extends PluginOptions>(
+    ctor: PluginCtor<P, O>
+  ): P[];
+  findAll(): Plugin[];  
 }
 ```
 
