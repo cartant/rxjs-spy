@@ -4,12 +4,12 @@
  */
 
 import { Logger, PartialLogger, toLogger } from "../logger";
-import { BasePlugin } from "./plugin";
-import { getSnapshotRef } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
-import { getStackTrace } from "./stack-trace-plugin";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
+import { BasePlugin } from "./plugin";
+import { getSnapshotRef } from "./snapshot-plugin";
+import { getStackTrace } from "./stack-trace-plugin";
 
 const cycleCountSymbol = Symbol("cycleCount");
 const cycleWarnedSymbol = Symbol("cycleWarned");

@@ -4,10 +4,10 @@
  */
 
 import { Observable, Subscriber } from "rxjs";
-import { getGraphRef } from "./graph-plugin";
-import { BasePlugin } from "./plugin";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
+import { getGraphRef } from "./graph-plugin";
+import { BasePlugin } from "./plugin";
 
 export interface Stats {
     completes: number;

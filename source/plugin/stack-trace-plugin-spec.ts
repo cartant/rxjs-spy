@@ -7,11 +7,10 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import { map } from "rxjs/operators";
-import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
-import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
+import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 
 describe("StackTracePlugin", () => {
 

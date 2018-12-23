@@ -7,10 +7,10 @@ import { Auditor } from "../auditor";
 import { identify } from "../identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { BasePlugin, Notification } from "./plugin";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
+import { BasePlugin, Notification } from "./plugin";
 
 export class LogPlugin extends BasePlugin {
 

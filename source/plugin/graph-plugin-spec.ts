@@ -5,14 +5,14 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { combineLatest, NEVER, Observable, Observer, Subject, Subscription } from "rxjs";
+import { combineLatest, NEVER, Observable, Subject, Subscription } from "rxjs";
 import { map, mergeMap, switchMap } from "rxjs/operators";
-import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
 import { tag } from "../operators";
-import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
+import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
+import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 
 describe("GraphPlugin", () => {
 

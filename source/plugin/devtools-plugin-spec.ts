@@ -8,14 +8,13 @@ import { expect } from "chai";
 import { Subject } from "rxjs";
 import * as sinon from "sinon";
 import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools/constants";
-import { Connection, Extension } from "../devtools/interfaces";
+import { create } from "../spy-factory";
+import { Spy } from "../spy-interface";
 import { DevToolsPlugin } from "./devtools-plugin";
 import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
 import { PausePlugin } from "./pause-plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
-import { create } from "../spy-factory";
-import { Spy } from "../spy-interface";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
 if (typeof window !== "undefined") {
@@ -104,7 +103,7 @@ if (typeof window !== "undefined") {
                         "before-next"
                     ]);
 
-                    const { messages: [,, { notification }] } = batch;
+                    const { messages: [, , { notification }] } = batch;
                     expect(notification).to.have.property("value");
                     expect(notification.value).to.have.property("json");
                     expect(notification.value.json).to.match(/"name":\s*"alice"/);

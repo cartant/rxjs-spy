@@ -7,12 +7,12 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import { identify } from "../identify";
-import { LogPlugin } from "./log-plugin";
 import { tag } from "../operators";
-import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
+import { LogPlugin } from "./log-plugin";
+import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 
 const options = {
     defaultPlugins: false,

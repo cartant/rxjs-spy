@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import * as sinon from "sinon";
-import { CyclePlugin } from "./cycle-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
+import { CyclePlugin } from "./cycle-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
 const options = {

@@ -3,14 +3,14 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { getGraphRef, GraphRef } from "./graph-plugin";
 import { Logger, PartialLogger, toLogger } from "../logger";
-import { BasePlugin } from "./plugin";
-import { getSnapshotRef, SnapshotRef } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
-import { getStackTrace } from "./stack-trace-plugin";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
+import { getGraphRef, GraphRef } from "./graph-plugin";
+import { BasePlugin } from "./plugin";
+import { getSnapshotRef, SnapshotRef } from "./snapshot-plugin";
+import { getStackTrace } from "./stack-trace-plugin";
 
 interface BufferRef {
     sink: SubscriptionRef;

@@ -16,9 +16,9 @@ import {
     DebugPlugin,
     DevToolsPlugin,
     GraphPlugin,
-    PipePlugin,
     LogPlugin,
     PausePlugin,
+    PipePlugin,
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin

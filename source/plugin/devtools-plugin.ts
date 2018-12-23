@@ -5,15 +5,7 @@
 /*tslint:disable:no-debugger*/
 
 import { stringify } from "circular-json";
-
-import {
-    from,
-    Observable,
-    Observer,
-    Subscriber,
-    Subscription
-} from "rxjs";
-
+import { Observable, Subscription } from "rxjs";
 import { filter, map } from "rxjs/operators";
 
 import {
@@ -28,8 +20,6 @@ import {
 import { isPostRequest } from "../devtools/guards";
 
 import {
-    Batch,
-    Broadcast,
     Connection,
     DeckStats as DeckStatsPayload,
     Extension,
@@ -42,18 +32,18 @@ import {
     Snapshot as SnapshotPayload
 } from "../devtools/interfaces";
 
-import { getGraphRef } from "./graph-plugin";
 import { identify } from "../identify";
-import { LogPlugin } from "./log-plugin";
 import { read } from "../match";
 import { hide } from "../operators";
-import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
-import { BasePlugin, Notification, Plugin } from "./plugin";
-import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { Spy } from "../spy-interface";
-import { getStackTrace, getStackTraceRef } from "./stack-trace-plugin";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
+import { getGraphRef } from "./graph-plugin";
+import { LogPlugin } from "./log-plugin";
+import { DeckStats, PausePlugin } from "./pause-plugin";
+import { BasePlugin, Notification, Plugin } from "./plugin";
+import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
+import { getStackTrace } from "./stack-trace-plugin";
 
 interface NotificationRef {
     error?: any;

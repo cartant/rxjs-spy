@@ -4,10 +4,9 @@
  */
 /*tslint:disable:no-debugger*/
 
-import { Observable, Subscriber } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
-import { BasePlugin, Notification } from "./plugin";
 import { SubscriptionRef } from "../subscription-ref";
+import { BasePlugin, Notification } from "./plugin";
 
 export class DebugPlugin extends BasePlugin {
 
