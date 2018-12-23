@@ -84,7 +84,6 @@ export class SpyCore implements Spy {
         defaultPlugins?: boolean,
         devTools?: boolean,
         global?: string,
-        plugins?: Plugin[],
         warning?: boolean
     } = {}) {
 
