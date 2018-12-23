@@ -3,15 +3,14 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, Subscriber, Subscription } from "rxjs";
-import { PartialLogger } from "../logger";
+import { Observable } from "rxjs";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 
 export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
 
 export interface PluginOptions {
-    logger: PartialLogger;
+    [key: string]: any;
     spy: Spy;
 }
 
@@ -29,7 +28,7 @@ export interface Plugin {
     beforeNext(ref: SubscriptionRef, value: any): void;
     beforeSubscribe(ref: SubscriptionRef): void;
     beforeUnsubscribe(ref: SubscriptionRef): void;
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined;
+    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined;
     teardown(): void;
 }
 
@@ -47,6 +46,6 @@ export class BasePlugin implements Plugin {
     beforeNext(ref: SubscriptionRef, value: any): void {}
     beforeSubscribe(ref: SubscriptionRef): void {}
     beforeUnsubscribe(ref: SubscriptionRef): void {}
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }
+    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }
     teardown(): void {}
 }

@@ -25,7 +25,7 @@ describe("spy", () => {
 
     describe("let", () => {
 
-        it("should apply the selector to the tagged observable", () => {
+        it("should apply the operator to the tagged observable", () => {
 
             spy = create({ defaultPlugins: false, ...options });
             spy.let("people", (source) => source.pipe(mapTo("bob")));
@@ -434,7 +434,7 @@ function stubPlugin(): Plugin {
         beforeNext: sinon.stub(),
         beforeSubscribe: sinon.stub(),
         beforeUnsubscribe: sinon.stub(),
-        select: sinon.stub().returns(undefined),
+        operator: sinon.stub().returns(undefined),
         teardown: sinon.stub()
     } as any;
 }

@@ -30,7 +30,7 @@ export interface Spy {
     find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
     findAll<T extends Plugin>(ctor: Ctor<T>): T[];
     findAll(): Plugin[];
-    let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
+    let(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
     log(tagMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(tagMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;

@@ -95,7 +95,7 @@ export class Deck {
         this.broadcast_();
     }
 
-    select(ref: SubscriptionRef): (source: Observable<any>) => Observable<any> {
+    operator(ref: SubscriptionRef): (source: Observable<any>) => Observable<any> {
 
         const { observable } = ref;
 
@@ -204,12 +204,12 @@ export class PausePlugin extends BasePlugin {
         return match_;
     }
 
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
+    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { deck_, match_ } = this;
 
         if (matches(ref, match_)) {
-            return deck_.select(ref);
+            return deck_.operator(ref);
         }
         return undefined;
     }

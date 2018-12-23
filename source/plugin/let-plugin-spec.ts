@@ -15,10 +15,10 @@ describe("LetPlugin", () => {
 
     let spy: Spy;
 
-    it("should apply the selector to a tag's source", () => {
+    it("should apply the operator to a tag's source", () => {
 
-        const selected = new Subject<string>();
-        const plugin = new LetPlugin("people", () => selected);
+        const operated = new Subject<string>();
+        const plugin = new LetPlugin("people", () => operated);
 
         spy = create({ defaultPlugins: false, warning: false });
         spy.plug(plugin);
@@ -30,11 +30,11 @@ describe("LetPlugin", () => {
         subject.next("alice");
         expect(values).to.deep.equal([]);
 
-        selected.next("alice");
+        operated.next("alice");
         expect(values).to.deep.equal(["alice"]);
     });
 
-    it("should apply the selector to an already-subscribed tag's source", () => {
+    it("should apply the operator to an already-subscribed tag's source", () => {
 
         spy = create({ defaultPlugins: false, warning: false });
 
@@ -42,17 +42,17 @@ describe("LetPlugin", () => {
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
-        const selected = new Subject<string>();
-        spy.plug(new LetPlugin("people", () => selected));
+        const operated = new Subject<string>();
+        spy.plug(new LetPlugin("people", () => operated));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);
 
-        selected.next("alice");
+        operated.next("alice");
         expect(values).to.deep.equal(["alice"]);
     });
 
-    it("should forward completion notifications from the selected source by default", () => {
+    it("should forward completion notifications from the source by default", () => {
 
         spy = create({ defaultPlugins: false, warning: false });
 
@@ -60,7 +60,7 @@ describe("LetPlugin", () => {
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
-        const selected = new Subject<string>();
+        const operated = new Subject<string>();
         spy.plug(new LetPlugin("people", () => of("bob")));
 
         subject.next("alice");
@@ -68,7 +68,7 @@ describe("LetPlugin", () => {
         expect(subscription).to.have.property("closed", true);
     });
 
-    it("should ignore completion notifications from the selected source if required", () => {
+    it("should ignore completion notifications from the source if required", () => {
 
         spy = create({ defaultPlugins: false, warning: false });
 
@@ -76,7 +76,7 @@ describe("LetPlugin", () => {
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
-        const selected = new Subject<string>();
+        const operated = new Subject<string>();
         spy.plug(new LetPlugin("people", () => of("bob"), { complete: false }));
 
         subject.next("alice");

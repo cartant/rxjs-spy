@@ -11,26 +11,26 @@ import { SubscriptionRef } from "../subscription-ref";
 export class LetPlugin extends BasePlugin {
 
     private match_: Match;
-    private select_: (source: Observable<any>) => Observable<any>;
+    private operator_: (source: Observable<any>) => Observable<any>;
 
     constructor(
         match: Match,
-        select: (source: Observable<any>) => Observable<any>,
+        operator: (source: Observable<any>) => Observable<any>,
         { complete = true }: { complete?: boolean } = {}
     ) {
 
         super(`let(${matchToString(match)})`);
 
         this.match_ = match;
-        this.select_ = complete ? select : source => merge(NEVER, select(source));
+        this.operator_ = complete ? operator : source => merge(NEVER, operator(source));
     }
 
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
+    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
 
-        const { match_, select_ } = this;
+        const { match_, operator_: operator_ } = this;
 
         if (matches(ref, match_)) {
-            return select_;
+            return operator_;
         }
         return undefined;
     }

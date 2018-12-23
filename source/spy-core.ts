@@ -209,9 +209,9 @@ export class SpyCore implements Spy {
             this.plugins_;
     }
 
-    let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
+    let(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
 
-        return this.plug(new LetPlugin(match, select, options));
+        return this.plug(new LetPlugin(match, operator, options));
     }
 
     log(tagMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
@@ -609,7 +609,7 @@ export class SpyCore implements Spy {
             }
         };
 
-        const postSelectObserver = {
+        const postOperationObserver = {
 
             complete(): void {
                 notify_(
@@ -646,14 +646,14 @@ export class SpyCore implements Spy {
             }
         };
 
-        const preSelectObserver = {
+        const preOperationObserver = {
 
             complete(): void {
                 this.completed = true;
-                if (this.preSelectSubject) {
-                    this.preSelectSubject.complete();
+                if (this.preOperationSubject) {
+                    this.preOperationSubject.complete();
                 } else {
-                    this.postSelectObserver.complete();
+                    this.postOperationObserver.complete();
                 }
             },
 
@@ -661,53 +661,53 @@ export class SpyCore implements Spy {
 
             error(error: any): void {
                 this.errored = true;
-                if (this.preSelectSubject) {
-                    this.preSelectSubject.error(error);
+                if (this.preOperationSubject) {
+                    this.preOperationSubject.error(error);
                 } else {
-                    this.postSelectObserver.error(error);
+                    this.postOperationObserver.error(error);
                 }
             },
 
             errored: false,
 
             let(plugins: Plugin[]): void {
-                const selectors = plugins.map((plugin) => plugin.select(ref)).filter(Boolean);
-                if (selectors.length > 0) {
-                    if (!this.preSelectSubject) {
-                        this.preSelectSubject = new Subject<any>();
+                const operators = plugins.map((plugin) => plugin.operator(ref)).filter(Boolean);
+                if (operators.length > 0) {
+                    if (!this.preOperationSubject) {
+                        this.preOperationSubject = new Subject<any>();
                     }
-                    if (this.postSelectSubscription) {
-                        this.postSelectSubscription.unsubscribe();
+                    if (this.postOperationSubscription) {
+                        this.postOperationSubscription.unsubscribe();
                     }
-                    let source = this.preSelectSubject.asObservable();
-                    selectors.forEach(selector => source = selector!(source));
-                    this.postSelectSubscription = source.pipe(hide()).subscribe(postSelectObserver);
-                } else if (this.postSelectSubscription) {
-                    this.postSelectSubscription.unsubscribe();
-                    this.postSelectSubscription = undefined;
-                    this.preSelectSubject = undefined;
+                    let source = this.preOperationSubject.asObservable();
+                    operators.forEach(operator => source = operator!(source));
+                    this.postOperationSubscription = source.pipe(hide()).subscribe(postOperationObserver);
+                } else if (this.postOperationSubscription) {
+                    this.postOperationSubscription.unsubscribe();
+                    this.postOperationSubscription = undefined;
+                    this.preOperationSubject = undefined;
                 }
             },
 
             next(value: any): void {
-                if (this.preSelectSubject) {
-                    this.preSelectSubject.next(value);
+                if (this.preOperationSubject) {
+                    this.preOperationSubject.next(value);
                 } else {
-                    this.postSelectObserver.next(value);
+                    this.postOperationObserver.next(value);
                 }
             },
 
-            postSelectObserver,
-            postSelectSubscription: undefined as Subscription | undefined,
-            preSelectSubject: undefined as Subject<any> | undefined,
+            postOperationObserver: postOperationObserver,
+            postOperationSubscription: undefined as Subscription | undefined,
+            preOperationSubject: undefined as Subject<any> | undefined,
 
             unsubscribe(): void {
                 if (!this.unsubscribed) {
                     this.unsubscribed = true;
                     if (!this.completed && !this.errored) {
-                        if (this.postSelectSubscription) {
-                            this.postSelectSubscription.unsubscribe();
-                            this.postSelectSubscription = undefined;
+                        if (this.postOperationSubscription) {
+                            this.postOperationSubscription.unsubscribe();
+                            this.postOperationSubscription = undefined;
                         }
                     }
                 }
@@ -717,14 +717,14 @@ export class SpyCore implements Spy {
         };
 
         subscriber.add(spy_.pluginsSubject_.pipe(hide()).subscribe({
-            next: (plugins: any) => preSelectObserver.let(plugins)
+            next: (plugins: any) => preOperationObserver.let(plugins)
         }));
 
         notify_(
             (plugin) => plugin.beforeSubscribe(ref),
             () => {
-                subscriber.add(observableSubscribe.call(observable, preSelectObserver));
-                subscriber.add(() => preSelectObserver.unsubscribe());
+                subscriber.add(observableSubscribe.call(observable, preOperationObserver));
+                subscriber.add(() => preOperationObserver.unsubscribe());
             },
             (plugin) => plugin.afterSubscribe(ref)
         );
