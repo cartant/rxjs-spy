@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Logger, PartialLogger, toLogger } from "../logger";
+import { Logger } from "../logger";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
@@ -21,18 +21,18 @@ export class CyclePlugin extends BasePlugin {
     private nexts_: SubscriptionRef[] = [];
     private spy_: Spy;
 
-    constructor(spy: Spy, {
+    constructor({
         cycleThreshold = 100,
-        logger
+        spy
     }: {
         cycleThreshold?: number,
-        logger: PartialLogger
+        spy: Spy
     }) {
 
         super("cycle");
 
         this.cycleThreshold_ = cycleThreshold;
-        this.logger_ = toLogger(logger);
+        this.logger_ = spy.logger;
         this.spy_ = spy;
     }
 

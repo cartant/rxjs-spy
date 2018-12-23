@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Logger, PartialLogger, toLogger } from "../logger";
+import { Logger } from "../logger";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
@@ -33,18 +33,18 @@ export class BufferPlugin extends BasePlugin {
     private logger_: Logger;
     private spy_: Spy;
 
-    constructor(spy: Spy, {
+    constructor({
         bufferThreshold = 100,
-        logger
+        spy
     }: {
         bufferThreshold?: number,
-        logger: PartialLogger
+        spy: Spy
     }) {
 
         super("buffer");
 
         this.bufferThreshold_ = bufferThreshold;
-        this.logger_ = toLogger(logger);
+        this.logger_ = spy.logger;
         this.spy_ = spy;
     }
 

@@ -31,8 +31,12 @@ describe("LogPlugin", () => {
 
             spy = create(options);
 
-            const plugin = new LogPlugin(spy, "people", {
-                log(...args: any[]): void { calls.push(args); }
+            const plugin = new LogPlugin({
+                logger: {
+                    log(...args: any[]): void { calls.push(args); }
+                },
+                observableMatch: "people",
+                spy
             });
             spy.plug(plugin);
             calls = [];
@@ -143,8 +147,8 @@ describe("LogPlugin", () => {
 
         beforeEach(() => {
 
-            subscriptionRefsPlugin = new SubscriptionRefsPlugin();
             spy = create(options);
+            subscriptionRefsPlugin = new SubscriptionRefsPlugin({ spy });
             spy.plug(subscriptionRefsPlugin);
             calls = [];
         });
@@ -155,8 +159,12 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
-            spy.plug(new LogPlugin(spy, identify(subscriptionRef.observable), {
-                log(...args: any[]): void { calls.push(args); }
+            spy.plug(new LogPlugin({
+                logger: {
+                    log(...args: any[]): void { calls.push(args); }
+                },
+                observableMatch: identify(subscriptionRef.observable),
+                spy
             }));
 
             calls = [];
@@ -172,8 +180,12 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
-            spy.plug(new LogPlugin(spy, identify(subscriptionRef.subscriber), {
-                log(...args: any[]): void { calls.push(args); }
+            spy.plug(new LogPlugin({
+                logger: {
+                    log(...args: any[]): void { calls.push(args); }
+                },
+                observableMatch: identify(subscriptionRef.subscriber),
+                spy
             }));
 
             calls = [];
@@ -189,8 +201,12 @@ describe("LogPlugin", () => {
             const subscription = subject.subscribe();
 
             const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
-            spy.plug(new LogPlugin(spy, identify(subscriptionRef.subscription), {
-                log(...args: any[]): void { calls.push(args); }
+            spy.plug(new LogPlugin({
+                logger: {
+                    log(...args: any[]): void { calls.push(args); }
+                },
+                observableMatch: identify(subscriptionRef.subscription),
+                spy
             }));
 
             calls = [];

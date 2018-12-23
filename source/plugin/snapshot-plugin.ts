@@ -127,11 +127,13 @@ export class SnapshotPlugin extends BasePlugin {
     private sentinel_: GraphRef | undefined;
     private spy_: Spy;
 
-    constructor(spy: Spy, {
-        keptValues = 4
+    constructor({
+        keptValues = 4,
+        spy
     }: {
-        keptValues?: number
-    } = {}) {
+        keptValues?: number,
+        spy: Spy
+    }) {
 
         super("snapshot");
 

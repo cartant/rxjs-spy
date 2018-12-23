@@ -5,62 +5,40 @@
 
 import { Auditor } from "../auditor";
 import { identify } from "../identify";
-import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
+import { Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 import { BasePlugin, Notification } from "./plugin";
 
+const defaultMatch = /.+/;
+
 export class LogPlugin extends BasePlugin {
 
     private auditor_: Auditor;
     private logger_: Logger;
     private notificationMatch_: Match;
-    private tagMatch_: Match;
+    private observableMatch_: Match;
 
-    constructor(
-        spy: Spy,
-        tagMatch: Match,
-        partialLogger?: PartialLogger
-    );
-    constructor(
-        spy: Spy,
-        tagMatch: Match,
-        notifcationMatch: Match,
-        partialLogger?: PartialLogger
-    );
-    constructor(
-        spy: Spy,
-        tagMatch: Match,
-        ...args: any[]
-    ) {
+    constructor({
+        logger,
+        notificationMatch,
+        observableMatch,
+        spy
+    }: {
+        logger?: PartialLogger,
+        notificationMatch?: Match,
+        observableMatch?: Match,
+        spy: Spy
+    }) {
 
-        super(`log(${matchToString(tagMatch)})`);
+        super(`log(${matchToString(observableMatch || defaultMatch)})`);
 
         this.auditor_ = spy.auditor;
-        this.tagMatch_ = tagMatch;
-
-        const defaultMatch = /.+/;
-        switch (args.length) {
-        case 0:
-            this.notificationMatch_ = defaultMatch;
-            this.logger_ = toLogger(defaultLogger);
-            break;
-        case 1:
-            if (typeof args[0] === "function") {
-                this.notificationMatch_ = args[0];
-                this.logger_ = toLogger(defaultLogger);
-            } else {
-                this.notificationMatch_ = defaultMatch;
-                this.logger_ = toLogger(args[0]);
-            }
-            break;
-        default:
-            this.notificationMatch_ = args[0];
-            this.logger_ = toLogger(args[1]);
-            break;
-        }
+        this.logger_ = logger ? toLogger(logger) : spy.logger;
+        this.notificationMatch_ = notificationMatch || defaultMatch;
+        this.observableMatch_ = observableMatch || defaultMatch;
     }
 
     beforeComplete(ref: SubscriptionRef): void {
@@ -94,9 +72,9 @@ export class LogPlugin extends BasePlugin {
         param?: any
     ): void {
 
-        const { auditor_, notificationMatch_, tagMatch_ } = this;
+        const { auditor_, notificationMatch_, observableMatch_ } = this;
 
-        if (matches(ref, tagMatch_) && matches(ref, notificationMatch_, notification)) {
+        if (matches(ref, observableMatch_) && matches(ref, notificationMatch_, notification)) {
 
             auditor_.audit(this, (ignored) => {
 
@@ -107,13 +85,13 @@ export class LogPlugin extends BasePlugin {
                 const type = inferType(observable);
 
                 let identifier = tag ? `Tag = ${tag}` : `ID = ${id}`;
-                if ((typeof tagMatch_ === "number") || (typeof tagMatch_ === "string")) {
-                    if (tagMatch_.toString() !== tag) {
+                if ((typeof observableMatch_ === "number") || (typeof observableMatch_ === "string")) {
+                    if (observableMatch_.toString() !== tag) {
                         identifier = `ID = ${id}`;
                     }
                 }
 
-                const matching = (typeof tagMatch_ === "object") ? `; matching ${matchToString(tagMatch_)}` : "";
+                const matching = (typeof observableMatch_ === "object") ? `; matching ${matchToString(observableMatch_)}` : "";
                 const audit  = (ignored === 0) ? "" : `; ignored ${ignored}`;
                 const description = `${identifier}; notification = ${notification}${matching}${audit}`;
 

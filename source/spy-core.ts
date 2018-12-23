@@ -33,6 +33,8 @@ import {
     PausePlugin,
     PipePlugin,
     Plugin,
+    PluginCtor,
+    PluginOptions,
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin,
@@ -41,7 +43,7 @@ import {
 } from "./plugin";
 
 import { wrap } from "./spy-console";
-import { Ctor, Options, Spy, Teardown } from "./spy-interface";
+import { Options, Spy, Teardown } from "./spy-interface";
 import { SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
 
@@ -105,15 +107,15 @@ export class SpyCore implements Spy {
             this.plugins_ = [];
         } else {
             this.plugins_ = [
-                new StackTracePlugin(options as Options),
-                new GraphPlugin(options as Options),
-                new SnapshotPlugin(this, options as Options),
-                new BufferPlugin(this, { ...options, logger: this.defaultLogger_ }),
-                new CyclePlugin(this, { ...options, logger: this.defaultLogger_ }),
-                new StatsPlugin(this)
+                new StackTracePlugin({ ...options, spy: this }),
+                new GraphPlugin({ ...options, spy: this }),
+                new SnapshotPlugin({ ...options, spy: this }),
+                new BufferPlugin({ ...options, spy: this }),
+                new CyclePlugin({ ...options, spy: this }),
+                new StatsPlugin({ spy: this })
             ];
             if (options.devTools !==  false) {
-                this.plugins_.push(new DevToolsPlugin(this));
+                this.plugins_.push(new DevToolsPlugin({ spy: this }));
             }
         }
         this.pluginsSubject_ = new BehaviorSubject(this.plugins_);
@@ -191,35 +193,52 @@ export class SpyCore implements Spy {
         if (notifications.length === 0) {
             notifications = ["complete", "error", "next", "subscribe", "unsubscribe"];
         }
-        return this.plug(new DebugPlugin(match, notifications));
+        return this.plug(new DebugPlugin({
+            match,
+            notifications,
+            spy: this
+        }));
     }
 
-    find<T extends Plugin>(ctor: Ctor<T>): T | undefined {
+    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined {
 
         const found = this.plugins_.find((plugin) => plugin instanceof ctor);
-        return found ? found as T : undefined;
+        return found ? found as P : undefined;
     }
 
-    findAll<T extends Plugin>(ctor: Ctor<T>): T[];
+    findAll<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
     findAll(): Plugin[];
-    findAll<T extends Plugin>(ctor?: Ctor<T>): T[] | Plugin[] {
+    findAll<P extends Plugin, O extends PluginOptions>(ctor?: PluginCtor<P, O>): P[] | Plugin[] {
 
         return ctor ?
-            this.plugins_.filter((plugin) => plugin instanceof ctor) as T[] :
+            this.plugins_.filter((plugin) => plugin instanceof ctor) as P[] :
             this.plugins_;
     }
 
-    pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown {
+    pipe({
+        complete,
+        match,
+        operator
+    }: {
+        complete?: boolean
+        match: Match,
+        operator: (source: Observable<any>) => Observable<any>
+    }): Teardown {
 
-        return this.plug(new PipePlugin(match, operator, options));
+        return this.plug(new PipePlugin({
+            complete,
+            match,
+            operator,
+            spy: this
+        }));
     }
 
-    log(tagMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
-    log(tagMatch: Match, partialLogger?: PartialLogger): Teardown;
+    log(observableMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
+    log(observableMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;
     log(...args: any[]): Teardown {
 
-        let tagMatch: Match = /.+/;
+        let observableMatch: Match = /.+/;
         let notificationMatch: Match = /.+/;
         let predicate: (notification: Notification) => boolean = () => true;
         let partialLogger: PartialLogger = this.defaultLogger_;
@@ -229,21 +248,26 @@ export class SpyCore implements Spy {
             if (typeof arg.log === "function") {
                 partialLogger = arg;
             } else {
-                tagMatch = arg;
+                observableMatch = arg;
             }
         } else if (args.length === 2) {
             let arg: any;
-            [tagMatch, arg] = args;
+            [observableMatch, arg] = args;
             if (typeof arg.log === "function") {
                 partialLogger = arg;
             } else {
                 notificationMatch = arg;
             }
         } else if (args.length === 3) {
-            [tagMatch, notificationMatch, partialLogger] = args;
+            [observableMatch, notificationMatch, partialLogger] = args;
         }
 
-        return this.plug(new LogPlugin(this, tagMatch, notificationMatch, partialLogger));
+        return this.plug(new LogPlugin({
+            logger: partialLogger,
+            notificationMatch,
+            observableMatch,
+            spy: this
+        }));
     }
 
     maxLogged(value: number): void {
@@ -253,7 +277,7 @@ export class SpyCore implements Spy {
 
     pause(match: Match): Deck {
 
-        const pausePlugin = new PausePlugin(match);
+        const pausePlugin = new PausePlugin({ match, spy: this });
         const teardown = this.plug(pausePlugin);
 
         const deck = pausePlugin.deck;

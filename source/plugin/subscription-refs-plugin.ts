@@ -5,6 +5,7 @@
 /*tslint:disable:no-debugger*/
 
 import { Observable } from "rxjs";
+import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
@@ -12,7 +13,7 @@ export class SubscriptionRefsPlugin extends BasePlugin {
 
     private subscriptionRefs_: Map<Observable<any>, SubscriptionRef> = new Map<Observable<any>, SubscriptionRef>();
 
-    constructor() { super("subscriptionRefs"); }
+    constructor({ spy }: { spy: Spy }) { super("subscriptionRefs"); }
 
     beforeSubscribe(ref: SubscriptionRef): void {
 

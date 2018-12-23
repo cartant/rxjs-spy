@@ -21,7 +21,7 @@ describe("PausePlugin", () => {
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
-        plugin = new PausePlugin("people");
+        plugin = new PausePlugin({ match: "people", spy });
         spy.plug(plugin);
 
         deck = plugin.deck;

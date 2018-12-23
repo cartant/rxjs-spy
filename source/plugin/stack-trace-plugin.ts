@@ -11,6 +11,7 @@ import { shareReplay } from "rxjs/operators";
 import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
+import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
@@ -49,7 +50,13 @@ export class StackTracePlugin extends BasePlugin {
     private sourceCache_: object;
     private sourceMaps_: boolean;
 
-    constructor({ sourceMaps = false }: { sourceMaps?: boolean } = {}) {
+    constructor({
+        sourceMaps = false,
+        spy
+    }: {
+        sourceMaps?: boolean,
+        spy: Spy
+    }) {
 
         super("stackTrace");
 

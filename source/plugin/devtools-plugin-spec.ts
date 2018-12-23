@@ -41,12 +41,12 @@ if (typeof window !== "undefined") {
             window[EXTENSION_KEY] = mockExtension;
 
             spy = create({ defaultPlugins: false, warning: false });
-            snapshotPlugin = new SnapshotPlugin(spy, { keptValues: 1 });
+            snapshotPlugin = new SnapshotPlugin({ keptValues: 1, spy });
             spy.plug(
-                new StackTracePlugin(),
-                new GraphPlugin({ keptDuration: -1 }),
+                new StackTracePlugin({ spy }),
+                new GraphPlugin({ keptDuration: -1, spy }),
                 snapshotPlugin,
-                new DevToolsPlugin(spy)
+                new DevToolsPlugin({ spy })
             );
         });
 

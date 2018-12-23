@@ -31,9 +31,9 @@ describe("GraphPlugin", () => {
 
             beforeEach(() => {
 
-                graphPlugin = new GraphPlugin({ keptDuration: duration });
-                subscriptionRefsPlugin = new SubscriptionRefsPlugin();
                 spy = create({ defaultPlugins: false, warning: false });
+                graphPlugin = new GraphPlugin({ keptDuration: duration, spy });
+                subscriptionRefsPlugin = new SubscriptionRefsPlugin({ spy });
                 spy.plug(graphPlugin, subscriptionRefsPlugin);
             });
 
@@ -304,8 +304,8 @@ describe("GraphPlugin", () => {
 
         beforeEach(() => {
 
-            graphPlugin = new GraphPlugin({ keptDuration: 0 });
-            subscriptionRefsPlugin = new SubscriptionRefsPlugin();
+            graphPlugin = new GraphPlugin({ keptDuration: 0, spy });
+            subscriptionRefsPlugin = new SubscriptionRefsPlugin({ spy });
             spy = create({ defaultPlugins: false, warning: false });
             spy.plug(graphPlugin, subscriptionRefsPlugin);
         });

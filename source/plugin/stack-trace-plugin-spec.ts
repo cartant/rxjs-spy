@@ -20,9 +20,9 @@ describe("StackTracePlugin", () => {
 
     beforeEach(() => {
 
-        stackTracePlugin = new StackTracePlugin();
-        subscriptionRefsPlugin = new SubscriptionRefsPlugin();
         spy = create({ defaultPlugins: false, warning: false });
+        stackTracePlugin = new StackTracePlugin({ spy });
+        subscriptionRefsPlugin = new SubscriptionRefsPlugin({ spy });
         spy.plug(stackTracePlugin, subscriptionRefsPlugin);
     });
 

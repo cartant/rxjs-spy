@@ -5,6 +5,7 @@
 /*tslint:disable:no-debugger*/
 
 import { Match, matches, toString as matchToString } from "../match";
+import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { BasePlugin, Notification } from "./plugin";
 
@@ -13,7 +14,15 @@ export class DebugPlugin extends BasePlugin {
     private notifications_: Notification[];
     private matcher_: (ref: SubscriptionRef, notification: Notification) => boolean;
 
-    constructor(match: Match, notifications: Notification[]) {
+    constructor({
+        match,
+        notifications,
+        spy
+    }: {
+        match: Match,
+        notifications: Notification[],
+        spy: Spy
+    }) {
 
         super(`debug(${matchToString(match)})`);
 

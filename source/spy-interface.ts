@@ -7,11 +7,7 @@ import { Observable } from "rxjs";
 import { Auditor } from "./auditor";
 import { Logger, PartialLogger } from "./logger";
 import { Match } from "./match";
-import { Deck, Notification, Plugin } from "./plugin";
-
-export interface Ctor<T> {
-    new (...args: any[]): T;
-}
+import { Deck, Notification, Plugin, PluginCtor, PluginOptions } from "./plugin";
 
 export interface Options {
     [key: string]: any;
@@ -27,14 +23,22 @@ export interface Spy {
     readonly tick: number;
     readonly version: string;
     debug(match: Match, ...notifications: Notification[]): Teardown;
-    find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
-    findAll<T extends Plugin>(ctor: Ctor<T>): T[];
+    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined;
+    findAll<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
     findAll(): Plugin[];
-    log(tagMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
-    log(tagMatch: Match, partialLogger?: PartialLogger): Teardown;
+    log(observableMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
+    log(observableMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;
     pause(match: Match): Deck;
-    pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
+    pipe({
+        complete,
+        match,
+        operator
+    }: {
+        complete?: boolean
+        match: Match,
+        operator: (source: Observable<any>) => Observable<any>
+    }): Teardown;
     plug(...plugins: Plugin[]): Teardown;
     show(match: Match, partialLogger?: PartialLogger): void;
     show(partialLogger?: PartialLogger): void;

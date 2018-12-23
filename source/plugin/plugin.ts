@@ -13,6 +13,7 @@ export interface PluginOptions {
     [key: string]: any;
     spy: Spy;
 }
+export type PluginCtor<P extends Plugin, O extends PluginOptions> = new (options: O) => P;
 
 export interface Plugin {
 

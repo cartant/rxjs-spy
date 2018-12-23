@@ -4,6 +4,7 @@
  */
 
 import { defaultLogger, Logger } from "../logger";
+import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 import { BasePlugin, Notification } from "./plugin";
@@ -69,10 +70,12 @@ export class GraphPlugin extends BasePlugin {
     private sentinel_: GraphRef;
 
     constructor({
-        keptDuration = 30000
+        keptDuration = 30000,
+        spy
     }: {
-        keptDuration?: number
-    } = {}) {
+        keptDuration?: number,
+        spy: Spy
+    }) {
 
         super("graph");
 

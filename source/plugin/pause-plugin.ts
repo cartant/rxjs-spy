@@ -7,15 +7,14 @@ import {
     Notification,
     Observable,
     Subject,
-    Subscriber,
     Subscription
 } from "rxjs";
 
 import { dematerialize, materialize } from "rxjs/operators";
-import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
+import { defaultLogger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { hide } from "../operators";
-import { Teardown } from "../spy-interface";
+import { Spy, Teardown } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
@@ -184,7 +183,7 @@ export class PausePlugin extends BasePlugin {
     private match_: Match;
     private deck_: Deck;
 
-    constructor(match: Match) {
+    constructor({ match, spy }: { match: Match, spy: Spy }) {
 
         super(`pause(${matchToString(match)})`);
 

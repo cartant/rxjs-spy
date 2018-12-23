@@ -7,6 +7,7 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import * as sinon from "sinon";
+import { PartialLogger } from "../logger";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { CyclePlugin } from "./cycle-plugin";
@@ -24,18 +25,17 @@ describe("CyclePlugin", () => {
 
     beforeEach(() => {
 
-        spy = create(options);
-        spy.plug(new StackTracePlugin());
-
         stubs = {
-            debug: sinon.stub(),
             error: sinon.stub(),
             log: sinon.stub(),
             warn: sinon.stub()
         };
-        const plugin = new CyclePlugin(spy, {
+        spy = create({ ...options, defaultLogger: stubs as any });
+        spy.plug(new StackTracePlugin({ spy }));
+
+        const plugin = new CyclePlugin({
             cycleThreshold: 1,
-            logger: stubs as any
+            spy
         });
         spy.plug(plugin);
     });

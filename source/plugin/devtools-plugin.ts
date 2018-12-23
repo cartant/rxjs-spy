@@ -72,7 +72,7 @@ export class DevToolsPlugin extends BasePlugin {
     private spy_: Spy;
     private subscription_!: Subscription;
 
-    constructor(spy: Spy) {
+    constructor({ spy }: { spy: Spy }) {
 
         super("devTools");
 
@@ -99,22 +99,31 @@ export class DevToolsPlugin extends BasePlugin {
                         request
                     };
                     switch (request.requestType) {
-                    case "log":
-                        this.recordPlugin_(request["spyId"], request.postId, new LogPlugin(this.spy_, request["spyId"]));
+                    case "log": {
+                        const plugin = new LogPlugin({
+                            observableMatch: request["spyId"],
+                            spy: this.spy_
+                        });
+                        this.recordPlugin_(request["spyId"], request.postId, plugin);
                         response["pluginId"] = request.postId;
                         break;
+                    }
                     case "log-teardown":
                         this.teardownPlugin_(request["pluginId"]);
                         break;
-                    case "pause":
-                        const plugin = new PausePlugin(request["spyId"]);
+                    case "pause": {
+                        const plugin = new PausePlugin({
+                            match: request["spyId"],
+                            spy: this.spy_
+                        });
                         this.recordPlugin_(request["spyId"], request.postId, plugin);
                         plugin.deck.stats.pipe(hide()).subscribe((stats: DeckStats) => {
                             this.batchDeckStats_(toStats(request["spyId"], stats));
                         });
                         response["pluginId"] = request.postId;
                         break;
-                    case "pause-command":
+                    }
+                    case "pause-command": {
                         const pluginRecord = this.plugins_.get(request["pluginId"]) as PluginRecord | undefined;
                         if (pluginRecord) {
                             const { deck } = pluginRecord.plugin as PausePlugin;
@@ -135,19 +144,21 @@ export class DevToolsPlugin extends BasePlugin {
                             }
                         }
                         break;
+                    }
                     case "pause-teardown":
                         this.teardownPlugin_(request["pluginId"]);
                         break;
-                    case "snapshot":
+                    case "snapshot": {
                         this.snapshotHinted_ = false;
-                        const snapshotPlugin = this.spy_.find(SnapshotPlugin);
-                        if (snapshotPlugin) {
-                            const snapshot = snapshotPlugin.snapshotAll();
+                        const plugin = this.spy_.find(SnapshotPlugin);
+                        if (plugin) {
+                            const snapshot = plugin.snapshotAll();
                             response["snapshot"] = toSnapshot(snapshot);
                             return response;
                         }
                         response.error = "Cannot find snapshot plugin.";
                         break;
+                    }
                     default:
                         response.error = "Unexpected request.";
                         break;

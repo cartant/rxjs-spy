@@ -18,9 +18,13 @@ describe("PipePlugin", () => {
     it("should apply the operator to a tag's source", () => {
 
         const operated = new Subject<string>();
-        const plugin = new PipePlugin("people", () => operated);
 
         spy = create({ defaultPlugins: false, warning: false });
+        const plugin = new PipePlugin({
+            match: "people",
+            operator: () => operated,
+            spy
+        });
         spy.plug(plugin);
 
         const values: any[] = [];
@@ -43,7 +47,11 @@ describe("PipePlugin", () => {
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const operated = new Subject<string>();
-        spy.plug(new PipePlugin("people", () => operated));
+        spy.plug(new PipePlugin({
+            match: "people",
+            operator: () => operated,
+            spy
+        }));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);
@@ -61,7 +69,11 @@ describe("PipePlugin", () => {
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const operated = new Subject<string>();
-        spy.plug(new PipePlugin("people", () => of("bob")));
+        spy.plug(new PipePlugin({
+            match: "people",
+            operator: () => of("bob"),
+            spy
+        }));
 
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);
@@ -77,7 +89,12 @@ describe("PipePlugin", () => {
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const operated = new Subject<string>();
-        spy.plug(new PipePlugin("people", () => of("bob"), { complete: false }));
+        spy.plug(new PipePlugin({
+            complete: false,
+            match: "people",
+            operator: () => of("bob"),
+            spy
+        }));
 
         subject.next("alice");
         expect(values).to.deep.equal(["bob"]);

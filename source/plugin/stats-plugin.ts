@@ -3,7 +3,6 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, Subscriber } from "rxjs";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { getGraphRef } from "./graph-plugin";
@@ -30,7 +29,7 @@ export class StatsPlugin extends BasePlugin {
     private stats_: Stats;
     private time_: number;
 
-    constructor(spy: Spy) {
+    constructor({ spy }: { spy: Spy }) {
 
         super("stats");
 
