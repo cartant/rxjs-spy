@@ -30,7 +30,7 @@ describe("StackTracePlugin", () => {
 
         const subject = new Subject<number>();
         const mapped = subject.pipe(map((value) => value));
-        const subscription = mapped.subscribe();
+        mapped.subscribe();
 
         const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
         const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);

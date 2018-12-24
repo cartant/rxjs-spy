@@ -4,15 +4,7 @@
  */
 
 import { Subscription } from "rxjs";
-
-import {
-    ObservableSnapshot,
-    Snapshot,
-    SnapshotPlugin,
-    SubscriberSnapshot,
-    SubscriptionSnapshot
-} from "./plugin/snapshot-plugin";
-
+import { Snapshot, SnapshotPlugin, SubscriptionSnapshot } from "./plugin/snapshot-plugin";
 import { Spy } from "./spy-interface";
 
 export interface Detected {
@@ -141,7 +133,7 @@ export class Detector {
         subscriptionRecord: SubscriptionRecord
     ): void {
 
-        const { flats, subscriptionSnapshot } = subscriptionRecord;
+        const { flats } = subscriptionRecord;
 
         snapshot.subscriptions.forEach((s) => {
             s.flats.forEach((f) => {

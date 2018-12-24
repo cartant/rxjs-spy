@@ -29,7 +29,7 @@ describe("PipePlugin", () => {
 
         const values: any[] = [];
         const subject = new Subject<string>();
-        const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
+        subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         subject.next("alice");
         expect(values).to.deep.equal([]);
@@ -44,7 +44,7 @@ describe("PipePlugin", () => {
 
         const values: any[] = [];
         const subject = new Subject<string>();
-        const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
+        subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
         const operated = new Subject<string>();
         spy.plug(new PipePlugin({
@@ -68,7 +68,6 @@ describe("PipePlugin", () => {
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
-        const operated = new Subject<string>();
         spy.plug(new PipePlugin({
             match: "people",
             operator: () => of("bob"),
@@ -88,7 +87,6 @@ describe("PipePlugin", () => {
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
-        const operated = new Subject<string>();
         spy.plug(new PipePlugin({
             complete: false,
             match: "people",

@@ -7,7 +7,7 @@ import { Observable } from "rxjs";
 import { Auditor } from "./auditor";
 import { Logger, PartialLogger } from "./logger";
 import { Match } from "./match";
-import { Deck, Notification, Plugin, PluginCtor, PluginOptions } from "./plugin";
+import { Deck, Plugin, PluginCtor, PluginOptions } from "./plugin";
 
 export interface Options {
     [key: string]: any;

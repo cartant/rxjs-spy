@@ -1,7 +1,8 @@
 {
   "defaultSeverity": "error",
   "extends": [
-    "rxjs-tslint-rules"
+    "rxjs-tslint-rules",
+    "tslint-etc"
   ],
   "jsRules": {},
   "rules": {
@@ -100,6 +101,7 @@
     "no-trailing-whitespace": { "severity": "error" },
     "no-unnecessary-callback-wrapper": { "severity": "warning" },
     "no-unsafe-finally": { "severity": "error" },
+    "no-unused-declaration": { "severity": "error" },
     "no-unused-expression": { "severity": "error" },
     "no-use-before-declare": { "severity": "error" },
     "no-var-keyword": { "severity": "error" },

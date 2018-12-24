@@ -32,7 +32,7 @@ describe("spy", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
             subject.next("alice");
             expect(values).to.deep.equal(["bob"]);
@@ -80,7 +80,7 @@ describe("spy", () => {
                 log(...args: any[]): void { calls.push(args); }
             });
 
-            const subscription = subject.pipe(tag("people")).subscribe();
+            subject.pipe(tag("people")).subscribe();
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe; matching /.+/"]);
         });
@@ -114,7 +114,7 @@ describe("spy", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
             subject.next("alice");
             subject.next("bob");
@@ -126,11 +126,11 @@ describe("spy", () => {
         it("should resume upon teardown", () => {
 
             spy = create({ defaultPlugins: false, ...options });
-            const deck = spy.pause("people");
+            spy.pause("people");
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            const subscription = subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe((value) => values.push(value));
 
             subject.next("alice");
             subject.next("bob");
@@ -206,7 +206,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.subscribe();
+            subject.subscribe();
             expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
@@ -219,7 +219,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.subscribe(() => {}, () => {});
+            subject.subscribe(() => {}, () => {});
             expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
@@ -236,7 +236,7 @@ describe("spy", () => {
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
-            const deck = spy.pause("people");
+            spy.pause("people");
             subscription.unsubscribe();
             expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
@@ -246,7 +246,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.pipe(tag("people")).subscribe();
+            subject.pipe(tag("people")).subscribe();
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
@@ -263,7 +263,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.pipe(tag("people")).subscribe(() => {}, () => {});
+            subject.pipe(tag("people")).subscribe(() => {}, () => {});
             expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
             expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
@@ -280,7 +280,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.subscribe();
+            subject.subscribe();
             expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
@@ -293,7 +293,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.subscribe((value) => {}, (error) => {});
+            subject.subscribe((value) => {}, (error) => {});
             expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 
@@ -311,7 +311,7 @@ describe("spy", () => {
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
-            const subscription = subject.pipe(tag("people")).subscribe();
+            subject.pipe(tag("people")).subscribe();
 
             spy.show("people", {
                 log(...args: any[]): void { calls.push(args); }
@@ -328,7 +328,7 @@ describe("spy", () => {
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
-            const subscription = subject.pipe(tag("people")).subscribe();
+            subject.pipe(tag("people")).subscribe();
 
             spy.show({
                 log(...args: any[]): void { calls.push(args); }
@@ -348,7 +348,7 @@ describe("spy", () => {
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             spy.stats({
                 log(...args: any[]): void { calls.push(args); }

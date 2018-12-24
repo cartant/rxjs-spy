@@ -164,7 +164,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriptionRef): void {
 
-        const snapshotRef = setSnapshotRef(ref, {
+        setSnapshotRef(ref, {
             error: undefined,
             query: {},
             values: [],

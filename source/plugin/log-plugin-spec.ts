@@ -97,7 +97,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.pipe(tag("people")).subscribe();
+            subject.pipe(tag("people")).subscribe();
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
@@ -112,7 +112,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string>();
 
-            const subscription = subject.pipe(tag("people")).subscribe((value) => {}, (error) => {});
+            subject.pipe(tag("people")).subscribe((value) => {}, (error) => {});
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 
@@ -156,7 +156,7 @@ describe("LogPlugin", () => {
         it("should match observable ids", () => {
 
             const subject = new Subject<string>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
             spy.plug(new LogPlugin({
@@ -177,7 +177,7 @@ describe("LogPlugin", () => {
         it("should match subscriber ids", () => {
 
             const subject = new Subject<string>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
             spy.plug(new LogPlugin({
@@ -198,7 +198,7 @@ describe("LogPlugin", () => {
         it("should match subscription ids", () => {
 
             const subject = new Subject<string>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
             spy.plug(new LogPlugin({

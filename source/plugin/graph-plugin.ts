@@ -113,7 +113,7 @@ export class GraphPlugin extends BasePlugin {
 
     afterUnsubscribe(ref: SubscriptionRef): void {
 
-        const { notifications_, sentinel_ } = this;
+        const { notifications_ } = this;
         notifications_.pop();
         this.flush_(ref);
     }
@@ -211,7 +211,7 @@ export class GraphPlugin extends BasePlugin {
         }
 
         const { keptDuration_ } = this;
-        const { link, sink } = graphRef;
+        const { link } = graphRef;
 
         const flush = () => {
             const { flats, sources } = link;

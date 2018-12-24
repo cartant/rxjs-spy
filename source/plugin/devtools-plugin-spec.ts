@@ -53,12 +53,12 @@ if (typeof window !== "undefined") {
         it("should post notification messages", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             subject.next(1);
             subject.complete();
 
-            const snapshot = snapshotPlugin.snapshotAll();
+            snapshotPlugin.snapshotAll();
             return waitAfterSnapshot()
                 .then(() => {
 
@@ -81,14 +81,14 @@ if (typeof window !== "undefined") {
         it("should serialize circular values", () => {
 
             const subject = new Subject<any>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             const person: any = { name: "alice", employer: undefined };
             person.employer = person;
 
             subject.next(person);
 
-            const snapshot = snapshotPlugin.snapshotAll();
+            snapshotPlugin.snapshotAll();
             return waitAfterSnapshot()
                 .then(() => {
 
@@ -114,7 +114,7 @@ if (typeof window !== "undefined") {
         it("should respond to 'snapshot'", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             expect(mockConnection.subscribe).to.have.property("callCount", 1);
 
@@ -128,7 +128,7 @@ if (typeof window !== "undefined") {
                 requestType: "snapshot"
             });
 
-            const snapshot = snapshotPlugin.snapshotAll();
+            snapshotPlugin.snapshotAll();
             return waitAfterSnapshot()
                 .then(() => {
 
@@ -142,7 +142,7 @@ if (typeof window !== "undefined") {
         it("should respond to 'log'", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             expect(mockConnection.subscribe).to.have.property("callCount", 1);
 
@@ -191,7 +191,7 @@ if (typeof window !== "undefined") {
         it("should respond to 'pause'", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             expect(mockConnection.subscribe).to.have.property("callCount", 1);
 

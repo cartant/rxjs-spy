@@ -112,7 +112,7 @@ describe("StatsPlugin", () => {
     it("should count completes", () => {
 
         const subject = new Subject<number>();
-        const subscription = subject.subscribe();
+        subject.subscribe();
 
         let stats = statsPlugin.stats;
         expect(stats.completes).to.equal(0);
@@ -126,7 +126,7 @@ describe("StatsPlugin", () => {
     it("should count errors", () => {
 
         const subject = new Subject<number>();
-        const subscription = subject.subscribe(() => {}, () => {});
+        subject.subscribe(() => {}, () => {});
 
         let stats = statsPlugin.stats;
         expect(stats.errors).to.equal(0);
@@ -140,7 +140,7 @@ describe("StatsPlugin", () => {
     it("should count nexts", () => {
 
         const subject = new Subject<number>();
-        const subscription = subject.subscribe();
+        subject.subscribe();
 
         let stats = statsPlugin.stats;
         expect(stats.nexts).to.equal(0);
@@ -154,7 +154,7 @@ describe("StatsPlugin", () => {
     it("should include the tick", () => {
 
         const subject = new Subject<number>();
-        const subscription = subject.subscribe();
+        subject.subscribe();
 
         subject.next(1);
 

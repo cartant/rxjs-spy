@@ -44,7 +44,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.subscribers).to.have.property("size", 0);
             expect(snapshot.subscriptions).to.have.property("size", 0);
 
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
@@ -106,7 +106,7 @@ describe("SnapshotPlugin", () => {
         it("should spy on completions", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
@@ -146,7 +146,7 @@ describe("SnapshotPlugin", () => {
         it("should spy on errors", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe((value) => {}, (error) => {});
+            subject.subscribe((value) => {}, (error) => {});
 
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
@@ -187,7 +187,7 @@ describe("SnapshotPlugin", () => {
         it("should spy on values", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
@@ -227,7 +227,7 @@ describe("SnapshotPlugin", () => {
         it("should spy on changes since the specified snapshot", () => {
 
             const subject = new Subject<number>();
-            const subscription = subject.subscribe();
+            subject.subscribe();
 
             const since = plugin.snapshotAll();
             expect(since.observables).to.have.property("size", 1);
@@ -251,7 +251,7 @@ describe("SnapshotPlugin", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.pipe(map((value) => value));
-            const subscription = mapped.subscribe();
+            mapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 2);
@@ -275,7 +275,7 @@ describe("SnapshotPlugin", () => {
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
             const combined = combineLatest(subject1, subject2);
-            const subscription = combined.subscribe();
+            combined.subscribe();
 
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
@@ -301,7 +301,7 @@ describe("SnapshotPlugin", () => {
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
             const composed = outer.pipe(mergeMap((value) => of(value).pipe(tag("inner"))));
-            const subscription = composed.subscribe();
+            composed.subscribe();
 
             let snapshot = plugin.snapshotAll();
             let composedSnapshot = get(snapshot.observables, composed);
@@ -309,6 +309,7 @@ describe("SnapshotPlugin", () => {
             let composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
             expect(composedSubscription.flats).to.have.property("size", 0);
+            expect(composedSubscriber.subscriptions).to.have.property("size", 1);
 
             subject.next(0);
 
@@ -318,6 +319,7 @@ describe("SnapshotPlugin", () => {
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
             expect(composedSubscription.flats).to.have.property("size", 1);
+            expect(composedSubscriber.subscriptions).to.have.property("size", 1);
 
             subject.next(0);
 
@@ -327,13 +329,14 @@ describe("SnapshotPlugin", () => {
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
             expect(composedSubscription.flats).to.have.property("size", 2);
+            expect(composedSubscriber.subscriptions).to.have.property("size", 1);
         });
 
         it("should determine a subscription's sink subscription", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.pipe(map((value) => value));
-            const subscription = mapped.subscribe();
+            mapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 2);
@@ -358,7 +361,7 @@ describe("SnapshotPlugin", () => {
             const subject = new Subject<number>();
             const mapped = subject.pipe(map((value) => value));
             const remapped = mapped.pipe(map((value) => value));
-            const subscription = remapped.subscribe();
+            remapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 3);
@@ -388,7 +391,7 @@ describe("SnapshotPlugin", () => {
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
             const combined = combineLatest(subject1, subject2);
-            const subscription = combined.subscribe();
+            combined.subscribe();
 
             const snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
@@ -420,8 +423,8 @@ describe("SnapshotPlugin", () => {
             const innerSubject2 = new Subject<number>();
             const composed1 = outerSubject.pipe(switchMap((value) => innerSubject1));
             const composed2 = outerSubject.pipe(switchMap((value) => innerSubject2));
-            const subscription1 = composed1.subscribe();
-            const subscription2 = composed2.subscribe();
+            composed1.subscribe();
+            composed2.subscribe();
 
             outerSubject.next(1);
 

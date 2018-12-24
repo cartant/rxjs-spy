@@ -8,7 +8,6 @@ import { expect } from "chai";
 import { NEVER, Subject, zip } from "rxjs";
 import { bufferWhen, concatMap, mergeMap } from "rxjs/operators";
 import * as sinon from "sinon";
-import { PartialLogger } from "../logger";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { BufferPlugin } from "./buffer-plugin";

@@ -27,7 +27,6 @@ import {
     DevToolsPlugin,
     GraphPlugin,
     LogPlugin,
-    Notification,
     ObservableSnapshot,
     PausePlugin,
     PipePlugin,
@@ -42,7 +41,7 @@ import {
 } from "./plugin";
 
 import { wrap } from "./spy-console";
-import { Options, Spy, Teardown } from "./spy-interface";
+import { Spy, Teardown } from "./spy-interface";
 import { SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
 
@@ -208,7 +207,6 @@ export class SpyCore implements Spy {
 
         let observableMatch: Match = /.+/;
         let notificationMatch: Match = /.+/;
-        let predicate: (notification: Notification) => boolean = () => true;
         let partialLogger: PartialLogger = this.defaultLogger_;
 
         if (args.length === 1) {
@@ -363,7 +361,7 @@ export class SpyCore implements Spy {
 
                     const subscriptionSnapshot = sub.subscription;
                     const subscriberSnapshot = sub.subscriber;
-                    const { id, values, valuesFlushed } = subscriberSnapshot;
+                    const { values, valuesFlushed } = subscriberSnapshot;
                     logger[subscriberGroupMethod].call(logger, "Subscriber");
                     logger.log("Value count =", values.length + valuesFlushed);
                     if (values.length > 0) {
@@ -455,7 +453,7 @@ export class SpyCore implements Spy {
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
 
-                        const { id, values, valuesFlushed } = subscriberSnapshot;
+                        const { values, valuesFlushed } = subscriberSnapshot;
                         logger[subscriberGroupMethod].call(logger, "Subscriber");
                         logger.log("Value count =", values.length + valuesFlushed);
                         if (values.length > 0) {

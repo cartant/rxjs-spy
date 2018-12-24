@@ -9,7 +9,6 @@ import { Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
-import { inferType } from "../util";
 import { BasePlugin, Notification } from "./plugin";
 
 const defaultMatch = /.+/;
@@ -82,7 +81,6 @@ export class LogPlugin extends BasePlugin {
                 const { observable } = ref;
                 const id = identify(observable);
                 const tag = read(observable);
-                const type = inferType(observable);
 
                 let identifier = tag ? `Tag = ${tag}` : `ID = ${id}`;
                 if ((typeof observableMatch_ === "number") || (typeof observableMatch_ === "string")) {

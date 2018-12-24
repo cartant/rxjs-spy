@@ -5,8 +5,6 @@
 import {
     MESSAGE_BATCH,
     MESSAGE_BROADCAST,
-    MESSAGE_CONNECT,
-    MESSAGE_DISCONNECT,
     MESSAGE_REQUEST,
     MESSAGE_RESPONSE
 } from "./constants";

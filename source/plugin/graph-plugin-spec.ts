@@ -40,7 +40,7 @@ describe("GraphPlugin", () => {
             it("should flush completed root subscriptions", () => {
 
                 const subject = new Subject<number>();
-                const subscription = subject.subscribe();
+                subject.subscribe();
 
                 const { sentinel } = getGraphRef(subscriptionRefsPlugin.get(subject));
                 expect(sentinel.sources).to.have.length(1);
@@ -58,7 +58,7 @@ describe("GraphPlugin", () => {
             it("should flush errored root subscriptions", () => {
 
                 const subject = new Subject<number>();
-                const subscription = subject.subscribe(() => {}, () => {});
+                subject.subscribe(() => {}, () => {});
 
                 const { sentinel } = getGraphRef(subscriptionRefsPlugin.get(subject));
                 expect(sentinel.sources).to.have.length(1);
@@ -95,8 +95,8 @@ describe("GraphPlugin", () => {
 
                 const source1 = new Subject<number>();
                 const source2 = new Subject<number>();
-                const combined = combineLatest(source1, source1);
-                const subscription = combined.subscribe();
+                const combined = combineLatest(source1, source2);
+                combined.subscribe();
 
                 const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.get(source1));
                 const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
@@ -106,6 +106,7 @@ describe("GraphPlugin", () => {
                 expect(sentinel.sources).to.have.length(1);
 
                 source1.complete();
+                source2.complete();
 
                 if (duration === 0) {
                     expect(sinkGraphRef.sources).to.have.length(0);
@@ -124,8 +125,8 @@ describe("GraphPlugin", () => {
 
                 const source1 = new Subject<number>();
                 const source2 = new Subject<number>();
-                const combined = combineLatest(source1, source1);
-                const subscription = combined.subscribe(() => {}, () => {});
+                const combined = combineLatest(source1, source2);
+                combined.subscribe(() => {}, () => {});
 
                 const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.get(source1));
                 const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
@@ -155,13 +156,12 @@ describe("GraphPlugin", () => {
                 const inner = new Subject<number>();
                 const outer = subject.pipe(tag("outer"));
                 const composed = outer.pipe(mergeMap((value) => inner));
-                const subscription = composed.subscribe();
+                composed.subscribe();
 
                 subject.next(0);
 
                 const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
-                const { sentinel } = innerGraphRef;
 
                 expect(sinkGraphRef.flats).to.have.length(1);
 
@@ -181,13 +181,12 @@ describe("GraphPlugin", () => {
                 const inner = new Subject<number>();
                 const outer = subject.pipe(tag("outer"));
                 const composed = outer.pipe(mergeMap((value) => inner));
-                const subscription = composed.subscribe(() => {}, () => {});
+                composed.subscribe(() => {}, () => {});
 
                 subject.next(0);
 
                 const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
-                const { sentinel } = innerGraphRef;
 
                 expect(sinkGraphRef.flats).to.have.length(1);
 
@@ -208,11 +207,10 @@ describe("GraphPlugin", () => {
                     inner.subscribe(observer);
                     return () => {};
                 });
-                const subscription = custom.subscribe();
+                custom.subscribe();
 
                 const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
-                const { sentinel } = innerGraphRef;
 
                 expect(sinkGraphRef.sources).to.have.length(1);
 
@@ -233,11 +231,10 @@ describe("GraphPlugin", () => {
                     inner.subscribe(observer);
                     return () => {};
                 });
-                const subscription = custom.subscribe(() => {}, () => {});
+                custom.subscribe(() => {}, () => {});
 
                 const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
-                const { sentinel } = innerGraphRef;
 
                 expect(sinkGraphRef.sources).to.have.length(1);
 
@@ -259,11 +256,10 @@ describe("GraphPlugin", () => {
                     innerSubscription = inner.subscribe(observer);
                     return () => {};
                 });
-                const subscription = custom.subscribe();
+                custom.subscribe();
 
                 const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
-                const { sentinel } = innerGraphRef;
 
                 expect(sinkGraphRef.sources).to.have.length(1);
 
@@ -314,7 +310,7 @@ describe("GraphPlugin", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.pipe(map((value) => value));
-            const subscription = mapped.subscribe();
+            mapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
             const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
@@ -338,7 +334,7 @@ describe("GraphPlugin", () => {
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
             const combined = combineLatest(subject1, subject2);
-            const subscription = combined.subscribe();
+            combined.subscribe();
 
             const subject1SubscriptionRef = subscriptionRefsPlugin.get(subject1);
             const subject2SubscriptionRef = subscriptionRefsPlugin.get(subject2);
@@ -376,7 +372,7 @@ describe("GraphPlugin", () => {
                 merges.push(m);
                 return m;
             }));
-            const subscription = composed.subscribe();
+            composed.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
             const outerSubscriptionRef = subscriptionRefsPlugin.get(outer);
@@ -420,7 +416,7 @@ describe("GraphPlugin", () => {
 
                 return () => {};
             });
-            const subscription = custom.subscribe();
+            custom.subscribe();
 
             const inner1SubscriptionRef = subscriptionRefsPlugin.get(inner1);
             const inner2SubscriptionRef = subscriptionRefsPlugin.get(inner2);
@@ -452,7 +448,7 @@ describe("GraphPlugin", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.pipe(map((value) => value));
-            const subscription = mapped.subscribe();
+            mapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
             const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
@@ -471,7 +467,7 @@ describe("GraphPlugin", () => {
             const subject = new Subject<number>();
             const mapped = subject.pipe(map((value) => value));
             const remapped = mapped.pipe(map((value) => value));
-            const subscription = remapped.subscribe();
+            remapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
             const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
@@ -494,7 +490,7 @@ describe("GraphPlugin", () => {
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
             const combined = combineLatest(subject1, subject2);
-            const subscription = combined.subscribe();
+            combined.subscribe();
 
             const subject1SubscriptionRef = subscriptionRefsPlugin.get(subject1);
             const subject2SubscriptionRef = subscriptionRefsPlugin.get(subject2);
@@ -519,8 +515,8 @@ describe("GraphPlugin", () => {
             const innerSubject2 = new Subject<number>();
             const composed1 = outerSubject.pipe(switchMap((value) => innerSubject1));
             const composed2 = outerSubject.pipe(switchMap((value) => innerSubject2));
-            const subscription1 = composed1.subscribe();
-            const subscription2 = composed2.subscribe();
+            composed1.subscribe();
+            composed2.subscribe();
 
             outerSubject.next(0);
 
@@ -542,7 +538,7 @@ describe("GraphPlugin", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.pipe(map((value) => value));
-            const subscription = mapped.subscribe();
+            mapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
             const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
@@ -567,7 +563,7 @@ describe("GraphPlugin", () => {
                 merges.push(m);
                 return m;
             }));
-            const subscription = composed.subscribe();
+            composed.subscribe();
 
             const composedSubscriptionRef = subscriptionRefsPlugin.get(composed);
             const composedGraphRef = getGraphRef(composedSubscriptionRef);
