@@ -146,7 +146,7 @@ describe("SnapshotPlugin", () => {
         it("should spy on errors", () => {
 
             const subject = new Subject<number>();
-            subject.subscribe((value) => {}, (error) => {});
+            subject.subscribe(value => {}, error => {});
 
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
@@ -209,7 +209,7 @@ describe("SnapshotPlugin", () => {
 
             subscriptionSnapshot = getAt(observableSnapshot.subscriptions, 0);
             subscriberSnapshot = get(snapshot.subscribers, subscriptionSnapshot.subscriber);
-            expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1]);
+            expect(subscriberSnapshot.values.map(t => t.value)).to.deep.equal([1]);
 
             subject.next(-1);
 
@@ -221,7 +221,7 @@ describe("SnapshotPlugin", () => {
 
             subscriptionSnapshot = getAt(observableSnapshot.subscriptions, 0);
             subscriberSnapshot = get(snapshot.subscribers, subscriptionSnapshot.subscriber);
-            expect(subscriberSnapshot.values.map((t) => t.value)).to.deep.equal([1, -1]);
+            expect(subscriberSnapshot.values.map(t => t.value)).to.deep.equal([1, -1]);
         });
 
         it("should spy on changes since the specified snapshot", () => {
@@ -250,7 +250,7 @@ describe("SnapshotPlugin", () => {
         it("should spy on sources and sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.pipe(map((value) => value));
+            const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -300,7 +300,7 @@ describe("SnapshotPlugin", () => {
 
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
-            const composed = outer.pipe(mergeMap((value) => of(value).pipe(tag("inner"))));
+            const composed = outer.pipe(mergeMap(value => of(value).pipe(tag("inner"))));
             composed.subscribe();
 
             let snapshot = plugin.snapshotAll();
@@ -335,7 +335,7 @@ describe("SnapshotPlugin", () => {
         it("should determine a subscription's sink subscription", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.pipe(map((value) => value));
+            const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -359,8 +359,8 @@ describe("SnapshotPlugin", () => {
         it("should determine a subscription's root sink subscription", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.pipe(map((value) => value));
-            const remapped = mapped.pipe(map((value) => value));
+            const mapped = subject.pipe(map(value => value));
+            const remapped = mapped.pipe(map(value => value));
             remapped.subscribe();
 
             const snapshot = plugin.snapshotAll();
@@ -421,8 +421,8 @@ describe("SnapshotPlugin", () => {
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
             const innerSubject2 = new Subject<number>();
-            const composed1 = outerSubject.pipe(switchMap((value) => innerSubject1));
-            const composed2 = outerSubject.pipe(switchMap((value) => innerSubject2));
+            const composed1 = outerSubject.pipe(switchMap(value => innerSubject1));
+            const composed2 = outerSubject.pipe(switchMap(value => innerSubject2));
             composed1.subscribe();
             composed2.subscribe();
 
@@ -548,7 +548,7 @@ function getAt<K, V>(map: Map<K, V>, index: number): V {
 function hasSource(subscriptionSnapshot: SubscriptionSnapshot, source: SubscriptionSnapshot): boolean {
 
     let result = false;
-    subscriptionSnapshot.sources.forEach((s) => {
+    subscriptionSnapshot.sources.forEach(s => {
         if (s === source) {
             result = true;
         }
@@ -558,7 +558,7 @@ function hasSource(subscriptionSnapshot: SubscriptionSnapshot, source: Subscript
         return true;
     }
 
-    subscriptionSnapshot.sources.forEach((s) => {
+    subscriptionSnapshot.sources.forEach(s => {
         if (hasSource(s, source)) {
             result = true;
         }

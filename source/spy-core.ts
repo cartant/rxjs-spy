@@ -120,7 +120,7 @@ export class SpyCore implements Spy {
         this.undos_ = [];
 
         const detector = new Detector(this);
-        hook((id) => this.detect_(id, detector));
+        hook(id => this.detect_(id, detector));
 
         if (typeof window !== "undefined") {
             [options.global || "spy", "rxSpy"].forEach(key => {
@@ -150,7 +150,7 @@ export class SpyCore implements Spy {
             }
 
             hook(undefined);
-            this.plugins_.forEach((plugin) => plugin.teardown());
+            this.plugins_.forEach(plugin => plugin.teardown());
             this.plugins_ = [];
             this.pluginsSubject_.next(this.plugins_);
             this.undos_ = [];
@@ -187,7 +187,7 @@ export class SpyCore implements Spy {
 
     find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined {
 
-        const found = this.plugins_.find((plugin) => plugin instanceof ctor);
+        const found = this.plugins_.find(plugin => plugin instanceof ctor);
         return found ? found as P : undefined;
     }
 
@@ -196,7 +196,7 @@ export class SpyCore implements Spy {
     findAll<P extends Plugin, O extends PluginOptions>(ctor?: PluginCtor<P, O>): P[] | Plugin[] {
 
         return ctor ?
-            this.plugins_.filter((plugin) => plugin instanceof ctor) as P[] :
+            this.plugins_.filter(plugin => plugin instanceof ctor) as P[] :
             this.plugins_;
     }
 
@@ -308,7 +308,7 @@ export class SpyCore implements Spy {
                 let find: typeof found[0] | undefined;
 
                 const { subscriptions } = observableSnapshot;
-                subscriptions.forEach((subscriptionSnapshot) => {
+                subscriptions.forEach(subscriptionSnapshot => {
 
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
@@ -377,8 +377,8 @@ export class SpyCore implements Spy {
 
                     const otherSubscriptions = Array
                         .from(subscriberSnapshot.subscriptions.values())
-                        .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
-                    otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
+                        .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot);
+                    otherSubscriptions.forEach(otherSubscriptionSnapshot => {
                         logger.groupCollapsed("Other subscription");
                         this.logSubscription_(
                             logger,
@@ -423,7 +423,7 @@ export class SpyCore implements Spy {
         const snapshot = snapshotPlugin.snapshotAll();
         const matched = Array
             .from(snapshot.observables.values())
-            .filter((observableSnapshot) => matches(observableSnapshot.observable, match));
+            .filter(observableSnapshot => matches(observableSnapshot.observable, match));
         const logger = toLogger(partialLogger || this.defaultLogger_);
 
         const { maxLogged_ } = this;
@@ -436,7 +436,7 @@ export class SpyCore implements Spy {
             logger.group(`${matched.length + notLogged} snapshot(s) matching ${matchToString(match)}`);
 
             const observableGroupMethod = (matched.length > 3) ? "groupCollapsed" : "group";
-            matched.forEach((observableSnapshot) => {
+            matched.forEach(observableSnapshot => {
 
                 logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
                     `Tag = ${observableSnapshot.tag}; ID = ${observableSnapshot.id}` :
@@ -448,7 +448,7 @@ export class SpyCore implements Spy {
                 const { subscriptions } = observableSnapshot;
                 const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
                 logger.group(`${subscriptions.size} subscriber(s)`);
-                subscriptions.forEach((subscriptionSnapshot) => {
+                subscriptions.forEach(subscriptionSnapshot => {
 
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
@@ -468,8 +468,8 @@ export class SpyCore implements Spy {
 
                         const otherSubscriptions = Array
                             .from(subscriberSnapshot.subscriptions.values())
-                            .filter((otherSubscriptionSnapshot) => otherSubscriptionSnapshot !== subscriptionSnapshot);
-                        otherSubscriptions.forEach((otherSubscriptionSnapshot) => {
+                            .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot);
+                        otherSubscriptions.forEach(otherSubscriptionSnapshot => {
                             logger.groupCollapsed("Other subscription");
                             this.logSubscription_(
                                 logger,
@@ -540,11 +540,11 @@ export class SpyCore implements Spy {
 
     unplug(...plugins: Plugin[]): void {
 
-        plugins.forEach((plugin) => {
+        plugins.forEach(plugin => {
             plugin.teardown();
-            this.plugins_ = this.plugins_.filter((p) => p !== plugin);
+            this.plugins_ = this.plugins_.filter(p => p !== plugin);
             this.pluginsSubject_.next(this.plugins_);
-            this.undos_ = this.undos_.filter((u) => u !== plugin);
+            this.undos_ = this.undos_.filter(u => u !== plugin);
         });
     }
 
@@ -596,13 +596,13 @@ export class SpyCore implements Spy {
         subscriber.unsubscribe = () => {
             if (!subscriber.closed) {
                 notify_(
-                    (plugin) => plugin.beforeUnsubscribe(ref),
+                    plugin => plugin.beforeUnsubscribe(ref),
                     () => {
                         ref.subscription.unsubscribe();
                         ref.unsubscribeTimestamp = Date.now();
                         subscriberUnsubscribe.call(subscriber);
                     },
-                    (plugin) => plugin.afterUnsubscribe(ref)
+                    plugin => plugin.afterUnsubscribe(ref)
                 );
             } else {
                 subscriberUnsubscribe.call(subscriber);
@@ -613,35 +613,35 @@ export class SpyCore implements Spy {
 
             complete(): void {
                 notify_(
-                    (plugin) => plugin.beforeComplete(ref),
+                    plugin => plugin.beforeComplete(ref),
                     () => {
                         subscriber.complete();
                         ref.completeTimestamp = Date.now();
                     },
-                    (plugin) => plugin.afterComplete(ref)
+                    plugin => plugin.afterComplete(ref)
                 );
             },
 
             error(error: any): void {
                 notify_(
-                    (plugin) => plugin.beforeError(ref, error),
+                    plugin => plugin.beforeError(ref, error),
                     () => {
                         subscriber.error(error);
                         ref.errorTimestamp = Date.now();
                     },
-                    (plugin) => plugin.afterError(ref, error)
+                    plugin => plugin.afterError(ref, error)
                 );
             },
 
             next(value: any): void {
                 notify_(
-                    (plugin) => plugin.beforeNext(ref, value),
+                    plugin => plugin.beforeNext(ref, value),
                     () => {
                         subscriber.next(value);
                         ++ref.nextCount;
                         ref.nextTimestamp = Date.now();
                     },
-                    (plugin) => plugin.afterNext(ref, value)
+                    plugin => plugin.afterNext(ref, value)
                 );
             }
         };
@@ -679,7 +679,7 @@ export class SpyCore implements Spy {
             },
 
             pipe(plugins: Plugin[]): void {
-                const operators = plugins.map((plugin) => plugin.operator(ref)).filter(Boolean);
+                const operators = plugins.map(plugin => plugin.operator(ref)).filter(Boolean);
                 if (operators.length > 0) {
                     if (!this.preOpSubject) {
                         this.preOpSubject = new Subject<any>();
@@ -721,12 +721,12 @@ export class SpyCore implements Spy {
         }));
 
         notify_(
-            (plugin) => plugin.beforeSubscribe(ref),
+            plugin => plugin.beforeSubscribe(ref),
             () => {
                 subscriber.add(observableSubscribe.call(observable, preOpObserver));
                 subscriber.add(() => preOpObserver.unsubscribe());
             },
-            (plugin) => plugin.afterSubscribe(ref)
+            plugin => plugin.afterSubscribe(ref)
         );
         return subscriber;
     }
@@ -735,7 +735,7 @@ export class SpyCore implements Spy {
 
         const { auditor_, defaultLogger_ } = this;
 
-        auditor_.audit(id, (ignored) => {
+        auditor_.audit(id, ignored => {
 
             const detected = detector.detect(id);
             const logger = toLogger(defaultLogger_);
@@ -743,16 +743,16 @@ export class SpyCore implements Spy {
             if (detected) {
                 const audit = (ignored === 0) ? "" : `; ignored ${ignored}`;
                 logger.group(`Subscription changes detected; id = '${id}'${audit}`);
-                detected.subscriptions.forEach((s) => {
+                detected.subscriptions.forEach(s => {
                     logSubscription(logger, "Subscription", s);
                 });
-                detected.unsubscriptions.forEach((s) => {
+                detected.unsubscriptions.forEach(s => {
                     logSubscription(logger, "Unsubscription", s);
                 });
-                detected.flatSubscriptions.forEach((s) => {
+                detected.flatSubscriptions.forEach(s => {
                     logSubscription(logger, "Flat subscription", s);
                 });
-                detected.flatUnsubscriptions.forEach((s) => {
+                detected.flatUnsubscriptions.forEach(s => {
                     logSubscription(logger, "Flat unsubscription", s);
                 });
                 logger.groupEnd();

@@ -69,9 +69,9 @@ export function wrap(
                 logger.groupEnd();
             } else {
                 args
-                    .map((at) => core.undos[at - 1])
+                    .map(at => core.undos[at - 1])
                     .filter(Boolean)
-                    .forEach((undo) => core.unplug(undo));
+                    .forEach(undo => core.unplug(undo));
             }
         }
     };

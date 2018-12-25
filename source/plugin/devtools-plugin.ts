@@ -87,7 +87,7 @@ export class DevToolsPlugin extends BasePlugin {
             this.connection_ = extension.connect({ version: spy.version });
 
             this.posts_ = new Observable<Post>(observer => this.connection_ ?
-                this.connection_.subscribe((post) => observer.next(post)) :
+                this.connection_.subscribe(post => observer.next(post)) :
                 () => {}
             );
 
@@ -401,7 +401,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
     return {
         observables: Array
             .from(snapshot.observables.values())
-            .map((s) => ({
+            .map(s => ({
                 id: s.id,
                 path: s.path,
                 subscriptions: Array
@@ -413,7 +413,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
             })),
         subscribers: Array
             .from(snapshot.subscribers.values())
-            .map((s) => ({
+            .map(s => ({
                 id: s.id,
                 subscriptions: Array
                     .from(s.subscriptions.values())
@@ -428,7 +428,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
             })),
         subscriptions: Array
             .from(snapshot.subscriptions.values())
-            .map((s) => ({
+            .map(s => ({
                 completeTimestamp: s.completeTimestamp,
                 error: s.error,
                 errorTimestamp: s.errorTimestamp,

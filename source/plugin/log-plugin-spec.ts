@@ -112,7 +112,7 @@ describe("LogPlugin", () => {
 
             const subject = new Subject<string>();
 
-            subject.pipe(tag("people")).subscribe((value) => {}, (error) => {});
+            subject.pipe(tag("people")).subscribe(value => {}, error => {});
             expect(calls).to.not.be.empty;
             expect(calls[0]).to.deep.equal(["Tag = people; notification = subscribe"]);
 

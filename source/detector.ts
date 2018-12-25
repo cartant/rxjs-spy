@@ -123,8 +123,8 @@ export class Detector {
         return {
             flatSubscriptions,
             flatUnsubscriptions,
-            subscriptions: subscriptions.map((s) => s.subscriptionSnapshot),
-            unsubscriptions: unsubscriptions.map((s) => s.subscriptionSnapshot)
+            subscriptions: subscriptions.map(s => s.subscriptionSnapshot),
+            unsubscriptions: unsubscriptions.map(s => s.subscriptionSnapshot)
         };
     }
 
@@ -135,8 +135,8 @@ export class Detector {
 
         const { flats } = subscriptionRecord;
 
-        snapshot.subscriptions.forEach((s) => {
-            s.flats.forEach((f) => {
+        snapshot.subscriptions.forEach(s => {
+            s.flats.forEach(f => {
                 const { subscription } = f;
                 if (!subscription.closed) {
                     flats.set(subscription, f);
@@ -150,8 +150,8 @@ export class Detector {
         rootSubscriptions: Map<Subscription, SubscriptionRecord>
     ): void {
 
-        snapshot.observables.forEach((observableSnapshot) => {
-            observableSnapshot.subscriptions.forEach((subscriptionSnapshot) => {
+        snapshot.observables.forEach(observableSnapshot => {
+            observableSnapshot.subscriptions.forEach(subscriptionSnapshot => {
                 const { completeTimestamp, errorTimestamp, sink, subscription } = subscriptionSnapshot;
                 if (!completeTimestamp && !errorTimestamp && !sink && !subscription.closed) {
                     const subscriptionRecord = {

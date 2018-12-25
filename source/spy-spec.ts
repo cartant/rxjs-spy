@@ -32,7 +32,7 @@ describe("spy", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             subject.next("alice");
             expect(values).to.deep.equal(["bob"]);
@@ -114,7 +114,7 @@ describe("spy", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             subject.next("alice");
             subject.next("bob");
@@ -130,7 +130,7 @@ describe("spy", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             subject.next("alice");
             subject.next("bob");
@@ -293,7 +293,7 @@ describe("spy", () => {
 
             const subject = new Subject<string>();
 
-            subject.subscribe((value) => {}, (error) => {});
+            subject.subscribe(value => {}, error => {});
             expect(plugin.beforeSubscribe).to.have.property("calledOnce", true);
             expect(plugin.afterSubscribe).to.have.property("calledOnce", true);
 

@@ -57,8 +57,8 @@ export class Deck {
 
     clear(predicate: (notification: Notification<any>) => boolean = () => true): void {
 
-        this.states_.forEach((state) => {
-            state.notifications_ = state.notifications_.filter((notification) => !predicate(notification));
+        this.states_.forEach(state => {
+            state.notifications_ = state.notifications_.filter(notification => !predicate(notification));
         });
         this.broadcast_();
     }
@@ -69,7 +69,7 @@ export class Deck {
 
         logger.group(`Deck matching ${matchToString(this.match_)}`);
         logger.log("Paused =", this.paused_);
-        this.states_.forEach((state) => {
+        this.states_.forEach(state => {
             logger.group(`Observable; tag = ${state.tag_}`);
             logger.log("Notifications =", state.notifications_);
             logger.groupEnd();
@@ -85,7 +85,7 @@ export class Deck {
 
     resume(): void {
 
-        this.states_.forEach((state) => {
+        this.states_.forEach(state => {
             while (state.notifications_.length > 0) {
                 state.subject_.next(state.notifications_.shift());
             }
@@ -136,7 +136,7 @@ export class Deck {
 
     skip(): void {
 
-        this.states_.forEach((state) => {
+        this.states_.forEach(state => {
             if (state.notifications_.length > 0) {
                 state.notifications_.shift();
             }
@@ -146,7 +146,7 @@ export class Deck {
 
     step(): void {
 
-        this.states_.forEach((state) => {
+        this.states_.forEach(state => {
             if (state.notifications_.length > 0) {
                 state.subject_.next(state.notifications_.shift());
             }
@@ -155,7 +155,7 @@ export class Deck {
     }
 
     unsubscribe(): void {
-        this.states_.forEach((state) => {
+        this.states_.forEach(state => {
             if (state.subscription_) {
                 state.subscription_.unsubscribe();
                 state.subscription_ = undefined;
@@ -169,7 +169,7 @@ export class Deck {
         const { paused_, states_, stats_ } = this;
 
         let notifications = 0;
-        states_.forEach((state) => notifications += state.notifications_.length);
+        states_.forEach(state => notifications += state.notifications_.length);
 
         stats_.next({
             notifications,

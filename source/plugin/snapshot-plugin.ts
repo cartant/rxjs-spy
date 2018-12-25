@@ -286,11 +286,11 @@ export class SnapshotPlugin extends BasePlugin {
             if (graphRef.rootSink) {
                 subscriptionSnapshot.rootSink = subscriptions.get(graphRef.rootSink.subscription)!;
             }
-            graphRef.flats.forEach((m) => subscriptionSnapshot.flats.set(m.subscription, subscriptions.get(m.subscription)!));
-            graphRef.sources.forEach((s) => subscriptionSnapshot.sources.set(s.subscription, subscriptions.get(s.subscription)!));
+            graphRef.flats.forEach(m => subscriptionSnapshot.flats.set(m.subscription, subscriptions.get(m.subscription)!));
+            graphRef.sources.forEach(s => subscriptionSnapshot.sources.set(s.subscription, subscriptions.get(s.subscription)!));
         });
 
-        subscribers.forEach((subscriberSnapshot) => {
+        subscribers.forEach(subscriberSnapshot => {
 
             subscriberSnapshot.values.sort((a, b) => a.tick - b.tick);
         });
@@ -342,8 +342,8 @@ export class SnapshotPlugin extends BasePlugin {
         map.set(ref, true);
 
         const graphRef = getGraphRef(ref);
-        graphRef.flats.forEach((m) => this.addSubscriptionRefs_(m, map));
-        graphRef.sources.forEach((s) => this.addSubscriptionRefs_(s, map));
+        graphRef.flats.forEach(m => this.addSubscriptionRefs_(m, map));
+        graphRef.sources.forEach(s => this.addSubscriptionRefs_(s, map));
     }
 
     private getSubscriptionRefs_(): Map<SubscriptionRef, boolean> {

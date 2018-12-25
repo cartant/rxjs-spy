@@ -60,7 +60,7 @@ describe("detector", () => {
         const subject = new Subject<number>();
         const source = subject.pipe(tag("source"));
         const merged = source.pipe(
-            mergeMap((value) => new BehaviorSubject<number>(value).pipe(tag("merge")))
+            mergeMap(value => new BehaviorSubject<number>(value).pipe(tag("merge")))
         );
         const subscription = merged.subscribe();
 

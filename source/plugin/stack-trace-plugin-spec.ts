@@ -29,7 +29,7 @@ describe("StackTracePlugin", () => {
     it("should determine the stack traces", () => {
 
         const subject = new Subject<number>();
-        const mapped = subject.pipe(map((value) => value));
+        const mapped = subject.pipe(map(value => value));
         mapped.subscribe();
 
         const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);

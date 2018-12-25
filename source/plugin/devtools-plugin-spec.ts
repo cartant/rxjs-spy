@@ -275,5 +275,5 @@ function waitAfterSnapshot(): Promise<void> {
     // Notifications are posted to the DevTools in batches, so that large
     // numbers of high-frequency observables won't overload the connection.
 
-    return new Promise((resolve) => setTimeout(resolve, BATCH_MILLISECONDS + 10));
+    return new Promise(resolve => setTimeout(resolve, BATCH_MILLISECONDS + 10));
 }

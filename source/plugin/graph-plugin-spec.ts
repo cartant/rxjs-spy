@@ -156,7 +156,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
                 const outer = subject.pipe(tag("outer"));
-                const composed = outer.pipe(mergeMap((value) => inner));
+                const composed = outer.pipe(mergeMap(value => inner));
                 composed.subscribe();
 
                 subject.next(0);
@@ -181,7 +181,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
                 const outer = subject.pipe(tag("outer"));
-                const composed = outer.pipe(mergeMap((value) => inner));
+                const composed = outer.pipe(mergeMap(value => inner));
                 composed.subscribe(() => {}, () => {});
 
                 subject.next(0);
@@ -310,7 +310,7 @@ describe("GraphPlugin", () => {
         it("should graph sources and sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.pipe(map((value) => value));
+            const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
@@ -368,7 +368,7 @@ describe("GraphPlugin", () => {
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
             const merges: Observable<number>[] = [];
-            const composed = outer.pipe(mergeMap((value) => {
+            const composed = outer.pipe(mergeMap(value => {
                 const m = NEVER.pipe(tag("inner"));
                 merges.push(m);
                 return m;
@@ -448,7 +448,7 @@ describe("GraphPlugin", () => {
         it("should determine sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.pipe(map((value) => value));
+            const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
@@ -466,8 +466,8 @@ describe("GraphPlugin", () => {
         it("should determine root sinks", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.pipe(map((value) => value));
-            const remapped = mapped.pipe(map((value) => value));
+            const mapped = subject.pipe(map(value => value));
+            const remapped = mapped.pipe(map(value => value));
             remapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
@@ -514,8 +514,8 @@ describe("GraphPlugin", () => {
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
             const innerSubject2 = new Subject<number>();
-            const composed1 = outerSubject.pipe(switchMap((value) => innerSubject1));
-            const composed2 = outerSubject.pipe(switchMap((value) => innerSubject2));
+            const composed1 = outerSubject.pipe(switchMap(value => innerSubject1));
+            const composed2 = outerSubject.pipe(switchMap(value => innerSubject2));
             composed1.subscribe();
             composed2.subscribe();
 
@@ -538,7 +538,7 @@ describe("GraphPlugin", () => {
         it("should determine the depth", () => {
 
             const subject = new Subject<number>();
-            const mapped = subject.pipe(map((value) => value));
+            const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
             const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
@@ -559,7 +559,7 @@ describe("GraphPlugin", () => {
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
             const merges: Observable<number>[] = [];
-            const composed = outer.pipe(mergeMap((value) => {
+            const composed = outer.pipe(mergeMap(value => {
                 const m = NEVER.pipe(tag("inner"));
                 merges.push(m);
                 return m;
@@ -693,5 +693,5 @@ function hasSource(graphRef: GraphRef, sourceRef: SubscriptionRef): boolean {
     if (graphRef.sources.indexOf(sourceRef as SubscriptionRef) !== -1) {
         return true;
     }
-    return graphRef.sources.some((s) => hasSource(getGraphRef(s), sourceRef));
+    return graphRef.sources.some(s => hasSource(getGraphRef(s), sourceRef));
 }

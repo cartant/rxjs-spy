@@ -75,7 +75,7 @@ export class LogPlugin extends BasePlugin {
 
         if (matches(ref, observableMatch_) && matches(ref, notificationMatch_, notification)) {
 
-            auditor_.audit(this, (ignored) => {
+            auditor_.audit(this, ignored => {
 
                 const { logger_ } = this;
                 const { observable } = ref;

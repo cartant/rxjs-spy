@@ -45,7 +45,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
@@ -102,7 +102,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
@@ -131,7 +131,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
@@ -154,7 +154,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("stats");
 
@@ -185,7 +185,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
@@ -202,7 +202,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
@@ -220,7 +220,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
@@ -232,8 +232,8 @@ describe("PausePlugin", () => {
             let complete = false;
             const subject = new Subject<string>();
             subject.pipe(tag("people")).subscribe(
-                (value) => {},
-                (error) => {},
+                value => {},
+                error => {},
                 () => complete = true
             );
 
@@ -249,8 +249,8 @@ describe("PausePlugin", () => {
             const errors: any[] = [];
             const subject = new Subject<string>();
             subject.pipe(tag("people")).subscribe(
-                (value) => {},
-                (error) => errors.push(error)
+                value => {},
+                error => errors.push(error)
             );
 
             expect(deck).to.have.property("paused", true);
@@ -268,7 +268,7 @@ describe("PausePlugin", () => {
 
             const values: any[] = [];
             const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe((value) => values.push(value));
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
 
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
