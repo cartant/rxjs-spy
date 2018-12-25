@@ -12,7 +12,7 @@ import { hide } from "../operators";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
-import { getGraphRef, GraphRef } from "./graph-plugin";
+import { getGraphRef, GraphPlugin } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 import { getMappedStackTrace, getStackTrace } from "./stack-trace-plugin";
 
@@ -123,8 +123,8 @@ export interface SubscriptionSnapshot {
 
 export class SnapshotPlugin extends BasePlugin {
 
+    private graphPlugin_: GraphPlugin | undefined;
     private keptValues_: number;
-    private sentinel_: GraphRef | undefined;
     private spy_: Spy;
 
     constructor({
@@ -137,8 +137,8 @@ export class SnapshotPlugin extends BasePlugin {
 
         super("snapshot");
 
+        this.graphPlugin_ = spy.find(GraphPlugin);
         this.keptValues_ = keptValues;
-        this.sentinel_ = undefined;
         this.spy_ = spy;
     }
 
@@ -171,10 +171,8 @@ export class SnapshotPlugin extends BasePlugin {
             valuesFlushed: 0
         });
 
-        const graphRef = getGraphRef(ref);
-        if (graphRef) {
-            this.sentinel_ = graphRef.sentinel;
-        } else {
+        const { graphPlugin_ } = this;
+        if (graphPlugin_) {
             this.spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
         }
     }
@@ -350,11 +348,12 @@ export class SnapshotPlugin extends BasePlugin {
 
     private getSubscriptionRefs_(): Map<SubscriptionRef, boolean> {
 
-        const { sentinel_ } = this;
+        const { graphPlugin_ } = this;
         const map = new Map<SubscriptionRef, boolean>();
 
-        if (sentinel_) {
-            sentinel_.sources.forEach(ref => this.addSubscriptionRefs_(ref, map));
+        if (graphPlugin_) {
+            const roots = graphPlugin_.findRootSubscriptionRefs();
+            roots.forEach(root => this.addSubscriptionRefs_(root, map));
         }
         return map;
     }
