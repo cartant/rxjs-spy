@@ -6,7 +6,8 @@
 
 import { expect } from "chai";
 import { combineLatest, NEVER, Observable, Subject, Subscription } from "rxjs";
-import { map, mergeMap, switchMap } from "rxjs/operators";
+import { filter, map, mergeMap, switchMap, tap } from "rxjs/operators";
+import { identify } from "../identify";
 import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
@@ -300,9 +301,9 @@ describe("GraphPlugin", () => {
 
         beforeEach(() => {
 
+            spy = create({ defaultPlugins: false, warning: false });
             graphPlugin = new GraphPlugin({ keptDuration: 0, spy });
             subscriptionRefsPlugin = new SubscriptionRefsPlugin({ spy });
-            spy = create({ defaultPlugins: false, warning: false });
             spy.plug(graphPlugin, subscriptionRefsPlugin);
         });
 
@@ -580,6 +581,92 @@ describe("GraphPlugin", () => {
             flattenedSubscriptionRef = composedGraphRef.flats[1];
             flattenedGraphRef = getGraphRef(flattenedSubscriptionRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
+        });
+
+        afterEach(() => {
+
+            if (spy) {
+                spy.teardown();
+            }
+        });
+    });
+
+    describe.only("methods", () => {
+
+        let graphPlugin: GraphPlugin;
+        let spy: Spy;
+        let subscriptionRefsPlugin: SubscriptionRefsPlugin;
+
+        beforeEach(() => {
+
+            spy = create({ defaultPlugins: false, warning: false });
+            graphPlugin = new GraphPlugin({ keptDuration: 0, spy });
+            subscriptionRefsPlugin = new SubscriptionRefsPlugin({ spy });
+            spy.plug(graphPlugin, subscriptionRefsPlugin);
+        });
+
+        describe("findRootSubscriptionRefs", () => {
+
+            it("should should return the root subscriptions", () => {
+
+                const subject = new Subject<number>();
+                const filtered = subject.pipe(
+                    tap(() => {}),
+                    filter(Boolean)
+                );
+                const mapped = subject.pipe(
+                    tap(() => {}),
+                    map(value => value)
+                );
+                filtered.subscribe();
+                mapped.subscribe();
+
+                const filteredSubscriptionRef = subscriptionRefsPlugin.get(filtered);
+                const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+
+                const rootSubscriptionRefs = graphPlugin.findRootSubscriptionRefs();
+                expect(rootSubscriptionRefs).to.have.length(2);
+                expect(rootSubscriptionRefs).to.contain(filteredSubscriptionRef);
+                expect(rootSubscriptionRefs).to.contain(mappedSubscriptionRef);
+            });
+        });
+
+        describe("findSubscriptionRef", () => {
+
+            it("should return the matched subscription", () => {
+
+                const subject = new Subject<number>();
+                const filtered = subject.pipe(
+                    filter(Boolean)
+                );
+                const mapped = filtered.pipe(
+                    map(value => value)
+                );
+                mapped.subscribe();
+
+                const filteredSubscriptionRef = subscriptionRefsPlugin.get(filtered);
+                const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+                const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+
+                expect(
+                    graphPlugin.findSubscriptionRef(
+                        identify(filteredSubscriptionRef.subscription)
+                    )
+                ).to.equal(filteredSubscriptionRef);
+                expect(
+                    graphPlugin.findSubscriptionRef(
+                        identify(mappedSubscriptionRef.subscription)
+                    )
+                ).to.equal(mappedSubscriptionRef);
+                expect(
+                    graphPlugin.findSubscriptionRef(
+                        identify(subjectSubscriptionRef.subscription)
+                    )
+                ).to.equal(subjectSubscriptionRef);
+                expect(
+                    graphPlugin.findSubscriptionRef("missing")
+                ).to.be.undefined;
+            });
         });
 
         afterEach(() => {

@@ -4,6 +4,7 @@
  */
 
 import { defaultLogger, Logger } from "../logger";
+import { Match, matches } from "../match";
 import { Spy } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
@@ -18,6 +19,7 @@ export interface GraphRef {
     flattened: boolean;
     link: GraphRef;
     rootSink: SubscriptionRef | undefined;
+    self: SubscriptionRef;
     sentinel: GraphRef;
     sink: SubscriptionRef | undefined;
     sources: SubscriptionRef[];
@@ -90,6 +92,7 @@ export class GraphPlugin extends BasePlugin {
             flattened: false,
             link: undefined!,
             rootSink: undefined,
+            self: undefined!,
             sentinel: undefined!,
             sink: undefined,
             sources: [],
@@ -135,6 +138,7 @@ export class GraphPlugin extends BasePlugin {
             flattened: false,
             link: sentinel_,
             rootSink: undefined,
+            self: ref,
             sentinel: sentinel_,
             sink: undefined,
             sources: [],
@@ -187,6 +191,18 @@ export class GraphPlugin extends BasePlugin {
 
         const { notifications_ } = this;
         notifications_.push({ notification: "unsubscribe", ref });
+    }
+
+    findRootSubscriptionRefs(): SubscriptionRef[] {
+
+        const { sentinel_ } = this;
+        return sentinel_ ? sentinel_.sources : [];
+    }
+
+    findSubscriptionRef(match: Match): SubscriptionRef | undefined {
+
+        const { sentinel_ } = this;
+        return findSubscriptionRef(sentinel_, match);
     }
 
     teardown(): void {
@@ -247,4 +263,29 @@ export class GraphPlugin extends BasePlugin {
             }
         }
     }
+}
+
+function findSubscriptionRef(
+    graphRef: GraphRef,
+    match: Match
+): SubscriptionRef | undefined {
+
+    const { flats, self, sources } = graphRef;
+    if (self && matches(self, match)) {
+        return self;
+    }
+
+    function iter(
+        found: SubscriptionRef | undefined,
+        subscriptionRef: SubscriptionRef
+    ): SubscriptionRef | undefined {
+        if (found) {
+            return found;
+        }
+        return findSubscriptionRef(
+            getGraphRef(subscriptionRef),
+            match
+        );
+    }
+    return sources.reduce(iter, undefined) || flats.reduce(iter, undefined);
 }
