@@ -6,13 +6,13 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { detect, hook } from "./detect";
+import { hook, sweep } from "./sweep";
 
-describe("detect", () => {
+describe("sweep", () => {
 
     it("should do nothing if there is no hook", () => {
 
-        detect("");
+        sweep("");
     });
 
     it("should call the registered hook", () => {
@@ -20,7 +20,7 @@ describe("detect", () => {
         const stub = sinon.stub();
 
         hook(stub);
-        detect("");
+        sweep("");
 
         expect(stub).to.have.property("calledOnce", true);
         expect(stub.calledWith("")).to.be.true;

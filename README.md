@@ -102,7 +102,7 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.findAll`](#module-findAll)
 * [`Spy.stats`](#module-stats)
 * [`Spy.teardown`](#module-teardown)
-* [`detect`](#module-detect)
+* [`sweep`](#module-sweep)
 
 <a name="module-create"></a>
 
@@ -342,20 +342,20 @@ interface Spy {
 
 Tears down the spy.
 
-<a name="module-detect"></a>
+<a name="module-sweep"></a>
 
-### detect
+### sweep
 
 ```ts
-function detect(id: string): void;
+function sweep(id: string): void;
 ```
 
-Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `detect` call with the specified `id`.
+Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `sweep` call with the specified `id`.
 
-The `detect` method is implemented so that it can be imported and called regardless of whether or not the spy is configured. That is, calls can be left in production code, as they become no-ops. It should be imported like this:
+The `sweep` method is implemented so that it can be imported and called regardless of whether or not the spy is configured. That is, calls can be left in production code, as they become no-ops. It should be imported like this:
 
 ```ts
-import { detect } from "rxjs-spy/detect";
+import { sweep } from "rxjs-spy/sweep";
 ```
 
 ## Console API

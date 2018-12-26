@@ -8,12 +8,10 @@ export type Hook = (id: string) => void;
 const noop_: Hook = () => {};
 let hook_: Hook = noop_;
 
-export function detect(id: string): void {
-
-    hook_(id);
+export function hook(hook: Hook | undefined): void {
+    hook_ = hook || noop_;
 }
 
-export function hook(hook: Hook | undefined): void {
-
-    hook_ = hook || noop_;
+export function sweep(id: string): void {
+    hook_(id);
 }

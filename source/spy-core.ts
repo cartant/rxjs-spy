@@ -11,14 +11,14 @@ import {
 } from "rxjs";
 
 import { Auditor } from "./auditor";
-import { hook } from "./detect";
-import { Detector } from "./detector";
 import { compile } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
 import { hide } from "./operators";
+import { hook } from "./sweep";
+import { Sweeper } from "./sweeper";
 
 import {
     BufferPlugin,
@@ -119,8 +119,8 @@ export class SpyCore implements Spy {
         this.tick_ = 0;
         this.undos_ = [];
 
-        const detector = new Detector(this);
-        hook(id => this.detect_(id, detector));
+        const sweeper = new Sweeper(this);
+        hook(id => this.sweep_(id, sweeper));
 
         if (typeof window !== "undefined") {
             [options.global || "spy", "rxSpy"].forEach(key => {
@@ -731,28 +731,28 @@ export class SpyCore implements Spy {
         return subscriber;
     }
 
-    private detect_(id: string, detector: Detector): void {
+    private sweep_(id: string, sweeper: Sweeper): void {
 
         const { auditor_, defaultLogger_ } = this;
 
         auditor_.audit(id, ignored => {
 
-            const detected = detector.detect(id);
+            const swept = sweeper.sweep(id);
             const logger = toLogger(defaultLogger_);
 
-            if (detected) {
+            if (swept) {
                 const audit = (ignored === 0) ? "" : `; ignored ${ignored}`;
-                logger.group(`Subscription changes detected; id = '${id}'${audit}`);
-                detected.subscriptions.forEach(s => {
+                logger.group(`Subscription changes found; id = '${id}'${audit}`);
+                swept.subscriptions.forEach(s => {
                     logSubscription(logger, "Subscription", s);
                 });
-                detected.unsubscriptions.forEach(s => {
+                swept.unsubscriptions.forEach(s => {
                     logSubscription(logger, "Unsubscription", s);
                 });
-                detected.flatSubscriptions.forEach(s => {
+                swept.flatSubscriptions.forEach(s => {
                     logSubscription(logger, "Flat subscription", s);
                 });
-                detected.flatUnsubscriptions.forEach(s => {
+                swept.flatUnsubscriptions.forEach(s => {
                     logSubscription(logger, "Flat unsubscription", s);
                 });
                 logger.groupEnd();

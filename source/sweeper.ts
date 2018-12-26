@@ -7,14 +7,14 @@ import { Subscription } from "rxjs";
 import { Snapshot, SnapshotPlugin, SubscriptionSnapshot } from "./plugin/snapshot-plugin";
 import { Spy } from "./spy-interface";
 
-export interface Detected {
+export interface Swept {
     flatSubscriptions: SubscriptionSnapshot[];
     flatUnsubscriptions: SubscriptionSnapshot[];
     subscriptions: SubscriptionSnapshot[];
     unsubscriptions: SubscriptionSnapshot[];
 }
 
-interface DetectorRecord {
+interface SweeperRecord {
     snapshotRecords: SnapshotRecord[];
 }
 
@@ -28,51 +28,51 @@ interface SubscriptionRecord {
     subscriptionSnapshot: SubscriptionSnapshot;
 }
 
-export class Detector {
+export class Sweeper {
 
-    private detectorRecords_: Map<string, DetectorRecord>;
+    private sweeperRecords_: Map<string, SweeperRecord>;
     private snapshotPlugin_: SnapshotPlugin | undefined;
     private spy_: Spy;
 
     constructor(spy: Spy) {
 
-        this.detectorRecords_ = new Map<string, DetectorRecord>();
+        this.sweeperRecords_ = new Map<string, SweeperRecord>();
         this.snapshotPlugin_ = spy.find(SnapshotPlugin);
         this.spy_ = spy;
     }
 
-    detect(id: string): Detected | undefined {
+    sweep(id: string): Swept | undefined {
 
-        const { detectorRecords_, snapshotPlugin_, spy_ } = this;
+        const { sweeperRecords_, snapshotPlugin_, spy_ } = this;
 
         if (!snapshotPlugin_) {
             spy_.logger.warnOnce("Snapshotting is not enabled.");
             return undefined;
         }
 
-        let detectorRecord = detectorRecords_.get(id);
+        let sweeperRecord = sweeperRecords_.get(id);
         const snapshotRecord = this.record_(snapshotPlugin_.snapshotAll());
 
-        if (detectorRecord) {
-            detectorRecord.snapshotRecords.push(snapshotRecord);
+        if (sweeperRecord) {
+            sweeperRecord.snapshotRecords.push(snapshotRecord);
         } else {
-            detectorRecord = {
+            sweeperRecord = {
                 snapshotRecords: [snapshotRecord]
             };
-            detectorRecords_.set(id, detectorRecord);
+            sweeperRecords_.set(id, sweeperRecord);
         }
-        if (detectorRecord.snapshotRecords.length > 2) {
-            detectorRecord.snapshotRecords.shift();
+        if (sweeperRecord.snapshotRecords.length > 2) {
+            sweeperRecord.snapshotRecords.shift();
         }
-        if (detectorRecord.snapshotRecords.length < 2) {
+        if (sweeperRecord.snapshotRecords.length < 2) {
             return undefined;
         }
 
-        const [previous, current] = detectorRecord.snapshotRecords;
+        const [previous, current] = sweeperRecord.snapshotRecords;
         return this.compare_(id, previous, current);
     }
 
-    private compare_(id: string, previous: SnapshotRecord, current: SnapshotRecord): Detected | undefined {
+    private compare_(id: string, previous: SnapshotRecord, current: SnapshotRecord): Swept | undefined {
 
         const subscriptions: SubscriptionRecord[] = [];
         const unsubscriptions: SubscriptionRecord[] = [];

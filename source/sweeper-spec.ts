@@ -7,10 +7,10 @@
 import { expect } from "chai";
 import { BehaviorSubject, Subject } from "rxjs";
 import { mergeMap } from "rxjs/operators";
-import { Detector } from "./detector";
 import { tag } from "./operators";
 import { create } from "./spy-factory";
 import { Spy } from "./spy-interface";
+import { Sweeper } from "./sweeper";
 
 const options = {
     keptDuration: -1,
@@ -18,18 +18,18 @@ const options = {
     warning: false
 };
 
-describe("detector", () => {
+describe("sweeper", () => {
 
-    let detector: Detector;
+    let sweeper: Sweeper;
     let spy: Spy;
 
     beforeEach(() => {
 
         spy = create({ ...options });
-        detector = new Detector(spy);
+        sweeper = new Sweeper(spy);
     });
 
-    it("should detect subscriptions and unsubscriptions", () => {
+    it("should find subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
         const source = subject.pipe(tag("source"));
@@ -37,25 +37,25 @@ describe("detector", () => {
         subject.next();
 
         const id = "";
-        let detected = detector.detect(id);
-        expect(detected).to.not.exist;
+        let swept = sweeper.sweep(id);
+        expect(swept).to.not.exist;
 
         const subscription = source.subscribe();
         subject.next();
 
-        detected = detector.detect(id)!;
-        expect(detected.subscriptions).to.have.length(1);
-        expect(detected.unsubscriptions).to.be.empty;
+        swept = sweeper.sweep(id)!;
+        expect(swept.subscriptions).to.have.length(1);
+        expect(swept.unsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
         subject.next();
 
-        detected = detector.detect(id)!;
-        expect(detected.subscriptions).to.be.empty;
-        expect(detected.unsubscriptions).to.have.length(1);
+        swept = sweeper.sweep(id)!;
+        expect(swept.subscriptions).to.be.empty;
+        expect(swept.unsubscriptions).to.have.length(1);
     });
 
-    it("should detect flat subscriptions and unsubscriptions", () => {
+    it("should find flat subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
         const source = subject.pipe(tag("source"));
@@ -67,21 +67,21 @@ describe("detector", () => {
         subject.next();
 
         const id = "";
-        let detected = detector.detect(id);
-        expect(detected).to.not.exist;
+        let swept = sweeper.sweep(id);
+        expect(swept).to.not.exist;
 
         subject.next();
 
-        detected = detector.detect(id)!;
-        expect(detected.flatSubscriptions).to.have.length(1);
-        expect(detected.flatUnsubscriptions).to.be.empty;
+        swept = sweeper.sweep(id)!;
+        expect(swept.flatSubscriptions).to.have.length(1);
+        expect(swept.flatUnsubscriptions).to.be.empty;
 
         subject.next();
 
-        detected = detector.detect(id)!;
-        expect(detected).to.exist;
-        expect(detected.flatSubscriptions).to.have.length(1);
-        expect(detected.flatUnsubscriptions).to.be.empty;
+        swept = sweeper.sweep(id)!;
+        expect(swept).to.exist;
+        expect(swept.flatSubscriptions).to.have.length(1);
+        expect(swept.flatUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
     });

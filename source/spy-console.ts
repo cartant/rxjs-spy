@@ -3,10 +3,10 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { detect } from "./detect";
 import { defaultLogger, toLogger } from "./logger";
 import { PausePlugin } from "./plugin";
 import { SpyCore } from "./spy-core";
+import { sweep } from "./sweep";
 import { inferPath, inferType } from "./util";
 
 export function wrap(
@@ -26,10 +26,6 @@ export function wrap(
                 const pausePlugin = pausePlugins[call - 1];
                 return pausePlugin ? pausePlugin.deck : undefined;
             }
-        },
-        detect(id: string = ""): void {
-            deprecation();
-            detect(id);
         },
         inferPath,
         inferType,
@@ -60,6 +56,10 @@ export function wrap(
         stats(): void {
             deprecation();
             core.stats();
+        },
+        sweep(id: string = ""): void {
+            deprecation();
+            sweep(id);
         },
         undo(...args: any[]): void {
             if (args.length === 0) {
