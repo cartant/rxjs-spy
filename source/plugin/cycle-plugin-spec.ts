@@ -31,12 +31,10 @@ describe("CyclePlugin", () => {
         };
         spy = create({ ...options, defaultLogger: stubs as any });
         spy.plug(new StackTracePlugin({ spy }));
-
-        const plugin = new CyclePlugin({
+        spy.plug(new CyclePlugin({
             cycleThreshold: 1,
             spy
-        });
-        spy.plug(plugin);
+        }));
     });
 
     it("should detect cyclic next notifications", () => {

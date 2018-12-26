@@ -36,12 +36,10 @@ describe("BufferPlugin", () => {
         spy.plug(new StackTracePlugin({ spy }));
         spy.plug(new GraphPlugin({ spy }));
         spy.plug(new SnapshotPlugin({ spy }));
-
-        const plugin = new BufferPlugin({
+        spy.plug(new BufferPlugin({
             bufferThreshold: 2,
             spy
-        });
-        spy.plug(plugin);
+        }));
     });
 
     it("should be detect buffering within bufferWhen", () => {
