@@ -137,7 +137,7 @@ export class SnapshotPlugin extends BasePlugin {
 
         super("snapshot");
 
-        this.graphPlugin_ = spy.find(GraphPlugin);
+        this.graphPlugin_ = undefined;
         this.keptValues_ = keptValues;
         this.spy_ = spy;
     }
@@ -171,9 +171,12 @@ export class SnapshotPlugin extends BasePlugin {
             valuesFlushed: 0
         });
 
-        const { graphPlugin_ } = this;
-        if (graphPlugin_) {
-            this.spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
+        const { graphPlugin_, spy_ } = this;
+        if (!graphPlugin_) {
+            this.graphPlugin_ = spy_.find(GraphPlugin);
+            if (!this.graphPlugin_) {
+                spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
+            }
         }
     }
 

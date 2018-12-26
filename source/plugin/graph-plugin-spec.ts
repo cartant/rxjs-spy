@@ -591,7 +591,7 @@ describe("GraphPlugin", () => {
         });
     });
 
-    describe.only("methods", () => {
+    describe("methods", () => {
 
         let graphPlugin: GraphPlugin;
         let spy: Spy;
