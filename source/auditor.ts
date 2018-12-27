@@ -35,7 +35,10 @@ export class Auditor {
             const index = queue_.findIndex(q => q.source === source);
             if (index !== -1) {
                 const { ignored, timestamp } = queue_[index];
-                queued.ignored += ignored + 1;
+                // The queued task is going to be ignored and any tasks that
+                // have been ignored whilst it has been queued need to be
+                // included in the ignored total, too.
+                queued.ignored = 1 + ignored;
                 queued.timestamp = timestamp;
                 queue_.splice(index, 1);
             }
