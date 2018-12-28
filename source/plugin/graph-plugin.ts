@@ -44,7 +44,7 @@ export function logGraph(subscription: Subscription, {
         const { sentinel } = getGraphRef(subscription);
         sentinel.sources.forEach(source => log("", source, "root"));
     } else {
-        log("", subscription, "ref");
+        log("", subscription, "subscription");
     }
 
     function log(indent: string, source: Subscription, kind: string): void {

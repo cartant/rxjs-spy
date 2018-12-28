@@ -94,10 +94,9 @@ export class Deck {
         this.broadcast_();
     }
 
-    operator(ref: SubscriptionRef): (source: Observable<any>) => Observable<any> {
+    operator(subscriptionRef: SubscriptionRef): (source: Observable<any>) => Observable<any> {
 
-        const { observable } = ref;
-
+        const { observable } = subscriptionRef;
         return (source: Observable<any>) => {
 
             let state = this.states_.get(observable);
