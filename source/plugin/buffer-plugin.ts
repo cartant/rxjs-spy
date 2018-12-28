@@ -13,19 +13,37 @@ import { BasePlugin } from "./plugin";
 import { getSnapshotRef, SnapshotRef } from "./snapshot-plugin";
 import { getStackTrace } from "./stack-trace-plugin";
 
+const bufferRefHigherOrderSymbol = Symbol("bufferRefHigherOrder");
+const bufferRefSymbol = Symbol("bufferRef");
+
 interface BufferRef {
-    sink: SubscriptionRef;
     sinkGraphRef: GraphRef;
     sinkSnapshotRef: SnapshotRef;
-    sources: SubscriptionRef[];
+    sinkSubscriptionRef: SubscriptionRef;
+    sourceSubscriptionRefs: SubscriptionRef[];
     warned: boolean;
 }
 
-const bufferHigherOrderSymbol = Symbol("bufferHigherOrder");
-const bufferRefSymbol = Symbol("bufferRef");
+function getBufferRef(subscription: Subscription): BufferRef {
+    return subscription[bufferRefSymbol];
+}
+
+function getHigherOrderBufferRef(subscription: Subscription): BufferRef {
+    return subscription[bufferRefHigherOrderSymbol];
+}
+
+function setBufferRef(subscription: Subscription, value: BufferRef): BufferRef {
+    subscription[bufferRefSymbol] = value;
+    return value;
+}
+
+function setHigherOrderBufferRef(subscription: Subscription, value: BufferRef): BufferRef {
+    subscription[bufferRefHigherOrderSymbol] = value;
+    return value;
+}
 
 const higherOrderRegExp = /^(zip)$/;
-const subscriptions: SubscriptionRef[] = [];
+const subscriptions: Subscription[] = [];
 const unboundedRegExp = /^(buffer|bufferTime|bufferToggle|bufferWhen|delay|delayWhen|mergeMap|zip)$/;
 
 export class BufferPlugin extends BasePlugin {
@@ -51,29 +69,34 @@ export class BufferPlugin extends BasePlugin {
 
     afterNext(subscription: Subscription, value: any): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
-        const bufferRef: BufferRef = subscriptionRef[bufferRefSymbol];
+        const bufferRef = getBufferRef(subscription);
         if (!bufferRef) {
             return;
         }
 
-        const { sink, sinkGraphRef, sinkSnapshotRef, sources } = bufferRef;
-        const inputCount = sources.reduce((count, source) => {
-            return Math.max(count, source.nextCount);
+        const {
+            sinkGraphRef,
+            sinkSnapshotRef,
+            sinkSubscriptionRef,
+            sourceSubscriptionRefs
+        } = bufferRef;
+
+        const inputCount = sourceSubscriptionRefs.reduce((count, sourceSubscriptionRef) => {
+            return Math.max(count, sourceSubscriptionRef.nextCount);
         }, 0);
         const flatsCount = sinkGraphRef.flats.length + sinkGraphRef.flatsFlushed;
-        const outputCount = flatsCount || sink.nextCount;
+        const outputCount = flatsCount || sinkSubscriptionRef.nextCount;
 
         const { bufferThreshold_, logger_, spy_ } = this;
         const bufferCount = inputCount - outputCount;
         if ((bufferCount >= bufferThreshold_) && !bufferRef.warned) {
             bufferRef.warned = true;
-            const stackFrames = getStackTrace(sinkGraphRef.rootSink || sink);
+            const stackFrames = getStackTrace(sinkGraphRef.rootSink || sinkSubscriptionRef.subscription);
             if (stackFrames.length === 0) {
                 spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
             }
             const stackTrace = stackFrames.length ? `; subscribed at\n${stackFrames.join("\n")}` : "";
-            const type = inferType(sink.observable);
+            const type = inferType(sinkSubscriptionRef.observable);
             logger_.warn(`Excessive buffering detected; type = ${type}; count = ${bufferCount}${stackTrace}`);
         }
         if (sinkSnapshotRef) {
@@ -88,50 +111,56 @@ export class BufferPlugin extends BasePlugin {
 
     beforeSubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
-        const snapshotRef = getSnapshotRef(subscriptionRef);
+        const snapshotRef = getSnapshotRef(subscription);
         if (snapshotRef) {
             snapshotRef.query.bufferCount = 0;
         }
 
-        subscriptions.push(subscriptionRef);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        subscriptions.push(subscription);
         const length = subscriptions.length;
         if (length > 1) {
-            const bufferRef = subscriptions[length - 2][bufferHigherOrderSymbol];
+            const bufferRef = getHigherOrderBufferRef(subscriptions[length - 2]);
             if (bufferRef) {
-                bufferRef.sources.push(subscriptionRef);
-                subscriptionRef[bufferRefSymbol] = bufferRef;
+                bufferRef.sourceSubscriptionRefs.push(subscriptionRef);
+                setBufferRef(subscription, bufferRef);
                 return;
             }
         }
 
-        const graphRef = getGraphRef(subscriptionRef);
+        const graphRef = getGraphRef(subscription);
         if (!graphRef) {
             this.spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");
             return;
         }
 
         const { sink } = graphRef;
-        if (!sink || !unboundedRegExp.test(inferType(sink.observable))) {
+        if (!sink) {
             return;
         }
 
-        let bufferRef = sink[bufferRefSymbol];
-        if (!bufferRef) {
-            bufferRef = sink[bufferRefSymbol] = {
-                sink,
-                sinkGraphRef: getGraphRef(sink),
-                sinkSnapshotRef: getSnapshotRef(sink),
-                sources: [],
-                warned: false
-            };
+        const sinkSubscriptionRef = getSubscriptionRef(sink);
+        const sinkObservableType = inferType(sinkSubscriptionRef.observable);
+        if (!unboundedRegExp.test(sinkObservableType)) {
+            return;
         }
 
-        if (higherOrderRegExp.test(inferType(sink.observable))) {
-            subscriptionRef[bufferHigherOrderSymbol] = bufferRef;
+        let bufferRef = getBufferRef(sink);
+        if (!bufferRef) {
+            bufferRef = setBufferRef(sink, {
+                sinkGraphRef: getGraphRef(sink),
+                sinkSnapshotRef: getSnapshotRef(sink),
+                sinkSubscriptionRef,
+                sourceSubscriptionRefs: [],
+                warned: false
+            });
+        }
+
+        if (higherOrderRegExp.test(sinkObservableType)) {
+            setHigherOrderBufferRef(subscription, bufferRef);
         } else {
-            bufferRef.sources.push(subscriptionRef);
-            subscriptionRef[bufferRefSymbol] = bufferRef;
+            bufferRef.sourceSubscriptionRefs.push(subscriptionRef);
+            setBufferRef(subscription, bufferRef);
         }
     }
 }

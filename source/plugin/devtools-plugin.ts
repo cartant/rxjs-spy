@@ -360,9 +360,9 @@ export class DevToolsPlugin extends BasePlugin {
             },
             subscription: {
                 error,
-                graph: orNull(toGraph(subscriptionRef)),
+                graph: orNull(toGraph(subscription)),
                 id: identify(subscription),
-                stackTrace: orNull(getStackTrace(subscriptionRef))
+                stackTrace: orNull(getStackTrace(subscription))
             },
             tick: this.spy_.tick,
             timestamp: Date.now(),
@@ -377,9 +377,9 @@ function orNull(value: any): any {
     return  (value === undefined) ? null : value;
 }
 
-function toGraph(subscriptionRef: SubscriptionRef): GraphPayload | undefined {
+function toGraph(subscription: Subscription): GraphPayload | undefined {
 
-    const graphRef = getGraphRef(subscriptionRef);
+    const graphRef = getGraphRef(subscription);
 
     if (!graphRef) {
         return undefined;
@@ -396,9 +396,9 @@ function toGraph(subscriptionRef: SubscriptionRef): GraphPayload | undefined {
     return {
         flats: flats.map(identify),
         flatsFlushed,
-        rootSink: rootSink ? identify(rootSink.subscription) : null,
-        sink: sink ? identify(sink.subscription) : null,
-        sources: sources.map(source => identify(source.subscription)),
+        rootSink: rootSink ? identify(rootSink) : null,
+        sink: sink ? identify(sink) : null,
+        sources: sources.map(identify),
         sourcesFlushed
     };
 }

@@ -10,7 +10,6 @@ import { identify } from "../identify";
 import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
 import { LogPlugin } from "./log-plugin";
 import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 
@@ -158,7 +157,7 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             subject.subscribe();
 
-            const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
+            const subscriptionRef = subscriptionRefsPlugin.getSubscriptionRef(subject);
             spy.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
@@ -179,7 +178,7 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             subject.subscribe();
 
-            const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
+            const subscriptionRef = subscriptionRefsPlugin.getSubscriptionRef(subject);
             spy.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
@@ -200,7 +199,7 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             subject.subscribe();
 
-            const subscriptionRef = subscriptionRefsPlugin.get(subject) as SubscriptionRef;
+            const subscriptionRef = subscriptionRefsPlugin.getSubscriptionRef(subject);
             spy.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }

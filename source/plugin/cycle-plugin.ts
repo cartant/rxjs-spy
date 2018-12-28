@@ -6,7 +6,7 @@
 import { Subscription } from "rxjs";
 import { Logger } from "../logger";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 import { BasePlugin } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
@@ -19,7 +19,7 @@ export class CyclePlugin extends BasePlugin {
 
     private cycleThreshold_: number;
     private logger_: Logger;
-    private nexts_: SubscriptionRef[] = [];
+    private nexts_: Subscription[] = [];
     private spy_: Spy;
 
     constructor({
@@ -46,35 +46,33 @@ export class CyclePlugin extends BasePlugin {
     beforeNext(subscription: Subscription, value: any): void {
 
         const { cycleThreshold_, logger_, nexts_, spy_ } = this;
-        const subscriptionRef = getSubscriptionRef(subscription);
-        const { observable } = subscriptionRef;
 
-        if (nexts_.indexOf(subscriptionRef) !== -1) {
+        if (nexts_.indexOf(subscription) !== -1) {
             const cycleCount = subscription[cycleCountSymbol] = (subscription[cycleCountSymbol] || 0) + 1;
             if (cycleCount >= cycleThreshold_) {
-                if (nexts_.findIndex(n => n.subscription[cycleWarnedSymbol]) === -1) {
+                if (nexts_.findIndex(next => next[cycleWarnedSymbol]) === -1) {
                     subscription[cycleWarnedSymbol] = true;
-                    const stackFrames = getStackTrace(subscriptionRef);
+                    const stackFrames = getStackTrace(subscription);
                     if (stackFrames.length === 0) {
                         spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
                     }
                     const stackTrace = stackFrames.length ? `; subscribed at\n${stackFrames.join("\n")}` : "";
+                    const { observable } = getSubscriptionRef(subscription);
                     const type = inferType(observable);
                     logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
                 }
             }
-            const snapshotRef = getSnapshotRef(subscriptionRef);
+            const snapshotRef = getSnapshotRef(subscription);
             if (snapshotRef) {
                 snapshotRef.query.cycleCount = cycleCount;
             }
         }
-        nexts_.push(subscriptionRef);
+        nexts_.push(subscription);
     }
 
     beforeSubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
-        const snapshotRef = getSnapshotRef(subscriptionRef);
+        const snapshotRef = getSnapshotRef(subscription);
         if (snapshotRef) {
             snapshotRef.query.cycleCount = 0;
         }

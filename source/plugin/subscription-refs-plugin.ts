@@ -22,7 +22,14 @@ export class SubscriptionRefsPlugin extends BasePlugin {
         subscriptionRefs_.set(subscriptionRef.observable, subscriptionRef);
     }
 
-    get(observable: Observable<any>): SubscriptionRef {
+    getSubscription(observable: Observable<any>): Subscription {
+
+        const { subscriptionRefs_ } = this;
+        const subscriptionRef = subscriptionRefs_.get(observable)!;
+        return subscriptionRef ? subscriptionRef.subscription : undefined!;
+    }
+
+    getSubscriptionRef(observable: Observable<any>): SubscriptionRef {
 
         const { subscriptionRefs_ } = this;
         return subscriptionRefs_.get(observable)!;

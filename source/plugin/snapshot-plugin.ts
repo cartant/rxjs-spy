@@ -10,7 +10,7 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 import { getGraphRef, GraphPlugin } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
@@ -25,9 +25,9 @@ export interface SnapshotRef {
     valuesFlushed: number;
 }
 
-export function getSnapshotRef(ref: SubscriptionRef): SnapshotRef {
+export function getSnapshotRef(subscription: Subscription): SnapshotRef {
 
-    return ref[snapshotRefSymbol];
+    return subscription[snapshotRefSymbol];
 }
 
 function mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
@@ -59,9 +59,9 @@ function mapStackTraces(snapshots: any[]): Observable<void> {
     }
 }
 
-function setSnapshotRef(ref: SubscriptionRef, value: SnapshotRef): SnapshotRef {
+function setSnapshotRef(subscription: Subscription, value: SnapshotRef): SnapshotRef {
 
-    ref[snapshotRefSymbol] = value;
+    subscription[snapshotRefSymbol] = value;
     return value;
 }
 
@@ -144,16 +144,14 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeError(subscription: Subscription, error: any): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
-        const snapshotRef = getSnapshotRef(subscriptionRef);
+        const snapshotRef = getSnapshotRef(subscription);
         snapshotRef.error = error;
     }
 
     beforeNext(subscription: Subscription, value: any): void {
 
         const tick = this.spy_.tick;
-        const subscriptionRef = getSubscriptionRef(subscription);
-        const snapshotRef = getSnapshotRef(subscriptionRef);
+        const snapshotRef = getSnapshotRef(subscription);
         snapshotRef.values.push({ tick, timestamp: Date.now(), value });
 
         const { keptValues_ } = this;
@@ -166,8 +164,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeSubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
-        setSnapshotRef(subscriptionRef, {
+        setSnapshotRef(subscription, {
             error: undefined,
             query: {},
             values: [],
@@ -193,8 +190,8 @@ export class SnapshotPlugin extends BasePlugin {
         const subscribers = new Map<Subscriber<any>, SubscriberSnapshot>();
         const subscriptions = new Map<Subscription, SubscriptionSnapshot>();
 
-        const subscriptionRefs = this.getSubscriptionRefs_();
-        subscriptionRefs.forEach((unused, ref) => {
+        const foundSubscriptions = this.findSubscriptions_();
+        foundSubscriptions.forEach((unused, subscription) => {
 
             const {
                 completeTimestamp,
@@ -204,20 +201,22 @@ export class SnapshotPlugin extends BasePlugin {
                 observable,
                 subscribeTimestamp,
                 subscriber,
-                subscription,
                 tick,
                 unsubscribeTimestamp
-            } = ref;
+            } = getSubscriptionRef(subscription);
 
-            const graphRef = getGraphRef(ref);
-            const { flatsFlushed, flattened, sourcesFlushed } = graphRef;
+            const {
+                flatsFlushed,
+                flattened,
+                sourcesFlushed
+            } = getGraphRef(subscription);
 
-            const snapshotRef = getSnapshotRef(ref);
             const {
                 error,
+                query,
                 values,
                 valuesFlushed
-            } = snapshotRef;
+            } = getSnapshotRef(subscription);
 
             const subscriptionSnapshot: SubscriptionSnapshot = {
                 completeTimestamp,
@@ -227,16 +226,16 @@ export class SnapshotPlugin extends BasePlugin {
                 flatsFlushed,
                 flattened,
                 id: identify(subscription),
-                mappedStackTrace: getMappedStackTrace(ref),
+                mappedStackTrace: getMappedStackTrace(subscription),
                 nextCount,
                 nextTimestamp,
                 observable,
-                query: snapshotRef.query,
+                query,
                 rootSink: undefined,
                 sink: undefined,
                 sources: new Map<Subscription, SubscriptionSnapshot>(),
                 sourcesFlushed,
-                stackTrace: getStackTrace(ref),
+                stackTrace: getStackTrace(subscription),
                 subscribeTimestamp,
                 subscriber,
                 subscription,
@@ -281,19 +280,19 @@ export class SnapshotPlugin extends BasePlugin {
             observableSnapshot.tick = Math.max(observableSnapshot.tick, tick);
         });
 
-        subscriptionRefs.forEach((unused, ref) => {
+        foundSubscriptions.forEach((unused, subscription) => {
 
-            const graphRef = getGraphRef(ref);
-            const subscriptionSnapshot = subscriptions.get(ref.subscription)!;
+            const graphRef = getGraphRef(subscription);
+            const subscriptionSnapshot = subscriptions.get(subscription)!;
 
             if (graphRef.sink) {
-                subscriptionSnapshot.sink = subscriptions.get(graphRef.sink.subscription)!;
+                subscriptionSnapshot.sink = subscriptions.get(graphRef.sink)!;
             }
             if (graphRef.rootSink) {
-                subscriptionSnapshot.rootSink = subscriptions.get(graphRef.rootSink.subscription)!;
+                subscriptionSnapshot.rootSink = subscriptions.get(graphRef.rootSink)!;
             }
-            graphRef.flats.forEach(m => subscriptionSnapshot.flats.set(m.subscription, subscriptions.get(m.subscription)!));
-            graphRef.sources.forEach(s => subscriptionSnapshot.sources.set(s.subscription, subscriptions.get(s.subscription)!));
+            graphRef.flats.forEach(flat => subscriptionSnapshot.flats.set(flat, subscriptions.get(flat)!));
+            graphRef.sources.forEach(source => subscriptionSnapshot.sources.set(source, subscriptions.get(source)!));
         });
 
         subscribers.forEach(subscriberSnapshot => {
@@ -331,35 +330,23 @@ export class SnapshotPlugin extends BasePlugin {
         };
     }
 
-    snapshotObservable(ref: SubscriptionRef): ObservableSnapshot | undefined {
+    private addSubscriptions_(subscription: Subscription, map: Map<Subscription, boolean>): void {
 
-        const snapshot = this.snapshotAll();
-        return snapshot.observables.get(ref.observable);
+        map.set(subscription, true);
+
+        const graphRef = getGraphRef(subscription);
+        graphRef.flats.forEach(flat => this.addSubscriptions_(flat, map));
+        graphRef.sources.forEach(source => this.addSubscriptions_(source, map));
     }
 
-    snapshotSubscriber(ref: SubscriptionRef): SubscriberSnapshot | undefined {
-
-        const snapshot = this.snapshotAll();
-        return snapshot.subscribers.get(ref.subscriber);
-    }
-
-    private addSubscriptionRefs_(ref: SubscriptionRef, map: Map<SubscriptionRef, boolean>): void {
-
-        map.set(ref, true);
-
-        const graphRef = getGraphRef(ref);
-        graphRef.flats.forEach(m => this.addSubscriptionRefs_(m, map));
-        graphRef.sources.forEach(s => this.addSubscriptionRefs_(s, map));
-    }
-
-    private getSubscriptionRefs_(): Map<SubscriptionRef, boolean> {
+    private findSubscriptions_(): Map<Subscription, boolean> {
 
         const { graphPlugin_ } = this;
-        const map = new Map<SubscriptionRef, boolean>();
+        const map = new Map<Subscription, boolean>();
 
         if (graphPlugin_) {
-            const roots = graphPlugin_.findRootSubscriptionRefs();
-            roots.forEach(root => this.addSubscriptionRefs_(root, map));
+            const roots = graphPlugin_.findRootSubscriptions();
+            roots.forEach(root => this.addSubscriptions_(root, map));
         }
         return map;
     }

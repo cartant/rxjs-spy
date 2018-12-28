@@ -5,7 +5,6 @@
 
 import { Subscription } from "rxjs";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef } from "../subscription-ref";
 import { getGraphRef } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 
@@ -54,8 +53,7 @@ export class StatsPlugin extends BasePlugin {
 
     afterSubscribe(subscription: Subscription): void {
         const { stats_ } = this;
-        const subscriptionRef = getSubscriptionRef(subscription);
-        const graphRef = getGraphRef(subscriptionRef);
+        const graphRef = getGraphRef(subscription);
         if (graphRef) {
             const { depth, flattened, flats, flatsFlushed, rootSink, sources, sourcesFlushed } = graphRef;
             if (!rootSink) {

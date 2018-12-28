@@ -12,7 +12,6 @@ import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
@@ -22,26 +21,26 @@ export interface StackTraceRef {
     stackTrace: StackFrame[];
 }
 
-export function getMappedStackTrace(ref: SubscriptionRef): Observable<StackFrame[]> {
+export function getMappedStackTrace(subscription: Subscription): Observable<StackFrame[]> {
 
-    const stackTraceRef = getStackTraceRef(ref);
+    const stackTraceRef = getStackTraceRef(subscription);
     return stackTraceRef ? stackTraceRef.mappedStackTrace : of([]);
 }
 
-export function getStackTrace(ref: SubscriptionRef): StackFrame[] {
+export function getStackTrace(subscription: Subscription): StackFrame[] {
 
-    const stackTraceRef = getStackTraceRef(ref);
+    const stackTraceRef = getStackTraceRef(subscription);
     return stackTraceRef ? stackTraceRef.stackTrace : [];
 }
 
-export function getStackTraceRef(ref: SubscriptionRef): StackTraceRef {
+export function getStackTraceRef(subscription: Subscription): StackTraceRef {
 
-    return ref[stackTraceRefSymbol];
+    return subscription[stackTraceRefSymbol];
 }
 
-function setStackTraceRef(ref: SubscriptionRef, value: StackTraceRef): StackTraceRef {
+function setStackTraceRef(subscription: Subscription, value: StackTraceRef): StackTraceRef {
 
-    ref[stackTraceRefSymbol] = value;
+    subscription[stackTraceRefSymbol] = value;
     return value;
 }
 
@@ -66,11 +65,10 @@ export class StackTracePlugin extends BasePlugin {
 
     beforeSubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
         const stackFrames = this.getStackFrames_();
 
         if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            setStackTraceRef(subscriptionRef, {
+            setStackTraceRef(subscription, {
                 mappedStackTrace: defer(() => {
                     const gps = new StackTraceGps({ sourceCache: this.sourceCache_ });
                     return Promise.all(stackFrames.map(stackFrame => gps
@@ -84,7 +82,7 @@ export class StackTracePlugin extends BasePlugin {
                 stackTrace: stackFrames
             });
         } else {
-            setStackTraceRef(subscriptionRef, {
+            setStackTraceRef(subscription, {
                 mappedStackTrace: of(stackFrames).pipe(hide()),
                 stackTrace: stackFrames
             });

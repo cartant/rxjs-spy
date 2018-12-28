@@ -11,7 +11,6 @@ import { identify } from "../identify";
 import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
 import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
 import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 
@@ -43,7 +42,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 subject.subscribe();
 
-                const { sentinel } = getGraphRef(subscriptionRefsPlugin.get(subject));
+                const { sentinel } = getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
                 expect(sentinel.sources).to.have.length(1);
 
                 subject.complete();
@@ -61,7 +60,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 subject.subscribe(() => {}, () => {});
 
-                const { sentinel } = getGraphRef(subscriptionRefsPlugin.get(subject));
+                const { sentinel } = getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
                 expect(sentinel.sources).to.have.length(1);
 
                 subject.error(new Error("Boom!"));
@@ -79,7 +78,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 const subscription = subject.subscribe();
 
-                const { sentinel } = getGraphRef(subscriptionRefsPlugin.get(subject));
+                const { sentinel } = getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
                 expect(sentinel.sources).to.have.length(1);
 
                 subscription.unsubscribe();
@@ -99,7 +98,7 @@ describe("GraphPlugin", () => {
                 const combined = combineLatest(source1, source2);
                 combined.subscribe();
 
-                const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.get(source1));
+                const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(source1));
                 const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
                 const { sentinel } = sourceGraphRef;
 
@@ -129,7 +128,7 @@ describe("GraphPlugin", () => {
                 const combined = combineLatest(source1, source2);
                 combined.subscribe(() => {}, () => {});
 
-                const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.get(source1));
+                const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(source1));
                 const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
                 const { sentinel } = sourceGraphRef;
 
@@ -161,7 +160,7 @@ describe("GraphPlugin", () => {
 
                 subject.next(0);
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
+                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.flats).to.have.length(1);
@@ -186,7 +185,7 @@ describe("GraphPlugin", () => {
 
                 subject.next(0);
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
+                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.flats).to.have.length(1);
@@ -210,7 +209,7 @@ describe("GraphPlugin", () => {
                 });
                 custom.subscribe();
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
+                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.sources).to.have.length(1);
@@ -234,7 +233,7 @@ describe("GraphPlugin", () => {
                 });
                 custom.subscribe(() => {}, () => {});
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
+                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.sources).to.have.length(1);
@@ -259,7 +258,7 @@ describe("GraphPlugin", () => {
                 });
                 custom.subscribe();
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.get(inner));
+                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
                 const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.sources).to.have.length(1);
@@ -313,8 +312,8 @@ describe("GraphPlugin", () => {
             const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
-            const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
-            const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+            const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
+            const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
 
             const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
             const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
@@ -337,9 +336,9 @@ describe("GraphPlugin", () => {
             const combined = combineLatest(subject1, subject2);
             combined.subscribe();
 
-            const subject1SubscriptionRef = subscriptionRefsPlugin.get(subject1);
-            const subject2SubscriptionRef = subscriptionRefsPlugin.get(subject2);
-            const combinedSubscriptionRef = subscriptionRefsPlugin.get(combined);
+            const subject1SubscriptionRef = subscriptionRefsPlugin.getSubscription(subject1);
+            const subject2SubscriptionRef = subscriptionRefsPlugin.getSubscription(subject2);
+            const combinedSubscriptionRef = subscriptionRefsPlugin.getSubscription(combined);
 
             const subject1GraphRef = getGraphRef(subject1SubscriptionRef);
             const subject2GraphRef = getGraphRef(subject2SubscriptionRef);
@@ -375,9 +374,9 @@ describe("GraphPlugin", () => {
             }));
             composed.subscribe();
 
-            const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
-            const outerSubscriptionRef = subscriptionRefsPlugin.get(outer);
-            const composedSubscriptionRef = subscriptionRefsPlugin.get(composed);
+            const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
+            const outerSubscriptionRef = subscriptionRefsPlugin.getSubscription(outer);
+            const composedSubscriptionRef = subscriptionRefsPlugin.getSubscription(composed);
 
             const outerGraphRef = getGraphRef(outerSubscriptionRef);
             expect(outerGraphRef).to.have.property("sink", composedSubscriptionRef);
@@ -396,13 +395,13 @@ describe("GraphPlugin", () => {
             subject.next(0);
 
             expect(composedGraphRef.flats).to.not.be.empty;
-            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.get(merges[0]));
+            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.getSubscription(merges[0]));
 
             subject.next(1);
 
             expect(composedGraphRef.flats).to.not.be.empty;
-            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.get(merges[0]));
-            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.get(merges[1]));
+            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.getSubscription(merges[0]));
+            expect(composedGraphRef.flats).to.contain(subscriptionRefsPlugin.getSubscription(merges[1]));
         });
 
         it("should graph custom observables", () => {
@@ -419,9 +418,9 @@ describe("GraphPlugin", () => {
             });
             custom.subscribe();
 
-            const inner1SubscriptionRef = subscriptionRefsPlugin.get(inner1);
-            const inner2SubscriptionRef = subscriptionRefsPlugin.get(inner2);
-            const customSubscriptionRef = subscriptionRefsPlugin.get(custom);
+            const inner1SubscriptionRef = subscriptionRefsPlugin.getSubscription(inner1);
+            const inner2SubscriptionRef = subscriptionRefsPlugin.getSubscription(inner2);
+            const customSubscriptionRef = subscriptionRefsPlugin.getSubscription(custom);
 
             const inner1GraphRef = getGraphRef(inner1SubscriptionRef);
             const inner2GraphRef = getGraphRef(inner2SubscriptionRef);
@@ -451,8 +450,8 @@ describe("GraphPlugin", () => {
             const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
-            const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
-            const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+            const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
+            const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
 
             const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
             const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
@@ -470,9 +469,9 @@ describe("GraphPlugin", () => {
             const remapped = mapped.pipe(map(value => value));
             remapped.subscribe();
 
-            const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
-            const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
-            const remappedSubscriptionRef = subscriptionRefsPlugin.get(remapped);
+            const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
+            const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
+            const remappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(remapped);
 
             const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
             const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
@@ -493,9 +492,9 @@ describe("GraphPlugin", () => {
             const combined = combineLatest(subject1, subject2);
             combined.subscribe();
 
-            const subject1SubscriptionRef = subscriptionRefsPlugin.get(subject1);
-            const subject2SubscriptionRef = subscriptionRefsPlugin.get(subject2);
-            const combinedSubscriptionRef = subscriptionRefsPlugin.get(combined);
+            const subject1SubscriptionRef = subscriptionRefsPlugin.getSubscription(subject1);
+            const subject2SubscriptionRef = subscriptionRefsPlugin.getSubscription(subject2);
+            const combinedSubscriptionRef = subscriptionRefsPlugin.getSubscription(combined);
 
             const subject1GraphRef = getGraphRef(subject1SubscriptionRef);
             const subject2GraphRef = getGraphRef(subject2SubscriptionRef);
@@ -521,10 +520,10 @@ describe("GraphPlugin", () => {
 
             outerSubject.next(0);
 
-            const innerSubject1SubscriptionRef = subscriptionRefsPlugin.get(innerSubject1);
-            const innerSubject2SubscriptionRef = subscriptionRefsPlugin.get(innerSubject2);
-            const composed1SubscriptionRef = subscriptionRefsPlugin.get(composed1);
-            const composed2SubscriptionRef = subscriptionRefsPlugin.get(composed2);
+            const innerSubject1SubscriptionRef = subscriptionRefsPlugin.getSubscription(innerSubject1);
+            const innerSubject2SubscriptionRef = subscriptionRefsPlugin.getSubscription(innerSubject2);
+            const composed1SubscriptionRef = subscriptionRefsPlugin.getSubscription(composed1);
+            const composed2SubscriptionRef = subscriptionRefsPlugin.getSubscription(composed2);
 
             const innerSubject1GraphRef = getGraphRef(innerSubject1SubscriptionRef);
             const innerSubject2GraphRef = getGraphRef(innerSubject2SubscriptionRef);
@@ -541,8 +540,8 @@ describe("GraphPlugin", () => {
             const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
-            const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
-            const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+            const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
+            const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
 
             const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
             const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
@@ -566,7 +565,7 @@ describe("GraphPlugin", () => {
             }));
             composed.subscribe();
 
-            const composedSubscriptionRef = subscriptionRefsPlugin.get(composed);
+            const composedSubscriptionRef = subscriptionRefsPlugin.getSubscription(composed);
             const composedGraphRef = getGraphRef(composedSubscriptionRef);
             expect(composedGraphRef).to.have.property("flattened", false);
 
@@ -605,7 +604,7 @@ describe("GraphPlugin", () => {
             spy.plug(graphPlugin, subscriptionRefsPlugin);
         });
 
-        describe("findRootSubscriptionRefs", () => {
+        describe("findRootSubscriptions", () => {
 
             it("should should return the root subscriptions", () => {
 
@@ -621,17 +620,17 @@ describe("GraphPlugin", () => {
                 filtered.subscribe();
                 mapped.subscribe();
 
-                const filteredSubscriptionRef = subscriptionRefsPlugin.get(filtered);
-                const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+                const filteredSubscription = subscriptionRefsPlugin.getSubscription(filtered);
+                const mappedSubscription = subscriptionRefsPlugin.getSubscription(mapped);
 
-                const rootSubscriptionRefs = graphPlugin.findRootSubscriptionRefs();
-                expect(rootSubscriptionRefs).to.have.length(2);
-                expect(rootSubscriptionRefs).to.contain(filteredSubscriptionRef);
-                expect(rootSubscriptionRefs).to.contain(mappedSubscriptionRef);
+                const rootSubscriptions = graphPlugin.findRootSubscriptions();
+                expect(rootSubscriptions).to.have.length(2);
+                expect(rootSubscriptions).to.contain(filteredSubscription);
+                expect(rootSubscriptions).to.contain(mappedSubscription);
             });
         });
 
-        describe("findSubscriptionRef", () => {
+        describe("findSubscription", () => {
 
             it("should return the matched subscription", () => {
 
@@ -644,27 +643,27 @@ describe("GraphPlugin", () => {
                 );
                 mapped.subscribe();
 
-                const filteredSubscriptionRef = subscriptionRefsPlugin.get(filtered);
-                const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
-                const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
+                const filteredSubscription = subscriptionRefsPlugin.getSubscription(filtered);
+                const mappedSubscription = subscriptionRefsPlugin.getSubscription(mapped);
+                const subjectSubscription = subscriptionRefsPlugin.getSubscription(subject);
 
                 expect(
-                    graphPlugin.findSubscriptionRef(
-                        identify(filteredSubscriptionRef.subscription)
+                    graphPlugin.findSubscription(
+                        identify(filteredSubscription)
                     )
-                ).to.equal(filteredSubscriptionRef);
+                ).to.equal(filteredSubscription);
                 expect(
-                    graphPlugin.findSubscriptionRef(
-                        identify(mappedSubscriptionRef.subscription)
+                    graphPlugin.findSubscription(
+                        identify(mappedSubscription)
                     )
-                ).to.equal(mappedSubscriptionRef);
+                ).to.equal(mappedSubscription);
                 expect(
-                    graphPlugin.findSubscriptionRef(
-                        identify(subjectSubscriptionRef.subscription)
+                    graphPlugin.findSubscription(
+                        identify(subjectSubscription)
                     )
-                ).to.equal(subjectSubscriptionRef);
+                ).to.equal(subjectSubscription);
                 expect(
-                    graphPlugin.findSubscriptionRef("missing")
+                    graphPlugin.findSubscription("missing")
                 ).to.be.undefined;
             });
         });
@@ -678,20 +677,20 @@ describe("GraphPlugin", () => {
     });
 });
 
-function hasSink(graphRef: GraphRef, sinkRef: SubscriptionRef): boolean {
+function hasSink(graphRef: GraphRef, sink: Subscription): boolean {
 
     if (graphRef.sink === undefined) {
         return false;
-    } else if (graphRef.sink === sinkRef) {
+    } else if (graphRef.sink === sink) {
         return true;
     }
-    return hasSink(getGraphRef(graphRef.sink), sinkRef);
+    return hasSink(getGraphRef(graphRef.sink), sink);
 }
 
-function hasSource(graphRef: GraphRef, sourceRef: SubscriptionRef): boolean {
+function hasSource(graphRef: GraphRef, source: Subscription): boolean {
 
-    if (graphRef.sources.indexOf(sourceRef as SubscriptionRef) !== -1) {
+    if (graphRef.sources.indexOf(source as Subscription) !== -1) {
         return true;
     }
-    return graphRef.sources.some(s => hasSource(getGraphRef(s), sourceRef));
+    return graphRef.sources.some(s => hasSource(getGraphRef(s), source));
 }

@@ -473,60 +473,6 @@ describe("SnapshotPlugin", () => {
         });
     });
 
-    describe("snapshotObservable", () => {
-
-        it("should snapshot the specified observable", () => {
-
-            const subject = new Subject<number>();
-            const subscriber = toSubscriber(() => {});
-            const subscription = subject.subscribe(subscriber);
-
-            let observableSnapshot = plugin.snapshotObservable({
-                completeTimestamp: 0,
-                errorTimestamp: 0,
-                nextCount: 0,
-                nextTimestamp: 0,
-                observable: subject,
-                subscribeTimestamp: Date.now(),
-                subscriber,
-                subscription,
-                tick: 0,
-                unsubscribeTimestamp: 0
-            });
-
-            expect(observableSnapshot).to.exist;
-            expect(observableSnapshot).to.have.property("observable", subject);
-            expect(observableSnapshot).to.have.property("subscriptions");
-        });
-    });
-
-    describe("snapshotSubscriber", () => {
-
-        it("should snapshot the specified subscriber", () => {
-
-            const subject = new Subject<number>();
-            const subscriber = toSubscriber(() => {});
-            const subscription = subject.subscribe(subscriber);
-
-            let subscriberSnapshot = plugin.snapshotSubscriber({
-                completeTimestamp: 0,
-                errorTimestamp: 0,
-                nextCount: 0,
-                nextTimestamp: 0,
-                observable: subject,
-                subscribeTimestamp: Date.now(),
-                subscriber,
-                subscription,
-                tick: 0,
-                unsubscribeTimestamp: 0
-            });
-
-            expect(subscriberSnapshot).to.exist;
-            expect(subscriberSnapshot).to.have.property("subscriber", subscriber);
-            expect(subscriberSnapshot).to.have.property("subscriptions");
-        });
-    });
-
     afterEach(() => {
 
         if (spy) {

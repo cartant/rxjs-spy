@@ -32,11 +32,11 @@ describe("StackTracePlugin", () => {
         const mapped = subject.pipe(map(value => value));
         mapped.subscribe();
 
-        const subjectSubscriptionRef = subscriptionRefsPlugin.get(subject);
-        const mappedSubscriptionRef = subscriptionRefsPlugin.get(mapped);
+        const subjectSubscription = subscriptionRefsPlugin.getSubscription(subject);
+        const mappedSubscription = subscriptionRefsPlugin.getSubscription(mapped);
 
-        const subjectStackTrace = getStackTrace(subjectSubscriptionRef);
-        const mappedStackTrace = getStackTrace(mappedSubscriptionRef);
+        const subjectStackTrace = getStackTrace(subjectSubscription);
+        const mappedStackTrace = getStackTrace(mappedSubscription);
 
         expect(subjectStackTrace).to.exist;
         expect(subjectStackTrace).to.not.be.empty;
