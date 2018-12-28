@@ -7,7 +7,6 @@ import { defaultLogger, toLogger } from "./logger";
 import { PausePlugin } from "./plugin";
 import { SpyCore } from "./spy-core";
 import { sweep } from "./sweep";
-import { inferPath, inferType } from "./util";
 
 export function wrap(
     core: SpyCore,
@@ -27,8 +26,6 @@ export function wrap(
                 return pausePlugin ? pausePlugin.deck : undefined;
             }
         },
-        inferPath,
-        inferType,
         log(...args: any[]): void {
             deprecation();
             core.log.apply(core, args);
