@@ -14,9 +14,9 @@ import { hide } from "../operators";
 import { Spy } from "../spy-interface";
 import { BasePlugin } from "./plugin";
 
-const stackTraceRefSymbol = Symbol("stackTraceRef");
+const stackTraceLabelSymbol = Symbol("stackTraceLabel");
 
-export interface StackTraceRef {
+export interface StackTraceLabel {
     mappedStackTrace: Observable<StackFrame[]>;
     stackTrace: StackFrame[];
 }
@@ -45,7 +45,7 @@ export class StackTracePlugin extends BasePlugin {
         const stackFrames = this.getStackFrames_();
 
         if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            this.setStackTraceRef_(subscription, {
+            this.setStackTraceLabel_(subscription, {
                 mappedStackTrace: defer(() => {
                     const gps = new StackTraceGps({ sourceCache: this.sourceCache_ });
                     return Promise.all(stackFrames.map(stackFrame => gps
@@ -59,7 +59,7 @@ export class StackTracePlugin extends BasePlugin {
                 stackTrace: stackFrames
             });
         } else {
-            this.setStackTraceRef_(subscription, {
+            this.setStackTraceLabel_(subscription, {
                 mappedStackTrace: of(stackFrames).pipe(hide()),
                 stackTrace: stackFrames
             });
@@ -68,19 +68,19 @@ export class StackTracePlugin extends BasePlugin {
 
     getMappedStackTrace(subscription: Subscription): Observable<StackFrame[]> {
 
-        const stackTraceRef = this.getStackTraceRef(subscription);
-        return stackTraceRef ? stackTraceRef.mappedStackTrace : of([]);
+        const stackTraceLabel = this.getStackTraceLabel(subscription);
+        return stackTraceLabel ? stackTraceLabel.mappedStackTrace : of([]);
     }
 
     getStackTrace(subscription: Subscription): StackFrame[] {
 
-        const stackTraceRef = this.getStackTraceRef(subscription);
-        return stackTraceRef ? stackTraceRef.stackTrace : [];
+        const stackTraceLabel = this.getStackTraceLabel(subscription);
+        return stackTraceLabel ? stackTraceLabel.stackTrace : [];
     }
 
-    getStackTraceRef(subscription: Subscription): StackTraceRef {
+    getStackTraceLabel(subscription: Subscription): StackTraceLabel {
 
-        return subscription[stackTraceRefSymbol];
+        return subscription[stackTraceLabelSymbol];
     }
 
     teardown(): void {
@@ -104,9 +104,9 @@ export class StackTracePlugin extends BasePlugin {
         }
     }
 
-    private setStackTraceRef_(subscription: Subscription, value: StackTraceRef): StackTraceRef {
+    private setStackTraceLabel_(subscription: Subscription, label: StackTraceLabel): StackTraceLabel {
 
-        subscription[stackTraceRefSymbol] = value;
-        return value;
+        subscription[stackTraceLabelSymbol] = label;
+        return label;
     }
 }

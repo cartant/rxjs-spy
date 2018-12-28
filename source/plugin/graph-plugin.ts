@@ -7,21 +7,21 @@ import { Subscription } from "rxjs";
 import { defaultLogger, Logger } from "../logger";
 import { Match, matches } from "../match";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef } from "../subscription-ref";
+import { getSubscriptionLabel } from "../subscription-label";
 import { inferType } from "../util";
 import { BasePlugin, Notification } from "./plugin";
 
-const graphRefSymbol = Symbol("graphRef");
+const graphLabelSymbol = Symbol("graphLabel");
 
-export interface GraphRef {
+export interface GraphLabel {
     depth: number;
     flats: Subscription[];
     flatsFlushed: number;
     flattened: boolean;
-    link: GraphRef;
+    link: GraphLabel;
     rootSink: Subscription | undefined;
     self: Subscription;
-    sentinel: GraphRef;
+    sentinel: GraphLabel;
     sink: Subscription | undefined;
     sources: Subscription[];
     sourcesFlushed: number;
@@ -36,7 +36,7 @@ export class GraphPlugin extends BasePlugin {
         notification: Notification;
         subscription: Subscription;
     }[];
-    private sentinel_: GraphRef;
+    private sentinel_: GraphLabel;
 
     constructor({
         keptDuration = 30000,
@@ -97,7 +97,7 @@ export class GraphPlugin extends BasePlugin {
     beforeSubscribe(subscription: Subscription): void {
 
         const { notifications_, sentinel_ } = this;
-        const graphRef = this.setGraphRef_(subscription, {
+        const graphLabel = this.setGraphLabel_(subscription, {
             depth: 1,
             flats: [],
             flatsFlushed: 0,
@@ -119,35 +119,35 @@ export class GraphPlugin extends BasePlugin {
         if ((length > 0) && (notifications_[length - 1].notification === "next")) {
 
             const { subscription: source } = notifications_[length - 1];
-            const sourceGraphRef = this.getGraphRef(source);
-            const { sink } = sourceGraphRef;
+            const sourceGraphLabel = this.getGraphLabel(source);
+            const { sink } = sourceGraphLabel;
             if (sink) {
-                const sinkGraphRef = this.getGraphRef(sink);
-                sinkGraphRef.flats.push(subscription);
-                graphRef.link = sinkGraphRef;
-                graphRef.flattened = true;
-                graphRef.rootSink = sinkGraphRef.rootSink || sink;
-                graphRef.sink = sink;
+                const sinkGraphLabel = this.getGraphLabel(sink);
+                sinkGraphLabel.flats.push(subscription);
+                graphLabel.link = sinkGraphLabel;
+                graphLabel.flattened = true;
+                graphLabel.rootSink = sinkGraphLabel.rootSink || sink;
+                graphLabel.sink = sink;
             }
         } else {
             for (let n = length - 1; n > -1; --n) {
                 if (notifications_[n].notification === "subscribe") {
 
                     const { subscription: sink } = notifications_[length - 1];
-                    const sinkGraphRef = this.getGraphRef(sink);
-                    sinkGraphRef.sources.push(subscription);
-                    graphRef.depth = sinkGraphRef.depth + 1;
-                    graphRef.link = sinkGraphRef;
-                    graphRef.rootSink = sinkGraphRef.rootSink || sink;
-                    graphRef.sink = sink;
+                    const sinkGraphLabel = this.getGraphLabel(sink);
+                    sinkGraphLabel.sources.push(subscription);
+                    graphLabel.depth = sinkGraphLabel.depth + 1;
+                    graphLabel.link = sinkGraphLabel;
+                    graphLabel.rootSink = sinkGraphLabel.rootSink || sink;
+                    graphLabel.sink = sink;
 
                     break;
                 }
             }
         }
 
-        if (graphRef.link === graphRef.sentinel) {
-            graphRef.sentinel.sources.push(subscription);
+        if (graphLabel.link === graphLabel.sentinel) {
+            graphLabel.sentinel.sources.push(subscription);
         }
 
         notifications_.push({ notification: "subscribe", subscription });
@@ -179,19 +179,19 @@ export class GraphPlugin extends BasePlugin {
         }
     }
 
-    getGraphRef(subscription: Subscription): GraphRef {
+    getGraphLabel(subscription: Subscription): GraphLabel {
 
-        return subscription[graphRefSymbol];
+        return subscription[graphLabelSymbol];
     }
 
     logGraph(subscription?: Subscription, logger: Logger = defaultLogger): void {
 
         const log = (indent: string, source: Subscription, kind: string) => {
-            const { observable } = getSubscriptionRef(source);
+            const { observable } = getSubscriptionLabel(source);
             logger.log(`${indent}${inferType(observable)} (${kind})`);
-            const graphRef = this.getGraphRef(source);
-            graphRef.sources.forEach(source => log(`${indent}  `, source, "source"));
-            graphRef.flats.forEach(flat => log(`${indent}  `, flat, "flat"));
+            const graphLabel = this.getGraphLabel(source);
+            graphLabel.sources.forEach(source => log(`${indent}  `, source, "source"));
+            graphLabel.flats.forEach(flat => log(`${indent}  `, flat, "flat"));
         };
 
         if (subscription) {
@@ -204,19 +204,19 @@ export class GraphPlugin extends BasePlugin {
 
     private flush_(subscription: Subscription): void {
 
-        const graphRef = this.getGraphRef(subscription);
-        const { flats, sources } = graphRef;
+        const graphLabel = this.getGraphLabel(subscription);
+        const { flats, sources } = graphLabel;
 
         if (
-            (getSubscriptionRef(subscription).unsubscribeTimestamp === 0) ||
-            flats.some(flat => getSubscriptionRef(flat).unsubscribeTimestamp === 0) ||
-            sources.some(source => getSubscriptionRef(source).unsubscribeTimestamp === 0)
+            (getSubscriptionLabel(subscription).unsubscribeTimestamp === 0) ||
+            flats.some(flat => getSubscriptionLabel(flat).unsubscribeTimestamp === 0) ||
+            sources.some(source => getSubscriptionLabel(source).unsubscribeTimestamp === 0)
         ) {
             return;
         }
 
         const { keptDuration_ } = this;
-        const { link } = graphRef;
+        const { link } = graphLabel;
 
         const flush = () => {
             const { flats, sources } = link;
@@ -254,11 +254,11 @@ export class GraphPlugin extends BasePlugin {
     }
 
     private findSubscription_(
-        graphRef: GraphRef,
+        graphLabel: GraphLabel,
         match: Match
     ): Subscription | undefined {
 
-        const { flats, self, sources } = graphRef;
+        const { flats, self, sources } = graphLabel;
 
         const iter = (
             found: Subscription | undefined,
@@ -268,7 +268,7 @@ export class GraphPlugin extends BasePlugin {
                 return found;
             }
             return this.findSubscription_(
-                this.getGraphRef(subscription),
+                this.getGraphLabel(subscription),
                 match
             );
         };
@@ -279,9 +279,9 @@ export class GraphPlugin extends BasePlugin {
         return sources.reduce(iter, undefined) || flats.reduce(iter, undefined);
     }
 
-    private setGraphRef_(subscription: Subscription, value: GraphRef): GraphRef {
+    private setGraphLabel_(subscription: Subscription, label: GraphLabel): GraphLabel {
 
-        subscription[graphRefSymbol] = value;
-        return value;
+        subscription[graphLabelSymbol] = label;
+        return label;
     }
 }

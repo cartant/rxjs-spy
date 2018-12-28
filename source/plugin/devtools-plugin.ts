@@ -36,7 +36,7 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionLabel, SubscriptionLabel } from "../subscription-label";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
@@ -45,11 +45,11 @@ import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
-interface NotificationRef {
+interface NotificationLabel {
     error?: any;
     notification: Notification;
     prefix: "after" | "before";
-    subscriptionRef: SubscriptionRef;
+    subscriptionLabel: SubscriptionLabel;
     value?: any;
 }
 
@@ -183,73 +183,73 @@ export class DevToolsPlugin extends BasePlugin {
 
     afterSubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         this.batchNotification_({
             notification: "subscribe",
             prefix: "after",
-            subscriptionRef
+            subscriptionLabel
         });
     }
 
     afterUnsubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         this.batchNotification_({
             notification: "unsubscribe",
             prefix: "after",
-            subscriptionRef
+            subscriptionLabel
         });
     }
 
     beforeComplete(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         this.batchNotification_({
             notification: "complete",
             prefix: "before",
-            subscriptionRef
+            subscriptionLabel
         });
     }
 
     beforeError(subscription: Subscription, error: any): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         this.batchNotification_({
             error,
             notification: "error",
             prefix: "before",
-            subscriptionRef
+            subscriptionLabel
         });
     }
 
     beforeNext(subscription: Subscription, value: any): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         this.batchNotification_({
             notification: "next",
             prefix: "before",
-            subscriptionRef,
+            subscriptionLabel,
             value
         });
     }
 
     beforeSubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         this.batchNotification_({
             notification: "subscribe",
             prefix: "before",
-            subscriptionRef
+            subscriptionLabel
         });
     }
 
     beforeUnsubscribe(subscription: Subscription): void {
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         this.batchNotification_({
             notification: "unsubscribe",
             prefix: "before",
-            subscriptionRef
+            subscriptionLabel
         });
     }
 
@@ -305,7 +305,7 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private batchNotification_(notificationRef: NotificationRef): void {
+    private batchNotification_(notificationLabel: NotificationLabel): void {
 
         const { connection_ } = this;
         if (connection_) {
@@ -326,7 +326,7 @@ export class DevToolsPlugin extends BasePlugin {
                 this.batchMessage_({
                     broadcastType: "notification",
                     messageType: MESSAGE_BROADCAST,
-                    notification: this.toNotification_(notificationRef)
+                    notification: this.toNotification_(notificationLabel)
                 });
             }
         }
@@ -373,7 +373,7 @@ export class DevToolsPlugin extends BasePlugin {
         if (!graphPlugin) {
             return undefined;
         }
-        const graphRef = graphPlugin.getGraphRef(subscription);
+        const graphLabel = graphPlugin.getGraphLabel(subscription);
 
         const {
             flats,
@@ -382,7 +382,7 @@ export class DevToolsPlugin extends BasePlugin {
             sink,
             sources,
             sourcesFlushed
-        } = graphRef;
+        } = graphLabel;
         return {
             flats: flats.map(identify),
             flatsFlushed,
@@ -393,11 +393,11 @@ export class DevToolsPlugin extends BasePlugin {
         };
     }
 
-    private toNotification_(notificationRef: NotificationRef): NotificationPayload {
+    private toNotification_(notificationLabel: NotificationLabel): NotificationPayload {
 
         const { stackTracePlugin } = this.findPlugins_();
-        const { error, notification, prefix, subscriptionRef, value } = notificationRef;
-        const { observable, subscriber, subscription } = subscriptionRef;
+        const { error, notification, prefix, subscriptionLabel, value } = notificationLabel;
+        const { observable, subscriber, subscription } = subscriptionLabel;
 
         return {
             id: identify({}),

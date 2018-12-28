@@ -5,9 +5,9 @@
 
 import { Observable, Subscriber, Subscription } from "rxjs";
 
-const subscriptionRefSymbol = Symbol("subscriptionRef");
+const subscriptionLabelSymbol = Symbol("subscriptionLabel");
 
-export interface SubscriptionRef {
+export interface SubscriptionLabel {
     completeTimestamp: number;
     errorTimestamp: number;
     nextCount: number;
@@ -20,11 +20,11 @@ export interface SubscriptionRef {
     unsubscribeTimestamp: number;
 }
 
-export function getSubscriptionRef(subscription: Subscription): SubscriptionRef {
-    return subscription[subscriptionRefSymbol];
+export function getSubscriptionLabel(subscription: Subscription): SubscriptionLabel {
+    return subscription[subscriptionLabelSymbol];
 }
 
-export function setSubscriptionRef(subscription: Subscription, value: SubscriptionRef): SubscriptionRef {
-    subscription[subscriptionRefSymbol] = value;
-    return value;
+export function setSubscriptionLabel(subscription: Subscription, label: SubscriptionLabel): SubscriptionLabel {
+    subscription[subscriptionLabelSymbol] = label;
+    return label;
 }

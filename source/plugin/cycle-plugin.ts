@@ -6,7 +6,7 @@
 import { Subscription } from "rxjs";
 import { Logger } from "../logger";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef } from "../subscription-ref";
+import { getSubscriptionLabel } from "../subscription-label";
 import { inferType } from "../util";
 import { BasePlugin } from "./plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
@@ -61,7 +61,7 @@ export class CyclePlugin extends BasePlugin {
                     const stackTrace = stackTracePlugin ?
                         `; subscribed at\n${stackTracePlugin.getStackTrace(subscription).join("\n")}` :
                         "";
-                    const { observable } = getSubscriptionRef(subscription);
+                    const { observable } = getSubscriptionLabel(subscription);
                     const type = inferType(observable);
                     logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
                 }
@@ -69,8 +69,8 @@ export class CyclePlugin extends BasePlugin {
 
             const { snapshotPlugin } = this.findPlugins_();
             if (snapshotPlugin) {
-                const snapshotRef = snapshotPlugin.getSnapshotRef(subscription);
-                snapshotRef.query.cycleCount = cycleCount;
+                const snapshotLabel = snapshotPlugin.getSnapshotLabel(subscription);
+                snapshotLabel.query.cycleCount = cycleCount;
             }
         }
         nexts_.push(subscription);
@@ -80,8 +80,8 @@ export class CyclePlugin extends BasePlugin {
 
         const { snapshotPlugin } = this.findPlugins_();
         if (snapshotPlugin) {
-            const snapshotRef = snapshotPlugin.getSnapshotRef(subscription);
-            snapshotRef.query.cycleCount = 0;
+            const snapshotLabel = snapshotPlugin.getSnapshotLabel(subscription);
+            snapshotLabel.query.cycleCount = 0;
         }
     }
 

@@ -10,20 +10,20 @@ import { map } from "rxjs/operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { StackTracePlugin } from "./stack-trace-plugin";
-import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
+import { SubscriptionLabelsPlugin } from "./subscription-labels-plugin";
 
 describe("StackTracePlugin", () => {
 
     let spy: Spy;
     let stackTracePlugin: StackTracePlugin;
-    let subscriptionRefsPlugin: SubscriptionRefsPlugin;
+    let subscriptionLabelsPlugin: SubscriptionLabelsPlugin;
 
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
         stackTracePlugin = new StackTracePlugin({ spy });
-        subscriptionRefsPlugin = new SubscriptionRefsPlugin({ spy });
-        spy.plug(stackTracePlugin, subscriptionRefsPlugin);
+        subscriptionLabelsPlugin = new SubscriptionLabelsPlugin({ spy });
+        spy.plug(stackTracePlugin, subscriptionLabelsPlugin);
     });
 
     it("should determine the stack traces", () => {
@@ -32,8 +32,8 @@ describe("StackTracePlugin", () => {
         const mapped = subject.pipe(map(value => value));
         mapped.subscribe();
 
-        const subjectSubscription = subscriptionRefsPlugin.getSubscription(subject);
-        const mappedSubscription = subscriptionRefsPlugin.getSubscription(mapped);
+        const subjectSubscription = subscriptionLabelsPlugin.getSubscription(subject);
+        const mappedSubscription = subscriptionLabelsPlugin.getSubscription(mapped);
 
         const subjectStackTrace = stackTracePlugin.getStackTrace(subjectSubscription);
         const mappedStackTrace = stackTracePlugin.getStackTrace(mappedSubscription);

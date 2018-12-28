@@ -10,15 +10,15 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef } from "../subscription-ref";
+import { getSubscriptionLabel } from "../subscription-label";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
-const snapshotRefSymbol = Symbol("snapshotRef");
+const snapshotLabelSymbol = Symbol("snapshotLabel");
 
-export interface SnapshotRef {
+export interface SnapshotLabel {
     error: any;
     query: Record<string, any>;
     values: { tick: number; timestamp: number; value: any; }[];
@@ -107,27 +107,27 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeError(subscription: Subscription, error: any): void {
 
-        const snapshotRef = this.getSnapshotRef(subscription);
-        snapshotRef.error = error;
+        const snapshotLabel = this.getSnapshotLabel(subscription);
+        snapshotLabel.error = error;
     }
 
     beforeNext(subscription: Subscription, value: any): void {
 
         const tick = this.spy_.tick;
-        const snapshotRef = this.getSnapshotRef(subscription);
-        snapshotRef.values.push({ tick, timestamp: Date.now(), value });
+        const snapshotLabel = this.getSnapshotLabel(subscription);
+        snapshotLabel.values.push({ tick, timestamp: Date.now(), value });
 
         const { keptValues_ } = this;
-        const count = snapshotRef.values.length - keptValues_;
+        const count = snapshotLabel.values.length - keptValues_;
         if (count > 0) {
-            snapshotRef.values.splice(0, count);
-            snapshotRef.valuesFlushed += count;
+            snapshotLabel.values.splice(0, count);
+            snapshotLabel.valuesFlushed += count;
         }
     }
 
     beforeSubscribe(subscription: Subscription): void {
 
-        this.setSnapshotRef_(subscription, {
+        this.setSnapshotLabel_(subscription, {
             error: undefined,
             query: {},
             values: [],
@@ -135,9 +135,9 @@ export class SnapshotPlugin extends BasePlugin {
         });
     }
 
-    getSnapshotRef(subscription: Subscription): SnapshotRef {
+    getSnapshotLabel(subscription: Subscription): SnapshotLabel {
 
-        return subscription[snapshotRefSymbol];
+        return subscription[snapshotLabelSymbol];
     }
 
     mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
@@ -195,20 +195,20 @@ export class SnapshotPlugin extends BasePlugin {
                     subscriber,
                     tick,
                     unsubscribeTimestamp
-                } = getSubscriptionRef(subscription);
+                } = getSubscriptionLabel(subscription);
 
                 const {
                     flatsFlushed,
                     flattened,
                     sourcesFlushed
-                } = graphPlugin.getGraphRef(subscription);
+                } = graphPlugin.getGraphLabel(subscription);
 
                 const {
                     error,
                     query,
                     values,
                     valuesFlushed
-                } = this.getSnapshotRef(subscription);
+                } = this.getSnapshotLabel(subscription);
 
                 const { stackTracePlugin } = this.findPlugins_();
                 const subscriptionSnapshot: SubscriptionSnapshot = {
@@ -279,17 +279,17 @@ export class SnapshotPlugin extends BasePlugin {
 
             foundSubscriptions.forEach((unused, subscription) => {
 
-                const graphRef = graphPlugin.getGraphRef(subscription);
+                const graphLabel = graphPlugin.getGraphLabel(subscription);
                 const subscriptionSnapshot = subscriptions.get(subscription)!;
 
-                if (graphRef.sink) {
-                    subscriptionSnapshot.sink = subscriptions.get(graphRef.sink)!;
+                if (graphLabel.sink) {
+                    subscriptionSnapshot.sink = subscriptions.get(graphLabel.sink)!;
                 }
-                if (graphRef.rootSink) {
-                    subscriptionSnapshot.rootSink = subscriptions.get(graphRef.rootSink)!;
+                if (graphLabel.rootSink) {
+                    subscriptionSnapshot.rootSink = subscriptions.get(graphLabel.rootSink)!;
                 }
-                graphRef.flats.forEach(flat => subscriptionSnapshot.flats.set(flat, subscriptions.get(flat)!));
-                graphRef.sources.forEach(source => subscriptionSnapshot.sources.set(source, subscriptions.get(source)!));
+                graphLabel.flats.forEach(flat => subscriptionSnapshot.flats.set(flat, subscriptions.get(flat)!));
+                graphLabel.sources.forEach(source => subscriptionSnapshot.sources.set(source, subscriptions.get(source)!));
             });
 
             subscribers.forEach(subscriberSnapshot => {
@@ -334,9 +334,9 @@ export class SnapshotPlugin extends BasePlugin {
 
         const { graphPlugin } = this.findPlugins_();
         if (graphPlugin) {
-            const graphRef = graphPlugin.getGraphRef(subscription);
-            graphRef.flats.forEach(flat => this.addSubscriptions_(flat, map));
-            graphRef.sources.forEach(source => this.addSubscriptions_(source, map));
+            const graphLabel = graphPlugin.getGraphLabel(subscription);
+            graphLabel.flats.forEach(flat => this.addSubscriptions_(flat, map));
+            graphLabel.sources.forEach(source => this.addSubscriptions_(source, map));
         }
     }
 
@@ -373,9 +373,9 @@ export class SnapshotPlugin extends BasePlugin {
         return map;
     }
 
-    private setSnapshotRef_(subscription: Subscription, value: SnapshotRef): SnapshotRef {
+    private setSnapshotLabel_(subscription: Subscription, label: SnapshotLabel): SnapshotLabel {
 
-        subscription[snapshotRefSymbol] = value;
-        return value;
+        subscription[snapshotLabelSymbol] = label;
+        return label;
     }
 }

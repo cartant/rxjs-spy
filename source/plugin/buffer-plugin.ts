@@ -6,21 +6,21 @@
 import { Subscription } from "rxjs";
 import { Logger } from "../logger";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionLabel, SubscriptionLabel } from "../subscription-label";
 import { inferType } from "../util";
-import { GraphPlugin, GraphRef } from "./graph-plugin";
+import { GraphLabel, GraphPlugin } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
-import { SnapshotPlugin, SnapshotRef } from "./snapshot-plugin";
+import { SnapshotLabel, SnapshotPlugin } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
-const bufferRefHigherOrderSymbol = Symbol("bufferRefHigherOrder");
-const bufferRefSymbol = Symbol("bufferRef");
+const bufferLabelHigherOrderSymbol = Symbol("bufferLabelHigherOrder");
+const bufferLabelSymbol = Symbol("bufferLabel");
 
-interface BufferRef {
-    sinkGraphRef: GraphRef;
-    sinkSnapshotRef: SnapshotRef | undefined;
-    sinkSubscriptionRef: SubscriptionRef;
-    sourceSubscriptionRefs: SubscriptionRef[];
+interface BufferLabel {
+    sinkGraphLabel: GraphLabel;
+    sinkSnapshotLabel: SnapshotLabel | undefined;
+    sinkSubscriptionLabel: SubscriptionLabel;
+    sourceSubscriptionLabels: SubscriptionLabel[];
     warned: boolean;
 }
 
@@ -57,37 +57,37 @@ export class BufferPlugin extends BasePlugin {
 
     afterNext(subscription: Subscription, value: any): void {
 
-        const bufferRef = this.getBufferRef_(subscription);
-        if (!bufferRef) {
+        const bufferLabel = this.getBufferLabel_(subscription);
+        if (!bufferLabel) {
             return;
         }
 
         const {
-            sinkGraphRef,
-            sinkSnapshotRef,
-            sinkSubscriptionRef,
-            sourceSubscriptionRefs
-        } = bufferRef;
+            sinkGraphLabel,
+            sinkSnapshotLabel,
+            sinkSubscriptionLabel,
+            sourceSubscriptionLabels
+        } = bufferLabel;
 
-        const inputCount = sourceSubscriptionRefs.reduce((count, sourceSubscriptionRef) => {
-            return Math.max(count, sourceSubscriptionRef.nextCount);
+        const inputCount = sourceSubscriptionLabels.reduce((count, sourceSubscriptionLabel) => {
+            return Math.max(count, sourceSubscriptionLabel.nextCount);
         }, 0);
-        const flatsCount = sinkGraphRef.flats.length + sinkGraphRef.flatsFlushed;
-        const outputCount = flatsCount || sinkSubscriptionRef.nextCount;
+        const flatsCount = sinkGraphLabel.flats.length + sinkGraphLabel.flatsFlushed;
+        const outputCount = flatsCount || sinkSubscriptionLabel.nextCount;
 
         const { bufferThreshold_, logger_ } = this;
         const bufferCount = inputCount - outputCount;
-        if ((bufferCount >= bufferThreshold_) && !bufferRef.warned) {
-            bufferRef.warned = true;
+        if ((bufferCount >= bufferThreshold_) && !bufferLabel.warned) {
+            bufferLabel.warned = true;
             const { stackTracePlugin } = this.findPlugins_();
             const stackTrace = stackTracePlugin ?
-                `; subscribed at\n${stackTracePlugin.getStackTrace(sinkGraphRef.rootSink || sinkSubscriptionRef.subscription).join("\n")}` :
+                `; subscribed at\n${stackTracePlugin.getStackTrace(sinkGraphLabel.rootSink || sinkSubscriptionLabel.subscription).join("\n")}` :
                 "";
-            const type = inferType(sinkSubscriptionRef.observable);
+            const type = inferType(sinkSubscriptionLabel.observable);
             logger_.warn(`Excessive buffering detected; type = ${type}; count = ${bufferCount}${stackTrace}`);
         }
-        if (sinkSnapshotRef) {
-            sinkSnapshotRef.query.bufferCount = bufferCount;
+        if (sinkSnapshotLabel) {
+            sinkSnapshotLabel.query.bufferCount = bufferCount;
         }
     }
 
@@ -99,21 +99,21 @@ export class BufferPlugin extends BasePlugin {
     beforeSubscribe(subscription: Subscription): void {
 
         const { snapshotPlugin } = this.findPlugins_();
-        const snapshotRef = snapshotPlugin ?
-            snapshotPlugin.getSnapshotRef(subscription) :
+        const snapshotLabel = snapshotPlugin ?
+            snapshotPlugin.getSnapshotLabel(subscription) :
             undefined;
-        if (snapshotRef) {
-            snapshotRef.query.bufferCount = 0;
+        if (snapshotLabel) {
+            snapshotLabel.query.bufferCount = 0;
         }
 
-        const subscriptionRef = getSubscriptionRef(subscription);
+        const subscriptionLabel = getSubscriptionLabel(subscription);
         subscriptions.push(subscription);
         const length = subscriptions.length;
         if (length > 1) {
-            const bufferRef = this.getHigherOrderBufferRef_(subscriptions[length - 2]);
-            if (bufferRef) {
-                bufferRef.sourceSubscriptionRefs.push(subscriptionRef);
-                this.setBufferRef_(subscription, bufferRef);
+            const bufferLabel = this.getHigherOrderBufferLabel_(subscriptions[length - 2]);
+            if (bufferLabel) {
+                bufferLabel.sourceSubscriptionLabels.push(subscriptionLabel);
+                this.setBufferLabel_(subscription, bufferLabel);
                 return;
             }
         }
@@ -123,36 +123,36 @@ export class BufferPlugin extends BasePlugin {
             return;
         }
 
-        const graphRef = graphPlugin.getGraphRef(subscription);
-        const { sink } = graphRef;
+        const graphLabel = graphPlugin.getGraphLabel(subscription);
+        const { sink } = graphLabel;
         if (!sink) {
             return;
         }
 
-        const sinkSubscriptionRef = getSubscriptionRef(sink);
-        const sinkObservableType = inferType(sinkSubscriptionRef.observable);
+        const sinkSubscriptionLabel = getSubscriptionLabel(sink);
+        const sinkObservableType = inferType(sinkSubscriptionLabel.observable);
         if (!unboundedRegExp.test(sinkObservableType)) {
             return;
         }
 
-        let bufferRef = this.getBufferRef_(sink);
-        if (!bufferRef) {
-            bufferRef = this.setBufferRef_(sink, {
-                sinkGraphRef: graphPlugin.getGraphRef(sink),
-                sinkSnapshotRef: snapshotPlugin ?
-                    snapshotPlugin.getSnapshotRef(sink) :
+        let bufferLabel = this.getBufferLabel_(sink);
+        if (!bufferLabel) {
+            bufferLabel = this.setBufferLabel_(sink, {
+                sinkGraphLabel: graphPlugin.getGraphLabel(sink),
+                sinkSnapshotLabel: snapshotPlugin ?
+                    snapshotPlugin.getSnapshotLabel(sink) :
                     undefined,
-                sinkSubscriptionRef,
-                sourceSubscriptionRefs: [],
+                sinkSubscriptionLabel,
+                sourceSubscriptionLabels: [],
                 warned: false
             });
         }
 
         if (higherOrderRegExp.test(sinkObservableType)) {
-            this.setHigherOrderBufferRef_(subscription, bufferRef);
+            this.setHigherOrderBufferLabel_(subscription, bufferLabel);
         } else {
-            bufferRef.sourceSubscriptionRefs.push(subscriptionRef);
-            this.setBufferRef_(subscription, bufferRef);
+            bufferLabel.sourceSubscriptionLabels.push(subscriptionLabel);
+            this.setBufferLabel_(subscription, bufferLabel);
         }
     }
 
@@ -182,21 +182,21 @@ export class BufferPlugin extends BasePlugin {
         return this.foundPlugins_;
     }
 
-    private getBufferRef_(subscription: Subscription): BufferRef {
-        return subscription[bufferRefSymbol];
+    private getBufferLabel_(subscription: Subscription): BufferLabel {
+        return subscription[bufferLabelSymbol];
     }
 
-    private getHigherOrderBufferRef_(subscription: Subscription): BufferRef {
-        return subscription[bufferRefHigherOrderSymbol];
+    private getHigherOrderBufferLabel_(subscription: Subscription): BufferLabel {
+        return subscription[bufferLabelHigherOrderSymbol];
     }
 
-    private setBufferRef_(subscription: Subscription, value: BufferRef): BufferRef {
-        subscription[bufferRefSymbol] = value;
-        return value;
+    private setBufferLabel_(subscription: Subscription, label: BufferLabel): BufferLabel {
+        subscription[bufferLabelSymbol] = label;
+        return label;
     }
 
-    private setHigherOrderBufferRef_(subscription: Subscription, value: BufferRef): BufferRef {
-        subscription[bufferRefHigherOrderSymbol] = value;
-        return value;
+    private setHigherOrderBufferLabel_(subscription: Subscription, label: BufferLabel): BufferLabel {
+        subscription[bufferLabelHigherOrderSymbol] = label;
+        return label;
     }
 }
