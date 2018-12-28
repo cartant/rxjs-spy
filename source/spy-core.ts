@@ -6,6 +6,7 @@
 import {
     BehaviorSubject,
     Observable,
+    Operator,
     Subject,
     Subscription
 } from "rxjs";
@@ -555,19 +556,37 @@ export class SpyCore implements Spy {
     }
 
     /*tslint:disable-next-line:member-ordering*/
-    private static coreLift_(this: Observable<any>, ...args: any[]): any {
+    private static coreLift_(this: Observable<any>, operator: Operator<any, any>): Observable<any> {
 
         /*tslint:disable-next-line:no-invalid-this*/
-        const observable = this;
-        return observableLift.apply(observable, args);
+        const source = this;
+
+        const { spy_ } = SpyCore;
+        if (!spy_) {
+            return observableLift.call(source, operator);
+        }
+
+        spy_.plugins_.forEach(plugin => plugin.beforeLift(operator, source));
+        const sink = observableLift.call(source, operator);
+        spy_.plugins_.forEach(plugin => plugin.afterLift(operator, source, sink));
+        return sink;
     }
 
     /*tslint:disable-next-line:member-ordering*/
     private static corePipe_(this: Observable<any>, ...args: any[]): any {
 
         /*tslint:disable-next-line:no-invalid-this*/
-        const observable = this;
-        return observablePipe.apply(observable, args);
+        const source = this;
+
+        const { spy_ } = SpyCore;
+        if (!spy_) {
+            return observablePipe.apply(source, args);
+        }
+
+        spy_.plugins_.forEach(plugin => plugin.beforePipe(args, source));
+        const sink = observablePipe.apply(source, args);
+        spy_.plugins_.forEach(plugin => plugin.afterPipe(args, source, sink));
+        return sink;
     }
 
     /*tslint:disable-next-line:member-ordering*/
