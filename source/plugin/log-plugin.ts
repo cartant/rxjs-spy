@@ -9,7 +9,7 @@ import { identify } from "../identify";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef } from "../subscription-ref";
 import { BasePlugin, Notification } from "./plugin";
 
 const defaultMatch = /.+/;
@@ -42,40 +42,36 @@ export class LogPlugin extends BasePlugin {
     }
 
     beforeComplete(subscription: Subscription): void {
-        const subscriptionRef = getSubscriptionRef(subscription);
-        this.log_(subscriptionRef, "complete");
+        this.log_(subscription, "complete");
     }
 
     beforeError(subscription: Subscription, error: any): void {
-        const subscriptionRef = getSubscriptionRef(subscription);
-        this.log_(subscriptionRef, "error", error);
+        this.log_(subscription, "error", error);
     }
 
     beforeNext(subscription: Subscription, value: any): void {
-        const subscriptionRef = getSubscriptionRef(subscription);
-        this.log_(subscriptionRef, "next", value);
+        this.log_(subscription, "next", value);
     }
 
     beforeSubscribe(subscription: Subscription): void {
-        const subscriptionRef = getSubscriptionRef(subscription);
-        this.log_(subscriptionRef, "subscribe");
+        this.log_(subscription, "subscribe");
     }
 
     beforeUnsubscribe(subscription: Subscription): void {
-        const subscriptionRef = getSubscriptionRef(subscription);
-        this.log_(subscriptionRef, "unsubscribe");
+        this.log_(subscription, "unsubscribe");
     }
 
     private log_(
-        subscriptionRef: SubscriptionRef,
+        subscription: Subscription,
         notification: Notification,
         param?: any
     ): void {
 
         const { auditor_, notificationMatch_, observableMatch_ } = this;
 
-        if (matches(subscriptionRef, observableMatch_) && matches(subscriptionRef, notificationMatch_, notification)) {
+        if (matches(subscription, observableMatch_) && matches(subscription, notificationMatch_, notification)) {
 
+            const subscriptionRef = getSubscriptionRef(subscription);
             auditor_.audit(this, ignored => {
 
                 const { logger_ } = this;

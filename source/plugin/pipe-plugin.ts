@@ -6,7 +6,6 @@
 import { merge, NEVER, Observable, Subscription } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
 import { Spy } from "../spy-interface";
-import { getSubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
 export class PipePlugin extends BasePlugin {
@@ -35,9 +34,8 @@ export class PipePlugin extends BasePlugin {
     operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { match_, operator_: operator_ } = this;
-        const subscriptionRef = getSubscriptionRef(subscription);
 
-        if (matches(subscriptionRef, match_)) {
+        if (matches(subscription, match_)) {
             return operator_;
         }
         return undefined;

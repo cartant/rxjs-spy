@@ -273,7 +273,7 @@ function findSubscription(
 
     const { flats, self, sources } = graphRef;
 
-    if (self && matches(getSubscriptionRef(self), match)) {
+    if (self && matches(self, match)) {
         return self;
     }
 
