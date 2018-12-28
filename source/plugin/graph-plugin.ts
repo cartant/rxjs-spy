@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Subscription } from "rxjs";
+import { Observable, OperatorFunction, Subscription } from "rxjs";
 import { defaultLogger, Logger } from "../logger";
 import { Match, matches } from "../match";
 import { Spy } from "../spy-interface";
@@ -75,6 +75,9 @@ export class GraphPlugin extends BasePlugin {
         notifications_.pop();
     }
 
+    afterPipe(operators: OperatorFunction<any, any>[], source: Observable<any>, sink: Observable<any>): void {
+    }
+
     afterSubscribe(subscription: Subscription): void {
 
         const { notifications_ } = this;
@@ -92,6 +95,9 @@ export class GraphPlugin extends BasePlugin {
 
         const { notifications_ } = this;
         notifications_.push({ notification: "next", subscription });
+    }
+
+    beforePipe(operators: OperatorFunction<any, any>[], source: Observable<any>): void {
     }
 
     beforeSubscribe(subscription: Subscription): void {
