@@ -42,7 +42,7 @@ import {
 } from "./plugin";
 
 import { wrap } from "./spy-console";
-import { Spy, Teardown } from "./spy-interface";
+import { QueryDerivations, QueryPredicate, Spy, Teardown } from "./spy-interface";
 import { setSubscriptionRef, SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
 
@@ -51,9 +51,6 @@ const observableLift = Observable.prototype.lift;
 const observablePipe = Observable.prototype.pipe;
 const observableSubscribe = Observable.prototype.subscribe;
 const previousWindow: Record<string, any> = {};
-
-type QueryPredicate = (record: Record<string, any>) => boolean;
-type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
 
 const defaultDerivations: QueryDerivations = {
     blocked: ({ nextAge, sinkNextAge }) => nextAge > sinkNextAge,
@@ -192,19 +189,9 @@ export class SpyCore implements Spy {
         return __RXJS_SPY_VERSION__;
     }
 
-    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined {
+    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[] {
 
-        const found = this.plugins_.find(plugin => plugin instanceof ctor);
-        return found ? found as P : undefined;
-    }
-
-    findAll<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
-    findAll(): Plugin[];
-    findAll<P extends Plugin, O extends PluginOptions>(ctor?: PluginCtor<P, O>): P[] | Plugin[] {
-
-        return ctor ?
-            this.plugins_.filter(plugin => plugin instanceof ctor) as P[] :
-            this.plugins_;
+        return this.plugins_.filter(plugin => plugin instanceof ctor) as P[];
     }
 
     log(observableMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
@@ -290,7 +277,7 @@ export class SpyCore implements Spy {
             compile(arg) :
             { func: arg, keys: [] };
 
-        const snapshotPlugin = this.find(SnapshotPlugin);
+        const [snapshotPlugin] = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
             this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
@@ -421,7 +408,7 @@ export class SpyCore implements Spy {
             match = anyTagged;
         }
 
-        const snapshotPlugin = this.find(SnapshotPlugin);
+        const [snapshotPlugin] = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
             this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
@@ -504,7 +491,7 @@ export class SpyCore implements Spy {
 
     stats(partialLogger?: PartialLogger): void {
 
-        const statsPlugin = this.find(StatsPlugin);
+        const [statsPlugin] = this.find(StatsPlugin);
         if (!statsPlugin) {
             this.defaultLogger_.warnOnce("Stats are not enabled.");
             return;

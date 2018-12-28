@@ -11,7 +11,7 @@ import { identify } from "../identify";
 import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
-import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
+import { GraphPlugin, GraphRef } from "./graph-plugin";
 import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 
 describe("GraphPlugin", () => {
@@ -42,7 +42,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 subject.subscribe();
 
-                const { sentinel } = getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
+                const { sentinel } = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
                 expect(sentinel.sources).to.have.length(1);
 
                 subject.complete();
@@ -60,7 +60,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 subject.subscribe(() => {}, () => {});
 
-                const { sentinel } = getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
+                const { sentinel } = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
                 expect(sentinel.sources).to.have.length(1);
 
                 subject.error(new Error("Boom!"));
@@ -78,7 +78,7 @@ describe("GraphPlugin", () => {
                 const subject = new Subject<number>();
                 const subscription = subject.subscribe();
 
-                const { sentinel } = getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
+                const { sentinel } = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(subject));
                 expect(sentinel.sources).to.have.length(1);
 
                 subscription.unsubscribe();
@@ -98,8 +98,8 @@ describe("GraphPlugin", () => {
                 const combined = combineLatest(source1, source2);
                 combined.subscribe();
 
-                const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(source1));
-                const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
+                const sourceGraphRef = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(source1));
+                const sinkGraphRef = graphPlugin.getGraphRef(sourceGraphRef.sink!);
                 const { sentinel } = sourceGraphRef;
 
                 expect(sinkGraphRef.sources).to.have.length(2);
@@ -128,8 +128,8 @@ describe("GraphPlugin", () => {
                 const combined = combineLatest(source1, source2);
                 combined.subscribe(() => {}, () => {});
 
-                const sourceGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(source1));
-                const sinkGraphRef = getGraphRef(sourceGraphRef.sink!);
+                const sourceGraphRef = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(source1));
+                const sinkGraphRef = graphPlugin.getGraphRef(sourceGraphRef.sink!);
                 const { sentinel } = sourceGraphRef;
 
                 expect(sinkGraphRef.sources).to.have.length(2);
@@ -160,8 +160,8 @@ describe("GraphPlugin", () => {
 
                 subject.next(0);
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
-                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
+                const innerGraphRef = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
+                const sinkGraphRef = graphPlugin.getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.flats).to.have.length(1);
 
@@ -185,8 +185,8 @@ describe("GraphPlugin", () => {
 
                 subject.next(0);
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
-                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
+                const innerGraphRef = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
+                const sinkGraphRef = graphPlugin.getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.flats).to.have.length(1);
 
@@ -209,8 +209,8 @@ describe("GraphPlugin", () => {
                 });
                 custom.subscribe();
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
-                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
+                const innerGraphRef = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
+                const sinkGraphRef = graphPlugin.getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.sources).to.have.length(1);
 
@@ -233,8 +233,8 @@ describe("GraphPlugin", () => {
                 });
                 custom.subscribe(() => {}, () => {});
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
-                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
+                const innerGraphRef = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
+                const sinkGraphRef = graphPlugin.getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.sources).to.have.length(1);
 
@@ -258,8 +258,8 @@ describe("GraphPlugin", () => {
                 });
                 custom.subscribe();
 
-                const innerGraphRef = getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
-                const sinkGraphRef = getGraphRef(innerGraphRef.sink!);
+                const innerGraphRef = graphPlugin.getGraphRef(subscriptionRefsPlugin.getSubscription(inner));
+                const sinkGraphRef = graphPlugin.getGraphRef(innerGraphRef.sink!);
 
                 expect(sinkGraphRef.sources).to.have.length(1);
 
@@ -315,8 +315,8 @@ describe("GraphPlugin", () => {
             const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
             const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
 
-            const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
-            const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
+            const subjectGraphRef = graphPlugin.getGraphRef(subjectSubscriptionRef);
+            const mappedGraphRef = graphPlugin.getGraphRef(mappedSubscriptionRef);
 
             expect(subjectGraphRef).to.exist;
             expect(subjectGraphRef).to.have.property("sink", mappedSubscriptionRef);
@@ -340,9 +340,9 @@ describe("GraphPlugin", () => {
             const subject2SubscriptionRef = subscriptionRefsPlugin.getSubscription(subject2);
             const combinedSubscriptionRef = subscriptionRefsPlugin.getSubscription(combined);
 
-            const subject1GraphRef = getGraphRef(subject1SubscriptionRef);
-            const subject2GraphRef = getGraphRef(subject2SubscriptionRef);
-            const combinedGraphRef = getGraphRef(combinedSubscriptionRef);
+            const subject1GraphRef = graphPlugin.getGraphRef(subject1SubscriptionRef);
+            const subject2GraphRef = graphPlugin.getGraphRef(subject2SubscriptionRef);
+            const combinedGraphRef = graphPlugin.getGraphRef(combinedSubscriptionRef);
 
             expect(subject1GraphRef).to.exist;
             expect(subject1GraphRef).to.have.property("sources");
@@ -378,13 +378,13 @@ describe("GraphPlugin", () => {
             const outerSubscriptionRef = subscriptionRefsPlugin.getSubscription(outer);
             const composedSubscriptionRef = subscriptionRefsPlugin.getSubscription(composed);
 
-            const outerGraphRef = getGraphRef(outerSubscriptionRef);
+            const outerGraphRef = graphPlugin.getGraphRef(outerSubscriptionRef);
             expect(outerGraphRef).to.have.property("sink", composedSubscriptionRef);
             expect(outerGraphRef).to.have.property("sources");
             expect(outerGraphRef.sources).to.not.be.empty;
             expect(hasSource(outerGraphRef, subjectSubscriptionRef)).to.be.true;
 
-            const composedGraphRef = getGraphRef(composedSubscriptionRef);
+            const composedGraphRef = graphPlugin.getGraphRef(composedSubscriptionRef);
             expect(composedGraphRef).to.have.property("sink", undefined);
             expect(composedGraphRef).to.have.property("sources");
             expect(composedGraphRef.flats).to.be.empty;
@@ -422,9 +422,9 @@ describe("GraphPlugin", () => {
             const inner2SubscriptionRef = subscriptionRefsPlugin.getSubscription(inner2);
             const customSubscriptionRef = subscriptionRefsPlugin.getSubscription(custom);
 
-            const inner1GraphRef = getGraphRef(inner1SubscriptionRef);
-            const inner2GraphRef = getGraphRef(inner2SubscriptionRef);
-            const customGraphRef = getGraphRef(customSubscriptionRef);
+            const inner1GraphRef = graphPlugin.getGraphRef(inner1SubscriptionRef);
+            const inner2GraphRef = graphPlugin.getGraphRef(inner2SubscriptionRef);
+            const customGraphRef = graphPlugin.getGraphRef(customSubscriptionRef);
 
             expect(inner1GraphRef).to.exist;
             expect(inner1GraphRef).to.have.property("sources");
@@ -453,8 +453,8 @@ describe("GraphPlugin", () => {
             const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
             const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
 
-            const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
-            const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
+            const subjectGraphRef = graphPlugin.getGraphRef(subjectSubscriptionRef);
+            const mappedGraphRef = graphPlugin.getGraphRef(mappedSubscriptionRef);
 
             expect(subjectGraphRef).to.have.property("sink", mappedSubscriptionRef);
             expect(subjectGraphRef).to.have.property("rootSink", mappedSubscriptionRef);
@@ -473,9 +473,9 @@ describe("GraphPlugin", () => {
             const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
             const remappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(remapped);
 
-            const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
-            const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
-            const remappedGraphRef = getGraphRef(remappedSubscriptionRef);
+            const subjectGraphRef = graphPlugin.getGraphRef(subjectSubscriptionRef);
+            const mappedGraphRef = graphPlugin.getGraphRef(mappedSubscriptionRef);
+            const remappedGraphRef = graphPlugin.getGraphRef(remappedSubscriptionRef);
 
             expect(subjectGraphRef).to.have.property("sink", mappedSubscriptionRef);
             expect(subjectGraphRef).to.have.property("rootSink", remappedSubscriptionRef);
@@ -496,9 +496,9 @@ describe("GraphPlugin", () => {
             const subject2SubscriptionRef = subscriptionRefsPlugin.getSubscription(subject2);
             const combinedSubscriptionRef = subscriptionRefsPlugin.getSubscription(combined);
 
-            const subject1GraphRef = getGraphRef(subject1SubscriptionRef);
-            const subject2GraphRef = getGraphRef(subject2SubscriptionRef);
-            const combinedGraphRef = getGraphRef(combinedSubscriptionRef);
+            const subject1GraphRef = graphPlugin.getGraphRef(subject1SubscriptionRef);
+            const subject2GraphRef = graphPlugin.getGraphRef(subject2SubscriptionRef);
+            const combinedGraphRef = graphPlugin.getGraphRef(combinedSubscriptionRef);
 
             expect(subject1GraphRef).to.have.property("sink");
             expect(subject1GraphRef).to.have.property("rootSink", combinedSubscriptionRef);
@@ -525,8 +525,8 @@ describe("GraphPlugin", () => {
             const composed1SubscriptionRef = subscriptionRefsPlugin.getSubscription(composed1);
             const composed2SubscriptionRef = subscriptionRefsPlugin.getSubscription(composed2);
 
-            const innerSubject1GraphRef = getGraphRef(innerSubject1SubscriptionRef);
-            const innerSubject2GraphRef = getGraphRef(innerSubject2SubscriptionRef);
+            const innerSubject1GraphRef = graphPlugin.getGraphRef(innerSubject1SubscriptionRef);
+            const innerSubject2GraphRef = graphPlugin.getGraphRef(innerSubject2SubscriptionRef);
 
             expect(innerSubject1GraphRef).to.have.property("sink");
             expect(innerSubject1GraphRef).to.have.property("rootSink", composed1SubscriptionRef);
@@ -543,8 +543,8 @@ describe("GraphPlugin", () => {
             const subjectSubscriptionRef = subscriptionRefsPlugin.getSubscription(subject);
             const mappedSubscriptionRef = subscriptionRefsPlugin.getSubscription(mapped);
 
-            const subjectGraphRef = getGraphRef(subjectSubscriptionRef);
-            const mappedGraphRef = getGraphRef(mappedSubscriptionRef);
+            const subjectGraphRef = graphPlugin.getGraphRef(subjectSubscriptionRef);
+            const mappedGraphRef = graphPlugin.getGraphRef(mappedSubscriptionRef);
 
             expect(subjectGraphRef).to.exist;
             expect(subjectGraphRef).to.have.property("depth", 2);
@@ -566,19 +566,19 @@ describe("GraphPlugin", () => {
             composed.subscribe();
 
             const composedSubscriptionRef = subscriptionRefsPlugin.getSubscription(composed);
-            const composedGraphRef = getGraphRef(composedSubscriptionRef);
+            const composedGraphRef = graphPlugin.getGraphRef(composedSubscriptionRef);
             expect(composedGraphRef).to.have.property("flattened", false);
 
             subject.next(0);
 
             let flattenedSubscriptionRef = composedGraphRef.flats[0];
-            let flattenedGraphRef = getGraphRef(flattenedSubscriptionRef);
+            let flattenedGraphRef = graphPlugin.getGraphRef(flattenedSubscriptionRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
 
             subject.next(1);
 
             flattenedSubscriptionRef = composedGraphRef.flats[1];
-            flattenedGraphRef = getGraphRef(flattenedSubscriptionRef);
+            flattenedGraphRef = graphPlugin.getGraphRef(flattenedSubscriptionRef);
             expect(flattenedGraphRef).to.have.property("flattened", true);
         });
 
@@ -588,6 +588,24 @@ describe("GraphPlugin", () => {
                 spy.teardown();
             }
         });
+
+        function hasSink(graphRef: GraphRef, sink: Subscription): boolean {
+
+            if (graphRef.sink === undefined) {
+                return false;
+            } else if (graphRef.sink === sink) {
+                return true;
+            }
+            return hasSink(graphPlugin.getGraphRef(graphRef.sink), sink);
+        }
+
+        function hasSource(graphRef: GraphRef, source: Subscription): boolean {
+
+            if (graphRef.sources.indexOf(source as Subscription) !== -1) {
+                return true;
+            }
+            return graphRef.sources.some(s => hasSource(graphPlugin.getGraphRef(s), source));
+        }
     });
 
     describe("methods", () => {
@@ -676,21 +694,3 @@ describe("GraphPlugin", () => {
         });
     });
 });
-
-function hasSink(graphRef: GraphRef, sink: Subscription): boolean {
-
-    if (graphRef.sink === undefined) {
-        return false;
-    } else if (graphRef.sink === sink) {
-        return true;
-    }
-    return hasSink(getGraphRef(graphRef.sink), sink);
-}
-
-function hasSource(graphRef: GraphRef, source: Subscription): boolean {
-
-    if (graphRef.sources.indexOf(source as Subscription) !== -1) {
-        return true;
-    }
-    return graphRef.sources.some(s => hasSource(getGraphRef(s), source));
-}

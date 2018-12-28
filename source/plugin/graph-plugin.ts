@@ -27,41 +27,6 @@ export interface GraphRef {
     sourcesFlushed: number;
 }
 
-export function getGraphRef(subscription: Subscription): GraphRef {
-
-    return subscription[graphRefSymbol];
-}
-
-export function logGraph(subscription: Subscription, {
-    all = false,
-    logger = defaultLogger
-}: {
-    all?: boolean,
-    logger?: Logger
-}): void {
-
-    if (all) {
-        const { sentinel } = getGraphRef(subscription);
-        sentinel.sources.forEach(source => log("", source, "root"));
-    } else {
-        log("", subscription, "subscription");
-    }
-
-    function log(indent: string, source: Subscription, kind: string): void {
-        const { observable } = getSubscriptionRef(source);
-        logger.log(`${indent}${inferType(observable)} (${kind})`);
-        const graphRef = getGraphRef(source);
-        graphRef.sources.forEach(source => log(`${indent}  `, source, "source"));
-        graphRef.flats.forEach(flat => log(`${indent}  `, flat, "flat"));
-    }
-}
-
-function setGraphRef(subscription: Subscription, value: GraphRef): GraphRef {
-
-    subscription[graphRefSymbol] = value;
-    return value;
-}
-
 export class GraphPlugin extends BasePlugin {
 
     private flushIntervalId_: any;
@@ -132,7 +97,7 @@ export class GraphPlugin extends BasePlugin {
     beforeSubscribe(subscription: Subscription): void {
 
         const { notifications_, sentinel_ } = this;
-        const graphRef = setGraphRef(subscription, {
+        const graphRef = this.setGraphRef_(subscription, {
             depth: 1,
             flats: [],
             flatsFlushed: 0,
@@ -154,10 +119,10 @@ export class GraphPlugin extends BasePlugin {
         if ((length > 0) && (notifications_[length - 1].notification === "next")) {
 
             const { subscription: source } = notifications_[length - 1];
-            const sourceGraphRef = getGraphRef(source);
+            const sourceGraphRef = this.getGraphRef(source);
             const { sink } = sourceGraphRef;
             if (sink) {
-                const sinkGraphRef = getGraphRef(sink);
+                const sinkGraphRef = this.getGraphRef(sink);
                 sinkGraphRef.flats.push(subscription);
                 graphRef.link = sinkGraphRef;
                 graphRef.flattened = true;
@@ -169,7 +134,7 @@ export class GraphPlugin extends BasePlugin {
                 if (notifications_[n].notification === "subscribe") {
 
                     const { subscription: sink } = notifications_[length - 1];
-                    const sinkGraphRef = getGraphRef(sink);
+                    const sinkGraphRef = this.getGraphRef(sink);
                     sinkGraphRef.sources.push(subscription);
                     graphRef.depth = sinkGraphRef.depth + 1;
                     graphRef.link = sinkGraphRef;
@@ -203,7 +168,7 @@ export class GraphPlugin extends BasePlugin {
     findSubscription(match: Match): Subscription | undefined {
 
         const { sentinel_ } = this;
-        return findSubscription(sentinel_, match);
+        return this.findSubscription_(sentinel_, match);
     }
 
     teardown(): void {
@@ -214,9 +179,32 @@ export class GraphPlugin extends BasePlugin {
         }
     }
 
+    getGraphRef(subscription: Subscription): GraphRef {
+
+        return subscription[graphRefSymbol];
+    }
+
+    logGraph(subscription?: Subscription, logger: Logger = defaultLogger): void {
+
+        const log = (indent: string, source: Subscription, kind: string) => {
+            const { observable } = getSubscriptionRef(source);
+            logger.log(`${indent}${inferType(observable)} (${kind})`);
+            const graphRef = this.getGraphRef(source);
+            graphRef.sources.forEach(source => log(`${indent}  `, source, "source"));
+            graphRef.flats.forEach(flat => log(`${indent}  `, flat, "flat"));
+        };
+
+        if (subscription) {
+            log("", subscription, "subscription");
+        } else {
+            const { sentinel_ } = this;
+            sentinel_.sources.forEach(source => log("", source, "root"));
+        }
+    }
+
     private flush_(subscription: Subscription): void {
 
-        const graphRef = getGraphRef(subscription);
+        const graphRef = this.getGraphRef(subscription);
         const { flats, sources } = graphRef;
 
         if (
@@ -264,30 +252,36 @@ export class GraphPlugin extends BasePlugin {
             }
         }
     }
-}
 
-function findSubscription(
-    graphRef: GraphRef,
-    match: Match
-): Subscription | undefined {
-
-    const { flats, self, sources } = graphRef;
-
-    if (self && matches(self, match)) {
-        return self;
-    }
-
-    function iter(
-        found: Subscription | undefined,
-        subscription: Subscription
+    private findSubscription_(
+        graphRef: GraphRef,
+        match: Match
     ): Subscription | undefined {
-        if (found) {
-            return found;
+
+        const { flats, self, sources } = graphRef;
+
+        const iter = (
+            found: Subscription | undefined,
+            subscription: Subscription
+        ) => {
+            if (found) {
+                return found;
+            }
+            return this.findSubscription_(
+                this.getGraphRef(subscription),
+                match
+            );
+        };
+
+        if (self && matches(self, match)) {
+            return self;
         }
-        return findSubscription(
-            getGraphRef(subscription),
-            match
-        );
+        return sources.reduce(iter, undefined) || flats.reduce(iter, undefined);
     }
-    return sources.reduce(iter, undefined) || flats.reduce(iter, undefined);
+
+    private setGraphRef_(subscription: Subscription, value: GraphRef): GraphRef {
+
+        subscription[graphRefSymbol] = value;
+        return value;
+    }
 }

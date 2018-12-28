@@ -13,6 +13,9 @@ export interface Options {
     [key: string]: any;
 }
 
+export type QueryPredicate = (record: Record<string, any>) => boolean;
+export type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
+
 export interface Teardown {
     (): void;
 }
@@ -22,15 +25,15 @@ export interface Spy {
     readonly logger: Logger;
     readonly tick: number;
     readonly version: string;
-    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined;
-    findAll<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
-    findAll(): Plugin[];
+    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
     log(observableMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(observableMatch: Match, partialLogger?: PartialLogger): Teardown;
     log(partialLogger?: PartialLogger): Teardown;
     pause(match: Match): Deck;
     pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, complete?: boolean): Teardown;
     plug(...plugins: Plugin[]): Teardown;
+    query(predicate: string | QueryPredicate, partialLogger?: PartialLogger): void;
+    query(derivations: QueryDerivations): void;
     show(match: Match, partialLogger?: PartialLogger): void;
     show(partialLogger?: PartialLogger): void;
     stats(partialLogger?: PartialLogger): void;

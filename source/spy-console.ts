@@ -16,7 +16,7 @@ export function wrap(
     return {
         deck(call?: number): any {
             deprecation();
-            const pausePlugins = core.findAll(PausePlugin);
+            const pausePlugins = core.find(PausePlugin);
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
                 logger.group(`${pausePlugins.length} Deck(s)`);

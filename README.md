@@ -99,7 +99,6 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.plug`](#module-plug)
 * [`Spy.unplug`](#module-unplug)
 * [`Spy.find`](#module-find)
-* [`Spy.findAll`](#module-findAll)
 * [`Spy.stats`](#module-stats)
 * [`Spy.teardown`](#module-teardown)
 * [`sweep`](#module-sweep)
@@ -123,9 +122,7 @@ Calling `create` attaches the spy to `Observable.prototype.subscribe` and return
 ```ts
 interface Spy {
   readonly tick: number;
-  find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P | undefined;
-  findAll<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
-  findAll(): Plugin[];
+  find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
   pause(match: Match): Deck;
@@ -297,26 +294,11 @@ Removes the specified plugin(s).
 interface Spy {
   find<P extends Plugin, O extends PluginOptions>(
     ctor: PluginCtor<P, O>
-  ): P | undefined;
-}
-```
-
-Returns the first plugin matching the specified constructor/class.
-
-<a name="module-findAll"></a>
-
-### findAll
-
-```ts
-interface Spy {
-  findAll<P extends Plugin, O extends PluginOptions>(
-    ctor: PluginCtor<P, O>
   ): P[];
-  findAll(): Plugin[];  
 }
 ```
 
-Returns all plugins matching the specified constructor/class. Or all plugins of no constructor is specified.
+Returns all plugins matching the specified constructor/class.
 
 <a name="module-stats"></a>
 

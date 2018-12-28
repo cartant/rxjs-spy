@@ -38,12 +38,12 @@ import { hide } from "../operators";
 import { Spy } from "../spy-interface";
 import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
-import { getGraphRef } from "./graph-plugin";
+import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
 import { DeckStats, PausePlugin } from "./pause-plugin";
 import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
-import { getStackTrace } from "./stack-trace-plugin";
+import { StackTracePlugin } from "./stack-trace-plugin";
 
 interface NotificationRef {
     error?: any;
@@ -65,6 +65,11 @@ export class DevToolsPlugin extends BasePlugin {
     private batchQueue_: Message[];
     private batchTimeoutId_: any;
     private connection_: Connection | undefined;
+    private foundPlugins_: {
+        graphPlugin: GraphPlugin | undefined;
+        snapshotPlugin: SnapshotPlugin | undefined;
+        stackTracePlugin: StackTracePlugin | undefined;
+    } | undefined;
     private posts_!: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
     private responses_!: Observable<Response>;
@@ -77,6 +82,7 @@ export class DevToolsPlugin extends BasePlugin {
         super("devTools");
 
         this.batchQueue_ = [];
+        this.foundPlugins_ = undefined;
         this.plugins_ = new Map<string, PluginRecord>();
         this.snapshotHinted_ = false;
         this.spy_ = spy;
@@ -150,9 +156,9 @@ export class DevToolsPlugin extends BasePlugin {
                         break;
                     case "snapshot": {
                         this.snapshotHinted_ = false;
-                        const plugin = this.spy_.find(SnapshotPlugin);
-                        if (plugin) {
-                            const snapshot = plugin.snapshotAll();
+                        const { snapshotPlugin } = this.findPlugins_();
+                        if (snapshotPlugin) {
+                            const snapshot = snapshotPlugin.snapshotAll();
                             response["snapshot"] = toSnapshot(snapshot);
                             return response;
                         }
@@ -326,6 +332,25 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
+    private findPlugins_(): {
+        graphPlugin: GraphPlugin | undefined,
+        snapshotPlugin: SnapshotPlugin | undefined,
+        stackTracePlugin: StackTracePlugin | undefined
+    } {
+
+        const { foundPlugins_, spy_ } = this;
+        if (foundPlugins_) {
+            return foundPlugins_;
+        }
+
+        const [graphPlugin] = spy_.find(GraphPlugin);
+        const [snapshotPlugin] = spy_.find(SnapshotPlugin);
+        const [stackTracePlugin] = spy_.find(StackTracePlugin);
+
+        this.foundPlugins_ = { graphPlugin, snapshotPlugin, stackTracePlugin };
+        return this.foundPlugins_;
+    }
+
     private recordPlugin_(spyId: string, pluginId: string, plugin: Plugin): void {
 
         const teardown = this.spy_.plug(plugin);
@@ -342,8 +367,35 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
+    private toGraph_(subscription: Subscription): GraphPayload | undefined {
+
+        const { graphPlugin } = this.findPlugins_();
+        if (!graphPlugin) {
+            return undefined;
+        }
+        const graphRef = graphPlugin.getGraphRef(subscription);
+
+        const {
+            flats,
+            flatsFlushed,
+            rootSink,
+            sink,
+            sources,
+            sourcesFlushed
+        } = graphRef;
+        return {
+            flats: flats.map(identify),
+            flatsFlushed,
+            rootSink: rootSink ? identify(rootSink) : null,
+            sink: sink ? identify(sink) : null,
+            sources: sources.map(identify),
+            sourcesFlushed
+        };
+    }
+
     private toNotification_(notificationRef: NotificationRef): NotificationPayload {
 
+        const { stackTracePlugin } = this.findPlugins_();
         const { error, notification, prefix, subscriptionRef, value } = notificationRef;
         const { observable, subscriber, subscription } = subscriptionRef;
 
@@ -360,9 +412,9 @@ export class DevToolsPlugin extends BasePlugin {
             },
             subscription: {
                 error,
-                graph: orNull(toGraph(subscription)),
+                graph: orNull(this.toGraph_(subscription)),
                 id: identify(subscription),
-                stackTrace: orNull(getStackTrace(subscription))
+                stackTrace: orNull(stackTracePlugin && stackTracePlugin.getStackTrace(subscription))
             },
             tick: this.spy_.tick,
             timestamp: Date.now(),
@@ -375,32 +427,6 @@ export class DevToolsPlugin extends BasePlugin {
 function orNull(value: any): any {
 
     return  (value === undefined) ? null : value;
-}
-
-function toGraph(subscription: Subscription): GraphPayload | undefined {
-
-    const graphRef = getGraphRef(subscription);
-
-    if (!graphRef) {
-        return undefined;
-    }
-
-    const {
-        flats,
-        flatsFlushed,
-        rootSink,
-        sink,
-        sources,
-        sourcesFlushed
-    } = graphRef;
-    return {
-        flats: flats.map(identify),
-        flatsFlushed,
-        rootSink: rootSink ? identify(rootSink) : null,
-        sink: sink ? identify(sink) : null,
-        sources: sources.map(identify),
-        sourcesFlushed
-    };
 }
 
 function toSnapshot(snapshot: Snapshot): SnapshotPayload {

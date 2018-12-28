@@ -9,8 +9,8 @@ import { Spy } from "../spy-interface";
 import { getSubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 import { BasePlugin } from "./plugin";
-import { getSnapshotRef } from "./snapshot-plugin";
-import { getStackTrace } from "./stack-trace-plugin";
+import { SnapshotPlugin } from "./snapshot-plugin";
+import { StackTracePlugin } from "./stack-trace-plugin";
 
 const cycleCountSymbol = Symbol("cycleCount");
 const cycleWarnedSymbol = Symbol("cycleWarned");
@@ -18,6 +18,10 @@ const cycleWarnedSymbol = Symbol("cycleWarned");
 export class CyclePlugin extends BasePlugin {
 
     private cycleThreshold_: number;
+    private foundPlugins_: {
+        snapshotPlugin: SnapshotPlugin | undefined;
+        stackTracePlugin: StackTracePlugin | undefined;
+    } | undefined;
     private logger_: Logger;
     private nexts_: Subscription[] = [];
     private spy_: Spy;
@@ -33,6 +37,7 @@ export class CyclePlugin extends BasePlugin {
         super("cycle");
 
         this.cycleThreshold_ = cycleThreshold;
+        this.foundPlugins_ = undefined;
         this.logger_ = spy.logger;
         this.spy_ = spy;
     }
@@ -45,25 +50,26 @@ export class CyclePlugin extends BasePlugin {
 
     beforeNext(subscription: Subscription, value: any): void {
 
-        const { cycleThreshold_, logger_, nexts_, spy_ } = this;
+        const { cycleThreshold_, logger_, nexts_ } = this;
 
         if (nexts_.indexOf(subscription) !== -1) {
             const cycleCount = subscription[cycleCountSymbol] = (subscription[cycleCountSymbol] || 0) + 1;
             if (cycleCount >= cycleThreshold_) {
                 if (nexts_.findIndex(next => next[cycleWarnedSymbol]) === -1) {
                     subscription[cycleWarnedSymbol] = true;
-                    const stackFrames = getStackTrace(subscription);
-                    if (stackFrames.length === 0) {
-                        spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
-                    }
-                    const stackTrace = stackFrames.length ? `; subscribed at\n${stackFrames.join("\n")}` : "";
+                    const { stackTracePlugin } = this.findPlugins_();
+                    const stackTrace = stackTracePlugin ?
+                        `; subscribed at\n${stackTracePlugin.getStackTrace(subscription).join("\n")}` :
+                        "";
                     const { observable } = getSubscriptionRef(subscription);
                     const type = inferType(observable);
                     logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
                 }
             }
-            const snapshotRef = getSnapshotRef(subscription);
-            if (snapshotRef) {
+
+            const { snapshotPlugin } = this.findPlugins_();
+            if (snapshotPlugin) {
+                const snapshotRef = snapshotPlugin.getSnapshotRef(subscription);
                 snapshotRef.query.cycleCount = cycleCount;
             }
         }
@@ -72,9 +78,31 @@ export class CyclePlugin extends BasePlugin {
 
     beforeSubscribe(subscription: Subscription): void {
 
-        const snapshotRef = getSnapshotRef(subscription);
-        if (snapshotRef) {
+        const { snapshotPlugin } = this.findPlugins_();
+        if (snapshotPlugin) {
+            const snapshotRef = snapshotPlugin.getSnapshotRef(subscription);
             snapshotRef.query.cycleCount = 0;
         }
+    }
+
+    private findPlugins_(): {
+        snapshotPlugin: SnapshotPlugin | undefined,
+        stackTracePlugin: StackTracePlugin | undefined
+    } {
+
+        const { foundPlugins_, spy_ } = this;
+        if (foundPlugins_) {
+            return foundPlugins_;
+        }
+
+        const [snapshotPlugin] = spy_.find(SnapshotPlugin);
+        const [stackTracePlugin] = spy_.find(StackTracePlugin);
+
+        if (!stackTracePlugin) {
+            spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
+        }
+
+        this.foundPlugins_ = { snapshotPlugin, stackTracePlugin };
+        return this.foundPlugins_;
     }
 }

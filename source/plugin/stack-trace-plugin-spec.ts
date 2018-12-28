@@ -9,7 +9,7 @@ import { Subject } from "rxjs";
 import { map } from "rxjs/operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
-import { getStackTrace, StackTracePlugin } from "./stack-trace-plugin";
+import { StackTracePlugin } from "./stack-trace-plugin";
 import { SubscriptionRefsPlugin } from "./subscription-refs-plugin";
 
 describe("StackTracePlugin", () => {
@@ -35,8 +35,8 @@ describe("StackTracePlugin", () => {
         const subjectSubscription = subscriptionRefsPlugin.getSubscription(subject);
         const mappedSubscription = subscriptionRefsPlugin.getSubscription(mapped);
 
-        const subjectStackTrace = getStackTrace(subjectSubscription);
-        const mappedStackTrace = getStackTrace(mappedSubscription);
+        const subjectStackTrace = stackTracePlugin.getStackTrace(subjectSubscription);
+        const mappedStackTrace = stackTracePlugin.getStackTrace(mappedSubscription);
 
         expect(subjectStackTrace).to.exist;
         expect(subjectStackTrace).to.not.be.empty;

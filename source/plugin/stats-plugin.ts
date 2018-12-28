@@ -5,7 +5,7 @@
 
 import { Subscription } from "rxjs";
 import { Spy } from "../spy-interface";
-import { getGraphRef } from "./graph-plugin";
+import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 
 export interface Stats {
@@ -25,6 +25,9 @@ export interface Stats {
 
 export class StatsPlugin extends BasePlugin {
 
+    private foundPlugins_: {
+        graphPlugin: GraphPlugin | undefined;
+    } | undefined;
     private spy_: Spy;
     private stats_: Stats;
     private time_: number;
@@ -33,6 +36,7 @@ export class StatsPlugin extends BasePlugin {
 
         super("stats");
 
+        this.foundPlugins_ = undefined;
         this.spy_ = spy;
         this.stats_ = {
             completes: 0,
@@ -52,10 +56,21 @@ export class StatsPlugin extends BasePlugin {
     }
 
     afterSubscribe(subscription: Subscription): void {
-        const { stats_ } = this;
-        const graphRef = getGraphRef(subscription);
-        if (graphRef) {
-            const { depth, flattened, flats, flatsFlushed, rootSink, sources, sourcesFlushed } = graphRef;
+
+        const { graphPlugin } = this.findPlugins_();
+        if (graphPlugin) {
+
+            const { stats_ } = this;
+            const {
+                depth,
+                flattened,
+                flats,
+                flatsFlushed,
+                rootSink,
+                sources,
+                sourcesFlushed
+            } = graphPlugin.getGraphRef(subscription);
+
             if (!rootSink) {
                 stats_.rootSubscribes += 1;
             }
@@ -115,5 +130,19 @@ export class StatsPlugin extends BasePlugin {
             stats_.timespan = Date.now() - time_;
         }
         stats_.tick = spy_.tick;
+    }
+
+    private findPlugins_(): {
+        graphPlugin: GraphPlugin | undefined
+    } {
+
+        const { foundPlugins_, spy_ } = this;
+        if (foundPlugins_) {
+            return foundPlugins_;
+        }
+
+        const [graphPlugin] = spy_.find(GraphPlugin);
+        this.foundPlugins_ = { graphPlugin };
+        return this.foundPlugins_;
     }
 }

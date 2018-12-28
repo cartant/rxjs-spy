@@ -37,7 +37,7 @@ export class Sweeper {
     constructor(spy: Spy) {
 
         this.sweeperRecords_ = new Map<string, SweeperRecord>();
-        this.snapshotPlugin_ = spy.find(SnapshotPlugin);
+        [this.snapshotPlugin_] = spy.find(SnapshotPlugin);
         this.spy_ = spy;
     }
 
