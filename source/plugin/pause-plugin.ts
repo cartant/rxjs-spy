@@ -15,7 +15,7 @@ import { defaultLogger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { hide } from "../operators";
 import { Spy, Teardown } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
 export interface DeckStats {
@@ -203,12 +203,13 @@ export class PausePlugin extends BasePlugin {
         return match_;
     }
 
-    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
+    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { deck_, match_ } = this;
+        const subscriptionRef = getSubscriptionRef(subscription);
 
-        if (matches(ref, match_)) {
-            return deck_.operator(ref);
+        if (matches(subscriptionRef, match_)) {
+            return deck_.operator(subscriptionRef);
         }
         return undefined;
     }

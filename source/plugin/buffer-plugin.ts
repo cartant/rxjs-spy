@@ -3,9 +3,10 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { Subscription } from "rxjs";
 import { Logger } from "../logger";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 import { getGraphRef, GraphRef } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
@@ -48,9 +49,10 @@ export class BufferPlugin extends BasePlugin {
         this.spy_ = spy;
     }
 
-    afterNext(ref: SubscriptionRef, value: any): void {
+    afterNext(subscription: Subscription, value: any): void {
 
-        const bufferRef: BufferRef = ref[bufferRefSymbol];
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const bufferRef: BufferRef = subscriptionRef[bufferRefSymbol];
         if (!bufferRef) {
             return;
         }
@@ -79,30 +81,31 @@ export class BufferPlugin extends BasePlugin {
         }
     }
 
-    afterSubscribe(ref: SubscriptionRef): void {
+    afterSubscribe(subscription: Subscription): void {
 
         subscriptions.pop();
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
 
-        const snapshotRef = getSnapshotRef(ref);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const snapshotRef = getSnapshotRef(subscriptionRef);
         if (snapshotRef) {
             snapshotRef.query.bufferCount = 0;
         }
 
-        subscriptions.push(ref);
+        subscriptions.push(subscriptionRef);
         const length = subscriptions.length;
         if (length > 1) {
             const bufferRef = subscriptions[length - 2][bufferHigherOrderSymbol];
             if (bufferRef) {
-                bufferRef.sources.push(ref);
-                ref[bufferRefSymbol] = bufferRef;
+                bufferRef.sources.push(subscriptionRef);
+                subscriptionRef[bufferRefSymbol] = bufferRef;
                 return;
             }
         }
 
-        const graphRef = getGraphRef(ref);
+        const graphRef = getGraphRef(subscriptionRef);
         if (!graphRef) {
             this.spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");
             return;
@@ -125,10 +128,10 @@ export class BufferPlugin extends BasePlugin {
         }
 
         if (higherOrderRegExp.test(inferType(sink.observable))) {
-            ref[bufferHigherOrderSymbol] = bufferRef;
+            subscriptionRef[bufferHigherOrderSymbol] = bufferRef;
         } else {
-            bufferRef.sources.push(ref);
-            ref[bufferRefSymbol] = bufferRef;
+            bufferRef.sources.push(subscriptionRef);
+            subscriptionRef[bufferRefSymbol] = bufferRef;
         }
     }
 }

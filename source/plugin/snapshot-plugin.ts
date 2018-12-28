@@ -10,7 +10,7 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 import { getGraphRef, GraphPlugin } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
@@ -142,16 +142,18 @@ export class SnapshotPlugin extends BasePlugin {
         this.spy_ = spy;
     }
 
-    beforeError(ref: SubscriptionRef, error: any): void {
+    beforeError(subscription: Subscription, error: any): void {
 
-        const snapshotRef = getSnapshotRef(ref);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const snapshotRef = getSnapshotRef(subscriptionRef);
         snapshotRef.error = error;
     }
 
-    beforeNext(ref: SubscriptionRef, value: any): void {
+    beforeNext(subscription: Subscription, value: any): void {
 
         const tick = this.spy_.tick;
-        const snapshotRef = getSnapshotRef(ref);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const snapshotRef = getSnapshotRef(subscriptionRef);
         snapshotRef.values.push({ tick, timestamp: Date.now(), value });
 
         const { keptValues_ } = this;
@@ -162,9 +164,10 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
 
-        setSnapshotRef(ref, {
+        const subscriptionRef = getSubscriptionRef(subscription);
+        setSnapshotRef(subscriptionRef, {
             error: undefined,
             query: {},
             values: [],

@@ -3,9 +3,8 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, Operator, OperatorFunction } from "rxjs";
+import { Observable, Operator, OperatorFunction, Subscription } from "rxjs";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
 
 export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
 
@@ -19,21 +18,21 @@ export interface Plugin {
 
     readonly name: string;
 
-    afterComplete(ref: SubscriptionRef): void;
-    afterError(ref: SubscriptionRef, error: any): void;
+    afterComplete(subscription: Subscription): void;
+    afterError(subscription: Subscription, error: any): void;
     afterLift(operator: Operator<any, any>, source: Observable<any>, sink: Observable<any>): void;
-    afterNext(ref: SubscriptionRef, value: any): void;
+    afterNext(subscription: Subscription, value: any): void;
     afterPipe(operators: OperatorFunction<any, any>[], source: Observable<any>, sink: Observable<any>): void;
-    afterSubscribe(ref: SubscriptionRef): void;
-    afterUnsubscribe(ref: SubscriptionRef): void;
-    beforeComplete(ref: SubscriptionRef): void;
-    beforeError(ref: SubscriptionRef, error: any): void;
+    afterSubscribe(subscription: Subscription): void;
+    afterUnsubscribe(subscription: Subscription): void;
+    beforeComplete(subscription: Subscription): void;
+    beforeError(subscription: Subscription, error: any): void;
     beforeLift(operator: Operator<any, any>, source: Observable<any>): void;
-    beforeNext(ref: SubscriptionRef, value: any): void;
+    beforeNext(subscription: Subscription, value: any): void;
     beforePipe(operators: OperatorFunction<any, any>[], source: Observable<any>): void;
-    beforeSubscribe(ref: SubscriptionRef): void;
-    beforeUnsubscribe(ref: SubscriptionRef): void;
-    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined;
+    beforeSubscribe(subscription: Subscription): void;
+    beforeUnsubscribe(subscription: Subscription): void;
+    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined;
     teardown(): void;
 }
 
@@ -41,20 +40,20 @@ export class BasePlugin implements Plugin {
 
     constructor(public readonly name: string) {}
 
-    afterComplete(ref: SubscriptionRef): void {}
-    afterError(ref: SubscriptionRef, error: any): void {}
+    afterComplete(subscription: Subscription): void {}
+    afterError(subscription: Subscription, error: any): void {}
     afterLift(operator: Operator<any, any>, source: Observable<any>, sink: Observable<any>): void {}
-    afterNext(ref: SubscriptionRef, value: any): void {}
+    afterNext(subscription: Subscription, value: any): void {}
     afterPipe(operators: OperatorFunction<any, any>[], source: Observable<any>, sink: Observable<any>): void {}
-    afterSubscribe(ref: SubscriptionRef): void {}
-    afterUnsubscribe(ref: SubscriptionRef): void {}
-    beforeComplete(ref: SubscriptionRef): void {}
-    beforeError(ref: SubscriptionRef, error: any): void {}
+    afterSubscribe(subscription: Subscription): void {}
+    afterUnsubscribe(subscription: Subscription): void {}
+    beforeComplete(subscription: Subscription): void {}
+    beforeError(subscription: Subscription, error: any): void {}
     beforeLift(operator: Operator<any, any>, source: Observable<any>): void {}
-    beforeNext(ref: SubscriptionRef, value: any): void {}
+    beforeNext(subscription: Subscription, value: any): void {}
     beforePipe(operators: OperatorFunction<any, any>[], source: Observable<any>): void {}
-    beforeSubscribe(ref: SubscriptionRef): void {}
-    beforeUnsubscribe(ref: SubscriptionRef): void {}
-    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }
+    beforeSubscribe(subscription: Subscription): void {}
+    beforeUnsubscribe(subscription: Subscription): void {}
+    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }
     teardown(): void {}
 }

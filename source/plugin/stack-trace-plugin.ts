@@ -4,7 +4,7 @@
  */
 
 import { parse, StackFrame } from "error-stack-parser";
-import { defer, Observable, of } from "rxjs";
+import { defer, Observable, of, Subscription } from "rxjs";
 import { shareReplay } from "rxjs/operators";
 
 // @ts-ignore: Could not find a declaration file for module 'stacktrace-gps'.
@@ -12,7 +12,7 @@ import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
@@ -64,12 +64,13 @@ export class StackTracePlugin extends BasePlugin {
         this.sourceMaps_ = sourceMaps;
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         const stackFrames = this.getStackFrames_();
 
         if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            setStackTraceRef(ref, {
+            setStackTraceRef(subscriptionRef, {
                 mappedStackTrace: defer(() => {
                     const gps = new StackTraceGps({ sourceCache: this.sourceCache_ });
                     return Promise.all(stackFrames.map(stackFrame => gps
@@ -83,7 +84,7 @@ export class StackTracePlugin extends BasePlugin {
                 stackTrace: stackFrames
             });
         } else {
-            setStackTraceRef(ref, {
+            setStackTraceRef(subscriptionRef, {
                 mappedStackTrace: of(stackFrames).pipe(hide()),
                 stackTrace: stackFrames
             });

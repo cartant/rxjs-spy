@@ -3,10 +3,11 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { Subscription } from "rxjs";
 import { defaultLogger, Logger } from "../logger";
 import { Match, matches } from "../match";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 import { BasePlugin, Notification } from "./plugin";
 
@@ -67,7 +68,7 @@ export class GraphPlugin extends BasePlugin {
     private keptDuration_: number;
     private notifications_: {
         notification: Notification;
-        ref: SubscriptionRef;
+        subscriptionRef: SubscriptionRef;
     }[];
     private sentinel_: GraphRef;
 
@@ -102,43 +103,45 @@ export class GraphPlugin extends BasePlugin {
         this.sentinel_.sentinel = this.sentinel_;
     }
 
-    afterNext(ref: SubscriptionRef, value: any): void {
+    afterNext(subscription: Subscription, value: any): void {
 
         const { notifications_ } = this;
         notifications_.pop();
     }
 
-    afterSubscribe(ref: SubscriptionRef): void {
+    afterSubscribe(subscription: Subscription): void {
 
         const { notifications_ } = this;
         notifications_.pop();
     }
 
-    afterUnsubscribe(ref: SubscriptionRef): void {
+    afterUnsubscribe(subscription: Subscription): void {
 
         const { notifications_ } = this;
         notifications_.pop();
-        this.flush_(ref);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        this.flush_(subscriptionRef);
     }
 
-    beforeNext(ref: SubscriptionRef, value: any): void {
+    beforeNext(subscription: Subscription, value: any): void {
 
         const { notifications_ } = this;
-        notifications_.push({ notification: "next", ref });
+        const subscriptionRef = getSubscriptionRef(subscription);
+        notifications_.push({ notification: "next", subscriptionRef });
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
 
         const { notifications_, sentinel_ } = this;
-
-        const graphRef = setGraphRef(ref, {
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const graphRef = setGraphRef(subscriptionRef, {
             depth: 1,
             flats: [],
             flatsFlushed: 0,
             flattened: false,
             link: sentinel_,
             rootSink: undefined,
-            self: ref,
+            self: subscriptionRef,
             sentinel: sentinel_,
             sink: undefined,
             sources: [],
@@ -152,12 +155,12 @@ export class GraphPlugin extends BasePlugin {
         const length = notifications_.length;
         if ((length > 0) && (notifications_[length - 1].notification === "next")) {
 
-            const { ref: sourceRef } = notifications_[length - 1];
+            const { subscriptionRef: sourceRef } = notifications_[length - 1];
             const sourceGraphRef = getGraphRef(sourceRef);
             const sinkRef = sourceGraphRef.sink;
             if (sinkRef) {
                 const sinkGraphRef = getGraphRef(sinkRef);
-                sinkGraphRef.flats.push(ref as SubscriptionRef);
+                sinkGraphRef.flats.push(subscriptionRef as SubscriptionRef);
                 graphRef.link = sinkGraphRef;
                 graphRef.flattened = true;
                 graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
@@ -167,9 +170,9 @@ export class GraphPlugin extends BasePlugin {
             for (let n = length - 1; n > -1; --n) {
                 if (notifications_[n].notification === "subscribe") {
 
-                    const { ref: sinkRef } = notifications_[length - 1];
+                    const { subscriptionRef: sinkRef } = notifications_[length - 1];
                     const sinkGraphRef = getGraphRef(sinkRef);
-                    sinkGraphRef.sources.push(ref as SubscriptionRef);
+                    sinkGraphRef.sources.push(subscriptionRef as SubscriptionRef);
                     graphRef.depth = sinkGraphRef.depth + 1;
                     graphRef.link = sinkGraphRef;
                     graphRef.rootSink = sinkGraphRef.rootSink || sinkRef as SubscriptionRef;
@@ -181,16 +184,17 @@ export class GraphPlugin extends BasePlugin {
         }
 
         if (graphRef.link === graphRef.sentinel) {
-            graphRef.sentinel.sources.push(ref as SubscriptionRef);
+            graphRef.sentinel.sources.push(subscriptionRef);
         }
 
-        notifications_.push({ notification: "subscribe", ref });
+        notifications_.push({ notification: "subscribe", subscriptionRef });
     }
 
-    beforeUnsubscribe(ref: SubscriptionRef): void {
+    beforeUnsubscribe(subscription: Subscription): void {
 
         const { notifications_ } = this;
-        notifications_.push({ notification: "unsubscribe", ref });
+        const subscriptionRef = getSubscriptionRef(subscription);
+        notifications_.push({ notification: "unsubscribe", subscriptionRef });
     }
 
     findRootSubscriptionRefs(): SubscriptionRef[] {

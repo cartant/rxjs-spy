@@ -43,7 +43,7 @@ import {
 
 import { wrap } from "./spy-console";
 import { Spy, Teardown } from "./spy-interface";
-import { SubscriptionRef } from "./subscription-ref";
+import { setSubscriptionRef, SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
 
 declare const __RXJS_SPY_VERSION__: string;
@@ -609,7 +609,13 @@ export class SpyCore implements Spy {
         }
 
         const subscriber = toSubscriber.apply(undefined, args);
-        const ref: SubscriptionRef = {
+        const subscription = new Subscription();
+
+        identify(observable);
+        identify(subscriber);
+        identify(subscription);
+
+        const subscriptionRef: SubscriptionRef = {
             completeTimestamp: 0,
             errorTimestamp: 0,
             nextCount: 0,
@@ -617,17 +623,14 @@ export class SpyCore implements Spy {
             observable,
             subscribeTimestamp: Date.now(),
             subscriber,
-            subscription: new Subscription(),
+            subscription,
             tick: 0,
             unsubscribeTimestamp: 0
         };
-
-        identify(observable);
-        identify(subscriber);
-        identify(ref.subscription);
+        setSubscriptionRef(subscription, subscriptionRef);
 
         const notify_ = (before: (plugin: Plugin) => void, block: () => void, after: (plugin: Plugin) => void) => {
-            ref.tick = ++spy_.tick_;
+            subscriptionRef.tick = ++spy_.tick_;
             spy_.plugins_.forEach(before);
             block();
             spy_.plugins_.forEach(after);
@@ -637,13 +640,13 @@ export class SpyCore implements Spy {
         subscriber.unsubscribe = () => {
             if (!subscriber.closed) {
                 notify_(
-                    plugin => plugin.beforeUnsubscribe(ref),
+                    plugin => plugin.beforeUnsubscribe(subscription),
                     () => {
-                        ref.subscription.unsubscribe();
-                        ref.unsubscribeTimestamp = Date.now();
+                        subscriptionRef.subscription.unsubscribe();
+                        subscriptionRef.unsubscribeTimestamp = Date.now();
                         subscriberUnsubscribe.call(subscriber);
                     },
-                    plugin => plugin.afterUnsubscribe(ref)
+                    plugin => plugin.afterUnsubscribe(subscription)
                 );
             } else {
                 subscriberUnsubscribe.call(subscriber);
@@ -654,35 +657,35 @@ export class SpyCore implements Spy {
 
             complete(): void {
                 notify_(
-                    plugin => plugin.beforeComplete(ref),
+                    plugin => plugin.beforeComplete(subscription),
                     () => {
                         subscriber.complete();
-                        ref.completeTimestamp = Date.now();
+                        subscriptionRef.completeTimestamp = Date.now();
                     },
-                    plugin => plugin.afterComplete(ref)
+                    plugin => plugin.afterComplete(subscription)
                 );
             },
 
             error(error: any): void {
                 notify_(
-                    plugin => plugin.beforeError(ref, error),
+                    plugin => plugin.beforeError(subscription, error),
                     () => {
                         subscriber.error(error);
-                        ref.errorTimestamp = Date.now();
+                        subscriptionRef.errorTimestamp = Date.now();
                     },
-                    plugin => plugin.afterError(ref, error)
+                    plugin => plugin.afterError(subscription, error)
                 );
             },
 
             next(value: any): void {
                 notify_(
-                    plugin => plugin.beforeNext(ref, value),
+                    plugin => plugin.beforeNext(subscription, value),
                     () => {
                         subscriber.next(value);
-                        ++ref.nextCount;
-                        ref.nextTimestamp = Date.now();
+                        ++subscriptionRef.nextCount;
+                        subscriptionRef.nextTimestamp = Date.now();
                     },
-                    plugin => plugin.afterNext(ref, value)
+                    plugin => plugin.afterNext(subscription, value)
                 );
             }
         };
@@ -720,7 +723,7 @@ export class SpyCore implements Spy {
             },
 
             pipe(plugins: Plugin[]): void {
-                const operators = plugins.map(plugin => plugin.operator(ref)).filter(Boolean);
+                const operators = plugins.map(plugin => plugin.operator(subscription)).filter(Boolean);
                 if (operators.length > 0) {
                     if (!this.preOpSubject) {
                         this.preOpSubject = new Subject<any>();
@@ -762,12 +765,12 @@ export class SpyCore implements Spy {
         }));
 
         notify_(
-            plugin => plugin.beforeSubscribe(ref),
+            plugin => plugin.beforeSubscribe(subscription),
             () => {
                 subscriber.add(observableSubscribe.call(observable, preOpObserver));
                 subscriber.add(() => preOpObserver.unsubscribe());
             },
-            plugin => plugin.afterSubscribe(ref)
+            plugin => plugin.afterSubscribe(subscription)
         );
         return subscriber;
     }

@@ -3,8 +3,9 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { Subscription } from "rxjs";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef } from "../subscription-ref";
 import { getGraphRef } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 
@@ -51,9 +52,10 @@ export class StatsPlugin extends BasePlugin {
         this.time_ = 0;
     }
 
-    afterSubscribe(ref: SubscriptionRef): void {
+    afterSubscribe(subscription: Subscription): void {
         const { stats_ } = this;
-        const graphRef = getGraphRef(ref);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const graphRef = getGraphRef(subscriptionRef);
         if (graphRef) {
             const { depth, flattened, flats, flatsFlushed, rootSink, sources, sourcesFlushed } = graphRef;
             if (!rootSink) {
@@ -72,31 +74,31 @@ export class StatsPlugin extends BasePlugin {
         }
     }
 
-    beforeComplete(ref: SubscriptionRef): void {
+    beforeComplete(subscription: Subscription): void {
         const { stats_ } = this;
         ++stats_.completes;
         this.all_();
     }
 
-    beforeError(ref: SubscriptionRef, error: any): void {
+    beforeError(subscription: Subscription, error: any): void {
         const { stats_ } = this;
         ++stats_.errors;
         this.all_();
     }
 
-    beforeNext(ref: SubscriptionRef, value: any): void {
+    beforeNext(subscription: Subscription, value: any): void {
         const { stats_ } = this;
         ++stats_.nexts;
         this.all_();
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
         const { stats_ } = this;
         ++stats_.subscribes;
         this.all_();
     }
 
-    beforeUnsubscribe(ref: SubscriptionRef): void {
+    beforeUnsubscribe(subscription: Subscription): void {
         const { stats_ } = this;
         ++stats_.unsubscribes;
         this.all_();

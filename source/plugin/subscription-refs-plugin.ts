@@ -4,9 +4,9 @@
  */
 /*tslint:disable:no-debugger*/
 
-import { Observable } from "rxjs";
+import { Observable, Subscription } from "rxjs";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
 export class SubscriptionRefsPlugin extends BasePlugin {
@@ -15,10 +15,11 @@ export class SubscriptionRefsPlugin extends BasePlugin {
 
     constructor({ spy }: { spy: Spy }) { super("subscriptionRefs"); }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
 
         const { subscriptionRefs_ } = this;
-        subscriptionRefs_.set(ref.observable, ref);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        subscriptionRefs_.set(subscriptionRef.observable, subscriptionRef);
     }
 
     get(observable: Observable<any>): SubscriptionRef {

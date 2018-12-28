@@ -3,9 +3,10 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { Subscription } from "rxjs";
 import { Logger } from "../logger";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
 import { BasePlugin } from "./plugin";
 import { getSnapshotRef } from "./snapshot-plugin";
@@ -36,23 +37,24 @@ export class CyclePlugin extends BasePlugin {
         this.spy_ = spy;
     }
 
-    afterNext(ref: SubscriptionRef, value: any): void {
+    afterNext(subscription: Subscription, value: any): void {
 
         const { nexts_ } = this;
         nexts_.pop();
     }
 
-    beforeNext(ref: SubscriptionRef, value: any): void {
+    beforeNext(subscription: Subscription, value: any): void {
 
         const { cycleThreshold_, logger_, nexts_, spy_ } = this;
-        const { observable, subscription } = ref;
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const { observable } = subscriptionRef;
 
-        if (nexts_.indexOf(ref) !== -1) {
+        if (nexts_.indexOf(subscriptionRef) !== -1) {
             const cycleCount = subscription[cycleCountSymbol] = (subscription[cycleCountSymbol] || 0) + 1;
             if (cycleCount >= cycleThreshold_) {
                 if (nexts_.findIndex(n => n.subscription[cycleWarnedSymbol]) === -1) {
                     subscription[cycleWarnedSymbol] = true;
-                    const stackFrames = getStackTrace(ref);
+                    const stackFrames = getStackTrace(subscriptionRef);
                     if (stackFrames.length === 0) {
                         spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
                     }
@@ -61,17 +63,18 @@ export class CyclePlugin extends BasePlugin {
                     logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
                 }
             }
-            const snapshotRef = getSnapshotRef(ref);
+            const snapshotRef = getSnapshotRef(subscriptionRef);
             if (snapshotRef) {
                 snapshotRef.query.cycleCount = cycleCount;
             }
         }
-        nexts_.push(ref);
+        nexts_.push(subscriptionRef);
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
 
-        const snapshotRef = getSnapshotRef(ref);
+        const subscriptionRef = getSubscriptionRef(subscription);
+        const snapshotRef = getSnapshotRef(subscriptionRef);
         if (snapshotRef) {
             snapshotRef.query.cycleCount = 0;
         }

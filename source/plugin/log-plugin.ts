@@ -3,12 +3,13 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { Subscription } from "rxjs";
 import { Auditor } from "../auditor";
 import { identify } from "../identify";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { BasePlugin, Notification } from "./plugin";
 
 const defaultMatch = /.+/;
@@ -40,45 +41,45 @@ export class LogPlugin extends BasePlugin {
         this.observableMatch_ = observableMatch || defaultMatch;
     }
 
-    beforeComplete(ref: SubscriptionRef): void {
-
-        this.log_(ref, "complete");
+    beforeComplete(subscription: Subscription): void {
+        const subscriptionRef = getSubscriptionRef(subscription);
+        this.log_(subscriptionRef, "complete");
     }
 
-    beforeError(ref: SubscriptionRef, error: any): void {
-
-        this.log_(ref, "error", error);
+    beforeError(subscription: Subscription, error: any): void {
+        const subscriptionRef = getSubscriptionRef(subscription);
+        this.log_(subscriptionRef, "error", error);
     }
 
-    beforeNext(ref: SubscriptionRef, value: any): void {
-
-        this.log_(ref, "next", value);
+    beforeNext(subscription: Subscription, value: any): void {
+        const subscriptionRef = getSubscriptionRef(subscription);
+        this.log_(subscriptionRef, "next", value);
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
-
-        this.log_(ref, "subscribe");
+    beforeSubscribe(subscription: Subscription): void {
+        const subscriptionRef = getSubscriptionRef(subscription);
+        this.log_(subscriptionRef, "subscribe");
     }
 
-    beforeUnsubscribe(ref: SubscriptionRef): void {
-
-        this.log_(ref, "unsubscribe");
+    beforeUnsubscribe(subscription: Subscription): void {
+        const subscriptionRef = getSubscriptionRef(subscription);
+        this.log_(subscriptionRef, "unsubscribe");
     }
 
     private log_(
-        ref: SubscriptionRef,
+        subscriptionRef: SubscriptionRef,
         notification: Notification,
         param?: any
     ): void {
 
         const { auditor_, notificationMatch_, observableMatch_ } = this;
 
-        if (matches(ref, observableMatch_) && matches(ref, notificationMatch_, notification)) {
+        if (matches(subscriptionRef, observableMatch_) && matches(subscriptionRef, notificationMatch_, notification)) {
 
             auditor_.audit(this, ignored => {
 
                 const { logger_ } = this;
-                const { observable } = ref;
+                const { observable } = subscriptionRef;
                 const id = identify(observable);
                 const tag = read(observable);
 

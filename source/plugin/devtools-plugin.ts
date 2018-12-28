@@ -36,7 +36,7 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
 import { getGraphRef } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
@@ -49,7 +49,7 @@ interface NotificationRef {
     error?: any;
     notification: Notification;
     prefix: "after" | "before";
-    ref: SubscriptionRef;
+    subscriptionRef: SubscriptionRef;
     value?: any;
 }
 
@@ -175,68 +175,75 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    afterSubscribe(ref: SubscriptionRef): void {
+    afterSubscribe(subscription: Subscription): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         this.batchNotification_({
             notification: "subscribe",
             prefix: "after",
-            ref
+            subscriptionRef
         });
     }
 
-    afterUnsubscribe(ref: SubscriptionRef): void {
+    afterUnsubscribe(subscription: Subscription): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         this.batchNotification_({
             notification: "unsubscribe",
             prefix: "after",
-            ref
+            subscriptionRef
         });
     }
 
-    beforeComplete(ref: SubscriptionRef): void {
+    beforeComplete(subscription: Subscription): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         this.batchNotification_({
             notification: "complete",
             prefix: "before",
-            ref
+            subscriptionRef
         });
     }
 
-    beforeError(ref: SubscriptionRef, error: any): void {
+    beforeError(subscription: Subscription, error: any): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         this.batchNotification_({
             error,
             notification: "error",
             prefix: "before",
-            ref
+            subscriptionRef
         });
     }
 
-    beforeNext(ref: SubscriptionRef, value: any): void {
+    beforeNext(subscription: Subscription, value: any): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         this.batchNotification_({
             notification: "next",
             prefix: "before",
-            ref,
+            subscriptionRef,
             value
         });
     }
 
-    beforeSubscribe(ref: SubscriptionRef): void {
+    beforeSubscribe(subscription: Subscription): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         this.batchNotification_({
             notification: "subscribe",
             prefix: "before",
-            ref
+            subscriptionRef
         });
     }
 
-    beforeUnsubscribe(ref: SubscriptionRef): void {
+    beforeUnsubscribe(subscription: Subscription): void {
 
+        const subscriptionRef = getSubscriptionRef(subscription);
         this.batchNotification_({
             notification: "unsubscribe",
             prefix: "before",
-            ref
+            subscriptionRef
         });
     }
 
@@ -337,8 +344,8 @@ export class DevToolsPlugin extends BasePlugin {
 
     private toNotification_(notificationRef: NotificationRef): NotificationPayload {
 
-        const { error, notification, prefix, ref, value } = notificationRef;
-        const { observable, subscriber, subscription } = ref;
+        const { error, notification, prefix, subscriptionRef, value } = notificationRef;
+        const { observable, subscriber, subscription } = subscriptionRef;
 
         return {
             id: identify({}),
@@ -353,9 +360,9 @@ export class DevToolsPlugin extends BasePlugin {
             },
             subscription: {
                 error,
-                graph: orNull(toGraph(ref)),
+                graph: orNull(toGraph(subscriptionRef)),
                 id: identify(subscription),
-                stackTrace: orNull(getStackTrace(ref))
+                stackTrace: orNull(getStackTrace(subscriptionRef))
             },
             tick: this.spy_.tick,
             timestamp: Date.now(),

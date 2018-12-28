@@ -3,10 +3,10 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { merge, NEVER, Observable } from "rxjs";
+import { merge, NEVER, Observable, Subscription } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
 import { Spy } from "../spy-interface";
-import { SubscriptionRef } from "../subscription-ref";
+import { getSubscriptionRef } from "../subscription-ref";
 import { BasePlugin } from "./plugin";
 
 export class PipePlugin extends BasePlugin {
@@ -32,11 +32,12 @@ export class PipePlugin extends BasePlugin {
         this.operator_ = complete ? operator : source => merge(NEVER, operator(source));
     }
 
-    operator(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
+    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { match_, operator_: operator_ } = this;
+        const subscriptionRef = getSubscriptionRef(subscription);
 
-        if (matches(ref, match_)) {
+        if (matches(subscriptionRef, match_)) {
             return operator_;
         }
         return undefined;
