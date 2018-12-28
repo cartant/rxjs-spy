@@ -46,6 +46,8 @@ import { SubscriptionRef } from "./subscription-ref";
 import { toSubscriber } from "./util";
 
 declare const __RXJS_SPY_VERSION__: string;
+const observableLift = Observable.prototype.lift;
+const observablePipe = Observable.prototype.pipe;
 const observableSubscribe = Observable.prototype.subscribe;
 const previousWindow: Record<string, any> = {};
 
@@ -95,6 +97,8 @@ export class SpyCore implements Spy {
         }
 
         SpyCore.spy_ = this;
+        Observable.prototype.lift = SpyCore.coreLift_;
+        Observable.prototype.pipe = SpyCore.corePipe_;
         Observable.prototype.subscribe = SpyCore.coreSubscribe_;
 
         this.auditor_ = new Auditor(options.audit || 0);
@@ -156,6 +160,8 @@ export class SpyCore implements Spy {
             this.undos_ = [];
 
             SpyCore.spy_ = undefined;
+            Observable.prototype.lift = observableLift;
+            Observable.prototype.pipe = observablePipe;
             Observable.prototype.subscribe = observableSubscribe;
         };
     }
@@ -546,6 +552,22 @@ export class SpyCore implements Spy {
             this.pluginsSubject_.next(this.plugins_);
             this.undos_ = this.undos_.filter(u => u !== plugin);
         });
+    }
+
+    /*tslint:disable-next-line:member-ordering*/
+    private static coreLift_(this: Observable<any>, ...args: any[]): any {
+
+        /*tslint:disable-next-line:no-invalid-this*/
+        const observable = this;
+        return observableLift.apply(observable, args);
+    }
+
+    /*tslint:disable-next-line:member-ordering*/
+    private static corePipe_(this: Observable<any>, ...args: any[]): any {
+
+        /*tslint:disable-next-line:no-invalid-this*/
+        const observable = this;
+        return observablePipe.apply(observable, args);
     }
 
     /*tslint:disable-next-line:member-ordering*/
