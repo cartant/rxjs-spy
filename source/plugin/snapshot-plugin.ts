@@ -81,12 +81,14 @@ export interface SubscriptionSnapshot {
     valuesFlushed: number;
 }
 
+type FindPlugins = {
+    graphPlugin: GraphPlugin | undefined;
+    stackTracePlugin: StackTracePlugin | undefined;
+};
+
 export class SnapshotPlugin extends BasePlugin {
 
-    private foundPlugins_: {
-        graphPlugin: GraphPlugin | undefined;
-        stackTracePlugin: StackTracePlugin | undefined;
-    } | undefined;
+    private foundPlugins_: FindPlugins | undefined;
     private keptValues_: number;
     private spy_: Spy;
 
@@ -340,10 +342,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
     }
 
-    private findPlugins_(): {
-        graphPlugin: GraphPlugin | undefined,
-        stackTracePlugin: StackTracePlugin | undefined
-    } {
+    private findPlugins_(): FindPlugins {
 
         const { foundPlugins_, spy_ } = this;
         if (foundPlugins_) {

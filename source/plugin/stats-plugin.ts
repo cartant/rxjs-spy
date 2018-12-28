@@ -23,11 +23,13 @@ export interface Stats {
     unsubscribes: number;
 }
 
+type FindPlugins = {
+    graphPlugin: GraphPlugin | undefined;
+};
+
 export class StatsPlugin extends BasePlugin {
 
-    private foundPlugins_: {
-        graphPlugin: GraphPlugin | undefined;
-    } | undefined;
+    private foundPlugins_: FindPlugins | undefined;
     private spy_: Spy;
     private stats_: Stats;
     private time_: number;
@@ -132,9 +134,7 @@ export class StatsPlugin extends BasePlugin {
         stats_.tick = spy_.tick;
     }
 
-    private findPlugins_(): {
-        graphPlugin: GraphPlugin | undefined
-    } {
+    private findPlugins_(): FindPlugins {
 
         const { foundPlugins_, spy_ } = this;
         if (foundPlugins_) {

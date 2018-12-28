@@ -28,14 +28,16 @@ const higherOrderRegExp = /^(zip)$/;
 const subscriptions: Subscription[] = [];
 const unboundedRegExp = /^(buffer|bufferTime|bufferToggle|bufferWhen|delay|delayWhen|mergeMap|zip)$/;
 
+type FindPlugins = {
+    graphPlugin: GraphPlugin | undefined;
+    snapshotPlugin: SnapshotPlugin | undefined;
+    stackTracePlugin: StackTracePlugin | undefined;
+};
+
 export class BufferPlugin extends BasePlugin {
 
     private bufferThreshold_: number;
-    private foundPlugins_: {
-        graphPlugin: GraphPlugin | undefined;
-        snapshotPlugin: SnapshotPlugin | undefined;
-        stackTracePlugin: StackTracePlugin | undefined;
-    } | undefined;
+    private foundPlugins_: FindPlugins | undefined;
     private logger_: Logger;
     private spy_: Spy;
 
@@ -156,11 +158,7 @@ export class BufferPlugin extends BasePlugin {
         }
     }
 
-    private findPlugins_(): {
-        graphPlugin: GraphPlugin | undefined,
-        snapshotPlugin: SnapshotPlugin | undefined,
-        stackTracePlugin: StackTracePlugin | undefined
-    } {
+    private findPlugins_(): FindPlugins {
 
         const { foundPlugins_, spy_ } = this;
         if (foundPlugins_) {

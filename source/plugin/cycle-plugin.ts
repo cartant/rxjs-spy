@@ -15,13 +15,15 @@ import { StackTracePlugin } from "./stack-trace-plugin";
 const cycleCountSymbol = Symbol("cycleCount");
 const cycleWarnedSymbol = Symbol("cycleWarned");
 
+type FindPlugins = {
+    snapshotPlugin: SnapshotPlugin | undefined;
+    stackTracePlugin: StackTracePlugin | undefined;
+};
+
 export class CyclePlugin extends BasePlugin {
 
     private cycleThreshold_: number;
-    private foundPlugins_: {
-        snapshotPlugin: SnapshotPlugin | undefined;
-        stackTracePlugin: StackTracePlugin | undefined;
-    } | undefined;
+    private foundPlugins_: FindPlugins | undefined;
     private logger_: Logger;
     private nexts_: Subscription[] = [];
     private spy_: Spy;
@@ -85,10 +87,7 @@ export class CyclePlugin extends BasePlugin {
         }
     }
 
-    private findPlugins_(): {
-        snapshotPlugin: SnapshotPlugin | undefined,
-        stackTracePlugin: StackTracePlugin | undefined
-    } {
+    private findPlugins_(): FindPlugins {
 
         const { foundPlugins_, spy_ } = this;
         if (foundPlugins_) {
