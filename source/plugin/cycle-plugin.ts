@@ -15,7 +15,7 @@ import { StackTracePlugin } from "./stack-trace-plugin";
 const cycleCountSymbol = Symbol("cycleCount");
 const cycleWarnedSymbol = Symbol("cycleWarned");
 
-type FindPlugins = {
+type FoundPlugins = {
     snapshotPlugin: SnapshotPlugin | undefined;
     stackTracePlugin: StackTracePlugin | undefined;
 };
@@ -23,7 +23,7 @@ type FindPlugins = {
 export class CyclePlugin extends BasePlugin {
 
     private cycleThreshold_: number;
-    private foundPlugins_: FindPlugins | undefined;
+    private foundPlugins_: FoundPlugins | undefined;
     private logger_: Logger;
     private nexts_: Subscription[] = [];
     private spy_: Spy;
@@ -87,7 +87,7 @@ export class CyclePlugin extends BasePlugin {
         }
     }
 
-    private findPlugins_(): FindPlugins {
+    private findPlugins_(): FoundPlugins {
 
         const { foundPlugins_, spy_ } = this;
         if (foundPlugins_) {

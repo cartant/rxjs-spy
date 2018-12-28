@@ -28,7 +28,7 @@ const higherOrderRegExp = /^(zip)$/;
 const subscriptions: Subscription[] = [];
 const unboundedRegExp = /^(buffer|bufferTime|bufferToggle|bufferWhen|delay|delayWhen|mergeMap|zip)$/;
 
-type FindPlugins = {
+type FoundPlugins = {
     graphPlugin: GraphPlugin | undefined;
     snapshotPlugin: SnapshotPlugin | undefined;
     stackTracePlugin: StackTracePlugin | undefined;
@@ -37,7 +37,7 @@ type FindPlugins = {
 export class BufferPlugin extends BasePlugin {
 
     private bufferThreshold_: number;
-    private foundPlugins_: FindPlugins | undefined;
+    private foundPlugins_: FoundPlugins | undefined;
     private logger_: Logger;
     private spy_: Spy;
 
@@ -158,7 +158,7 @@ export class BufferPlugin extends BasePlugin {
         }
     }
 
-    private findPlugins_(): FindPlugins {
+    private findPlugins_(): FoundPlugins {
 
         const { foundPlugins_, spy_ } = this;
         if (foundPlugins_) {

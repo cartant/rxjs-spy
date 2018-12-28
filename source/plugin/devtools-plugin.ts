@@ -60,7 +60,7 @@ interface PluginRecord {
     teardown: () => void;
 }
 
-type FindPlugins = {
+type FoundPlugins = {
     graphPlugin: GraphPlugin | undefined;
     snapshotPlugin: SnapshotPlugin | undefined;
     stackTracePlugin: StackTracePlugin | undefined;
@@ -71,7 +71,7 @@ export class DevToolsPlugin extends BasePlugin {
     private batchQueue_: Message[];
     private batchTimeoutId_: any;
     private connection_: Connection | undefined;
-    private foundPlugins_: FindPlugins | undefined;
+    private foundPlugins_: FoundPlugins | undefined;
     private posts_!: Observable<Post>;
     private plugins_: Map<string, PluginRecord>;
     private responses_!: Observable<Response>;
@@ -334,7 +334,7 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private findPlugins_(): FindPlugins {
+    private findPlugins_(): FoundPlugins {
 
         const { foundPlugins_, spy_ } = this;
         if (foundPlugins_) {
