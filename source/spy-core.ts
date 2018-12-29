@@ -120,7 +120,7 @@ export class SpyCore implements Spy {
         this.undos_ = [];
 
         const sweeper = new Sweeper(this);
-        hook(id => this.sweep_(id, sweeper));
+        hook((id, options) => this.sweep_(id, options, sweeper));
 
         if (typeof window !== "undefined") {
             [options.global || "spy", "rxSpy"].forEach(key => {
@@ -762,13 +762,13 @@ export class SpyCore implements Spy {
         return subscriber;
     }
 
-    private sweep_(id: string, sweeper: Sweeper): void {
+    private sweep_(id: string, options: { flush?: boolean }, sweeper: Sweeper): void {
 
         const { auditor_, defaultLogger_ } = this;
 
         auditor_.audit(id, ignored => {
 
-            const swept = sweeper.sweep(id);
+            const swept = sweeper.sweep(id, options);
             const logger = toLogger(defaultLogger_);
 
             if (swept) {

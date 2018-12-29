@@ -40,7 +40,7 @@ export class Sweeper {
         this.spy_ = spy;
     }
 
-    sweep(id: string): Swept | undefined {
+    sweep(id: string, options: { flush?: boolean } = {}): Swept | undefined {
 
         const { snapshotPlugin } = this.findPlugins_();
         if (!snapshotPlugin) {
@@ -52,6 +52,9 @@ export class Sweeper {
         const sweepRecord = this.record_(snapshotPlugin.snapshotAll());
 
         if (sweepRecords) {
+            if (options.flush) {
+                sweepRecords.splice(0, sweepRecords.length);
+            }
             sweepRecords.push(sweepRecord);
         } else {
             sweepRecords = [sweepRecord];

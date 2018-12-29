@@ -86,6 +86,31 @@ describe("sweeper", () => {
         subscription.unsubscribe();
     });
 
+    it("should support flush", () => {
+
+        const subject = new Subject<number>();
+        const source = subject.pipe(tag("source"));
+
+        subject.next();
+
+        const id = "";
+        let swept = sweeper.sweep(id);
+        expect(swept).to.not.exist;
+
+        const subscription = source.subscribe();
+        subject.next();
+
+        swept = sweeper.sweep(id)!;
+        expect(swept.rootSubscriptions).to.have.length(1);
+        expect(swept.rootUnsubscriptions).to.be.empty;
+
+        subscription.unsubscribe();
+        subject.next();
+
+        swept = sweeper.sweep(id, { flush: true })!;
+        expect(swept).to.not.exist;
+    });
+
     afterEach(() => {
 
         if (spy) {
