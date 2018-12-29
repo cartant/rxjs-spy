@@ -14,43 +14,43 @@ export interface Swept {
     unsubscriptions: SubscriptionSnapshot[];
 }
 
-interface SweeperRecord {
-    snapshotRecords: SnapshotRecord[];
+interface SweptRecord {
+    snapshotRecords: SweptSnapshotRecord[];
 }
 
-interface SnapshotRecord {
-    rootSubscriptions: Map<Subscription, SubscriptionRecord>;
+interface SweptSnapshotRecord {
+    rootSubscriptions: Map<Subscription, SweptSubscriptionRecord>;
     snapshot: Snapshot;
 }
 
-interface SubscriptionRecord {
+interface SweptSubscriptionRecord {
     flats: Map<Subscription, SubscriptionSnapshot>;
     subscriptionSnapshot: SubscriptionSnapshot;
 }
 
 export class Sweeper {
 
-    private sweeperRecords_: Map<string, SweeperRecord>;
+    private sweptRecords_: Map<string, SweptRecord>;
     private snapshotPlugin_: SnapshotPlugin | undefined;
     private spy_: Spy;
 
     constructor(spy: Spy) {
 
-        this.sweeperRecords_ = new Map<string, SweeperRecord>();
+        this.sweptRecords_ = new Map<string, SweptRecord>();
         [this.snapshotPlugin_] = spy.find(SnapshotPlugin);
         this.spy_ = spy;
     }
 
     sweep(id: string): Swept | undefined {
 
-        const { sweeperRecords_, snapshotPlugin_, spy_ } = this;
+        const { sweptRecords_, snapshotPlugin_, spy_ } = this;
 
         if (!snapshotPlugin_) {
             spy_.logger.warnOnce("Snapshotting is not enabled.");
             return undefined;
         }
 
-        let sweeperRecord = sweeperRecords_.get(id);
+        let sweeperRecord = sweptRecords_.get(id);
         const snapshotRecord = this.record_(snapshotPlugin_.snapshotAll());
 
         if (sweeperRecord) {
@@ -59,7 +59,7 @@ export class Sweeper {
             sweeperRecord = {
                 snapshotRecords: [snapshotRecord]
             };
-            sweeperRecords_.set(id, sweeperRecord);
+            sweptRecords_.set(id, sweeperRecord);
         }
         if (sweeperRecord.snapshotRecords.length > 2) {
             sweeperRecord.snapshotRecords.shift();
@@ -72,10 +72,10 @@ export class Sweeper {
         return this.compare_(id, previous, current);
     }
 
-    private compare_(id: string, previous: SnapshotRecord, current: SnapshotRecord): Swept | undefined {
+    private compare_(id: string, previous: SweptSnapshotRecord, current: SweptSnapshotRecord): Swept | undefined {
 
-        const subscriptions: SubscriptionRecord[] = [];
-        const unsubscriptions: SubscriptionRecord[] = [];
+        const subscriptions: SweptSubscriptionRecord[] = [];
+        const unsubscriptions: SweptSubscriptionRecord[] = [];
         const flatSubscriptions: SubscriptionSnapshot[] = [];
         const flatUnsubscriptions: SubscriptionSnapshot[] = [];
 
@@ -130,7 +130,7 @@ export class Sweeper {
 
     private findFlatSubscriptions_(
         snapshot: Snapshot,
-        subscriptionRecord: SubscriptionRecord
+        subscriptionRecord: SweptSubscriptionRecord
     ): void {
 
         const { flats } = subscriptionRecord;
@@ -147,7 +147,7 @@ export class Sweeper {
 
     private findRootSubscriptions_(
         snapshot: Snapshot,
-        rootSubscriptions: Map<Subscription, SubscriptionRecord>
+        rootSubscriptions: Map<Subscription, SweptSubscriptionRecord>
     ): void {
 
         snapshot.observables.forEach(observableSnapshot => {
@@ -165,9 +165,9 @@ export class Sweeper {
         });
     }
 
-    private record_(snapshot: Snapshot): SnapshotRecord {
+    private record_(snapshot: Snapshot): SweptSnapshotRecord {
 
-        const rootSubscriptions = new Map<Subscription, SubscriptionRecord>();
+        const rootSubscriptions = new Map<Subscription, SweptSubscriptionRecord>();
         this.findRootSubscriptions_(snapshot, rootSubscriptions);
 
         return { rootSubscriptions, snapshot };
