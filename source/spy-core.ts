@@ -57,9 +57,7 @@ const defaultDerivations: QueryDerivations = {
     blocking: ({ nextAge, sourceNextAge }) => sourceNextAge > nextAge,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
-    id: record => (match: number | string) => matchId(record, match),
-    inner: record => (match: number | string) => matchSource(record, "inners", match),
-    source: record => (match: number | string) => matchSource(record, "sources", match)
+    id: record => (match: number | string) => matchId(record, match)
 };
 
 export class SpyCore implements Spy {
@@ -970,16 +968,4 @@ function matchStackTrace(
     default:
         return false;
     }
-}
-
-function matchSource(
-    queryRecord: QueryRecord,
-    property: string,
-    match: number | string
-): boolean {
-    const ids: string[] = queryRecord[property];
-    if (typeof match === "number") {
-        match = match.toString();
-    }
-    return ids.some(id => id === match);
 }
