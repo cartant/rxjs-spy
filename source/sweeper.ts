@@ -28,30 +28,32 @@ interface SweptSubscriptionRecord {
     subscriptionSnapshot: SubscriptionSnapshot;
 }
 
+type FoundPlugins = {
+    snapshotPlugin: SnapshotPlugin | undefined;
+};
+
 export class Sweeper {
 
+    private foundPlugins_: FoundPlugins | undefined;
     private sweptRecords_: Map<string, SweptRecord>;
-    private snapshotPlugin_: SnapshotPlugin | undefined;
     private spy_: Spy;
 
     constructor(spy: Spy) {
 
         this.sweptRecords_ = new Map<string, SweptRecord>();
-        [this.snapshotPlugin_] = spy.find(SnapshotPlugin);
         this.spy_ = spy;
     }
 
     sweep(id: string): Swept | undefined {
 
-        const { sweptRecords_, snapshotPlugin_, spy_ } = this;
-
-        if (!snapshotPlugin_) {
-            spy_.logger.warnOnce("Snapshotting is not enabled.");
+        const { snapshotPlugin } = this.findPlugins_();
+        if (!snapshotPlugin) {
             return undefined;
         }
 
+        const { sweptRecords_ } = this;
         let sweeperRecord = sweptRecords_.get(id);
-        const snapshotRecord = this.record_(snapshotPlugin_.snapshotAll());
+        const snapshotRecord = this.record_(snapshotPlugin.snapshotAll());
 
         if (sweeperRecord) {
             sweeperRecord.snapshotRecords.push(snapshotRecord);
@@ -143,6 +145,22 @@ export class Sweeper {
                 }
             });
         });
+    }
+
+    private findPlugins_(): FoundPlugins {
+
+        const { foundPlugins_, spy_ } = this;
+        if (foundPlugins_) {
+            return foundPlugins_;
+        }
+
+        const [snapshotPlugin] = spy_.find(SnapshotPlugin);
+        if (!snapshotPlugin) {
+            this.spy_.logger.warnOnce("Sweeping is not enabled; add the SnapshotPlugin.");
+        }
+
+        this.foundPlugins_ = { snapshotPlugin };
+        return this.foundPlugins_;
     }
 
     private findRootSubscriptions_(
