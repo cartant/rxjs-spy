@@ -3,6 +3,18 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+export interface Batch extends Message {
+    [key: string]: any;
+    messages: Message[];
+    messageType: "batch";
+}
+
+export interface Broadcast extends Message {
+    [key: string]: any;
+    broadcastType: string;
+    messageType: "broadcast";
+}
+
 export interface Connection {
     disconnect(): void;
     post(message: Message): Post;
@@ -31,18 +43,6 @@ export interface Graph {
 export interface Message {
     [key: string]: any;
     messageType: string;
-}
-
-export interface Batch extends Message {
-    [key: string]: any;
-    messages: Message[];
-    messageType: "batch";
-}
-
-export interface Broadcast extends Message {
-    [key: string]: any;
-    broadcastType: string;
-    messageType: "broadcast";
 }
 
 export interface Notification {
