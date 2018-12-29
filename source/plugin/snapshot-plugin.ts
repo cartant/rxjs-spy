@@ -9,7 +9,7 @@ import { mapTo } from "rxjs/operators";
 import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
-import { Spy } from "../spy-interface";
+import { QueryRecord, Spy } from "../spy-interface";
 import { getSubscriptionLabel } from "../subscription-label";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
@@ -20,7 +20,7 @@ const snapshotLabelSymbol = Symbol("snapshotLabel");
 
 export interface SnapshotLabel {
     error: any;
-    query: Record<string, any>;
+    queryRecord: QueryRecord;
     values: { tick: number; timestamp: number; value: any; }[];
     valuesFlushed: number;
 }
@@ -66,7 +66,7 @@ export interface SubscriptionSnapshot {
     nextCount: number;
     nextTimestamp: number;
     observable: Observable<any>;
-    query: Record<string, any>;
+    queryRecord: QueryRecord;
     rootSink: SubscriptionSnapshot | undefined;
     sink: SubscriptionSnapshot | undefined;
     sources: Map<Subscription, SubscriptionSnapshot>;
@@ -131,7 +131,7 @@ export class SnapshotPlugin extends BasePlugin {
 
         this.setSnapshotLabel_(subscription, {
             error: undefined,
-            query: {},
+            queryRecord: {},
             values: [],
             valuesFlushed: 0
         });
@@ -207,7 +207,7 @@ export class SnapshotPlugin extends BasePlugin {
 
                 const {
                     error,
-                    query,
+                    queryRecord,
                     values,
                     valuesFlushed
                 } = this.getSnapshotLabel(subscription);
@@ -227,7 +227,7 @@ export class SnapshotPlugin extends BasePlugin {
                     nextCount,
                     nextTimestamp,
                     observable,
-                    query,
+                    queryRecord,
                     rootSink: undefined,
                     sink: undefined,
                     sources: new Map<Subscription, SubscriptionSnapshot>(),

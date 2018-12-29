@@ -72,7 +72,7 @@ export class CyclePlugin extends BasePlugin {
             const { snapshotPlugin } = this.findPlugins_();
             if (snapshotPlugin) {
                 const snapshotLabel = snapshotPlugin.getSnapshotLabel(subscription);
-                snapshotLabel.query.cycleCount = cycleCount;
+                snapshotLabel.queryRecord.cycleCount = cycleCount;
             }
         }
         nexts_.push(subscription);
@@ -83,7 +83,7 @@ export class CyclePlugin extends BasePlugin {
         const { snapshotPlugin } = this.findPlugins_();
         if (snapshotPlugin) {
             const snapshotLabel = snapshotPlugin.getSnapshotLabel(subscription);
-            snapshotLabel.query.cycleCount = 0;
+            snapshotLabel.queryRecord.cycleCount = 0;
         }
     }
 

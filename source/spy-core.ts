@@ -42,7 +42,7 @@ import {
 } from "./plugin";
 
 import { wrap } from "./spy-console";
-import { QueryDerivations, QueryPredicate, Spy, Teardown } from "./spy-interface";
+import { QueryDerivations, QueryPredicate, QueryRecord, Spy, Teardown } from "./spy-interface";
 import { setSubscriptionLabel, SubscriptionLabel } from "./subscription-label";
 import { toSubscriber } from "./util";
 
@@ -306,7 +306,7 @@ export class SpyCore implements Spy {
 
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
-                        if (predicate(this.toRecord_(
+                        if (predicate(this.toQueryRecord_(
                             observableSnapshot,
                             subscriberSnapshot,
                             subscriptionSnapshot
@@ -826,7 +826,7 @@ export class SpyCore implements Spy {
             errorTimestamp,
             unsubscribeTimestamp
         } = subscriptionSnapshot;
-        const record = this.toRecord_(
+        const record = this.toQueryRecord_(
             observableSnapshot,
             subscriberSnapshot,
             subscriptionSnapshot
@@ -856,11 +856,11 @@ export class SpyCore implements Spy {
         this.logStackTrace_(logger, subscriptionSnapshot);
     }
 
-    private toRecord_(
+    private toQueryRecord_(
         observableSnapshot: ObservableSnapshot,
         subscriberSnapshot: SubscriberSnapshot,
         subscriptionSnapshot: SubscriptionSnapshot
-    ): Record<string, any> {
+    ): QueryRecord {
 
         const now = Date.now();
         function age(timestamp: number): number | undefined {
@@ -892,8 +892,8 @@ export class SpyCore implements Spy {
         const flatSnapshots = Array.from(flats.values());
         const sourceSnapshots = Array.from(sources.values());
 
-        const record = {
-            ...subscriptionSnapshot.query,
+        const queryRecord = {
+            ...subscriptionSnapshot.queryRecord,
             complete: completeTimestamp !== 0,
             completeAge: age(completeTimestamp),
             error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
@@ -929,19 +929,19 @@ export class SpyCore implements Spy {
 
         const defaultDerived = {};
         Object.keys(defaultDerivations).forEach(key => {
-            defaultDerived[key] = defaultDerivations[key](record);
+            defaultDerived[key] = defaultDerivations[key](queryRecord);
         });
 
         const derived = {};
         Object.keys(derivations_).forEach(key => {
-            derived[key] = derivations_[key](record);
+            derived[key] = derivations_[key](queryRecord);
         });
-        return { ...defaultDerived, ...derived, ...record };
+        return { ...defaultDerived, ...derived, ...queryRecord };
     }
 }
 
 function matchId(
-    { observableId, subscriberId, subscriptionId }: Record<string, any>,
+    { observableId, subscriberId, subscriptionId }: QueryRecord,
     match: number | string
 ): boolean {
     if (typeof match === "number") {
@@ -951,11 +951,11 @@ function matchId(
 }
 
 function matchStackTrace(
-    record: Record<string, any>,
+    queryRecord: QueryRecord,
     property: string,
     match: string | RegExp
 ): boolean {
-    const [stackFrame] = record.stackTrace;
+    const [stackFrame] = queryRecord.stackTrace;
     if (!stackFrame) {
         return false;
     }
@@ -971,11 +971,11 @@ function matchStackTrace(
 }
 
 function matchSource(
-    record: Record<string, any>,
+    queryRecord: QueryRecord,
     property: string,
     match: number | string
 ): boolean {
-    const ids: string[] = record[property];
+    const ids: string[] = queryRecord[property];
     if (typeof match === "number") {
         match = match.toString();
     }

@@ -89,7 +89,7 @@ export class BufferPlugin extends BasePlugin {
             logger_.warn(`Excessive buffering detected; type = ${type}; count = ${bufferCount}${stackTrace}`);
         }
         if (sinkSnapshotLabel) {
-            sinkSnapshotLabel.query.bufferCount = bufferCount;
+            sinkSnapshotLabel.queryRecord.bufferCount = bufferCount;
         }
     }
 
@@ -105,7 +105,7 @@ export class BufferPlugin extends BasePlugin {
             snapshotPlugin.getSnapshotLabel(subscription) :
             undefined;
         if (snapshotLabel) {
-            snapshotLabel.query.bufferCount = 0;
+            snapshotLabel.queryRecord.bufferCount = 0;
         }
 
         const subscriptionLabel = getSubscriptionLabel(subscription);

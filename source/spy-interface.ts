@@ -13,8 +13,9 @@ export interface Options {
     [key: string]: any;
 }
 
-export type QueryPredicate = (record: Record<string, any>) => boolean;
-export type QueryDerivations = Record<string, (record: Record<string, any>) => any>;
+export type QueryRecord = Record<string, any>;
+export type QueryPredicate = (queryRecord: QueryRecord) => boolean;
+export type QueryDerivations = Record<string, (queryRecord: QueryRecord) => any>;
 
 export interface Teardown {
     (): void;
