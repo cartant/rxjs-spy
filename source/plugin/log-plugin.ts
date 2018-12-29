@@ -9,7 +9,7 @@ import { identify } from "../identify";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { Spy } from "../spy-interface";
-import { getSubscriptionLabel } from "../subscription-label";
+import { getSubscriptionRecord } from "../subscription-record";
 import { BasePlugin, Notification } from "./plugin";
 
 const defaultMatch = /.+/;
@@ -71,11 +71,11 @@ export class LogPlugin extends BasePlugin {
 
         if (matches(subscription, observableMatch_) && matches(subscription, notificationMatch_, notification)) {
 
-            const subscriptionLabel = getSubscriptionLabel(subscription);
+            const subscriptionRecord = getSubscriptionRecord(subscription);
             auditor_.audit(this, ignored => {
 
                 const { logger_ } = this;
-                const { observable } = subscriptionLabel;
+                const { observable } = subscriptionRecord;
                 const id = identify(observable);
                 const tag = read(observable);
 

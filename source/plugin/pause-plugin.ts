@@ -15,7 +15,7 @@ import { defaultLogger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { hide } from "../operators";
 import { Spy, Teardown } from "../spy-interface";
-import { getSubscriptionLabel } from "../subscription-label";
+import { getSubscriptionRecord } from "../subscription-record";
 import { BasePlugin } from "./plugin";
 
 export interface DeckStats {
@@ -96,7 +96,7 @@ export class Deck {
 
     operator(subscription: Subscription): (source: Observable<any>) => Observable<any> {
 
-        const { observable } = getSubscriptionLabel(subscription);
+        const { observable } = getSubscriptionRecord(subscription);
         return (source: Observable<any>) => {
 
             let state = this.states_.get(observable);

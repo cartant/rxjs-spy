@@ -43,7 +43,7 @@ import {
 
 import { wrap } from "./spy-console";
 import { QueryDerivations, QueryPredicate, QueryRecord, Spy, Teardown } from "./spy-interface";
-import { setSubscriptionLabel, SubscriptionLabel } from "./subscription-label";
+import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record";
 import { toSubscriber } from "./util";
 
 declare const __RXJS_SPY_VERSION__: string;
@@ -602,7 +602,7 @@ export class SpyCore implements Spy {
         identify(subscriber);
         identify(subscription);
 
-        const subscriptionLabel: SubscriptionLabel = {
+        const subscriptionRecord: SubscriptionRecord = {
             completeTimestamp: 0,
             errorTimestamp: 0,
             nextCount: 0,
@@ -614,10 +614,10 @@ export class SpyCore implements Spy {
             tick: 0,
             unsubscribeTimestamp: 0
         };
-        setSubscriptionLabel(subscription, subscriptionLabel);
+        setSubscriptionRecord(subscription, subscriptionRecord);
 
         const notify_ = (before: (plugin: Plugin) => void, block: () => void, after: (plugin: Plugin) => void) => {
-            subscriptionLabel.tick = ++spy_.tick_;
+            subscriptionRecord.tick = ++spy_.tick_;
             spy_.plugins_.forEach(before);
             block();
             spy_.plugins_.forEach(after);
@@ -629,8 +629,8 @@ export class SpyCore implements Spy {
                 notify_(
                     plugin => plugin.beforeUnsubscribe(subscription),
                     () => {
-                        subscriptionLabel.subscription.unsubscribe();
-                        subscriptionLabel.unsubscribeTimestamp = Date.now();
+                        subscriptionRecord.subscription.unsubscribe();
+                        subscriptionRecord.unsubscribeTimestamp = Date.now();
                         subscriberUnsubscribe.call(subscriber);
                     },
                     plugin => plugin.afterUnsubscribe(subscription)
@@ -647,7 +647,7 @@ export class SpyCore implements Spy {
                     plugin => plugin.beforeComplete(subscription),
                     () => {
                         subscriber.complete();
-                        subscriptionLabel.completeTimestamp = Date.now();
+                        subscriptionRecord.completeTimestamp = Date.now();
                     },
                     plugin => plugin.afterComplete(subscription)
                 );
@@ -658,7 +658,7 @@ export class SpyCore implements Spy {
                     plugin => plugin.beforeError(subscription, error),
                     () => {
                         subscriber.error(error);
-                        subscriptionLabel.errorTimestamp = Date.now();
+                        subscriptionRecord.errorTimestamp = Date.now();
                     },
                     plugin => plugin.afterError(subscription, error)
                 );
@@ -669,8 +669,8 @@ export class SpyCore implements Spy {
                     plugin => plugin.beforeNext(subscription, value),
                     () => {
                         subscriber.next(value);
-                        ++subscriptionLabel.nextCount;
-                        subscriptionLabel.nextTimestamp = Date.now();
+                        ++subscriptionRecord.nextCount;
+                        subscriptionRecord.nextTimestamp = Date.now();
                     },
                     plugin => plugin.afterNext(subscription, value)
                 );

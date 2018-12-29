@@ -11,7 +11,7 @@ import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { LogPlugin } from "./log-plugin";
-import { SubscriptionLabelsPlugin } from "./subscription-labels-plugin";
+import { SubscriptionRecordsPlugin } from "./subscription-records-plugin";
 
 const options = {
     defaultPlugins: false,
@@ -22,7 +22,7 @@ describe("LogPlugin", () => {
 
     let calls: any[][];
     let spy: Spy;
-    let subscriptionLabelsPlugin: SubscriptionLabelsPlugin;
+    let subscriptionRecordsPlugin: SubscriptionRecordsPlugin;
 
     describe("tags", () => {
 
@@ -147,8 +147,8 @@ describe("LogPlugin", () => {
         beforeEach(() => {
 
             spy = create(options);
-            subscriptionLabelsPlugin = new SubscriptionLabelsPlugin({ spy });
-            spy.plug(subscriptionLabelsPlugin);
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ spy });
+            spy.plug(subscriptionRecordsPlugin);
             calls = [];
         });
 
@@ -157,12 +157,12 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             subject.subscribe();
 
-            const subscriptionLabel = subscriptionLabelsPlugin.getSubscriptionLabel(subject);
+            const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
             spy.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
-                observableMatch: identify(subscriptionLabel.observable),
+                observableMatch: identify(subscriptionRecord.observable),
                 spy
             }));
 
@@ -170,7 +170,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionLabel.observable)}; notification = next; value =`, "alice"]);
+            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionRecord.observable)}; notification = next; value =`, "alice"]);
         });
 
         it("should match subscriber ids", () => {
@@ -178,12 +178,12 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             subject.subscribe();
 
-            const subscriptionLabel = subscriptionLabelsPlugin.getSubscriptionLabel(subject);
+            const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
             spy.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
-                observableMatch: identify(subscriptionLabel.subscriber),
+                observableMatch: identify(subscriptionRecord.subscriber),
                 spy
             }));
 
@@ -191,7 +191,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionLabel.observable)}; notification = next; value =`, "alice"]);
+            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionRecord.observable)}; notification = next; value =`, "alice"]);
         });
 
         it("should match subscription ids", () => {
@@ -199,12 +199,12 @@ describe("LogPlugin", () => {
             const subject = new Subject<string>();
             subject.subscribe();
 
-            const subscriptionLabel = subscriptionLabelsPlugin.getSubscriptionLabel(subject);
+            const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
             spy.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
-                observableMatch: identify(subscriptionLabel.subscription),
+                observableMatch: identify(subscriptionRecord.subscription),
                 spy
             }));
 
@@ -212,7 +212,7 @@ describe("LogPlugin", () => {
 
             subject.next("alice");
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionLabel.observable)}; notification = next; value =`, "alice"]);
+            expect(calls[0]).to.deep.equal([`ID = ${identify(subscriptionRecord.observable)}; notification = next; value =`, "alice"]);
         });
     });
 

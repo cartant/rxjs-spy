@@ -10,15 +10,15 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
 import { QueryRecord, Spy } from "../spy-interface";
-import { getSubscriptionLabel } from "../subscription-label";
+import { getSubscriptionRecord } from "../subscription-record";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
-const snapshotLabelSymbol = Symbol("snapshotLabel");
+const snapshotRecordSymbol = Symbol("snapshotRecord");
 
-export interface SnapshotLabel {
+export interface SnapshotRecord {
     error: any;
     queryRecord: QueryRecord;
     values: { tick: number; timestamp: number; value: any; }[];
@@ -109,27 +109,27 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeError(subscription: Subscription, error: any): void {
 
-        const snapshotLabel = this.getSnapshotLabel(subscription);
-        snapshotLabel.error = error;
+        const snapshotRecord = this.getSnapshotRecord(subscription);
+        snapshotRecord.error = error;
     }
 
     beforeNext(subscription: Subscription, value: any): void {
 
         const tick = this.spy_.tick;
-        const snapshotLabel = this.getSnapshotLabel(subscription);
-        snapshotLabel.values.push({ tick, timestamp: Date.now(), value });
+        const snapshotRecord = this.getSnapshotRecord(subscription);
+        snapshotRecord.values.push({ tick, timestamp: Date.now(), value });
 
         const { keptValues_ } = this;
-        const count = snapshotLabel.values.length - keptValues_;
+        const count = snapshotRecord.values.length - keptValues_;
         if (count > 0) {
-            snapshotLabel.values.splice(0, count);
-            snapshotLabel.valuesFlushed += count;
+            snapshotRecord.values.splice(0, count);
+            snapshotRecord.valuesFlushed += count;
         }
     }
 
     beforeSubscribe(subscription: Subscription): void {
 
-        this.setSnapshotLabel_(subscription, {
+        this.setSnapshotRecord_(subscription, {
             error: undefined,
             queryRecord: {},
             values: [],
@@ -137,9 +137,9 @@ export class SnapshotPlugin extends BasePlugin {
         });
     }
 
-    getSnapshotLabel(subscription: Subscription): SnapshotLabel {
+    getSnapshotRecord(subscription: Subscription): SnapshotRecord {
 
-        return subscription[snapshotLabelSymbol];
+        return subscription[snapshotRecordSymbol];
     }
 
     mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
@@ -197,20 +197,20 @@ export class SnapshotPlugin extends BasePlugin {
                     subscriber,
                     tick,
                     unsubscribeTimestamp
-                } = getSubscriptionLabel(subscription);
+                } = getSubscriptionRecord(subscription);
 
                 const {
                     flatsFlushed,
                     flattened,
                     sourcesFlushed
-                } = graphPlugin.getGraphLabel(subscription);
+                } = graphPlugin.getGraphRecord(subscription);
 
                 const {
                     error,
                     queryRecord,
                     values,
                     valuesFlushed
-                } = this.getSnapshotLabel(subscription);
+                } = this.getSnapshotRecord(subscription);
 
                 const { stackTracePlugin } = this.findPlugins_();
                 const subscriptionSnapshot: SubscriptionSnapshot = {
@@ -281,17 +281,17 @@ export class SnapshotPlugin extends BasePlugin {
 
             foundSubscriptions.forEach((unused, subscription) => {
 
-                const graphLabel = graphPlugin.getGraphLabel(subscription);
+                const graphRecord = graphPlugin.getGraphRecord(subscription);
                 const subscriptionSnapshot = subscriptions.get(subscription)!;
 
-                if (graphLabel.sink) {
-                    subscriptionSnapshot.sink = subscriptions.get(graphLabel.sink)!;
+                if (graphRecord.sink) {
+                    subscriptionSnapshot.sink = subscriptions.get(graphRecord.sink)!;
                 }
-                if (graphLabel.rootSink) {
-                    subscriptionSnapshot.rootSink = subscriptions.get(graphLabel.rootSink)!;
+                if (graphRecord.rootSink) {
+                    subscriptionSnapshot.rootSink = subscriptions.get(graphRecord.rootSink)!;
                 }
-                graphLabel.flats.forEach(flat => subscriptionSnapshot.flats.set(flat, subscriptions.get(flat)!));
-                graphLabel.sources.forEach(source => subscriptionSnapshot.sources.set(source, subscriptions.get(source)!));
+                graphRecord.flats.forEach(flat => subscriptionSnapshot.flats.set(flat, subscriptions.get(flat)!));
+                graphRecord.sources.forEach(source => subscriptionSnapshot.sources.set(source, subscriptions.get(source)!));
             });
 
             subscribers.forEach(subscriberSnapshot => {
@@ -336,9 +336,9 @@ export class SnapshotPlugin extends BasePlugin {
 
         const { graphPlugin } = this.findPlugins_();
         if (graphPlugin) {
-            const graphLabel = graphPlugin.getGraphLabel(subscription);
-            graphLabel.flats.forEach(flat => this.addSubscriptions_(flat, map));
-            graphLabel.sources.forEach(source => this.addSubscriptions_(source, map));
+            const graphRecord = graphPlugin.getGraphRecord(subscription);
+            graphRecord.flats.forEach(flat => this.addSubscriptions_(flat, map));
+            graphRecord.sources.forEach(source => this.addSubscriptions_(source, map));
         }
     }
 
@@ -372,9 +372,9 @@ export class SnapshotPlugin extends BasePlugin {
         return map;
     }
 
-    private setSnapshotLabel_(subscription: Subscription, label: SnapshotLabel): SnapshotLabel {
+    private setSnapshotRecord_(subscription: Subscription, record: SnapshotRecord): SnapshotRecord {
 
-        subscription[snapshotLabelSymbol] = label;
-        return label;
+        subscription[snapshotRecordSymbol] = record;
+        return record;
     }
 }

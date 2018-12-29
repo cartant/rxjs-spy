@@ -71,7 +71,7 @@ export class StatsPlugin extends BasePlugin {
                 rootSink,
                 sources,
                 sourcesFlushed
-            } = graphPlugin.getGraphLabel(subscription);
+            } = graphPlugin.getGraphRecord(subscription);
 
             if (!rootSink) {
                 stats_.rootSubscribes += 1;
