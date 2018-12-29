@@ -14,18 +14,14 @@ export interface Swept {
     rootUnsubscriptions: SubscriptionSnapshot[];
 }
 
-interface SweptRecord {
-    snapshotRecords: SweptSnapshotRecord[];
-}
-
-interface SweptSnapshotRecord {
-    roots: Map<Subscription, SweptSubscriptionRecord>;
-    snapshot: Snapshot;
-}
-
-interface SweptSubscriptionRecord {
+interface RootRecord {
     inners: Map<Subscription, SubscriptionSnapshot>;
     outer: SubscriptionSnapshot;
+}
+
+interface SweepRecord {
+    roots: Map<Subscription, RootRecord>;
+    snapshot: Snapshot;
 }
 
 type FoundPlugins = {
@@ -35,12 +31,12 @@ type FoundPlugins = {
 export class Sweeper {
 
     private foundPlugins_: FoundPlugins | undefined;
-    private sweptRecords_: Map<string, SweptRecord>;
+    private sweeps_: Map<string, SweepRecord[]>;
     private spy_: Spy;
 
     constructor(spy: Spy) {
 
-        this.sweptRecords_ = new Map<string, SweptRecord>();
+        this.sweeps_ = new Map<string, SweepRecord[]>();
         this.spy_ = spy;
     }
 
@@ -51,33 +47,31 @@ export class Sweeper {
             return undefined;
         }
 
-        const { sweptRecords_ } = this;
-        let sweeperRecord = sweptRecords_.get(id);
-        const snapshotRecord = this.record_(snapshotPlugin.snapshotAll());
+        const { sweeps_ } = this;
+        let sweepRecords = sweeps_.get(id);
+        const sweepRecord = this.record_(snapshotPlugin.snapshotAll());
 
-        if (sweeperRecord) {
-            sweeperRecord.snapshotRecords.push(snapshotRecord);
+        if (sweepRecords) {
+            sweepRecords.push(sweepRecord);
         } else {
-            sweeperRecord = {
-                snapshotRecords: [snapshotRecord]
-            };
-            sweptRecords_.set(id, sweeperRecord);
+            sweepRecords = [sweepRecord];
+            sweeps_.set(id, sweepRecords);
         }
-        if (sweeperRecord.snapshotRecords.length > 2) {
-            sweeperRecord.snapshotRecords.shift();
+        if (sweepRecords.length > 2) {
+            sweepRecords.shift();
         }
-        if (sweeperRecord.snapshotRecords.length < 2) {
+        if (sweepRecords.length < 2) {
             return undefined;
         }
 
-        const [previous, current] = sweeperRecord.snapshotRecords;
+        const [previous, current] = sweepRecords;
         return this.compare_(id, previous, current);
     }
 
-    private compare_(id: string, previous: SweptSnapshotRecord, current: SweptSnapshotRecord): Swept | undefined {
+    private compare_(id: string, previous: SweepRecord, current: SweepRecord): Swept | undefined {
 
-        const rootSubscriptions: SweptSubscriptionRecord[] = [];
-        const rootUnsubscriptions: SweptSubscriptionRecord[] = [];
+        const rootSubscriptions: RootRecord[] = [];
+        const rootUnsubscriptions: RootRecord[] = [];
         const innerSubscriptions: SubscriptionSnapshot[] = [];
         const innerUnsubscriptions: SubscriptionSnapshot[] = [];
 
@@ -132,15 +126,16 @@ export class Sweeper {
 
     private findInnerSubscriptions_(
         snapshot: Snapshot,
-        subscriptionRecord: SweptSubscriptionRecord
+        rootSubscriptionSnapshot: SubscriptionSnapshot,
+        rootRecord: RootRecord
     ): void {
 
-        const { inners } = subscriptionRecord;
+        const { inners } = rootRecord;
 
         snapshot.subscriptions.forEach(s => {
             s.inners.forEach(i => {
-                const { subscription } = i;
-                if (!subscription.closed) {
+                const { rootSink, subscription } = i;
+                if ((rootSink === rootSubscriptionSnapshot) && !subscription.closed) {
                     inners.set(subscription, i);
                 }
             });
@@ -163,30 +158,30 @@ export class Sweeper {
         return this.foundPlugins_;
     }
 
-    private findRootSubscriptions_(
+    private findRootRecords_(
         snapshot: Snapshot,
-        rootSubscriptions: Map<Subscription, SweptSubscriptionRecord>
+        roots: Map<Subscription, RootRecord>
     ): void {
 
         snapshot.observables.forEach(observableSnapshot => {
             observableSnapshot.subscriptions.forEach(subscriptionSnapshot => {
                 const { completeTimestamp, errorTimestamp, sink, subscription } = subscriptionSnapshot;
                 if (!completeTimestamp && !errorTimestamp && !sink && !subscription.closed) {
-                    const subscriptionRecord = {
+                    const rootRecord = {
                         inners: new Map<Subscription, SubscriptionSnapshot>(),
                         outer: subscriptionSnapshot
                     };
-                    this.findInnerSubscriptions_(snapshot, subscriptionRecord);
-                    rootSubscriptions.set(subscription, subscriptionRecord);
+                    this.findInnerSubscriptions_(snapshot, subscriptionSnapshot, rootRecord);
+                    roots.set(subscription, rootRecord);
                 }
             });
         });
     }
 
-    private record_(snapshot: Snapshot): SweptSnapshotRecord {
+    private record_(snapshot: Snapshot): SweepRecord {
 
-        const roots = new Map<Subscription, SweptSubscriptionRecord>();
-        this.findRootSubscriptions_(snapshot, roots);
+        const roots = new Map<Subscription, RootRecord>();
+        this.findRootRecords_(snapshot, roots);
 
         return { roots, snapshot };
     }
