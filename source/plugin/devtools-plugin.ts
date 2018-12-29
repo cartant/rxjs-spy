@@ -45,7 +45,7 @@ import { BasePlugin, Notification, Plugin } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
-interface NotificationLabel {
+interface NotificationRecord {
     error?: any;
     notification: Notification;
     prefix: "after" | "before";
@@ -112,19 +112,19 @@ export class DevToolsPlugin extends BasePlugin {
                             observableMatch: request["spyId"],
                             spy: this.spy_
                         });
-                        this.recordPlugin_(request["spyId"], request.postId, plugin);
+                        this.plug_(request["spyId"], request.postId, plugin);
                         response["pluginId"] = request.postId;
                         break;
                     }
                     case "log-teardown":
-                        this.teardownPlugin_(request["pluginId"]);
+                        this.unplug_(request["pluginId"]);
                         break;
                     case "pause": {
                         const plugin = new PausePlugin({
                             match: request["spyId"],
                             spy: this.spy_
                         });
-                        this.recordPlugin_(request["spyId"], request.postId, plugin);
+                        this.plug_(request["spyId"], request.postId, plugin);
                         plugin.deck.stats.pipe(hide()).subscribe((stats: DeckStats) => {
                             this.batchDeckStats_(toStats(request["spyId"], stats));
                         });
@@ -154,7 +154,7 @@ export class DevToolsPlugin extends BasePlugin {
                         break;
                     }
                     case "pause-teardown":
-                        this.teardownPlugin_(request["pluginId"]);
+                        this.unplug_(request["pluginId"]);
                         break;
                     case "snapshot": {
                         this.snapshotHinted_ = false;
@@ -307,7 +307,7 @@ export class DevToolsPlugin extends BasePlugin {
         }
     }
 
-    private batchNotification_(notificationLabel: NotificationLabel): void {
+    private batchNotification_(notificationRecord: NotificationRecord): void {
 
         const { connection_ } = this;
         if (connection_) {
@@ -328,7 +328,7 @@ export class DevToolsPlugin extends BasePlugin {
                 this.batchMessage_({
                     broadcastType: "notification",
                     messageType: MESSAGE_BROADCAST,
-                    notification: this.toNotification_(notificationLabel)
+                    notification: this.toNotification_(notificationRecord)
                 });
             }
         }
@@ -349,20 +349,10 @@ export class DevToolsPlugin extends BasePlugin {
         return this.foundPlugins_;
     }
 
-    private recordPlugin_(spyId: string, pluginId: string, plugin: Plugin): void {
+    private plug_(spyId: string, pluginId: string, plugin: Plugin): void {
 
         const teardown = this.spy_.plug(plugin);
         this.plugins_.set(pluginId, { plugin, pluginId, spyId, teardown });
-    }
-
-    private teardownPlugin_(pluginId: string): void {
-
-        const { plugins_ } = this;
-        const record = plugins_.get(pluginId);
-        if (record) {
-            record.teardown();
-            plugins_.delete(pluginId);
-        }
     }
 
     private toGraph_(subscription: Subscription): GraphPayload | undefined {
@@ -391,10 +381,10 @@ export class DevToolsPlugin extends BasePlugin {
         };
     }
 
-    private toNotification_(notificationLabel: NotificationLabel): NotificationPayload {
+    private toNotification_(notificationRecord: NotificationRecord): NotificationPayload {
 
         const { stackTracePlugin } = this.findPlugins_();
-        const { error, notification, prefix, subscriptionLabel, value } = notificationLabel;
+        const { error, notification, prefix, subscriptionLabel, value } = notificationRecord;
         const { observable, subscriber, subscription } = subscriptionLabel;
 
         return {
@@ -419,6 +409,16 @@ export class DevToolsPlugin extends BasePlugin {
             type: `${prefix}-${notification}`,
             value: (value === undefined) ? undefined : toValue(value)
         };
+    }
+
+    private unplug_(pluginId: string): void {
+
+        const { plugins_ } = this;
+        const record = plugins_.get(pluginId);
+        if (record) {
+            record.teardown();
+            plugins_.delete(pluginId);
+        }
     }
 }
 
