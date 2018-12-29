@@ -124,24 +124,6 @@ export class Sweeper {
         };
     }
 
-    private findInnerSubscriptions_(
-        snapshot: Snapshot,
-        rootSubscriptionSnapshot: SubscriptionSnapshot,
-        rootRecord: RootRecord
-    ): void {
-
-        const { inners } = rootRecord;
-
-        snapshot.subscriptions.forEach(s => {
-            s.inners.forEach(i => {
-                const { rootSink, subscription } = i;
-                if ((rootSink === rootSubscriptionSnapshot) && !subscription.closed) {
-                    inners.set(subscription, i);
-                }
-            });
-        });
-    }
-
     private findPlugins_(): FoundPlugins {
 
         const { foundPlugins_, spy_ } = this;
@@ -158,31 +140,43 @@ export class Sweeper {
         return this.foundPlugins_;
     }
 
-    private findRootRecords_(
-        snapshot: Snapshot,
-        roots: Map<Subscription, RootRecord>
-    ): void {
-
-        snapshot.observables.forEach(observableSnapshot => {
-            observableSnapshot.subscriptions.forEach(subscriptionSnapshot => {
-                const { completeTimestamp, errorTimestamp, sink, subscription } = subscriptionSnapshot;
-                if (!completeTimestamp && !errorTimestamp && !sink && !subscription.closed) {
-                    const rootRecord = {
-                        inners: new Map<Subscription, SubscriptionSnapshot>(),
-                        outer: subscriptionSnapshot
-                    };
-                    this.findInnerSubscriptions_(snapshot, subscriptionSnapshot, rootRecord);
-                    roots.set(subscription, rootRecord);
-                }
-            });
-        });
-    }
-
     private record_(snapshot: Snapshot): SweepRecord {
 
         const roots = new Map<Subscription, RootRecord>();
-        this.findRootRecords_(snapshot, roots);
+
+        snapshot.observables.forEach(observableSnapshot => {
+            observableSnapshot.subscriptions.forEach(subscriptionSnapshot => {
+                if (isClosed(subscriptionSnapshot)) {
+                    return;
+                }
+                const { inner, rootSink, subscription } = subscriptionSnapshot;
+                if (rootSink) {
+                    if (isClosed(rootSink) || !inner) {
+                        return;
+                    }
+                    let root = roots.get(rootSink.subscription);
+                    if (!root) {
+                        root = {
+                            inners: new Map<Subscription, SubscriptionSnapshot>(),
+                            outer: rootSink
+                        };
+                        roots.set(rootSink.subscription, root);
+                    }
+                    root.inners.set(subscription, subscriptionSnapshot);
+                } else if (!roots.has(subscription)) {
+                    roots.set(subscription, {
+                        inners: new Map<Subscription, SubscriptionSnapshot>(),
+                        outer: subscriptionSnapshot
+                    });
+                }
+            });
+        });
 
         return { roots, snapshot };
     }
+}
+
+function isClosed(subscriptionSnapshot: SubscriptionSnapshot): boolean {
+    const { completeTimestamp, errorTimestamp, subscription } = subscriptionSnapshot;
+    return Boolean(completeTimestamp || errorTimestamp || subscription.closed);
 }
