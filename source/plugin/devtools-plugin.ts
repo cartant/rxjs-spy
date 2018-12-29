@@ -364,16 +364,16 @@ export class DevToolsPlugin extends BasePlugin {
         const graphRecord = graphPlugin.getGraphRecord(subscription);
 
         const {
-            flats,
-            flatsFlushed,
+            inners,
+            innersFlushed,
             rootSink,
             sink,
             sources,
             sourcesFlushed
         } = graphRecord;
         return {
-            flats: flats.map(identify),
-            flatsFlushed,
+            inners: inners.map(identify),
+            innersFlushed,
             rootSink: rootSink ? identify(rootSink) : null,
             sink: sink ? identify(sink) : null,
             sources: sources.map(identify),
@@ -464,10 +464,10 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                 error: s.error,
                 errorTimestamp: s.errorTimestamp,
                 graph: {
-                    flats: Array
-                        .from(s.flats.values())
+                    inners: Array
+                        .from(s.inners.values())
                         .map(s => s.id),
-                    flatsFlushed: s.flatsFlushed,
+                    innersFlushed: s.innersFlushed,
                     rootSink: s.rootSink ? identify(s.rootSink.subscription) : null,
                     sink: s.sink ? identify(s.sink.subscription) : null,
                     sources: Array

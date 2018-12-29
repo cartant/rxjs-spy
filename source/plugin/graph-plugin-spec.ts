@@ -150,7 +150,7 @@ describe("GraphPlugin", () => {
                 });
             });
 
-            it("should flush completed flat subscriptions", () => {
+            it("should flush completed inner subscriptions", () => {
 
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
@@ -163,19 +163,19 @@ describe("GraphPlugin", () => {
                 const innerGraphRecord = graphPlugin.getGraphRecord(subscriptionRecordsPlugin.getSubscription(inner));
                 const sinkGraphRecord = graphPlugin.getGraphRecord(innerGraphRecord.sink!);
 
-                expect(sinkGraphRecord.flats).to.have.length(1);
+                expect(sinkGraphRecord.inners).to.have.length(1);
 
                 inner.complete();
 
                 if (duration === 0) {
-                    expect(sinkGraphRecord.flats).to.have.length(0);
+                    expect(sinkGraphRecord.inners).to.have.length(0);
                 } else {
-                    expect(sinkGraphRecord.flats).to.have.length(1);
+                    expect(sinkGraphRecord.inners).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(sinkGraphRecord.flats).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRecord.inners).to.have.length(0));
             });
 
-            it("should flush errored flat subscriptions", () => {
+            it("should flush errored inner subscriptions", () => {
 
                 const subject = new Subject<number>();
                 const inner = new Subject<number>();
@@ -188,16 +188,16 @@ describe("GraphPlugin", () => {
                 const innerGraphRecord = graphPlugin.getGraphRecord(subscriptionRecordsPlugin.getSubscription(inner));
                 const sinkGraphRecord = graphPlugin.getGraphRecord(innerGraphRecord.sink!);
 
-                expect(sinkGraphRecord.flats).to.have.length(1);
+                expect(sinkGraphRecord.inners).to.have.length(1);
 
                 inner.error(new Error("Boom!"));
 
                 if (duration === 0) {
-                    expect(sinkGraphRecord.flats).to.have.length(0);
+                    expect(sinkGraphRecord.inners).to.have.length(0);
                 } else {
-                    expect(sinkGraphRecord.flats).to.have.length(1);
+                    expect(sinkGraphRecord.inners).to.have.length(1);
                 }
-                return delay(duration).then(() => expect(sinkGraphRecord.flats).to.have.length(0));
+                return delay(duration).then(() => expect(sinkGraphRecord.inners).to.have.length(0));
             });
 
             it("should flush completed custom source subscriptions", () => {
@@ -362,7 +362,7 @@ describe("GraphPlugin", () => {
             expect(hasSource(combinedGraphRecord, subject2SubscriptionRecord)).to.be.true;
         });
 
-        it("should graph flats", () => {
+        it("should graph inner subscriptions", () => {
 
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
@@ -387,21 +387,21 @@ describe("GraphPlugin", () => {
             const composedGraphRecord = graphPlugin.getGraphRecord(composedSubscriptionRecord);
             expect(composedGraphRecord).to.have.property("sink", undefined);
             expect(composedGraphRecord).to.have.property("sources");
-            expect(composedGraphRecord.flats).to.be.empty;
+            expect(composedGraphRecord.inners).to.be.empty;
             expect(composedGraphRecord.sources).to.not.be.empty;
             expect(hasSource(composedGraphRecord, subjectSubscriptionRecord)).to.be.true;
             expect(hasSource(composedGraphRecord, outerSubscriptionRecord)).to.be.true;
 
             subject.next(0);
 
-            expect(composedGraphRecord.flats).to.not.be.empty;
-            expect(composedGraphRecord.flats).to.contain(subscriptionRecordsPlugin.getSubscription(merges[0]));
+            expect(composedGraphRecord.inners).to.not.be.empty;
+            expect(composedGraphRecord.inners).to.contain(subscriptionRecordsPlugin.getSubscription(merges[0]));
 
             subject.next(1);
 
-            expect(composedGraphRecord.flats).to.not.be.empty;
-            expect(composedGraphRecord.flats).to.contain(subscriptionRecordsPlugin.getSubscription(merges[0]));
-            expect(composedGraphRecord.flats).to.contain(subscriptionRecordsPlugin.getSubscription(merges[1]));
+            expect(composedGraphRecord.inners).to.not.be.empty;
+            expect(composedGraphRecord.inners).to.contain(subscriptionRecordsPlugin.getSubscription(merges[0]));
+            expect(composedGraphRecord.inners).to.contain(subscriptionRecordsPlugin.getSubscription(merges[1]));
         });
 
         it("should graph custom observables", () => {
@@ -508,7 +508,7 @@ describe("GraphPlugin", () => {
             expect(combinedGraphRecord).to.have.property("rootSink", undefined);
         });
 
-        it("should determine root sinks for flats", () => {
+        it("should determine root sinks for inner subscriptions", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();
@@ -553,7 +553,7 @@ describe("GraphPlugin", () => {
             expect(mappedGraphRecord).to.have.property("depth", 1);
         });
 
-        it("should indicate flattened subscriptions", () => {
+        it("should indicate inner subscriptions", () => {
 
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
@@ -567,19 +567,19 @@ describe("GraphPlugin", () => {
 
             const composedSubscriptionRecord = subscriptionRecordsPlugin.getSubscription(composed);
             const composedGraphRecord = graphPlugin.getGraphRecord(composedSubscriptionRecord);
-            expect(composedGraphRecord).to.have.property("flattened", false);
+            expect(composedGraphRecord).to.have.property("inner", false);
 
             subject.next(0);
 
-            let flattenedSubscriptionRecord = composedGraphRecord.flats[0];
-            let flattenedGraphRecord = graphPlugin.getGraphRecord(flattenedSubscriptionRecord);
-            expect(flattenedGraphRecord).to.have.property("flattened", true);
+            let innerSubscriptionRecord = composedGraphRecord.inners[0];
+            let innerGraphRecord = graphPlugin.getGraphRecord(innerSubscriptionRecord);
+            expect(innerGraphRecord).to.have.property("inner", true);
 
             subject.next(1);
 
-            flattenedSubscriptionRecord = composedGraphRecord.flats[1];
-            flattenedGraphRecord = graphPlugin.getGraphRecord(flattenedSubscriptionRecord);
-            expect(flattenedGraphRecord).to.have.property("flattened", true);
+            innerSubscriptionRecord = composedGraphRecord.inners[1];
+            innerGraphRecord = graphPlugin.getGraphRecord(innerSubscriptionRecord);
+            expect(innerGraphRecord).to.have.property("inner", true);
         });
 
         afterEach(() => {

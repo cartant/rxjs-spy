@@ -15,9 +15,9 @@ const graphRecordSymbol = Symbol("graphRecord");
 
 export interface GraphRecord {
     depth: number;
-    flats: Subscription[];
-    flatsFlushed: number;
-    flattened: boolean;
+    inner: boolean;
+    inners: Subscription[];
+    innersFlushed: number;
     link: GraphRecord;
     rootSink: Subscription | undefined;
     self: Subscription;
@@ -54,9 +54,9 @@ export class GraphPlugin extends BasePlugin {
         this.notifications_ = [];
         this.sentinel_ = {
             depth: 0,
-            flats: [],
-            flatsFlushed: 0,
-            flattened: false,
+            inner: false,
+            inners: [],
+            innersFlushed: 0,
             link: undefined!,
             rootSink: undefined,
             self: undefined!,
@@ -105,9 +105,9 @@ export class GraphPlugin extends BasePlugin {
         const { notifications_, sentinel_ } = this;
         const graphRecord = this.setGraphRecord_(subscription, {
             depth: 1,
-            flats: [],
-            flatsFlushed: 0,
-            flattened: false,
+            inner: false,
+            inners: [],
+            innersFlushed: 0,
             link: sentinel_,
             rootSink: undefined,
             self: subscription,
@@ -129,9 +129,9 @@ export class GraphPlugin extends BasePlugin {
             const { sink } = sourceGraphRecord;
             if (sink) {
                 const sinkGraphRecord = this.getGraphRecord(sink);
-                sinkGraphRecord.flats.push(subscription);
+                sinkGraphRecord.inners.push(subscription);
                 graphRecord.link = sinkGraphRecord;
-                graphRecord.flattened = true;
+                graphRecord.inner = true;
                 graphRecord.rootSink = sinkGraphRecord.rootSink || sink;
                 graphRecord.sink = sink;
             }
@@ -197,7 +197,7 @@ export class GraphPlugin extends BasePlugin {
             logger.log(`${indent}${inferType(observable)} (${kind})`);
             const graphRecord = this.getGraphRecord(source);
             graphRecord.sources.forEach(source => log(`${indent}  `, source, "source"));
-            graphRecord.flats.forEach(flat => log(`${indent}  `, flat, "flat"));
+            graphRecord.inners.forEach(inner => log(`${indent}  `, inner, "inner"));
         };
 
         if (subscription) {
@@ -211,11 +211,11 @@ export class GraphPlugin extends BasePlugin {
     private flush_(subscription: Subscription): void {
 
         const graphRecord = this.getGraphRecord(subscription);
-        const { flats, sources } = graphRecord;
+        const { inners, sources } = graphRecord;
 
         if (
             (getSubscriptionRecord(subscription).unsubscribeTimestamp === 0) ||
-            flats.some(flat => getSubscriptionRecord(flat).unsubscribeTimestamp === 0) ||
+            inners.some(inner => getSubscriptionRecord(inner).unsubscribeTimestamp === 0) ||
             sources.some(source => getSubscriptionRecord(source).unsubscribeTimestamp === 0)
         ) {
             return;
@@ -225,11 +225,11 @@ export class GraphPlugin extends BasePlugin {
         const { link } = graphRecord;
 
         const flush = () => {
-            const { flats, sources } = link;
-            const flatIndex = flats.indexOf(subscription);
-            if (flatIndex !== -1) {
-                flats.splice(flatIndex, 1);
-                ++link.flatsFlushed;
+            const { inners, sources } = link;
+            const innerIndex = inners.indexOf(subscription);
+            if (innerIndex !== -1) {
+                inners.splice(innerIndex, 1);
+                ++link.innersFlushed;
             }
             const sourceIndex = sources.indexOf(subscription);
             if (sourceIndex !== -1) {
@@ -264,7 +264,7 @@ export class GraphPlugin extends BasePlugin {
         match: Match
     ): Subscription | undefined {
 
-        const { flats, self, sources } = graphRecord;
+        const { inners, self, sources } = graphRecord;
 
         const iter = (
             found: Subscription | undefined,
@@ -282,7 +282,7 @@ export class GraphPlugin extends BasePlugin {
         if (self && matches(self, match)) {
             return self;
         }
-        return sources.reduce(iter, undefined) || flats.reduce(iter, undefined);
+        return sources.reduce(iter, undefined) || inners.reduce(iter, undefined);
     }
 
     private setGraphRecord_(subscription: Subscription, record: GraphRecord): GraphRecord {

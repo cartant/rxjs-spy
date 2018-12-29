@@ -37,8 +37,8 @@ export interface Extension {
 }
 
 export interface Graph {
-    flats: string[];
-    flatsFlushed: number;
+    inners: string[];
+    innersFlushed: number;
     rootSink: string | null;
     sink: string | null;
     sources: string[];

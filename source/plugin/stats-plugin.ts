@@ -11,7 +11,7 @@ import { BasePlugin } from "./plugin";
 export interface Stats {
     completes: number;
     errors: number;
-    flattenedSubscribes: number;
+    innerSubscribes: number;
     leafSubscribes: number;
     maxDepth: number;
     nexts: number;
@@ -43,7 +43,7 @@ export class StatsPlugin extends BasePlugin {
         this.stats_ = {
             completes: 0,
             errors: 0,
-            flattenedSubscribes: 0,
+            innerSubscribes: 0,
             leafSubscribes: 0,
             maxDepth: 0,
             nexts: 0,
@@ -65,9 +65,9 @@ export class StatsPlugin extends BasePlugin {
             const { stats_ } = this;
             const {
                 depth,
-                flattened,
-                flats,
-                flatsFlushed,
+                inner,
+                inners,
+                innersFlushed,
                 rootSink,
                 sources,
                 sourcesFlushed
@@ -76,10 +76,10 @@ export class StatsPlugin extends BasePlugin {
             if (!rootSink) {
                 stats_.rootSubscribes += 1;
             }
-            if (flattened) {
-                stats_.flattenedSubscribes += 1;
+            if (inner) {
+                stats_.innerSubscribes += 1;
             }
-            if ((flats.length + flatsFlushed + sources.length + sourcesFlushed) === 0) {
+            if ((inners.length + innersFlushed + sources.length + sourcesFlushed) === 0) {
                 if (stats_.maxDepth < depth) {
                     stats_.maxDepth = depth;
                 }

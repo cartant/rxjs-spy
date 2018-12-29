@@ -296,7 +296,7 @@ describe("SnapshotPlugin", () => {
             expect(hasSource(combinedSubscriptionSnapshot, subject2SubscriptionSnapshot)).to.be.true;
         });
 
-        it("should spy on flats", () => {
+        it("should spy on inner subscriptions", () => {
 
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
@@ -308,7 +308,7 @@ describe("SnapshotPlugin", () => {
             let composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             let composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(composedSubscription.flats).to.have.property("size", 0);
+            expect(composedSubscription.inners).to.have.property("size", 0);
             expect(composedSubscriber.subscriptions).to.have.property("size", 1);
 
             subject.next(0);
@@ -318,7 +318,7 @@ describe("SnapshotPlugin", () => {
             composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(composedSubscription.flats).to.have.property("size", 1);
+            expect(composedSubscription.inners).to.have.property("size", 1);
             expect(composedSubscriber.subscriptions).to.have.property("size", 1);
 
             subject.next(0);
@@ -328,7 +328,7 @@ describe("SnapshotPlugin", () => {
             composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
 
-            expect(composedSubscription.flats).to.have.property("size", 2);
+            expect(composedSubscription.inners).to.have.property("size", 2);
             expect(composedSubscriber.subscriptions).to.have.property("size", 1);
         });
 
@@ -416,7 +416,7 @@ describe("SnapshotPlugin", () => {
             expect(combinedSubscription).to.have.property("rootSink", undefined);
         });
 
-        it("should determine root sinks for flats", () => {
+        it("should determine root sinks for inner subscriptions", () => {
 
             const outerSubject = new Subject<number>();
             const innerSubject1 = new Subject<number>();

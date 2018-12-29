@@ -8,10 +8,10 @@ import { Snapshot, SnapshotPlugin, SubscriptionSnapshot } from "./plugin/snapsho
 import { Spy } from "./spy-interface";
 
 export interface Swept {
-    flatSubscriptions: SubscriptionSnapshot[];
-    flatUnsubscriptions: SubscriptionSnapshot[];
-    subscriptions: SubscriptionSnapshot[];
-    unsubscriptions: SubscriptionSnapshot[];
+    innerSubscriptions: SubscriptionSnapshot[];
+    innerUnsubscriptions: SubscriptionSnapshot[];
+    rootSubscriptions: SubscriptionSnapshot[];
+    rootUnsubscriptions: SubscriptionSnapshot[];
 }
 
 interface SweptRecord {
@@ -19,13 +19,13 @@ interface SweptRecord {
 }
 
 interface SweptSnapshotRecord {
-    rootSubscriptions: Map<Subscription, SweptSubscriptionRecord>;
+    roots: Map<Subscription, SweptSubscriptionRecord>;
     snapshot: Snapshot;
 }
 
 interface SweptSubscriptionRecord {
-    flats: Map<Subscription, SubscriptionSnapshot>;
-    subscriptionSnapshot: SubscriptionSnapshot;
+    inners: Map<Subscription, SubscriptionSnapshot>;
+    outer: SubscriptionSnapshot;
 }
 
 type FoundPlugins = {
@@ -76,72 +76,72 @@ export class Sweeper {
 
     private compare_(id: string, previous: SweptSnapshotRecord, current: SweptSnapshotRecord): Swept | undefined {
 
-        const subscriptions: SweptSubscriptionRecord[] = [];
-        const unsubscriptions: SweptSubscriptionRecord[] = [];
-        const flatSubscriptions: SubscriptionSnapshot[] = [];
-        const flatUnsubscriptions: SubscriptionSnapshot[] = [];
+        const rootSubscriptions: SweptSubscriptionRecord[] = [];
+        const rootUnsubscriptions: SweptSubscriptionRecord[] = [];
+        const innerSubscriptions: SubscriptionSnapshot[] = [];
+        const innerUnsubscriptions: SubscriptionSnapshot[] = [];
 
-        const { rootSubscriptions: previousSubscriptions } = previous;
-        const { rootSubscriptions: currentSubscriptions } = current;
+        const { roots: previousRoots } = previous;
+        const { roots: currentRoots } = current;
 
-        previousSubscriptions.forEach((previous, key) => {
+        previousRoots.forEach((previous, key) => {
 
-            if (!currentSubscriptions.has(key)) {
-                unsubscriptions.push(previous);
+            if (!currentRoots.has(key)) {
+                rootUnsubscriptions.push(previous);
             }
         });
-        currentSubscriptions.forEach((current, key) => {
+        currentRoots.forEach((current, key) => {
 
-            const previous = previousSubscriptions.get(key);
+            const previous = previousRoots.get(key);
             if (previous) {
 
-                const { flats: previousFlats } = previous;
-                const { flats: currentFlats } = current;
+                const { inners: previousInners } = previous;
+                const { inners: currentInners } = current;
 
-                previousFlats.forEach((flat, key) => {
-                    if (!currentFlats.has(key)) {
-                        flatUnsubscriptions.push(flat);
+                previousInners.forEach((inner, key) => {
+                    if (!currentInners.has(key)) {
+                        innerUnsubscriptions.push(inner);
                     }
                 });
-                currentFlats.forEach((flat, key) => {
-                    if (!previousFlats.has(key)) {
-                        flatSubscriptions.push(flat);
+                currentInners.forEach((inner, key) => {
+                    if (!previousInners.has(key)) {
+                        innerSubscriptions.push(inner);
                     }
                 });
             } else {
-                subscriptions.push(current);
+                rootSubscriptions.push(current);
             }
         });
 
         if (
-            flatSubscriptions.length === 0 &&
-            flatUnsubscriptions.length === 0 &&
-            subscriptions.length === 0 &&
-            unsubscriptions.length === 0
+            innerSubscriptions.length === 0 &&
+            innerUnsubscriptions.length === 0 &&
+            rootSubscriptions.length === 0 &&
+            rootUnsubscriptions.length === 0
         ) {
             return undefined;
         }
 
         return {
-            flatSubscriptions,
-            flatUnsubscriptions,
-            subscriptions: subscriptions.map(s => s.subscriptionSnapshot),
-            unsubscriptions: unsubscriptions.map(s => s.subscriptionSnapshot)
+            innerSubscriptions,
+            innerUnsubscriptions,
+            rootSubscriptions: rootSubscriptions.map(s => s.outer),
+            rootUnsubscriptions: rootUnsubscriptions.map(s => s.outer)
         };
     }
 
-    private findFlatSubscriptions_(
+    private findInnerSubscriptions_(
         snapshot: Snapshot,
         subscriptionRecord: SweptSubscriptionRecord
     ): void {
 
-        const { flats } = subscriptionRecord;
+        const { inners } = subscriptionRecord;
 
         snapshot.subscriptions.forEach(s => {
-            s.flats.forEach(f => {
-                const { subscription } = f;
+            s.inners.forEach(i => {
+                const { subscription } = i;
                 if (!subscription.closed) {
-                    flats.set(subscription, f);
+                    inners.set(subscription, i);
                 }
             });
         });
@@ -173,10 +173,10 @@ export class Sweeper {
                 const { completeTimestamp, errorTimestamp, sink, subscription } = subscriptionSnapshot;
                 if (!completeTimestamp && !errorTimestamp && !sink && !subscription.closed) {
                     const subscriptionRecord = {
-                        flats: new Map<Subscription, SubscriptionSnapshot>(),
-                        subscriptionSnapshot
+                        inners: new Map<Subscription, SubscriptionSnapshot>(),
+                        outer: subscriptionSnapshot
                     };
-                    this.findFlatSubscriptions_(snapshot, subscriptionRecord);
+                    this.findInnerSubscriptions_(snapshot, subscriptionRecord);
                     rootSubscriptions.set(subscription, subscriptionRecord);
                 }
             });
@@ -185,9 +185,9 @@ export class Sweeper {
 
     private record_(snapshot: Snapshot): SweptSnapshotRecord {
 
-        const rootSubscriptions = new Map<Subscription, SweptSubscriptionRecord>();
-        this.findRootSubscriptions_(snapshot, rootSubscriptions);
+        const roots = new Map<Subscription, SweptSubscriptionRecord>();
+        this.findRootSubscriptions_(snapshot, roots);
 
-        return { rootSubscriptions, snapshot };
+        return { roots, snapshot };
     }
 }

@@ -56,9 +56,9 @@ const defaultDerivations: QueryDerivations = {
     blocked: ({ nextAge, sinkNextAge }) => nextAge > sinkNextAge,
     blocking: ({ nextAge, sourceNextAge }) => sourceNextAge > nextAge,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
-    flat: record => (match: number | string) => matchSource(record, "flats", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
     id: record => (match: number | string) => matchId(record, match),
+    inner: record => (match: number | string) => matchSource(record, "inners", match),
     source: record => (match: number | string) => matchSource(record, "sources", match)
 };
 
@@ -498,7 +498,7 @@ export class SpyCore implements Spy {
         }
 
         const stats = statsPlugin.stats;
-        const { leafSubscribes, maxDepth, flattenedSubscribes, rootSubscribes, totalDepth } = stats;
+        const { innerSubscribes, leafSubscribes, maxDepth, rootSubscribes, totalDepth } = stats;
         const logger = toLogger(partialLogger || this.defaultLogger_);
         logger.group("Stats");
         logger.log("Subscribes =", stats.subscribes);
@@ -508,8 +508,8 @@ export class SpyCore implements Spy {
         if (leafSubscribes > 0) {
             logger.log("Leaf subscribes =", leafSubscribes);
         }
-        if (flattenedSubscribes > 0) {
-            logger.log("Flattened subscribes =", flattenedSubscribes);
+        if (innerSubscribes > 0) {
+            logger.log("Inner subscribes =", innerSubscribes);
         }
         logger.log("Unsubscribes =", stats.unsubscribes);
         logger.log("Nexts =", stats.nexts);
@@ -776,17 +776,17 @@ export class SpyCore implements Spy {
             if (swept) {
                 const audit = (ignored === 0) ? "" : `; ignored ${ignored}`;
                 logger.group(`Subscription changes found; id = '${id}'${audit}`);
-                swept.subscriptions.forEach(s => {
-                    logSubscription(logger, "Subscription", s);
+                swept.rootSubscriptions.forEach(s => {
+                    logSubscription(logger, "Root subscription", s);
                 });
-                swept.unsubscriptions.forEach(s => {
-                    logSubscription(logger, "Unsubscription", s);
+                swept.rootUnsubscriptions.forEach(s => {
+                    logSubscription(logger, "Root unsubscription", s);
                 });
-                swept.flatSubscriptions.forEach(s => {
-                    logSubscription(logger, "Flat subscription", s);
+                swept.innerSubscriptions.forEach(s => {
+                    logSubscription(logger, "Inner subscription", s);
                 });
-                swept.flatUnsubscriptions.forEach(s => {
-                    logSubscription(logger, "Flat unsubscription", s);
+                swept.innerUnsubscriptions.forEach(s => {
+                    logSubscription(logger, "Inner unsubscription", s);
                 });
                 logger.groupEnd();
             }
@@ -873,9 +873,9 @@ export class SpyCore implements Spy {
             completeTimestamp,
             error,
             errorTimestamp,
-            flats,
-            flatsFlushed,
-            flattened,
+            inner,
+            inners,
+            innersFlushed,
             nextCount,
             nextTimestamp,
             observable,
@@ -891,7 +891,7 @@ export class SpyCore implements Spy {
         } = subscriptionSnapshot;
         const { derivations_ } = this;
 
-        const flatSnapshots = Array.from(flats.values());
+        const innerSnapshots = Array.from(inners.values());
         const sourceSnapshots = Array.from(sources.values());
 
         const queryRecord = {
@@ -900,13 +900,13 @@ export class SpyCore implements Spy {
             completeAge: age(completeTimestamp),
             error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
             errorAge: age(errorTimestamp),
-            flatCount: flatSnapshots.length + flatsFlushed,
-            flatIds: flatSnapshots.map(flat => flat.id),
-            flatNextAge: age(flatSnapshots.reduce((max, flat) => Math.max(max, flat.nextTimestamp), 0)),
-            flatNextCount: flatSnapshots.reduce((total, flat) => total + flat.nextCount, 0),
-            flattened,
             frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
             incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
+            inner,
+            innerCount: innerSnapshots.length + innersFlushed,
+            innerIds: innerSnapshots.map(inner => inner.id),
+            innerNextAge: age(innerSnapshots.reduce((max, inner) => Math.max(max, inner.nextTimestamp), 0)),
+            innerNextCount: innerSnapshots.reduce((total, inner) => total + inner.nextCount, 0),
             nextAge: age(nextTimestamp),
             nextCount,
             observableId: identify(observable),

@@ -58,10 +58,10 @@ export interface SubscriptionSnapshot {
     completeTimestamp: number;
     error: any;
     errorTimestamp: number;
-    flats: Map<Subscription, SubscriptionSnapshot>;
-    flatsFlushed: number;
-    flattened: boolean;
     id: string;
+    inner: boolean;
+    inners: Map<Subscription, SubscriptionSnapshot>;
+    innersFlushed: number;
     mappedStackTrace: Observable<StackFrame[]>;
     nextCount: number;
     nextTimestamp: number;
@@ -200,8 +200,8 @@ export class SnapshotPlugin extends BasePlugin {
                 } = getSubscriptionRecord(subscription);
 
                 const {
-                    flatsFlushed,
-                    flattened,
+                    inner,
+                    innersFlushed,
                     sourcesFlushed
                 } = graphPlugin.getGraphRecord(subscription);
 
@@ -217,10 +217,10 @@ export class SnapshotPlugin extends BasePlugin {
                     completeTimestamp,
                     error,
                     errorTimestamp,
-                    flats: new Map<Subscription, SubscriptionSnapshot>(),
-                    flatsFlushed,
-                    flattened,
                     id: identify(subscription),
+                    inner,
+                    inners: new Map<Subscription, SubscriptionSnapshot>(),
+                    innersFlushed,
                     mappedStackTrace: stackTracePlugin ?
                         stackTracePlugin.getMappedStackTrace(subscription) :
                         of([]),
@@ -290,7 +290,7 @@ export class SnapshotPlugin extends BasePlugin {
                 if (graphRecord.rootSink) {
                     subscriptionSnapshot.rootSink = subscriptions.get(graphRecord.rootSink)!;
                 }
-                graphRecord.flats.forEach(flat => subscriptionSnapshot.flats.set(flat, subscriptions.get(flat)!));
+                graphRecord.inners.forEach(inner => subscriptionSnapshot.inners.set(inner, subscriptions.get(inner)!));
                 graphRecord.sources.forEach(source => subscriptionSnapshot.sources.set(source, subscriptions.get(source)!));
             });
 
@@ -337,7 +337,7 @@ export class SnapshotPlugin extends BasePlugin {
         const { graphPlugin } = this.findPlugins_();
         if (graphPlugin) {
             const graphRecord = graphPlugin.getGraphRecord(subscription);
-            graphRecord.flats.forEach(flat => this.addSubscriptions_(flat, map));
+            graphRecord.inners.forEach(inner => this.addSubscriptions_(inner, map));
             graphRecord.sources.forEach(source => this.addSubscriptions_(source, map));
         }
     }

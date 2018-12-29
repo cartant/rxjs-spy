@@ -73,7 +73,7 @@ describe("StatsPlugin", () => {
         expect(stats.unsubscribes).to.equal(2);
     });
 
-    it("should count flattened subscribes", () => {
+    it("should count inner subscribes", () => {
 
         const subject = new Subject<number>();
         const mapped = subject.pipe(switchMap(value => NEVER));
@@ -81,7 +81,7 @@ describe("StatsPlugin", () => {
         let stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(0);
         expect(stats.rootSubscribes).to.equal(0);
-        expect(stats.flattenedSubscribes).to.equal(0);
+        expect(stats.innerSubscribes).to.equal(0);
         expect(stats.unsubscribes).to.equal(0);
 
         const subscription = mapped.subscribe();
@@ -89,7 +89,7 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(2);
         expect(stats.rootSubscribes).to.equal(1);
-        expect(stats.flattenedSubscribes).to.equal(0);
+        expect(stats.innerSubscribes).to.equal(0);
         expect(stats.unsubscribes).to.equal(0);
 
         subject.next(0);
@@ -97,7 +97,7 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(3);
         expect(stats.rootSubscribes).to.equal(1);
-        expect(stats.flattenedSubscribes).to.equal(1);
+        expect(stats.innerSubscribes).to.equal(1);
         expect(stats.unsubscribes).to.equal(0);
 
         subscription.unsubscribe();
@@ -105,7 +105,7 @@ describe("StatsPlugin", () => {
         stats = statsPlugin.stats;
         expect(stats.subscribes).to.equal(3);
         expect(stats.rootSubscribes).to.equal(1);
-        expect(stats.flattenedSubscribes).to.equal(1);
+        expect(stats.innerSubscribes).to.equal(1);
         expect(stats.unsubscribes).to.equal(3);
     });
 

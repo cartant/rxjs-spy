@@ -44,18 +44,18 @@ describe("sweeper", () => {
         subject.next();
 
         swept = sweeper.sweep(id)!;
-        expect(swept.subscriptions).to.have.length(1);
-        expect(swept.unsubscriptions).to.be.empty;
+        expect(swept.rootSubscriptions).to.have.length(1);
+        expect(swept.rootUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
         subject.next();
 
         swept = sweeper.sweep(id)!;
-        expect(swept.subscriptions).to.be.empty;
-        expect(swept.unsubscriptions).to.have.length(1);
+        expect(swept.rootSubscriptions).to.be.empty;
+        expect(swept.rootUnsubscriptions).to.have.length(1);
     });
 
-    it("should find flat subscriptions and unsubscriptions", () => {
+    it("should find inner subscriptions and unsubscriptions", () => {
 
         const subject = new Subject<number>();
         const source = subject.pipe(tag("source"));
@@ -73,15 +73,15 @@ describe("sweeper", () => {
         subject.next();
 
         swept = sweeper.sweep(id)!;
-        expect(swept.flatSubscriptions).to.have.length(1);
-        expect(swept.flatUnsubscriptions).to.be.empty;
+        expect(swept.innerSubscriptions).to.have.length(1);
+        expect(swept.innerUnsubscriptions).to.be.empty;
 
         subject.next();
 
         swept = sweeper.sweep(id)!;
         expect(swept).to.exist;
-        expect(swept.flatSubscriptions).to.have.length(1);
-        expect(swept.flatUnsubscriptions).to.be.empty;
+        expect(swept.innerSubscriptions).to.have.length(1);
+        expect(swept.innerUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
     });

@@ -74,8 +74,8 @@ export class BufferPlugin extends BasePlugin {
         const inputCount = sourceSubscriptionRecords.reduce((count, sourceSubscriptionRecord) => {
             return Math.max(count, sourceSubscriptionRecord.nextCount);
         }, 0);
-        const flatsCount = sinkGraphRecord.flats.length + sinkGraphRecord.flatsFlushed;
-        const outputCount = flatsCount || sinkSubscriptionRecord.nextCount;
+        const innersCount = sinkGraphRecord.inners.length + sinkGraphRecord.innersFlushed;
+        const outputCount = innersCount || sinkSubscriptionRecord.nextCount;
 
         const { bufferThreshold_, logger_ } = this;
         const bufferCount = inputCount - outputCount;
