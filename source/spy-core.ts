@@ -535,10 +535,12 @@ export class SpyCore implements Spy {
     unplug(...plugins: Plugin[]): void {
 
         plugins.forEach(plugin => {
-            plugin.teardown();
-            this.plugins_ = this.plugins_.filter(p => p !== plugin);
-            this.pluginsSubject_.next(this.plugins_);
-            this.undos_ = this.undos_.filter(u => u !== plugin);
+            if (this.plugins_.find(p => p === plugin)) {
+                plugin.teardown();
+                this.plugins_ = this.plugins_.filter(p => p !== plugin);
+                this.pluginsSubject_.next(this.plugins_);
+                this.undos_ = this.undos_.filter(u => u !== plugin);
+            }
         });
     }
 
