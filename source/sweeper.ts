@@ -4,8 +4,8 @@
  */
 
 import { Subscription } from "rxjs";
+import { PluginHost } from "./plugin";
 import { Snapshot, SnapshotPlugin, SubscriptionSnapshot } from "./plugin/snapshot-plugin";
-import { Spy } from "./spy-interface";
 
 export interface Swept {
     innerSubscriptions: SubscriptionSnapshot[];
@@ -32,12 +32,12 @@ export class Sweeper {
 
     private foundPlugins_: FoundPlugins | undefined;
     private sweeps_: Map<string, SweepRecord[]>;
-    private spy_: Spy;
+    private pluginHost_: PluginHost;
 
-    constructor(spy: Spy) {
+    constructor(pluginHost: PluginHost) {
 
         this.sweeps_ = new Map<string, SweepRecord[]>();
-        this.spy_ = spy;
+        this.pluginHost_ = pluginHost;
     }
 
     sweep(id: string, options: { flush?: boolean } = {}): Swept | undefined {
@@ -129,14 +129,14 @@ export class Sweeper {
 
     private findPlugins_(): FoundPlugins {
 
-        const { foundPlugins_, spy_ } = this;
+        const { foundPlugins_, pluginHost_ } = this;
         if (foundPlugins_) {
             return foundPlugins_;
         }
 
-        const [snapshotPlugin] = spy_.find(SnapshotPlugin);
+        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
         if (!snapshotPlugin) {
-            this.spy_.logger.warnOnce("Sweeping is not enabled; add the SnapshotPlugin.");
+            pluginHost_.logger.warnOnce("Sweeping is not enabled; add the SnapshotPlugin.");
         }
 
         this.foundPlugins_ = { snapshotPlugin };
