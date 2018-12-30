@@ -6,9 +6,10 @@
 import { Observable, OperatorFunction, Subscription } from "rxjs";
 import { defaultLogger, Logger } from "../logger";
 import { Match, matches } from "../match";
+import { Notification } from "../notification";
 import { getSubscriptionRecord } from "../subscription-record";
 import { inferType } from "../util";
-import { BasePlugin, Notification, PluginHost } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 
 const graphRecordSymbol = Symbol("graphRecord");
 

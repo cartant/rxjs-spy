@@ -34,13 +34,14 @@ import {
 
 import { identify } from "../identify";
 import { read } from "../match";
+import { Notification } from "../notification";
 import { hide } from "../operators";
 import { getSubscriptionRecord, SubscriptionRecord } from "../subscription-record";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
 import { DeckStats, PausePlugin } from "./pause-plugin";
-import { BasePlugin, Notification, Plugin, PluginHost } from "./plugin";
+import { BasePlugin, Plugin, PluginHost } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 

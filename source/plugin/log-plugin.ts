@@ -8,8 +8,9 @@ import { Auditor } from "../auditor";
 import { identify } from "../identify";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
+import { Notification } from "../notification";
 import { getSubscriptionRecord } from "../subscription-record";
-import { BasePlugin, Notification, PluginHost } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 
 const defaultMatch = /.+/;
 

@@ -8,7 +8,6 @@ import { Auditor } from "../auditor";
 import { Logger } from "../logger";
 import { Teardown } from "../teardown";
 
-export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
 export type PluginCtor<P extends Plugin, O extends PluginOptions> = new (options: O) => P;
 
 export interface Plugin {
