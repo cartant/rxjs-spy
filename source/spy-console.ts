@@ -8,7 +8,7 @@ import { PausePlugin } from "./plugin";
 import { SpyCore } from "./spy-core";
 import { sweep } from "./sweep";
 
-export function wrap(
+export function forConsole(
     core: SpyCore,
     deprecation: () => void = () => {}
 ): any {

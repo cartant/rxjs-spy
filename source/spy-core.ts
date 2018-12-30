@@ -42,7 +42,7 @@ import {
 } from "./plugin";
 
 import { QueryDerivations, QueryPredicate, QueryRecord } from "./query";
-import { wrap } from "./spy-console";
+import { forConsole } from "./spy-console";
 import { Spy } from "./spy-interface";
 import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record";
 import { Teardown } from "./teardown";
@@ -125,12 +125,13 @@ export class SpyCore implements Spy {
         hook((id, options) => this.sweep_(id, options, sweeper));
 
         if (typeof window !== "undefined") {
-            [options.global || "spy", "rxSpy"].forEach(key => {
+            const preferredKey = options.global || "spy";
+            [preferredKey, "rxSpy"].forEach(key => {
                 if (window.hasOwnProperty(key)) {
                     this.defaultLogger_.log(`Overwriting window.${key}`);
                     previousWindow[key] = window[key];
                 }
-                window[key] = wrap(this, key === "rxSpy" ?
+                window[key] = forConsole(this, key !== preferredKey ?
                     () => this.defaultLogger_.warnOnce(`window.${key} is deprecated and has been renamed; use window.spy instead`) :
                     undefined
                 );
