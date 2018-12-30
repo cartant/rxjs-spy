@@ -14,3 +14,4 @@ export * from "./plugin";
 export * from "./snapshot-plugin";
 export * from "./stack-trace-plugin";
 export * from "./stats-plugin";
+export * from "./sweep-plugin";
