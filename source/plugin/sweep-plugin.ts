@@ -4,8 +4,10 @@
  */
 
 import { Subscription } from "rxjs";
+import { PartialLogger, toLogger } from "../logger";
 import { GraphPlugin, GraphRecord } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
+import { StackTracePlugin } from "./stack-trace-plugin";
 
 export interface Swept {
     innerSubscriptions: Subscription[];
@@ -16,6 +18,7 @@ export interface Swept {
 
 type FoundPlugins = {
     graphPlugin: GraphPlugin | undefined;
+    stackTracePlugin: StackTracePlugin | undefined;
 };
 
 export class SweepPlugin extends BasePlugin {
@@ -38,37 +41,6 @@ export class SweepPlugin extends BasePlugin {
         this.pluginHost_ = pluginHost;
         this.rootSubscriptions = new Map<Subscription, GraphRecord>();
         this.rootUnsubscriptions = new Map<Subscription, GraphRecord>();
-    }
-
-sweep({ flush }: { flush?: boolean } = {}): Swept | undefined {
-
-        const {
-            innerSubscriptions,
-            innerUnsubscriptions,
-            rootSubscriptions,
-            rootUnsubscriptions
-        } = this;
-
-        if (flush) {
-            this.clear_();
-            return undefined;
-        }
-        if ((
-            innerSubscriptions.size +
-            innerUnsubscriptions.size +
-            rootSubscriptions.size +
-            rootUnsubscriptions.size
-        ) === 0) {
-            return undefined;
-        }
-        const result = {
-            innerSubscriptions: Array.from(innerSubscriptions.keys()),
-            innerUnsubscriptions: Array.from(innerUnsubscriptions.keys()),
-            rootSubscriptions: Array.from(rootSubscriptions.keys()),
-            rootUnsubscriptions: Array.from(rootUnsubscriptions.keys())
-        };
-        this.clear_();
-        return result;
     }
 
     afterUnsubscribe(subscription: Subscription): void {
@@ -101,6 +73,58 @@ sweep({ flush }: { flush?: boolean } = {}): Swept | undefined {
         }
     }
 
+    logSwept(swept: Swept, partialLogger: PartialLogger): void {
+        const { stackTracePlugin } = this.findPlugins_();
+        if (!stackTracePlugin) {
+            return;
+        }
+        const logger = toLogger(partialLogger);
+        logger.group(`Subscription changes found; id = '${this.id}'`);
+        swept.rootSubscriptions.forEach(s => {
+            logger.log("Root subscription at", stackTracePlugin.getStackTrace(s));
+        });
+        swept.rootUnsubscriptions.forEach(s => {
+            logger.log("Root unsubscription at", stackTracePlugin.getStackTrace(s));
+        });
+        swept.innerSubscriptions.forEach(s => {
+            logger.log("Inner subscription at", stackTracePlugin.getStackTrace(s));
+        });
+        swept.innerUnsubscriptions.forEach(s => {
+            logger.log("Inner unsubscription at", stackTracePlugin.getStackTrace(s));
+        });
+        logger.groupEnd();
+    }
+
+    sweep({ flush }: { flush?: boolean } = {}): Swept | undefined {
+        const {
+            innerSubscriptions,
+            innerUnsubscriptions,
+            rootSubscriptions,
+            rootUnsubscriptions
+        } = this;
+
+        if (flush) {
+            this.clear_();
+            return undefined;
+        }
+        if ((
+            innerSubscriptions.size +
+            innerUnsubscriptions.size +
+            rootSubscriptions.size +
+            rootUnsubscriptions.size
+        ) === 0) {
+            return undefined;
+        }
+        const result = {
+            innerSubscriptions: Array.from(innerSubscriptions.keys()),
+            innerUnsubscriptions: Array.from(innerUnsubscriptions.keys()),
+            rootSubscriptions: Array.from(rootSubscriptions.keys()),
+            rootUnsubscriptions: Array.from(rootUnsubscriptions.keys())
+        };
+        this.clear_();
+        return result;
+    }
+
     private clear_(): void {
         this.innerSubscriptions.clear();
         this.innerUnsubscriptions.clear();
@@ -114,10 +138,14 @@ sweep({ flush }: { flush?: boolean } = {}): Swept | undefined {
             return foundPlugins_;
         }
         const [graphPlugin] = pluginHost_.find(GraphPlugin, SweepPlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, SweepPlugin);
         if (!graphPlugin) {
             pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SweepPlugin.");
         }
-        this.foundPlugins_ = { graphPlugin };
+        if (!stackTracePlugin) {
+            pluginHost_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the SweepPlugin.");
+        }
+        this.foundPlugins_ = { graphPlugin, stackTracePlugin };
         return this.foundPlugins_;
     }
 }

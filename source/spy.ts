@@ -20,7 +20,6 @@ import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
 import { hide } from "./operators";
 import { hook } from "./sweep";
-import { Sweeper } from "./sweeper";
 
 import {
     BufferPlugin,
@@ -39,7 +38,8 @@ import {
     StackTracePlugin,
     StatsPlugin,
     SubscriberSnapshot,
-    SubscriptionSnapshot
+    SubscriptionSnapshot,
+    SweepPlugin
 } from "./plugin";
 
 import { QueryDerivations, QueryPredicate, QueryRecord } from "./query";
@@ -120,8 +120,7 @@ export class Spy {
         this.tick_ = 0;
         this.undos_ = [];
 
-        const sweeper = new Sweeper(this);
-        hook((id, options) => this.sweep_(id, options, sweeper));
+        hook((id, options) => this.sweep_(id, options));
 
         if (typeof window !== "undefined") {
             const preferredKey = options.global || "spy";
@@ -771,44 +770,19 @@ export class Spy {
         return subscriber;
     }
 
-    private sweep_(id: string, options: { flush?: boolean }, sweeper: Sweeper): void {
+    private sweep_(id: string, options: { flush?: boolean }): void {
 
-        const { auditor_, defaultLogger_ } = this;
+        const { defaultLogger_ } = this;
 
-        auditor_.audit(id, ignored => {
-
-            const swept = sweeper.sweep(id, options);
-            const logger = toLogger(defaultLogger_);
-
-            if (swept) {
-                const audit = (ignored === 0) ? "" : `; ignored ${ignored}`;
-                logger.group(`Subscription changes found; id = '${id}'${audit}`);
-                swept.rootSubscriptions.forEach(s => {
-                    logSubscription(logger, "Root subscription", s);
-                });
-                swept.rootUnsubscriptions.forEach(s => {
-                    logSubscription(logger, "Root unsubscription", s);
-                });
-                swept.innerSubscriptions.forEach(s => {
-                    logSubscription(logger, "Inner subscription", s);
-                });
-                swept.innerUnsubscriptions.forEach(s => {
-                    logSubscription(logger, "Inner unsubscription", s);
-                });
-                logger.groupEnd();
-            }
-
-            function logSubscription(logger: Logger, name: string, subscription: SubscriptionSnapshot): void {
-
-                logger.group(name);
-                logger.log("Root subscribe at", subscription.rootSink ?
-                    subscription.rootSink.stackTrace :
-                    subscription.stackTrace
-                );
-                logger.log("Subscribe at", subscription.stackTrace);
-                logger.groupEnd();
-            }
-        });
+        let sweepPlugin = this.find(SweepPlugin).find(plugin => plugin.id === id);
+        if (!sweepPlugin) {
+            sweepPlugin = new SweepPlugin({ id, pluginHost: this });
+            this.plug(sweepPlugin);
+        }
+        const swept = sweepPlugin.sweep(options);
+        if (swept) {
+            sweepPlugin.logSwept(swept, defaultLogger_);
+        }
     }
 
     private logStackTrace_(

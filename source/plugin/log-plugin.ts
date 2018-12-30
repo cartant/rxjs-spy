@@ -87,7 +87,7 @@ export class LogPlugin extends BasePlugin {
                 }
 
                 const matching = (typeof observableMatch_ === "object") ? `; matching ${matchToString(observableMatch_)}` : "";
-                const audit  = (ignored === 0) ? "" : `; ignored ${ignored}`;
+                const audit = ignored ? `; ignored ${ignored}` : "";
                 const description = `${identifier}; notification = ${notification}${matching}${audit}`;
 
                 switch (notification) {
