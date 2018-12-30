@@ -11,8 +11,6 @@ type FoundPlugins = {
     graphPlugin: GraphPlugin | undefined;
 };
 
-const noGraphPluinMessage = "Graphing is not enabled; add the GraphPlugin before the SweepPlugin.";
-
 export class SweepPlugin extends BasePlugin {
 
     id: string;
@@ -41,9 +39,6 @@ export class SweepPlugin extends BasePlugin {
             return;
         }
         const graphRecord = graphPlugin.getGraphRecord(subscription);
-        if (!graphRecord) {
-            return;
-        }
         if (graphRecord.inner) {
             if (!this.innerSubscriptions.delete(subscription)) {
                 this.innerUnsubscriptions.set(subscription, graphRecord);
@@ -62,10 +57,6 @@ export class SweepPlugin extends BasePlugin {
             return;
         }
         const graphRecord = graphPlugin.getGraphRecord(subscription);
-        if (!graphRecord) {
-            pluginHost_.logger.warnOnce(noGraphPluinMessage);
-            return;
-        }
         if (graphRecord.inner) {
             this.innerSubscriptions.set(subscription, graphRecord);
         } else {
@@ -87,7 +78,7 @@ export class SweepPlugin extends BasePlugin {
         }
         const [graphPlugin] = pluginHost_.find(GraphPlugin);
         if (!graphPlugin) {
-            pluginHost_.logger.warnOnce(noGraphPluinMessage);
+            pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SweepPlugin.");
         }
         this.foundPlugins_ = { graphPlugin };
         return this.foundPlugins_;
