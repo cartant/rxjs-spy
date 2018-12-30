@@ -7,6 +7,13 @@ import { Subscription } from "rxjs";
 import { GraphPlugin, GraphRecord } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 
+export interface Swept {
+    innerSubscriptions: Subscription[];
+    innerUnsubscriptions: Subscription[];
+    rootSubscriptions: Subscription[];
+    rootUnsubscriptions: Subscription[];
+}
+
 type FoundPlugins = {
     graphPlugin: GraphPlugin | undefined;
 };
@@ -33,6 +40,37 @@ export class SweepPlugin extends BasePlugin {
         this.rootUnsubscriptions = new Map<Subscription, GraphRecord>();
     }
 
+sweep({ flush }: { flush?: boolean } = {}): Swept | undefined {
+
+        const {
+            innerSubscriptions,
+            innerUnsubscriptions,
+            rootSubscriptions,
+            rootUnsubscriptions
+        } = this;
+
+        if (flush) {
+            this.clear_();
+            return undefined;
+        }
+        if ((
+            innerSubscriptions.size +
+            innerUnsubscriptions.size +
+            rootSubscriptions.size +
+            rootUnsubscriptions.size
+        ) === 0) {
+            return undefined;
+        }
+        const result = {
+            innerSubscriptions: Array.from(innerSubscriptions.keys()),
+            innerUnsubscriptions: Array.from(innerUnsubscriptions.keys()),
+            rootSubscriptions: Array.from(rootSubscriptions.keys()),
+            rootUnsubscriptions: Array.from(rootUnsubscriptions.keys())
+        };
+        this.clear_();
+        return result;
+    }
+
     afterUnsubscribe(subscription: Subscription): void {
         const { graphPlugin } = this.findPlugins_();
         if (!graphPlugin) {
@@ -43,7 +81,7 @@ export class SweepPlugin extends BasePlugin {
             if (!this.innerSubscriptions.delete(subscription)) {
                 this.innerUnsubscriptions.set(subscription, graphRecord);
             }
-        } else {
+        } else if (!graphRecord.sink) {
             if (!this.rootSubscriptions.delete(subscription)) {
                 this.rootUnsubscriptions.set(subscription, graphRecord);
             }
@@ -58,12 +96,12 @@ export class SweepPlugin extends BasePlugin {
         const graphRecord = graphPlugin.getGraphRecord(subscription);
         if (graphRecord.inner) {
             this.innerSubscriptions.set(subscription, graphRecord);
-        } else {
+        } else if (!graphRecord.sink) {
             this.rootSubscriptions.set(subscription, graphRecord);
         }
     }
 
-    flush(): void {
+    private clear_(): void {
         this.innerSubscriptions.clear();
         this.innerUnsubscriptions.clear();
         this.rootSubscriptions.clear();
