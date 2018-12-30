@@ -39,8 +39,7 @@ import {
     StackTracePlugin,
     StatsPlugin,
     SubscriberSnapshot,
-    SubscriptionSnapshot,
-    SweepPlugin
+    SubscriptionSnapshot
 } from "./plugin";
 
 import { QueryDerivations, QueryPredicate, QueryRecord } from "./query";
