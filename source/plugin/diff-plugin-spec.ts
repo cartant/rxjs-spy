@@ -10,7 +10,7 @@ import { mergeMap } from "rxjs/operators";
 import { create } from "../factory";
 import { tag } from "../operators";
 import { Spy } from "../spy";
-import { SweepPlugin } from "./sweep-plugin";
+import { DiffPlugin } from "./diff-plugin";
 
 const options = {
     keptDuration: -1,
@@ -18,16 +18,16 @@ const options = {
     warning: false
 };
 
-describe("SweepPlugin", () => {
+describe("DiffPlugin", () => {
 
+    let diffPlugin: DiffPlugin;
     let spy: Spy;
-    let sweepPlugin: SweepPlugin;
 
     beforeEach(() => {
 
         spy = create({ ...options });
-        sweepPlugin = new SweepPlugin({ id: "", pluginHost: spy });
-        spy.plug(sweepPlugin);
+        diffPlugin = new DiffPlugin({ id: "", pluginHost: spy });
+        spy.plug(diffPlugin);
     });
 
     it("should find subscriptions and unsubscriptions", () => {
@@ -37,22 +37,22 @@ describe("SweepPlugin", () => {
 
         subject.next();
 
-        let swept = sweepPlugin.sweep();
-        expect(swept).to.not.exist;
+        let diff = diffPlugin.diff();
+        expect(diff).to.not.exist;
 
         const subscription = source.subscribe();
         subject.next();
 
-        swept = sweepPlugin.sweep()!;
-        expect(swept.rootSubscriptions).to.have.length(1);
-        expect(swept.rootUnsubscriptions).to.be.empty;
+        diff = diffPlugin.diff()!;
+        expect(diff.rootSubscriptions).to.have.length(1);
+        expect(diff.rootUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
         subject.next();
 
-        swept = sweepPlugin.sweep()!;
-        expect(swept.rootSubscriptions).to.be.empty;
-        expect(swept.rootUnsubscriptions).to.have.length(1);
+        diff = diffPlugin.diff()!;
+        expect(diff.rootSubscriptions).to.be.empty;
+        expect(diff.rootUnsubscriptions).to.have.length(1);
     });
 
     it("should find inner subscriptions and unsubscriptions", () => {
@@ -65,22 +65,22 @@ describe("SweepPlugin", () => {
 
         subject.next();
 
-        let swept = sweepPlugin.sweep();
-        expect(swept).to.not.exist;
+        let diff = diffPlugin.diff();
+        expect(diff).to.not.exist;
 
         const subscription = merged.subscribe();
         subject.next();
 
-        swept = sweepPlugin.sweep()!;
-        expect(swept.innerSubscriptions).to.have.length(1);
-        expect(swept.innerUnsubscriptions).to.be.empty;
+        diff = diffPlugin.diff()!;
+        expect(diff.innerSubscriptions).to.have.length(1);
+        expect(diff.innerUnsubscriptions).to.be.empty;
 
         subject.next();
 
-        swept = sweepPlugin.sweep()!;
-        expect(swept).to.exist;
-        expect(swept.innerSubscriptions).to.have.length(1);
-        expect(swept.innerUnsubscriptions).to.be.empty;
+        diff = diffPlugin.diff()!;
+        expect(diff).to.exist;
+        expect(diff.innerSubscriptions).to.have.length(1);
+        expect(diff.innerUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
     });
@@ -92,21 +92,21 @@ describe("SweepPlugin", () => {
 
         subject.next();
 
-        let swept = sweepPlugin.sweep();
-        expect(swept).to.not.exist;
+        let diff = diffPlugin.diff();
+        expect(diff).to.not.exist;
 
         const subscription = source.subscribe();
         subject.next();
 
-        swept = sweepPlugin.sweep()!;
-        expect(swept.rootSubscriptions).to.have.length(1);
-        expect(swept.rootUnsubscriptions).to.be.empty;
+        diff = diffPlugin.diff()!;
+        expect(diff.rootSubscriptions).to.have.length(1);
+        expect(diff.rootUnsubscriptions).to.be.empty;
 
         subscription.unsubscribe();
         subject.next();
 
-        swept = sweepPlugin.sweep({ flush: true })!;
-        expect(swept).to.not.exist;
+        diff = diffPlugin.diff({ flush: true })!;
+        expect(diff).to.not.exist;
     });
 
     afterEach(() => {

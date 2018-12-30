@@ -6,6 +6,7 @@
 export * from "./buffer-plugin";
 export * from "./cycle-plugin";
 export * from "./devtools-plugin";
+export * from "./diff-plugin";
 export * from "./graph-plugin";
 export * from "./log-plugin";
 export * from "./pause-plugin";
@@ -14,4 +15,3 @@ export * from "./plugin";
 export * from "./snapshot-plugin";
 export * from "./stack-trace-plugin";
 export * from "./stats-plugin";
-export * from "./sweep-plugin";

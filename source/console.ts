@@ -3,10 +3,10 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { diff } from "./diff";
 import { defaultLogger, toLogger } from "./logger";
 import { PausePlugin } from "./plugin";
 import { Spy } from "./spy";
-import { sweep } from "./sweep";
 
 export function forConsole(
     spy: Spy,
@@ -25,6 +25,10 @@ export function forConsole(
                 const pausePlugin = pausePlugins[call - 1];
                 return pausePlugin ? pausePlugin.deck : undefined;
             }
+        },
+        diff(id: string = "", options: object = {}): void {
+            deprecation();
+            diff(id, options);
         },
         log(...args: any[]): void {
             deprecation();
@@ -53,10 +57,6 @@ export function forConsole(
         stats(): void {
             deprecation();
             spy.stats();
-        },
-        sweep(id: string = ""): void {
-            deprecation();
-            sweep(id);
         },
         undo(...args: any[]): void {
             if (args.length === 0) {

@@ -8,10 +8,10 @@ export type Hook = (id: string, options: { flush?: boolean }) => void;
 const noop_: Hook = () => {};
 let hook_: Hook = noop_;
 
-export function hook(hook: Hook | undefined): void {
-    hook_ = hook || noop_;
+export function diff(id: string, options: { flush?: boolean } = {}): void {
+    hook_(id, options);
 }
 
-export function sweep(id: string, options: { flush?: boolean } = {}): void {
-    hook_(id, options);
+export function hook(hook: Hook | undefined): void {
+    hook_ = hook || noop_;
 }

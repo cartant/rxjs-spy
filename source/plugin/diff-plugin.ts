@@ -9,7 +9,7 @@ import { GraphPlugin, GraphRecord } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
-export interface Swept {
+export interface Diff {
     innerSubscriptions: Subscription[];
     innerUnsubscriptions: Subscription[];
     rootSubscriptions: Subscription[];
@@ -21,7 +21,7 @@ type FoundPlugins = {
     stackTracePlugin: StackTracePlugin | undefined;
 };
 
-export class SweepPlugin extends BasePlugin {
+export class DiffPlugin extends BasePlugin {
 
     id: string;
     innerSubscriptions: Map<Subscription, GraphRecord>;
@@ -33,7 +33,7 @@ export class SweepPlugin extends BasePlugin {
     private pluginHost_: PluginHost;
 
     constructor({ id, pluginHost }: { id: string, pluginHost: PluginHost }) {
-        super(`sweep(${id})`);
+        super(`diff(${id})`);
         this.foundPlugins_ = undefined;
         this.id = id;
         this.innerSubscriptions = new Map<Subscription, GraphRecord>();
@@ -73,29 +73,7 @@ export class SweepPlugin extends BasePlugin {
         }
     }
 
-    logSwept(swept: Swept, partialLogger: PartialLogger): void {
-        const { stackTracePlugin } = this.findPlugins_();
-        if (!stackTracePlugin) {
-            return;
-        }
-        const logger = toLogger(partialLogger);
-        logger.group(`Subscription changes found; id = '${this.id}'`);
-        swept.rootSubscriptions.forEach(s => {
-            logger.log("Root subscription at", stackTracePlugin.getStackTrace(s));
-        });
-        swept.rootUnsubscriptions.forEach(s => {
-            logger.log("Root unsubscription at", stackTracePlugin.getStackTrace(s));
-        });
-        swept.innerSubscriptions.forEach(s => {
-            logger.log("Inner subscription at", stackTracePlugin.getStackTrace(s));
-        });
-        swept.innerUnsubscriptions.forEach(s => {
-            logger.log("Inner unsubscription at", stackTracePlugin.getStackTrace(s));
-        });
-        logger.groupEnd();
-    }
-
-    sweep({ flush }: { flush?: boolean } = {}): Swept | undefined {
+    diff({ flush }: { flush?: boolean } = {}): Diff | undefined {
         const {
             innerSubscriptions,
             innerUnsubscriptions,
@@ -125,6 +103,28 @@ export class SweepPlugin extends BasePlugin {
         return result;
     }
 
+    logDiff(diff: Diff, partialLogger: PartialLogger): void {
+        const { stackTracePlugin } = this.findPlugins_();
+        if (!stackTracePlugin) {
+            return;
+        }
+        const logger = toLogger(partialLogger);
+        logger.group(`Subscription diff found; id = '${this.id}'`);
+        diff.rootSubscriptions.forEach(s => {
+            logger.log("Root subscription at", stackTracePlugin.getStackTrace(s));
+        });
+        diff.rootUnsubscriptions.forEach(s => {
+            logger.log("Root unsubscription at", stackTracePlugin.getStackTrace(s));
+        });
+        diff.innerSubscriptions.forEach(s => {
+            logger.log("Inner subscription at", stackTracePlugin.getStackTrace(s));
+        });
+        diff.innerUnsubscriptions.forEach(s => {
+            logger.log("Inner unsubscription at", stackTracePlugin.getStackTrace(s));
+        });
+        logger.groupEnd();
+    }
+
     private clear_(): void {
         this.innerSubscriptions.clear();
         this.innerUnsubscriptions.clear();
@@ -137,13 +137,13 @@ export class SweepPlugin extends BasePlugin {
         if (foundPlugins_) {
             return foundPlugins_;
         }
-        const [graphPlugin] = pluginHost_.find(GraphPlugin, SweepPlugin);
-        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, SweepPlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin, DiffPlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, DiffPlugin);
         if (!graphPlugin) {
-            pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SweepPlugin.");
+            pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the DiffPlugin.");
         }
         if (!stackTracePlugin) {
-            pluginHost_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the SweepPlugin.");
+            pluginHost_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the DiffPlugin.");
         }
         this.foundPlugins_ = { graphPlugin, stackTracePlugin };
         return this.foundPlugins_;

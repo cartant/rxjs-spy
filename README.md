@@ -101,7 +101,7 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.find`](#module-find)
 * [`Spy.stats`](#module-stats)
 * [`Spy.teardown`](#module-teardown)
-* [`sweep`](#module-sweep)
+* [`diff`](#module-diff)
 
 <a name="module-create"></a>
 
@@ -324,20 +324,20 @@ interface Spy {
 
 Tears down the spy.
 
-<a name="module-sweep"></a>
+<a name="module-diff"></a>
 
-### sweep
+### diff
 
 ```ts
-function sweep(id: string): void;
+function diff(id: string, options: { flush?: boolean } = {}): void;
 ```
 
-Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `sweep` call with the specified `id`.
+Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `diff` call with the specified `id`.
 
-The `sweep` method is implemented so that it can be imported and called regardless of whether or not the spy is configured. That is, calls can be left in production code, as they become no-ops. It should be imported like this:
+The `diff` method is implemented so that it can be imported and called regardless of whether or not the spy is configured. That is, calls can be left in production code, as they become no-ops. It should be imported like this:
 
 ```ts
-import { sweep } from "rxjs-spy/sweep";
+import { diff } from "rxjs-spy/diff";
 ```
 
 ## Console API

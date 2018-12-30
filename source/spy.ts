@@ -13,19 +13,20 @@ import {
 
 import { Auditor } from "./auditor";
 import { forConsole } from "./console";
+import { hook } from "./diff";
 import { compile } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match, matches, toString as matchToString } from "./match";
 import { hide } from "./operators";
-import { hook } from "./sweep";
 
 import {
     BufferPlugin,
     CyclePlugin,
     Deck,
     DevToolsPlugin,
+    DiffPlugin,
     GraphPlugin,
     LogPlugin,
     ObservableSnapshot,
@@ -38,8 +39,7 @@ import {
     StackTracePlugin,
     StatsPlugin,
     SubscriberSnapshot,
-    SubscriptionSnapshot,
-    SweepPlugin
+    SubscriptionSnapshot
 } from "./plugin";
 
 import { QueryDerivations, QueryPredicate, QueryRecord } from "./query";
@@ -120,7 +120,7 @@ export class Spy {
         this.tick_ = 0;
         this.undos_ = [];
 
-        hook((id, options) => this.sweep_(id, options));
+        hook((id, options) => this.diff_(id, options));
 
         if (typeof window !== "undefined") {
             const preferredKey = options.global || "spy";
@@ -770,18 +770,18 @@ export class Spy {
         return subscriber;
     }
 
-    private sweep_(id: string, options: { flush?: boolean }): void {
+    private diff_(id: string, options: { flush?: boolean }): void {
 
         const { defaultLogger_ } = this;
 
-        let sweepPlugin = this.find(SweepPlugin).find(plugin => plugin.id === id);
-        if (!sweepPlugin) {
-            sweepPlugin = new SweepPlugin({ id, pluginHost: this });
-            this.plug(sweepPlugin);
+        let diffPlugin = this.find(DiffPlugin).find(plugin => plugin.id === id);
+        if (!diffPlugin) {
+            diffPlugin = new DiffPlugin({ id, pluginHost: this });
+            this.plug(diffPlugin);
         }
-        const swept = sweepPlugin.sweep(options);
-        if (swept) {
-            sweepPlugin.logSwept(swept, defaultLogger_);
+        const diff = diffPlugin.diff(options);
+        if (diff) {
+            diffPlugin.logDiff(diff, defaultLogger_);
         }
     }
 

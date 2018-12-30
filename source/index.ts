@@ -3,17 +3,20 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+export { diff } from "./diff";
 export { create } from "./factory";
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugin";
-export { sweep } from "./sweep";
 export { inferPath, inferType } from "./util";
 
 import { hide, tag } from "./operators";
 
 import {
+    BufferPlugin,
+    CyclePlugin,
     DevToolsPlugin,
+    DiffPlugin,
     GraphPlugin,
     LogPlugin,
     PausePlugin,
@@ -24,7 +27,10 @@ import {
 } from "./plugin";
 
 export const plugins = {
+    BufferPlugin,
+    CyclePlugin,
     DevToolsPlugin,
+    DiffPlugin,
     GraphPlugin,
     LogPlugin,
     PausePlugin,
