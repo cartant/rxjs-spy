@@ -41,9 +41,11 @@ import {
     SubscriptionSnapshot
 } from "./plugin";
 
+import { QueryDerivations, QueryPredicate, QueryRecord } from "./query";
 import { wrap } from "./spy-console";
-import { QueryDerivations, QueryPredicate, QueryRecord, Spy, Teardown } from "./spy-interface";
+import { Spy } from "./spy-interface";
 import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record";
+import { Teardown } from "./teardown";
 import { toSubscriber } from "./util";
 
 declare const __RXJS_SPY_VERSION__: string;

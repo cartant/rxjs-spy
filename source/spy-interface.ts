@@ -8,18 +8,8 @@ import { Auditor } from "./auditor";
 import { Logger, PartialLogger } from "./logger";
 import { Match } from "./match";
 import { Deck, Plugin, PluginCtor, PluginOptions } from "./plugin";
-
-export interface Options {
-    [key: string]: any;
-}
-
-export type QueryRecord = Record<string, any>;
-export type QueryPredicate = (queryRecord: QueryRecord) => boolean;
-export type QueryDerivations = Record<string, (queryRecord: QueryRecord) => any>;
-
-export interface Teardown {
-    (): void;
-}
+import { QueryDerivations, QueryPredicate } from "./query";
+import { Teardown } from "./teardown";
 
 export interface Spy {
     readonly auditor: Auditor;
