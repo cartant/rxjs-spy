@@ -5,11 +5,10 @@
 
 import { Subscription } from "rxjs";
 import { Logger } from "../logger";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord, SubscriptionRecord } from "../subscription-record";
 import { inferType } from "../util";
 import { GraphPlugin, GraphRecord } from "./graph-plugin";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 import { SnapshotPlugin, SnapshotRecord } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
@@ -39,22 +38,22 @@ export class BufferPlugin extends BasePlugin {
     private bufferThreshold_: number;
     private foundPlugins_: FoundPlugins | undefined;
     private logger_: Logger;
-    private spy_: Spy;
+    private pluginHost_: PluginHost;
 
     constructor({
         bufferThreshold = 100,
-        spy
+        pluginHost
     }: {
         bufferThreshold?: number,
-        spy: Spy
+        pluginHost: PluginHost
     }) {
 
         super("buffer");
 
         this.bufferThreshold_ = bufferThreshold;
         this.foundPlugins_ = undefined;
-        this.logger_ = spy.logger;
-        this.spy_ = spy;
+        this.logger_ = pluginHost.logger;
+        this.pluginHost_ = pluginHost;
     }
 
     afterNext(subscription: Subscription, value: any): void {
@@ -160,20 +159,20 @@ export class BufferPlugin extends BasePlugin {
 
     private findPlugins_(): FoundPlugins {
 
-        const { foundPlugins_, spy_ } = this;
+        const { foundPlugins_, pluginHost_ } = this;
         if (foundPlugins_) {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = spy_.find(GraphPlugin);
-        const [snapshotPlugin] = spy_.find(SnapshotPlugin);
-        const [stackTracePlugin] = spy_.find(StackTracePlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin);
+        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
 
         if (!graphPlugin) {
-            this.spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");
+            pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");
         }
         if (!stackTracePlugin) {
-            spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the BufferPlugin.");
+            pluginHost_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the BufferPlugin.");
         }
 
         this.foundPlugins_ = { graphPlugin, snapshotPlugin, stackTracePlugin };

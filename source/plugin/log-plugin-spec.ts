@@ -35,7 +35,7 @@ describe("LogPlugin", () => {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: "people",
-                spy
+                pluginHost: spy
             });
             spy.plug(plugin);
             calls = [];
@@ -147,7 +147,7 @@ describe("LogPlugin", () => {
         beforeEach(() => {
 
             spy = create(options);
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ spy });
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
             spy.plug(subscriptionRecordsPlugin);
             calls = [];
         });
@@ -163,7 +163,7 @@ describe("LogPlugin", () => {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.observable),
-                spy
+                pluginHost: spy
             }));
 
             calls = [];
@@ -184,7 +184,7 @@ describe("LogPlugin", () => {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.subscriber),
-                spy
+                pluginHost: spy
             }));
 
             calls = [];
@@ -205,7 +205,7 @@ describe("LogPlugin", () => {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.subscription),
-                spy
+                pluginHost: spy
             }));
 
             calls = [];

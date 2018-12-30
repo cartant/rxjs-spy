@@ -14,10 +14,9 @@ import { dematerialize, materialize } from "rxjs/operators";
 import { defaultLogger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { hide } from "../operators";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord } from "../subscription-record";
 import { Teardown } from "../teardown";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 
 export interface DeckStats {
     notifications: number;
@@ -183,7 +182,7 @@ export class PausePlugin extends BasePlugin {
     private match_: Match;
     private deck_: Deck;
 
-    constructor({ match, spy }: { match: Match, spy: Spy }) {
+    constructor({ match, pluginHost }: { match: Match, pluginHost: PluginHost }) {
 
         super(`pause(${matchToString(match)})`);
 

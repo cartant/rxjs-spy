@@ -5,15 +5,14 @@
 /*tslint:disable:no-debugger*/
 
 import { Observable, Subscription } from "rxjs";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord, SubscriptionRecord } from "../subscription-record";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 
 export class SubscriptionRecordsPlugin extends BasePlugin {
 
     private subscriptionRecords_: Map<Observable<any>, SubscriptionRecord> = new Map<Observable<any>, SubscriptionRecord>();
 
-    constructor({ spy }: { spy: Spy }) { super("subscriptionRecords"); }
+    constructor({ pluginHost }: { pluginHost: PluginHost }) { super("subscriptionRecords"); }
 
     beforeSubscribe(subscription: Subscription): void {
 

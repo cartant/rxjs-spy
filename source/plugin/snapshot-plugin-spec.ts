@@ -24,8 +24,8 @@ describe("SnapshotPlugin", () => {
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
-        plugin = new SnapshotPlugin({ keptValues, spy });
-        spy.plug(new GraphPlugin({ keptDuration, spy }), plugin);
+        plugin = new SnapshotPlugin({ keptValues, pluginHost: spy });
+        spy.plug(new GraphPlugin({ keptDuration, pluginHost: spy }), plugin);
     });
 
     describe("snapshotAll", () => {

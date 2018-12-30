@@ -10,11 +10,10 @@ import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
 import { QueryRecord } from "../query";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord } from "../subscription-record";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
 const snapshotRecordSymbol = Symbol("snapshotRecord");
@@ -91,21 +90,21 @@ export class SnapshotPlugin extends BasePlugin {
 
     private foundPlugins_: FoundPlugins | undefined;
     private keptValues_: number;
-    private spy_: Spy;
+    private pluginHost_: PluginHost;
 
     constructor({
         keptValues = 4,
-        spy
+        pluginHost
     }: {
         keptValues?: number,
-        spy: Spy
+        pluginHost: PluginHost
     }) {
 
         super("snapshot");
 
         this.foundPlugins_ = undefined;
         this.keptValues_ = keptValues;
-        this.spy_ = spy;
+        this.pluginHost_ = pluginHost;
     }
 
     beforeError(subscription: Subscription, error: any): void {
@@ -116,7 +115,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeNext(subscription: Subscription, value: any): void {
 
-        const tick = this.spy_.tick;
+        const tick = this.pluginHost_.tick;
         const snapshotRecord = this.getSnapshotRecord(subscription);
         snapshotRecord.values.push({ tick, timestamp: Date.now(), value });
 
@@ -327,7 +326,7 @@ export class SnapshotPlugin extends BasePlugin {
             observables,
             subscribers,
             subscriptions,
-            tick: this.spy_.tick
+            tick: this.pluginHost_.tick
         };
     }
 
@@ -345,16 +344,16 @@ export class SnapshotPlugin extends BasePlugin {
 
     private findPlugins_(): FoundPlugins {
 
-        const { foundPlugins_, spy_ } = this;
+        const { foundPlugins_, pluginHost_ } = this;
         if (foundPlugins_) {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = spy_.find(GraphPlugin);
-        const [stackTracePlugin] = spy_.find(StackTracePlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
 
         if (!graphPlugin) {
-            spy_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
+            pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
         }
 
         this.foundPlugins_ = { graphPlugin, stackTracePlugin };

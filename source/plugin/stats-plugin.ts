@@ -4,9 +4,8 @@
  */
 
 import { Subscription } from "rxjs";
-import { Spy } from "../spy-interface";
 import { GraphPlugin } from "./graph-plugin";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 
 export interface Stats {
     completes: number;
@@ -30,16 +29,16 @@ type FoundPlugins = {
 export class StatsPlugin extends BasePlugin {
 
     private foundPlugins_: FoundPlugins | undefined;
-    private spy_: Spy;
+    private pluginHost_: PluginHost;
     private stats_: Stats;
     private time_: number;
 
-    constructor({ spy }: { spy: Spy }) {
+    constructor({ pluginHost }: { pluginHost: PluginHost }) {
 
         super("stats");
 
         this.foundPlugins_ = undefined;
-        this.spy_ = spy;
+        this.pluginHost_ = pluginHost;
         this.stats_ = {
             completes: 0,
             errors: 0,
@@ -125,23 +124,23 @@ export class StatsPlugin extends BasePlugin {
     }
 
     private all_(): void {
-        const { spy_, stats_, time_ } = this;
+        const { pluginHost_, stats_, time_ } = this;
         if (time_ === 0) {
             this.time_ = Date.now();
         } else {
             stats_.timespan = Date.now() - time_;
         }
-        stats_.tick = spy_.tick;
+        stats_.tick = pluginHost_.tick;
     }
 
     private findPlugins_(): FoundPlugins {
 
-        const { foundPlugins_, spy_ } = this;
+        const { foundPlugins_, pluginHost_ } = this;
         if (foundPlugins_) {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = spy_.find(GraphPlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin);
         this.foundPlugins_ = { graphPlugin };
         return this.foundPlugins_;
     }

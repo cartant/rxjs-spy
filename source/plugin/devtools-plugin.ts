@@ -35,13 +35,12 @@ import {
 import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord, SubscriptionRecord } from "../subscription-record";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
 import { DeckStats, PausePlugin } from "./pause-plugin";
-import { BasePlugin, Notification, Plugin } from "./plugin";
+import { BasePlugin, Notification, Plugin, PluginHost } from "./plugin";
 import { Snapshot, SnapshotPlugin } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
@@ -76,10 +75,10 @@ export class DevToolsPlugin extends BasePlugin {
     private plugins_: Map<string, PluginRecord>;
     private responses_!: Observable<Response>;
     private snapshotHinted_: boolean;
-    private spy_: Spy;
+    private pluginHost_: PluginHost;
     private subscription_!: Subscription;
 
-    constructor({ spy }: { spy: Spy }) {
+    constructor({ pluginHost }: { pluginHost: PluginHost }) {
 
         super("devTools");
 
@@ -87,12 +86,12 @@ export class DevToolsPlugin extends BasePlugin {
         this.foundPlugins_ = undefined;
         this.plugins_ = new Map<string, PluginRecord>();
         this.snapshotHinted_ = false;
-        this.spy_ = spy;
+        this.pluginHost_ = pluginHost;
 
         if ((typeof window !== "undefined") && window[EXTENSION_KEY]) {
 
             const extension = window[EXTENSION_KEY] as Extension;
-            this.connection_ = extension.connect({ version: spy.version });
+            this.connection_ = extension.connect({ version: pluginHost.version });
 
             this.posts_ = new Observable<Post>(observer => this.connection_ ?
                 this.connection_.subscribe(post => observer.next(post)) :
@@ -110,7 +109,7 @@ export class DevToolsPlugin extends BasePlugin {
                     case "log": {
                         const plugin = new LogPlugin({
                             observableMatch: request["spyId"],
-                            spy: this.spy_
+                            pluginHost: this.pluginHost_
                         });
                         this.plug_(request["spyId"], request.postId, plugin);
                         response["pluginId"] = request.postId;
@@ -122,7 +121,7 @@ export class DevToolsPlugin extends BasePlugin {
                     case "pause": {
                         const plugin = new PausePlugin({
                             match: request["spyId"],
-                            spy: this.spy_
+                            pluginHost: this.pluginHost_
                         });
                         this.plug_(request["spyId"], request.postId, plugin);
                         plugin.deck.stats.pipe(hide()).subscribe((stats: DeckStats) => {
@@ -336,14 +335,14 @@ export class DevToolsPlugin extends BasePlugin {
 
     private findPlugins_(): FoundPlugins {
 
-        const { foundPlugins_, spy_ } = this;
+        const { foundPlugins_, pluginHost_ } = this;
         if (foundPlugins_) {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = spy_.find(GraphPlugin);
-        const [snapshotPlugin] = spy_.find(SnapshotPlugin);
-        const [stackTracePlugin] = spy_.find(StackTracePlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin);
+        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
 
         this.foundPlugins_ = { graphPlugin, snapshotPlugin, stackTracePlugin };
         return this.foundPlugins_;
@@ -351,7 +350,7 @@ export class DevToolsPlugin extends BasePlugin {
 
     private plug_(spyId: string, pluginId: string, plugin: Plugin): void {
 
-        const teardown = this.spy_.plug(plugin);
+        const teardown = this.pluginHost_.plug(plugin);
         this.plugins_.set(pluginId, { plugin, pluginId, spyId, teardown });
     }
 
@@ -404,7 +403,7 @@ export class DevToolsPlugin extends BasePlugin {
                 id: identify(subscription),
                 stackTrace: orNull(stackTracePlugin && stackTracePlugin.getStackTrace(subscription))
             },
-            tick: this.spy_.tick,
+            tick: this.pluginHost_.tick,
             timestamp: Date.now(),
             type: `${prefix}-${notification}`,
             value: (value === undefined) ? undefined : toValue(value)

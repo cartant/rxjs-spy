@@ -6,10 +6,9 @@
 import { Observable, OperatorFunction, Subscription } from "rxjs";
 import { defaultLogger, Logger } from "../logger";
 import { Match, matches } from "../match";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord } from "../subscription-record";
 import { inferType } from "../util";
-import { BasePlugin, Notification } from "./plugin";
+import { BasePlugin, Notification, PluginHost } from "./plugin";
 
 const graphRecordSymbol = Symbol("graphRecord");
 
@@ -40,10 +39,10 @@ export class GraphPlugin extends BasePlugin {
 
     constructor({
         keptDuration = 30000,
-        spy
+        pluginHost
     }: {
         keptDuration?: number,
-        spy: Spy
+        pluginHost: PluginHost
     }) {
 
         super("graph");

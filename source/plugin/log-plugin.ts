@@ -8,9 +8,8 @@ import { Auditor } from "../auditor";
 import { identify } from "../identify";
 import { Logger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord } from "../subscription-record";
-import { BasePlugin, Notification } from "./plugin";
+import { BasePlugin, Notification, PluginHost } from "./plugin";
 
 const defaultMatch = /.+/;
 
@@ -25,18 +24,18 @@ export class LogPlugin extends BasePlugin {
         logger,
         notificationMatch,
         observableMatch,
-        spy
+        pluginHost
     }: {
         logger?: PartialLogger,
         notificationMatch?: Match,
         observableMatch?: Match,
-        spy: Spy
+        pluginHost: PluginHost
     }) {
 
         super(`log(${matchToString(observableMatch || defaultMatch)})`);
 
-        this.auditor_ = spy.auditor;
-        this.logger_ = logger ? toLogger(logger) : spy.logger;
+        this.auditor_ = pluginHost.auditor;
+        this.logger_ = logger ? toLogger(logger) : pluginHost.logger;
         this.notificationMatch_ = notificationMatch || defaultMatch;
         this.observableMatch_ = observableMatch || defaultMatch;
     }

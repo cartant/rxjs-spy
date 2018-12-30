@@ -20,8 +20,8 @@ describe("StatsPlugin", () => {
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
-        statsPlugin = new StatsPlugin({ spy });
-        spy.plug(new GraphPlugin({ keptDuration: -1, spy }), statsPlugin);
+        statsPlugin = new StatsPlugin({ pluginHost: spy });
+        spy.plug(new GraphPlugin({ keptDuration: -1, pluginHost: spy }), statsPlugin);
     });
 
     it("should count subscribes/unsubscribes", () => {

@@ -5,8 +5,7 @@
 
 import { merge, NEVER, Observable, Subscription } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
-import { Spy } from "../spy-interface";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 
 export class PipePlugin extends BasePlugin {
 
@@ -17,12 +16,12 @@ export class PipePlugin extends BasePlugin {
         complete = true,
         match,
         operator,
-        spy
+        pluginHost
     }: {
         complete?: boolean,
         match: Match,
         operator: (source: Observable<any>) => Observable<any>,
-        spy: Spy
+        pluginHost: PluginHost
     }) {
 
         super(`pipe(${matchToString(match)})`);

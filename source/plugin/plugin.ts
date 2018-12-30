@@ -4,14 +4,11 @@
  */
 
 import { Observable, Operator, OperatorFunction, Subscription } from "rxjs";
-import { Spy } from "../spy-interface";
+import { Auditor } from "../auditor";
+import { Logger } from "../logger";
+import { Teardown } from "../teardown";
 
 export type Notification = "complete" | "error" | "next" | "subscribe" | "unsubscribe";
-
-export interface PluginOptions {
-    [key: string]: any;
-    spy: Spy;
-}
 export type PluginCtor<P extends Plugin, O extends PluginOptions> = new (options: O) => P;
 
 export interface Plugin {
@@ -34,6 +31,21 @@ export interface Plugin {
     beforeUnsubscribe(subscription: Subscription): void;
     operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined;
     teardown(): void;
+}
+
+export interface PluginHost {
+    readonly auditor: Auditor;
+    readonly logger: Logger;
+    readonly tick: number;
+    readonly version: string;
+    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
+    plug(...plugins: Plugin[]): Teardown;
+    unplug(...plugins: Plugin[]): void;
+}
+
+export interface PluginOptions {
+    [key: string]: any;
+    pluginHost: PluginHost;
 }
 
 export class BasePlugin implements Plugin {

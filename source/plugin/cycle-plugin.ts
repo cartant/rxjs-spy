@@ -5,10 +5,9 @@
 
 import { Subscription } from "rxjs";
 import { Logger } from "../logger";
-import { Spy } from "../spy-interface";
 import { getSubscriptionRecord } from "../subscription-record";
 import { inferType } from "../util";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, PluginHost } from "./plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
@@ -26,22 +25,22 @@ export class CyclePlugin extends BasePlugin {
     private foundPlugins_: FoundPlugins | undefined;
     private logger_: Logger;
     private nexts_: Subscription[] = [];
-    private spy_: Spy;
+    private pluginHost_: PluginHost;
 
     constructor({
         cycleThreshold = 100,
-        spy
+        pluginHost
     }: {
         cycleThreshold?: number,
-        spy: Spy
+        pluginHost: PluginHost
     }) {
 
         super("cycle");
 
         this.cycleThreshold_ = cycleThreshold;
         this.foundPlugins_ = undefined;
-        this.logger_ = spy.logger;
-        this.spy_ = spy;
+        this.logger_ = pluginHost.logger;
+        this.pluginHost_ = pluginHost;
     }
 
     afterNext(subscription: Subscription, value: any): void {
@@ -89,16 +88,16 @@ export class CyclePlugin extends BasePlugin {
 
     private findPlugins_(): FoundPlugins {
 
-        const { foundPlugins_, spy_ } = this;
+        const { foundPlugins_, pluginHost_ } = this;
         if (foundPlugins_) {
             return foundPlugins_;
         }
 
-        const [snapshotPlugin] = spy_.find(SnapshotPlugin);
-        const [stackTracePlugin] = spy_.find(StackTracePlugin);
+        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
 
         if (!stackTracePlugin) {
-            spy_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
+            pluginHost_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
         }
 
         this.foundPlugins_ = { snapshotPlugin, stackTracePlugin };

@@ -32,8 +32,8 @@ describe("GraphPlugin", () => {
             beforeEach(() => {
 
                 spy = create({ defaultPlugins: false, warning: false });
-                graphPlugin = new GraphPlugin({ keptDuration: duration, spy });
-                subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ spy });
+                graphPlugin = new GraphPlugin({ keptDuration: duration, pluginHost: spy });
+                subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
                 spy.plug(graphPlugin, subscriptionRecordsPlugin);
             });
 
@@ -301,8 +301,8 @@ describe("GraphPlugin", () => {
         beforeEach(() => {
 
             spy = create({ defaultPlugins: false, warning: false });
-            graphPlugin = new GraphPlugin({ keptDuration: 0, spy });
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ spy });
+            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy });
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
             spy.plug(graphPlugin, subscriptionRecordsPlugin);
         });
 
@@ -617,8 +617,8 @@ describe("GraphPlugin", () => {
         beforeEach(() => {
 
             spy = create({ defaultPlugins: false, warning: false });
-            graphPlugin = new GraphPlugin({ keptDuration: 0, spy });
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ spy });
+            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy });
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
             spy.plug(graphPlugin, subscriptionRecordsPlugin);
         });
 

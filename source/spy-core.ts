@@ -106,15 +106,15 @@ export class SpyCore implements Spy {
             this.plugins_ = [];
         } else {
             this.plugins_ = [
-                new StackTracePlugin({ ...options, spy: this }),
-                new GraphPlugin({ ...options, spy: this }),
-                new SnapshotPlugin({ ...options, spy: this }),
-                new BufferPlugin({ ...options, spy: this }),
-                new CyclePlugin({ ...options, spy: this }),
-                new StatsPlugin({ spy: this })
+                new StackTracePlugin({ ...options, pluginHost: this }),
+                new GraphPlugin({ ...options, pluginHost: this }),
+                new SnapshotPlugin({ ...options, pluginHost: this }),
+                new BufferPlugin({ ...options, pluginHost: this }),
+                new CyclePlugin({ ...options, pluginHost: this }),
+                new StatsPlugin({ pluginHost: this })
             ];
             if (options.devTools !==  false) {
-                this.plugins_.push(new DevToolsPlugin({ spy: this }));
+                this.plugins_.push(new DevToolsPlugin({ pluginHost: this }));
             }
         }
         this.pluginsSubject_ = new BehaviorSubject(this.plugins_);
@@ -226,7 +226,7 @@ export class SpyCore implements Spy {
             logger: partialLogger,
             notificationMatch,
             observableMatch,
-            spy: this
+            pluginHost: this
         }));
     }
 
@@ -237,7 +237,7 @@ export class SpyCore implements Spy {
 
     pause(match: Match): Deck {
 
-        const pausePlugin = new PausePlugin({ match, spy: this });
+        const pausePlugin = new PausePlugin({ match, pluginHost: this });
         const teardown = this.plug(pausePlugin);
 
         const deck = pausePlugin.deck;
@@ -251,7 +251,7 @@ export class SpyCore implements Spy {
             complete,
             match,
             operator,
-            spy: this
+            pluginHost: this
         }));
     }
 

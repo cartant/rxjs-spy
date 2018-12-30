@@ -23,7 +23,7 @@ describe("PipePlugin", () => {
         const plugin = new PipePlugin({
             match: "people",
             operator: () => operated,
-            spy
+            pluginHost: spy
         });
         spy.plug(plugin);
 
@@ -50,7 +50,7 @@ describe("PipePlugin", () => {
         spy.plug(new PipePlugin({
             match: "people",
             operator: () => operated,
-            spy
+            pluginHost: spy
         }));
 
         subject.next("alice");
@@ -71,7 +71,7 @@ describe("PipePlugin", () => {
         spy.plug(new PipePlugin({
             match: "people",
             operator: () => of("bob"),
-            spy
+            pluginHost: spy
         }));
 
         subject.next("alice");
@@ -91,7 +91,7 @@ describe("PipePlugin", () => {
             complete: false,
             match: "people",
             operator: () => of("bob"),
-            spy
+            pluginHost: spy
         }));
 
         subject.next("alice");
