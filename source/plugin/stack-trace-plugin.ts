@@ -92,11 +92,11 @@ export class StackTracePlugin extends BasePlugin {
         try {
             throw new Error();
         } catch (error) {
-            let core = true;
+            let patched = true;
             return parse(error).filter(stackFrame => {
-                const result = !core;
-                if (/coreSubscribe_/.test(stackFrame.functionName || "")) {
-                    core = false;
+                const result = !patched;
+                if (/patched(Lift|Pipe|Subscribe)_/.test(stackFrame.functionName || "")) {
+                    patched = false;
                 }
                 return result;
             });

@@ -94,9 +94,9 @@ export class Spy {
         }
 
         Spy.spy_ = this;
-        Observable.prototype.lift = Spy.coreLift_;
-        Observable.prototype.pipe = Spy.corePipe_;
-        Observable.prototype.subscribe = Spy.coreSubscribe_;
+        Observable.prototype.lift = Spy.patchedLift_;
+        Observable.prototype.pipe = Spy.patchedPipe_;
+        Observable.prototype.subscribe = Spy.patchedSubscribe_;
 
         this.auditor_ = new Auditor(options.audit || 0);
         this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
@@ -551,7 +551,7 @@ export class Spy {
     }
 
     /*tslint:disable-next-line:member-ordering*/
-    private static coreLift_(this: Observable<any>, operator: Operator<any, any>): Observable<any> {
+    private static patchedLift_(this: Observable<any>, operator: Operator<any, any>): Observable<any> {
 
         /*tslint:disable-next-line:no-invalid-this*/
         const source = this;
@@ -568,7 +568,7 @@ export class Spy {
     }
 
     /*tslint:disable-next-line:member-ordering*/
-    private static corePipe_(this: Observable<any>, ...args: any[]): any {
+    private static patchedPipe_(this: Observable<any>, ...args: any[]): any {
 
         /*tslint:disable-next-line:no-invalid-this*/
         const source = this;
@@ -585,7 +585,7 @@ export class Spy {
     }
 
     /*tslint:disable-next-line:member-ordering*/
-    private static coreSubscribe_(this: Observable<any>, ...args: any[]): Subscription {
+    private static patchedSubscribe_(this: Observable<any>, ...args: any[]): Subscription {
 
         /*tslint:disable-next-line:no-invalid-this*/
         const observable = this;
