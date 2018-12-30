@@ -62,28 +62,32 @@ export class StatsPlugin extends BasePlugin {
         if (graphPlugin) {
 
             const { stats_ } = this;
-            const {
-                depth,
-                inner,
-                inners,
-                innersFlushed,
-                rootSink,
-                sources,
-                sourcesFlushed
-            } = graphPlugin.getGraphRecord(subscription);
+            const graphRecord = graphPlugin.getGraphRecord(subscription);
+            if (graphRecord) {
 
-            if (!rootSink) {
-                stats_.rootSubscribes += 1;
-            }
-            if (inner) {
-                stats_.innerSubscribes += 1;
-            }
-            if ((inners.length + innersFlushed + sources.length + sourcesFlushed) === 0) {
-                if (stats_.maxDepth < depth) {
-                    stats_.maxDepth = depth;
+                const {
+                    depth,
+                    inner,
+                    inners,
+                    innersFlushed,
+                    rootSink,
+                    sources,
+                    sourcesFlushed
+                } = graphRecord;
+
+                if (!rootSink) {
+                    stats_.rootSubscribes += 1;
                 }
-                stats_.leafSubscribes += 1;
-                stats_.totalDepth += depth;
+                if (inner) {
+                    stats_.innerSubscribes += 1;
+                }
+                if ((inners.length + innersFlushed + sources.length + sourcesFlushed) === 0) {
+                    if (stats_.maxDepth < depth) {
+                        stats_.maxDepth = depth;
+                    }
+                    stats_.leafSubscribes += 1;
+                    stats_.totalDepth += depth;
+                }
             }
         }
     }

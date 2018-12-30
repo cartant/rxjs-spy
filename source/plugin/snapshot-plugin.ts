@@ -349,7 +349,7 @@ export class SnapshotPlugin extends BasePlugin {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = pluginHost_.find(GraphPlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin, SnapshotPlugin);
         const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
 
         if (!graphPlugin) {

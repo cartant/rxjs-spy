@@ -164,9 +164,9 @@ export class BufferPlugin extends BasePlugin {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = pluginHost_.find(GraphPlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin, BufferPlugin);
         const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
-        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, BufferPlugin);
 
         if (!graphPlugin) {
             pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the BufferPlugin.");

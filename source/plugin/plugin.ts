@@ -37,7 +37,7 @@ export interface PluginHost {
     readonly logger: Logger;
     readonly tick: number;
     readonly version: string;
-    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
+    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>, dependent?: PluginCtor<any, any>): P[];
     plug(...plugins: Plugin[]): Teardown;
     unplug(...plugins: Plugin[]): void;
 }

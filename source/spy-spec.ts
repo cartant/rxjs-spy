@@ -23,22 +23,6 @@ describe("spy", () => {
 
     let spy: Spy;
 
-    describe("pipe", () => {
-
-        it("should apply the operator to the tagged observable", () => {
-
-            spy = create({ defaultPlugins: false, ...options });
-            spy.pipe("people", source => source.pipe(mapTo("bob")));
-
-            const values: any[] = [];
-            const subject = new Subject<string>();
-            subject.pipe(tag("people")).subscribe(value => values.push(value));
-
-            subject.next("alice");
-            expect(values).to.deep.equal(["bob"]);
-        });
-    });
-
     describe("log", () => {
 
         it("should log the tagged observable", () => {
@@ -137,6 +121,22 @@ describe("spy", () => {
             expect(values).to.deep.equal([]);
             spy.teardown();
             expect(values).to.deep.equal(["alice", "bob"]);
+        });
+    });
+
+    describe("pipe", () => {
+
+        it("should apply the operator to the tagged observable", () => {
+
+            spy = create({ defaultPlugins: false, ...options });
+            spy.pipe("people", source => source.pipe(mapTo("bob")));
+
+            const values: any[] = [];
+            const subject = new Subject<string>();
+            subject.pipe(tag("people")).subscribe(value => values.push(value));
+
+            subject.next("alice");
+            expect(values).to.deep.equal(["bob"]);
         });
     });
 

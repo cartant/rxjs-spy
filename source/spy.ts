@@ -189,9 +189,16 @@ export class Spy {
         return __RXJS_SPY_VERSION__;
     }
 
-    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[] {
+    find<P extends Plugin, O extends PluginOptions>(
+        ctor: PluginCtor<P, O>,
+        dependent?: PluginCtor<any, any>
+    ): P[] {
 
-        return this.plugins_.filter(plugin => plugin instanceof ctor) as P[];
+        const { plugins_ } = this;
+        if (dependent && (plugins_.findIndex(plugin => plugin instanceof dependent) < plugins_.findIndex(plugin => plugin instanceof ctor))) {
+            return [];
+        }
+        return plugins_.filter(plugin => plugin instanceof ctor) as P[];
     }
 
     log(observableMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;

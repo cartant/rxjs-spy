@@ -51,7 +51,6 @@ export class SweepPlugin extends BasePlugin {
     }
 
     beforeSubscribe(subscription: Subscription): void {
-        const { pluginHost_ } = this;
         const { graphPlugin } = this.findPlugins_();
         if (!graphPlugin) {
             return;
@@ -76,7 +75,7 @@ export class SweepPlugin extends BasePlugin {
         if (foundPlugins_) {
             return foundPlugins_;
         }
-        const [graphPlugin] = pluginHost_.find(GraphPlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin, SweepPlugin);
         if (!graphPlugin) {
             pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SweepPlugin.");
         }

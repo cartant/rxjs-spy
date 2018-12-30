@@ -94,7 +94,7 @@ export class CyclePlugin extends BasePlugin {
         }
 
         const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
-        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, CyclePlugin);
 
         if (!stackTracePlugin) {
             pluginHost_.logger.warnOnce("Stack tracing is not enabled; add the StackTracePlugin before the CyclePlugin.");
