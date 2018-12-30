@@ -340,9 +340,9 @@ export class DevToolsPlugin extends BasePlugin {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = pluginHost_.find(GraphPlugin);
-        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
-        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin, DevToolsPlugin);
+        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin, DevToolsPlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, DevToolsPlugin);
 
         this.foundPlugins_ = { graphPlugin, snapshotPlugin, stackTracePlugin };
         return this.foundPlugins_;

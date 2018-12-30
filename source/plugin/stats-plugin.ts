@@ -62,32 +62,28 @@ export class StatsPlugin extends BasePlugin {
         if (graphPlugin) {
 
             const { stats_ } = this;
-            const graphRecord = graphPlugin.getGraphRecord(subscription);
-            if (graphRecord) {
+            const {
+                depth,
+                inner,
+                inners,
+                innersFlushed,
+                rootSink,
+                sources,
+                sourcesFlushed
+            } = graphPlugin.getGraphRecord(subscription);
 
-                const {
-                    depth,
-                    inner,
-                    inners,
-                    innersFlushed,
-                    rootSink,
-                    sources,
-                    sourcesFlushed
-                } = graphRecord;
-
-                if (!rootSink) {
-                    stats_.rootSubscribes += 1;
+            if (!rootSink) {
+                stats_.rootSubscribes += 1;
+            }
+            if (inner) {
+                stats_.innerSubscribes += 1;
+            }
+            if ((inners.length + innersFlushed + sources.length + sourcesFlushed) === 0) {
+                if (stats_.maxDepth < depth) {
+                    stats_.maxDepth = depth;
                 }
-                if (inner) {
-                    stats_.innerSubscribes += 1;
-                }
-                if ((inners.length + innersFlushed + sources.length + sourcesFlushed) === 0) {
-                    if (stats_.maxDepth < depth) {
-                        stats_.maxDepth = depth;
-                    }
-                    stats_.leafSubscribes += 1;
-                    stats_.totalDepth += depth;
-                }
+                stats_.leafSubscribes += 1;
+                stats_.totalDepth += depth;
             }
         }
     }
@@ -144,7 +140,7 @@ export class StatsPlugin extends BasePlugin {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = pluginHost_.find(GraphPlugin);
+        const [graphPlugin] = pluginHost_.find(GraphPlugin, StatsPlugin);
         this.foundPlugins_ = { graphPlugin };
         return this.foundPlugins_;
     }

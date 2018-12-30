@@ -165,7 +165,7 @@ export class BufferPlugin extends BasePlugin {
         }
 
         const [graphPlugin] = pluginHost_.find(GraphPlugin, BufferPlugin);
-        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
+        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin, BufferPlugin);
         const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, BufferPlugin);
 
         if (!graphPlugin) {

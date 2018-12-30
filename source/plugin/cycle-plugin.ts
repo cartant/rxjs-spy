@@ -93,7 +93,7 @@ export class CyclePlugin extends BasePlugin {
             return foundPlugins_;
         }
 
-        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin);
+        const [snapshotPlugin] = pluginHost_.find(SnapshotPlugin, CyclePlugin);
         const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, CyclePlugin);
 
         if (!stackTracePlugin) {

@@ -350,7 +350,7 @@ export class SnapshotPlugin extends BasePlugin {
         }
 
         const [graphPlugin] = pluginHost_.find(GraphPlugin, SnapshotPlugin);
-        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin);
+        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, SnapshotPlugin);
 
         if (!graphPlugin) {
             pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the SnapshotPlugin.");
