@@ -5,17 +5,17 @@
 
 import { defaultLogger, toLogger } from "./logger";
 import { PausePlugin } from "./plugin";
-import { SpyCore } from "./spy-core";
+import { Spy } from "./spy";
 import { sweep } from "./sweep";
 
 export function forConsole(
-    core: SpyCore,
+    spy: Spy,
     deprecation: () => void = () => {}
 ): any {
     return {
         deck(call?: number): any {
             deprecation();
-            const pausePlugins = core.find(PausePlugin);
+            const pausePlugins = spy.find(PausePlugin);
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
                 logger.group(`${pausePlugins.length} Deck(s)`);
@@ -28,31 +28,31 @@ export function forConsole(
         },
         log(...args: any[]): void {
             deprecation();
-            core.log.apply(core, args);
+            spy.log.apply(spy, args);
         },
         maxLogged(...args: any[]): void {
             deprecation();
-            core.maxLogged.apply(core, args);
+            spy.maxLogged.apply(spy, args);
         },
         pause(...args: any[]): any {
             deprecation();
-            return core.pause.apply(core, args);
+            return spy.pause.apply(spy, args);
         },
         pipe(...args: any[]): void {
             deprecation();
-            core.pipe.apply(core, args);
+            spy.pipe.apply(spy, args);
         },
         query(...args: any[]): void {
             deprecation();
-            core.query.apply(core, args);
+            spy.query.apply(spy, args);
         },
         show(...args: any[]): void {
             deprecation();
-            core.show.apply(core, args);
+            spy.show.apply(spy, args);
         },
         stats(): void {
             deprecation();
-            core.stats();
+            spy.stats();
         },
         sweep(id: string = ""): void {
             deprecation();
@@ -61,14 +61,14 @@ export function forConsole(
         undo(...args: any[]): void {
             if (args.length === 0) {
                 const logger = toLogger(defaultLogger);
-                logger.group(`${core.undos.length} undo(s)`);
-                core.undos.forEach((undo, index) => logger.log(`${index + 1} ${undo.name}`));
+                logger.group(`${spy.undos.length} undo(s)`);
+                spy.undos.forEach((undo, index) => logger.log(`${index + 1} ${undo.name}`));
                 logger.groupEnd();
             } else {
                 args
-                    .map(at => core.undos[at - 1])
+                    .map(at => spy.undos[at - 1])
                     .filter(Boolean)
-                    .forEach(undo => core.unplug(undo));
+                    .forEach(undo => spy.unplug(undo));
             }
         }
     };

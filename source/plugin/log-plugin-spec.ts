@@ -6,10 +6,10 @@
 
 import { expect } from "chai";
 import { Subject } from "rxjs";
+import { create } from "../factory";
 import { identify } from "../identify";
 import { tag } from "../operators";
-import { create } from "../spy-factory";
-import { Spy } from "../spy-interface";
+import { Spy } from "../spy";
 import { LogPlugin } from "./log-plugin";
 import { SubscriptionRecordsPlugin } from "./subscription-records-plugin";
 

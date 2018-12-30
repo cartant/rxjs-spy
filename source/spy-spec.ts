@@ -8,10 +8,10 @@ import { expect } from "chai";
 import { Subject } from "rxjs";
 import { mapTo } from "rxjs/operators";
 import * as sinon from "sinon";
+import { create } from "./factory";
 import { tag }  from "./operators";
 import { Plugin } from "./plugin";
-import { create } from "./spy-factory";
-import { Spy } from "./spy-interface";
+import { Spy } from "./spy";
 
 const options = {
     keptDuration: -1,

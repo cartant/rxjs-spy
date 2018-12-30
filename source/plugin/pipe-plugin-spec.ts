@@ -6,9 +6,9 @@
 
 import { expect } from "chai";
 import { of, Subject } from "rxjs";
+import { create } from "../factory";
 import { tag } from "../operators";
-import { create } from "../spy-factory";
-import { Spy } from "../spy-interface";
+import { Spy } from "../spy";
 import { PipePlugin } from "./pipe-plugin";
 
 describe("PipePlugin", () => {

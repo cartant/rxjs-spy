@@ -6,9 +6,9 @@
 
 import { expect } from "chai";
 import { Notification, Subject } from "rxjs";
+import { create } from "../factory";
 import { tag } from "../operators";
-import { create } from "../spy-factory";
-import { Spy } from "../spy-interface";
+import { Spy } from "../spy";
 import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 
 describe("PausePlugin", () => {

@@ -7,10 +7,10 @@
 import { expect } from "chai";
 import { combineLatest, NEVER, Observable, Subject, Subscription } from "rxjs";
 import { filter, map, mergeMap, switchMap, tap } from "rxjs/operators";
+import { create } from "../factory";
 import { identify } from "../identify";
 import { tag } from "../operators";
-import { create } from "../spy-factory";
-import { Spy } from "../spy-interface";
+import { Spy } from "../spy";
 import { GraphPlugin, GraphRecord } from "./graph-plugin";
 import { SubscriptionRecordsPlugin } from "./subscription-records-plugin";
 

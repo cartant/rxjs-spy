@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { combineLatest, of, Subject } from "rxjs";
 import { map, mergeMap, switchMap } from "rxjs/operators";
+import { create } from "../factory";
 import { tag } from "../operators";
-import { create } from "../spy-factory";
-import { Spy } from "../spy-interface";
+import { Spy } from "../spy";
 import { toSubscriber } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { SnapshotPlugin, SubscriptionSnapshot } from "./snapshot-plugin";

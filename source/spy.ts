@@ -12,6 +12,7 @@ import {
 } from "rxjs";
 
 import { Auditor } from "./auditor";
+import { forConsole } from "./console";
 import { compile } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
@@ -42,8 +43,6 @@ import {
 } from "./plugin";
 
 import { QueryDerivations, QueryPredicate, QueryRecord } from "./query";
-import { forConsole } from "./spy-console";
-import { Spy } from "./spy-interface";
 import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record";
 import { Teardown } from "./teardown";
 import { toSubscriber } from "./util";
@@ -62,9 +61,9 @@ const defaultDerivations: QueryDerivations = {
     id: record => (match: number | string) => matchId(record, match)
 };
 
-export class SpyCore implements Spy {
+export class Spy {
 
-    private static spy_: SpyCore | undefined = undefined;
+    private static spy_: Spy | undefined = undefined;
 
     private auditor_: Auditor;
     private defaultLogger_: Logger;
@@ -86,7 +85,7 @@ export class SpyCore implements Spy {
         warning?: boolean
     } = {}) {
 
-        if (SpyCore.spy_) {
+        if (Spy.spy_) {
             throw new Error("Already spying on Observable.prototype.subscribe.");
         }
         if (options.warning) {
@@ -94,10 +93,10 @@ export class SpyCore implements Spy {
             console.warn("Spying on Observable.prototype.subscribe.");
         }
 
-        SpyCore.spy_ = this;
-        Observable.prototype.lift = SpyCore.coreLift_;
-        Observable.prototype.pipe = SpyCore.corePipe_;
-        Observable.prototype.subscribe = SpyCore.coreSubscribe_;
+        Spy.spy_ = this;
+        Observable.prototype.lift = Spy.coreLift_;
+        Observable.prototype.pipe = Spy.corePipe_;
+        Observable.prototype.subscribe = Spy.coreSubscribe_;
 
         this.auditor_ = new Auditor(options.audit || 0);
         this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
@@ -158,7 +157,7 @@ export class SpyCore implements Spy {
             this.pluginsSubject_.next(this.plugins_);
             this.undos_ = [];
 
-            SpyCore.spy_ = undefined;
+            Spy.spy_ = undefined;
             Observable.prototype.lift = observableLift;
             Observable.prototype.pipe = observablePipe;
             Observable.prototype.subscribe = observableSubscribe;
@@ -551,7 +550,7 @@ export class SpyCore implements Spy {
         /*tslint:disable-next-line:no-invalid-this*/
         const source = this;
 
-        const { spy_ } = SpyCore;
+        const { spy_ } = Spy;
         if (!spy_) {
             return observableLift.call(source, operator);
         }
@@ -568,7 +567,7 @@ export class SpyCore implements Spy {
         /*tslint:disable-next-line:no-invalid-this*/
         const source = this;
 
-        const { spy_ } = SpyCore;
+        const { spy_ } = Spy;
         if (!spy_) {
             return observablePipe.apply(source, args);
         }
@@ -585,16 +584,16 @@ export class SpyCore implements Spy {
         /*tslint:disable-next-line:no-invalid-this*/
         const observable = this;
 
-        const { spy_ } = SpyCore;
+        const { spy_ } = Spy;
         if (!spy_) {
             return observableSubscribe.apply(observable, args);
         }
         if (hidden(observable)) {
-            SpyCore.spy_ = undefined;
+            Spy.spy_ = undefined;
             try {
                 return observableSubscribe.apply(observable, args);
             } finally {
-                SpyCore.spy_ = spy_;
+                Spy.spy_ = spy_;
             }
         }
 

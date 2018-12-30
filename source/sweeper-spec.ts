@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { BehaviorSubject, Subject } from "rxjs";
 import { mergeMap } from "rxjs/operators";
+import { create } from "./factory";
 import { tag } from "./operators";
-import { create } from "./spy-factory";
-import { Spy } from "./spy-interface";
+import { Spy } from "./spy";
 import { Sweeper } from "./sweeper";
 
 const options = {

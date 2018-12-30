@@ -7,8 +7,8 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import * as sinon from "sinon";
-import { create } from "../spy-factory";
-import { Spy } from "../spy-interface";
+import { create } from "../factory";
+import { Spy } from "../spy";
 import { CyclePlugin } from "./cycle-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 

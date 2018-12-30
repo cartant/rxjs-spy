@@ -9,8 +9,8 @@ const fs = require("fs");
 const version = JSON.stringify(require("../package.json").version);
 
 const files = [
-    "./build/spy-core.js",
-    "./dist/spy-core.js"
+    "./build/spy.js",
+    "./dist/spy.js"
 ];
 files.forEach(file => {
 

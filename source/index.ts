@@ -3,10 +3,10 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+export { create } from "./factory";
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugin";
-export { create } from "./spy-factory";
 export { sweep } from "./sweep";
 export { inferPath, inferType } from "./util";
 

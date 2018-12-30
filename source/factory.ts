@@ -4,8 +4,7 @@
  */
 
 import { PartialLogger } from "./logger";
-import { SpyCore } from "./spy-core";
-import { Spy } from "./spy-interface";
+import { Spy } from "./spy";
 
 export function create(options: {
     [key: string]: any,
@@ -15,5 +14,5 @@ export function create(options: {
     warning?: boolean
 } = {}): Spy {
 
-    return new SpyCore(options);
+    return new Spy(options);
 }

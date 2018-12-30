@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { concat, NEVER, of } from "rxjs";
 import { share } from "rxjs/operators";
+import { create } from "./factory";
 import { hide } from "./operators";
-import { create } from "./spy-factory";
-import { Spy } from "./spy-interface";
+import { Spy } from "./spy";
 
 const options = {
     defaultPlugins: true,
