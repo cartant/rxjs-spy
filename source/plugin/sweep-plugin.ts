@@ -30,7 +30,7 @@ export class SweepPlugin extends BasePlugin {
     private pluginHost_: PluginHost;
 
     constructor({ id, pluginHost }: { id: string, pluginHost: PluginHost }) {
-        super("sweep");
+        super(`sweep(${id})`);
         this.foundPlugins_ = undefined;
         this.id = id;
         this.innerSubscriptions = new Map<Subscription, GraphRecord>();
