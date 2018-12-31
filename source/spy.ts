@@ -51,7 +51,7 @@ declare const __RXJS_SPY_VERSION__: string;
 const observableLift = Observable.prototype.lift;
 const observablePipe = Observable.prototype.pipe;
 const observableSubscribe = Observable.prototype.subscribe;
-const previousWindow: Record<string, any> = {};
+const previousGlobalScope: Record<string, any> = {};
 
 const defaultDerivations: QueryDerivations = {
     blocked: ({ nextAge, sinkNextAge }) => nextAge > sinkNextAge,
@@ -122,15 +122,25 @@ export class Spy {
 
         hook((id, options) => this.diff_(id, options));
 
+        let globalScope: any;
+        let globalName: string = "";
         if (typeof window !== "undefined") {
+            globalScope = window;
+            globalName = "window";
+        } else if (typeof global !== "undefined") {
+            globalScope = global;
+            globalName = "global";
+        }
+
+        if (globalScope) {
             const preferredKey = options.global || "spy";
             [preferredKey, "rxSpy"].forEach(key => {
-                if (window.hasOwnProperty(key)) {
-                    this.defaultLogger_.log(`Overwriting window.${key}`);
-                    previousWindow[key] = window[key];
+                if (globalScope.hasOwnProperty(key)) {
+                    this.defaultLogger_.log(`Overwriting ${globalName}.${key}`);
+                    previousGlobalScope[key] = globalScope[key];
                 }
-                window[key] = forConsole(this, key !== preferredKey ?
-                    () => this.defaultLogger_.warnOnce(`window.${key} is deprecated and has been renamed; use window.spy instead`) :
+                globalScope[key] = forConsole(this, key !== preferredKey ?
+                    () => this.defaultLogger_.warnOnce(`${globalName}.${key} is deprecated and has been renamed; use ${globalName}.spy instead`) :
                     undefined
                 );
             });
@@ -140,10 +150,10 @@ export class Spy {
 
             if (typeof window !== "undefined") {
                 [options.global || "spy", "rxSpy"].forEach(key => {
-                    if (previousWindow.hasOwnProperty(key)) {
+                    if (previousGlobalScope.hasOwnProperty(key)) {
                         this.defaultLogger_.log(`Restoring window.${key}`);
-                        window[key] = previousWindow[key];
-                        delete previousWindow[key];
+                        window[key] = previousGlobalScope[key];
+                        delete previousGlobalScope[key];
                     } else {
                         delete window[key];
                     }
