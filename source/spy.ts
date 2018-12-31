@@ -145,14 +145,24 @@ export class Spy {
 
         this.teardown_ = () => {
 
+            let globalScope: any;
+            let globalName: string = "";
             if (typeof window !== "undefined") {
+                globalScope = window;
+                globalName = "window";
+            } else if (typeof global !== "undefined") {
+                globalScope = global;
+                globalName = "global";
+            }
+
+            if (globalScope) {
                 [options.global || "spy", "rxSpy"].forEach(key => {
                     if (previousGlobalScope.hasOwnProperty(key)) {
-                        this.defaultLogger_.log(`Restoring window.${key}`);
-                        window[key] = previousGlobalScope[key];
+                        this.defaultLogger_.log(`Restoring ${globalName}.${key}`);
+                        globalScope[key] = previousGlobalScope[key];
                         delete previousGlobalScope[key];
                     } else {
-                        delete window[key];
+                        delete globalScope[key];
                     }
                 });
             }
