@@ -96,12 +96,12 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.log`](#module-log)
 * [`Spy.pause`](#module-pause)
 * [`Spy.pipe`](#module-pipe)
+* [`Spy.stats`](#module-stats)
+* [`Spy.diff`](#module-diff)
 * [`Spy.plug`](#module-plug)
 * [`Spy.unplug`](#module-unplug)
 * [`Spy.find`](#module-find)
-* [`Spy.stats`](#module-stats)
 * [`Spy.teardown`](#module-teardown)
-* [`diff`](#module-diff)
 
 <a name="module-create"></a>
 
@@ -122,6 +122,7 @@ Calling `create` attaches the spy to `Observable.prototype.subscribe` and return
 ```ts
 interface Spy {
   readonly tick: number;
+  diff(id: string, options?: { flush?: boolean }): Teardown;
   find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
@@ -262,6 +263,32 @@ If `complete` option is `false`, completion notifications received from the souc
 
 This method returns a teardown function.
 
+<a name="module-stats"></a>
+
+### stats
+
+```ts
+interface Spy {
+  stats(partialLogger: PartialLogger = console): void;
+}
+```
+
+Writes, to the console, counts of the number of notifications, etc.
+
+<a name="module-diff"></a>
+
+### diff
+
+```ts
+interface Spy {
+  function diff(id: string, options: { flush?: boolean } = {}): void;
+}
+```
+
+Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `diff` call with the specified `id`.
+
+This method returns a teardown function.
+
 <a name="module-plug"></a>
 
 ### plug
@@ -300,18 +327,6 @@ interface Spy {
 
 Returns all plugins matching the specified constructor/class.
 
-<a name="module-stats"></a>
-
-### stats
-
-```ts
-interface Spy {
-  stats(partialLogger: PartialLogger = console): void;
-}
-```
-
-Writes, to the console, counts of the number of notifications, etc.
-
 <a name="module-teardown"></a>
 
 ### teardown
@@ -323,22 +338,6 @@ interface Spy {
 ```
 
 Tears down the spy.
-
-<a name="module-diff"></a>
-
-### diff
-
-```ts
-function diff(id: string, options: { flush?: boolean } = {}): void;
-```
-
-Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `diff` call with the specified `id`.
-
-The `diff` method is implemented so that it can be imported and called regardless of whether or not the spy is configured. That is, calls can be left in production code, as they become no-ops. It should be imported like this:
-
-```ts
-import { diff } from "rxjs-spy/diff";
-```
 
 ## Console API
 

@@ -13,7 +13,6 @@ import {
 
 import { Auditor } from "./auditor";
 import { forConsole } from "./console";
-import { hook } from "./diff";
 import { compile } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
@@ -120,8 +119,6 @@ export class Spy {
         this.tick_ = 0;
         this.undos_ = [];
 
-        hook((id, options) => this.diff_(id, options));
-
         let globalScope: any;
         let globalName: string = "";
         if (typeof window !== "undefined") {
@@ -160,7 +157,6 @@ export class Spy {
                 });
             }
 
-            hook(undefined);
             this.plugins_.forEach(plugin => plugin.teardown());
             this.plugins_ = [];
             this.pluginsSubject_.next(this.plugins_);
@@ -196,6 +192,20 @@ export class Spy {
     get version(): string {
 
         return __RXJS_SPY_VERSION__;
+    }
+
+    diff(id: string, options: { flush?: boolean } = {}): Teardown {
+
+        const diffPlugin = this.find(DiffPlugin).find(plugin => plugin.id === id);
+        if (diffPlugin) {
+            const diff = diffPlugin.diff(options);
+            if (diff) {
+                const { defaultLogger_ } = this;
+                diffPlugin.logDiff(diff, defaultLogger_);
+            }
+            return () => this.unplug(diffPlugin);
+        }
+        return this.plug(new DiffPlugin({ id, pluginHost: this }));
     }
 
     find<P extends Plugin, O extends PluginOptions>(
@@ -778,21 +788,6 @@ export class Spy {
             plugin => plugin.afterSubscribe(subscription)
         );
         return subscriber;
-    }
-
-    private diff_(id: string, options: { flush?: boolean }): void {
-
-        const { defaultLogger_ } = this;
-
-        let diffPlugin = this.find(DiffPlugin).find(plugin => plugin.id === id);
-        if (!diffPlugin) {
-            diffPlugin = new DiffPlugin({ id, pluginHost: this });
-            this.plug(diffPlugin);
-        }
-        const diff = diffPlugin.diff(options);
-        if (diff) {
-            diffPlugin.logDiff(diff, defaultLogger_);
-        }
     }
 
     private logStackTrace_(

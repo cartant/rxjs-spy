@@ -3,7 +3,6 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { diff } from "./diff";
 import { defaultLogger, toLogger } from "./logger";
 import { PausePlugin } from "./plugin";
 import { Spy } from "./spy";
@@ -26,9 +25,9 @@ export function forConsole(
                 return pausePlugin ? pausePlugin.deck : undefined;
             }
         },
-        diff(id: string = "", options: object = {}): void {
+        diff(...args: any[]): void {
             deprecation();
-            diff(id, options);
+            spy.diff.apply(spy, args);
         },
         log(...args: any[]): void {
             deprecation();
