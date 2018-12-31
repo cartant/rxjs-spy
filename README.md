@@ -122,7 +122,7 @@ Calling `create` attaches the spy to `Observable.prototype.subscribe` and return
 ```ts
 interface Spy {
   readonly tick: number;
-  diff(id: string, options?: { flush?: boolean }): Teardown;
+  diff(id: string, options?: { flush?: boolean }): void;
   find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
@@ -281,13 +281,11 @@ Writes, to the console, counts of the number of notifications, etc.
 
 ```ts
 interface Spy {
-  function diff(id: string, options: { flush?: boolean } = {}): void;
+  function diff(id: string, options: { teardown?: boolean } = {}): void;
 }
 ```
 
 Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `diff` call with the specified `id`.
-
-This method returns a teardown function.
 
 <a name="module-plug"></a>
 

@@ -85,30 +85,6 @@ describe("DiffPlugin", () => {
         subscription.unsubscribe();
     });
 
-    it("should support flush", () => {
-
-        const subject = new Subject<number>();
-        const source = subject.pipe(tag("source"));
-
-        subject.next();
-
-        let diff = diffPlugin.diff();
-        expect(diff).to.not.exist;
-
-        const subscription = source.subscribe();
-        subject.next();
-
-        diff = diffPlugin.diff()!;
-        expect(diff.rootSubscriptions).to.have.length(1);
-        expect(diff.rootUnsubscriptions).to.be.empty;
-
-        subscription.unsubscribe();
-        subject.next();
-
-        diff = diffPlugin.diff({ flush: true })!;
-        expect(diff).to.not.exist;
-    });
-
     afterEach(() => {
 
         if (spy) {

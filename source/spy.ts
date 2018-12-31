@@ -204,18 +204,21 @@ export class Spy {
         return __RXJS_SPY_VERSION__;
     }
 
-    diff(id: string, options: { flush?: boolean } = {}): Teardown {
+    diff(id: string, options: { teardown?: boolean } = {}): void {
 
         const diffPlugin = this.find(DiffPlugin).find(plugin => plugin.id === id);
         if (diffPlugin) {
-            const diff = diffPlugin.diff(options);
+            const diff = diffPlugin.diff();
             if (diff) {
                 const { defaultLogger_ } = this;
                 diffPlugin.logDiff(diff, defaultLogger_);
             }
-            return () => this.unplug(diffPlugin);
+            if (options.teardown) {
+                this.unplug(diffPlugin);
+            }
+        } else {
+            this.plug(new DiffPlugin({ id, pluginHost: this }));
         }
-        return this.plug(new DiffPlugin({ id, pluginHost: this }));
     }
 
     find<P extends Plugin, O extends PluginOptions>(

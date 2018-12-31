@@ -73,7 +73,7 @@ export class DiffPlugin extends BasePlugin {
         }
     }
 
-    diff({ flush }: { flush?: boolean } = {}): Diff | undefined {
+    diff(): Diff | undefined {
         const {
             innerSubscriptions,
             innerUnsubscriptions,
@@ -81,10 +81,6 @@ export class DiffPlugin extends BasePlugin {
             rootUnsubscriptions
         } = this;
 
-        if (flush) {
-            this.clear_();
-            return undefined;
-        }
         if ((
             innerSubscriptions.size +
             innerUnsubscriptions.size +
