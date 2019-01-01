@@ -7,7 +7,7 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import * as sinon from "sinon";
-import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools/constants";
+import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools";
 import { create } from "../factory";
 import { Spy } from "../spy";
 import { DevToolsPlugin } from "./devtools-plugin";

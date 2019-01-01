@@ -3,7 +3,6 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-export * from "./extension";
-export * from "./messages";
-export * from "./payloads";
-export * from "./settings";
+export const BATCH_MILLISECONDS = 40;
+export const BATCH_NOTIFICATIONS = 100;
+export const EXTENSION_KEY = "__RXJS_SPY_EXTENSION__";

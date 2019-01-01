@@ -10,26 +10,22 @@ import { filter, map } from "rxjs/operators";
 import {
     BATCH_MILLISECONDS,
     BATCH_NOTIFICATIONS,
-    EXTENSION_KEY,
-    MESSAGE_BATCH,
-    MESSAGE_BROADCAST,
-    MESSAGE_RESPONSE
-} from "../devtools/constants";
-
-import { isPostRequest } from "../devtools/guards";
-
-import {
     Connection,
     DeckStats as DeckStatsPayload,
     Extension,
+    EXTENSION_KEY,
     Graph as GraphPayload,
+    isPostRequest,
     Message,
+    MESSAGE_BATCH,
+    MESSAGE_BROADCAST,
+    MESSAGE_RESPONSE,
     Notification as NotificationPayload,
     Post,
     Request,
     Response,
     Snapshot as SnapshotPayload
-} from "../devtools/interfaces";
+} from "../devtools";
 
 import { identify } from "../identify";
 import { read } from "../match";
