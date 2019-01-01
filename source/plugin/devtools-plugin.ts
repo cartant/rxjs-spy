@@ -474,6 +474,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
                 nextCount: s.nextCount,
                 nextTimestamp: s.nextTimestamp,
                 observable: identify(s.observable),
+                queryRecord: s.queryRecord,
                 stackTrace: s.stackTrace as any,
                 subscribeTimestamp: s.subscribeTimestamp,
                 subscriber: identify(s.subscriber),

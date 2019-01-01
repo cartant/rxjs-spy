@@ -88,6 +88,7 @@ export interface SubscriptionSnapshot {
     nextCount: number;
     nextTimestamp: number;
     observable: string;
+    queryRecord: Record<string, any>;
     stackTrace: StackFrame[];
     subscribeTimestamp: number;
     subscriber: string;
