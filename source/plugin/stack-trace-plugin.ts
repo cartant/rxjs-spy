@@ -4,8 +4,8 @@
  */
 
 import { parse, StackFrame } from "error-stack-parser";
-import { defer, Observable, of, Subscription } from "rxjs";
-import { shareReplay } from "rxjs/operators";
+import { defer, Observable, of, ReplaySubject, Subscription } from "rxjs";
+import { multicast, refCount } from "rxjs/operators";
 
 // @ts-ignore: Could not find a declaration file for module 'stacktrace-gps'.
 import * as StackTraceGps from "stacktrace-gps";
@@ -52,7 +52,11 @@ export class StackTracePlugin extends BasePlugin {
                         .catch(() => stackFrame)
                     ));
                 }).pipe(
-                    shareReplay(1),
+                    // Use a ReplaySubject so that callers can resolve all
+                    // observables within a snapshot and can then access
+                    // individual stack traces via synchronous subscribe calls.
+                    multicast(() => new ReplaySubject(1)),
+                    refCount(),
                     hide()
                 ),
                 stackTrace: stackFrames
