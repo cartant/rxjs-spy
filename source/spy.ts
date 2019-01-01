@@ -226,7 +226,7 @@ export class Spy {
             if (options.teardown) {
                 this.unplug(diffPlugin);
             }
-        } else {
+        } else if (!options.teardown) {
             this.plug(new DiffPlugin({ id, pluginHost: this }));
         }
     }
