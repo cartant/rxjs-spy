@@ -26,7 +26,8 @@ export function compile(expression: string): {
 
 export function compileOrderBy(expression: string): {
     comparer: (left: any, right: any) => number,
-    evaluator: (context: any) => any
+    evaluator: (context: any) => any,
+    keys: string[]
 } {
     let ascending = true;
     const match = expression.match(/[a-z]\s+(asc|desc)(\s*)$/i);
@@ -35,7 +36,7 @@ export function compileOrderBy(expression: string): {
         ascending = direction.toLowerCase() === "asc";
         expression = expression.substring(0, expression.length - direction.length - trailing.length);
     }
-    const { evaluator } = compile(expression);
+    const { evaluator, keys } = compile(expression);
     let comparer = (left: any, right: any) => {
         const l = evaluator(left);
         const r = evaluator(right);
@@ -43,6 +44,7 @@ export function compileOrderBy(expression: string): {
     };
     return {
         comparer: ascending ? comparer : (l, r) => comparer(l, r) * -1,
-        evaluator
+        evaluator,
+        keys
     };
 }

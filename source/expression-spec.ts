@@ -16,6 +16,14 @@ describe("expression", () => {
             expect(evaluator({ a: "A", b: "B", c: "C" })).to.equal("ABC");
         });
 
+        it("should expose the keys", () => {
+            const { keys } = compile("a + b + c");
+            expect(keys).to.have.length(3);
+            expect(keys).to.contain("a");
+            expect(keys).to.contain("b");
+            expect(keys).to.contain("c");
+        });
+
         it("should relax ===", () => {
             const { evaluator } = compile("a === b");
             expect(evaluator({ a: "1", b: 1 })).to.be.true;
@@ -62,6 +70,11 @@ describe("expression", () => {
             expect(evaluator({ name: "alice" })).to.equal("alice");
             expect(evaluator({ name: "bob" })).to.equal("bob");
             expect(comparer({ name: "alice" }, { name: "bob" })).to.equal(1);
+        });
+
+        it("should expose the keys", () => {
+            const { keys } = compileOrderBy("name asc");
+            expect(keys).to.deep.equal(["name"]);
         });
     });
 });
