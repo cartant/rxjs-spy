@@ -1,0 +1,14 @@
+{
+  "cwd": "harness/umd",
+  "headers": [{
+      "source": "**/*.@(html|js)",
+      "headers": [{
+          "key": "Cache-Control",
+          "value": "no-cache"
+      }]
+  }],
+  "redirects": [],
+  "rewrites": [
+    { "source": "/", "destination": "index.html" }
+  ]
+}

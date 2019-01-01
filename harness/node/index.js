@@ -3,10 +3,11 @@ const { startWith, switchMap, tap } = require("rxjs/operators");
 const { create } = require("../../dist");
 const { people } = require("./people");
 
+const browser = typeof window !== "undefined";
 const spy = create({
-    devTools: false,
+    devTools: browser,
     keptDuration: 10e3,
-    sourceMaps: false
+    sourceMaps: browser
 });
 
 interval(5000).pipe(
