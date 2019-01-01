@@ -13,7 +13,7 @@ import {
 
 import { Auditor } from "./auditor";
 import { forConsole } from "./console";
-import { compile } from "./expression";
+import { compile, compileOrderBy } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
@@ -303,18 +303,18 @@ export class Spy {
         return () => this.unplug(...plugins);
     }
 
-    query(predicate: string | QueryPredicate, partialLogger?: PartialLogger): void;
+    query(predicate: string | QueryPredicate, orderBy?: string, partialLogger?: PartialLogger): void;
     query(derivations: QueryDerivations): void;
-    query(arg: string | QueryPredicate | QueryDerivations, partialLogger?: PartialLogger): void {
+    query(arg: string | QueryPredicate | QueryDerivations, orderBy?: string, partialLogger?: PartialLogger): void {
 
         if ((typeof arg !== "string") && (typeof arg !== "function")) {
             this.derivations_ = arg;
             return;
         }
 
-        const { func: predicate, keys } = (typeof arg === "string") ?
+        const { evaluator: predicate, keys } = (typeof arg === "string") ?
             compile(arg) :
-            { func: arg, keys: [] };
+            { evaluator: arg, keys: [] };
 
         const [snapshotPlugin] = this.find(SnapshotPlugin);
         if (!snapshotPlugin) {
@@ -330,11 +330,16 @@ export class Spy {
 
             const found: {
                 observable: ObservableSnapshot;
+                orderByRecord: QueryRecord;
                 subs: {
                     subscriber: SubscriberSnapshot;
                     subscription: SubscriptionSnapshot;
                 }[]
             }[] = [];
+
+            const { comparer } = orderBy ?
+                compileOrderBy(orderBy) :
+                { comparer: () => 0 };
 
             observableSnapshots.forEach(observableSnapshot => {
 
@@ -345,16 +350,21 @@ export class Spy {
 
                     const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                     if (subscriberSnapshot) {
-                        if (predicate(this.toQueryRecord_(
+                        const queryRecord = this.toQueryRecord_(
                             observableSnapshot,
                             subscriberSnapshot,
                             subscriptionSnapshot
-                        ))) {
+                        );
+                        if (predicate(queryRecord)) {
+                            const orderByRecord = queryRecord;
                             if (!find) {
                                 find = {
                                     observable: observableSnapshot,
+                                    orderByRecord,
                                     subs: []
                                 };
+                            } else if (comparer(orderByRecord, find.orderByRecord) < 0) {
+                                find.orderByRecord = orderByRecord;
                             }
                             find.subs.push({
                                 subscriber: subscriberSnapshot,
@@ -368,6 +378,13 @@ export class Spy {
                     found.push(find);
                 }
             });
+
+            if (comparer) {
+                found.sort((l, r) => comparer(
+                    l.orderByRecord,
+                    r.orderByRecord
+                ));
+            }
 
             const { maxLogged_ } = this;
             const notLogged = (found.length > maxLogged_) ? found.length - maxLogged_ : 0;
