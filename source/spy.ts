@@ -67,7 +67,7 @@ export class Spy {
     private auditor_: Auditor;
     private defaultLogger_: Logger;
     private derivations_: QueryDerivations;
-    private maxLogged_ = 20;
+    private limit_ = 20;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
     private teardown_: Teardown | undefined;
@@ -184,6 +184,16 @@ export class Spy {
         return this.auditor_;
     }
 
+    get limit(): number {
+
+        return this.limit_;
+    }
+
+    set limit(value: number) {
+
+        this.limit_ = Math.max(value, 1);
+    }
+
     get logger(): Logger {
 
         return this.defaultLogger_;
@@ -267,11 +277,6 @@ export class Spy {
             observableMatch,
             pluginHost: this
         }));
-    }
-
-    maxLogged(value: number): void {
-
-        this.maxLogged_ = Math.max(value, 1);
     }
 
     pause(match: Match): Deck {
@@ -386,13 +391,13 @@ export class Spy {
                 ));
             }
 
-            const { maxLogged_ } = this;
-            const notLogged = (found.length > maxLogged_) ? found.length - maxLogged_ : 0;
-            if (notLogged) {
-                found.splice(maxLogged_, notLogged);
+            const { limit_ } = this;
+            const omitted = (found.length > limit_) ? found.length - limit_ : 0;
+            if (omitted) {
+                found.splice(limit_, omitted);
             }
 
-            logger.group(`${found.length + notLogged} snapshot(s) found`);
+            logger.group(`${found.length + omitted} snapshot(s) found`);
 
             const observableGroupMethod = (found.length > 3) ? "groupCollapsed" : "group";
             found.forEach(find => {
@@ -445,8 +450,8 @@ export class Spy {
                 logger.groupEnd();
             });
 
-            if (notLogged) {
-                logger.log(`... another ${notLogged} snapshot(s) not logged.`);
+            if (omitted) {
+                logger.log(`... another ${omitted} snapshot(s) not logged.`);
             }
             logger.groupEnd();
         });
@@ -476,14 +481,14 @@ export class Spy {
             .filter(observableSnapshot => matches(observableSnapshot.observable, match));
         const logger = toLogger(partialLogger || this.defaultLogger_);
 
-        const { maxLogged_ } = this;
-        const notLogged = (matched.length > maxLogged_) ? matched.length - maxLogged_ : 0;
-        if (notLogged) {
-            matched.splice(maxLogged_, notLogged);
+        const { limit_ } = this;
+        const omitted = (matched.length > limit_) ? matched.length - limit_ : 0;
+        if (omitted) {
+            matched.splice(limit_, omitted);
         }
 
         snapshot.mapStackTraces(matched).subscribe(() => {
-            logger.group(`${matched.length + notLogged} snapshot(s) matching ${matchToString(match)}`);
+            logger.group(`${matched.length + omitted} snapshot(s) matching ${matchToString(match)}`);
 
             const observableGroupMethod = (matched.length > 3) ? "groupCollapsed" : "group";
             matched.forEach(observableSnapshot => {
@@ -538,8 +543,8 @@ export class Spy {
                 logger.groupEnd();
             });
 
-            if (notLogged) {
-                logger.log(`... another ${notLogged} snapshot(s) not logged.`);
+            if (omitted) {
+                logger.log(`... another ${omitted} snapshot(s) not logged.`);
             }
             logger.groupEnd();
         });

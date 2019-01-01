@@ -12,6 +12,14 @@ export function forConsole(
     deprecation: () => void = () => {}
 ): any {
     return {
+        get limit(): number {
+            deprecation();
+            return spy.limit;
+        },
+        set limit(value: number) {
+            deprecation();
+            spy.limit = value;
+        },
         deck(call?: number): any {
             deprecation();
             const pausePlugins = spy.find(PausePlugin);
@@ -32,10 +40,6 @@ export function forConsole(
         log(...args: any[]): void {
             deprecation();
             spy.log.apply(spy, args);
-        },
-        maxLogged(...args: any[]): void {
-            deprecation();
-            spy.maxLogged.apply(spy, args);
         },
         pause(...args: any[]): any {
             deprecation();
