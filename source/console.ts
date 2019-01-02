@@ -22,7 +22,7 @@ export function forConsole(
         },
         deck(call?: number): any {
             deprecation();
-            const pausePlugins = spy.find(PausePlugin);
+            const pausePlugins = spy.findPlugins(PausePlugin);
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
                 logger.group(`${pausePlugins.length} Deck(s)`);

@@ -11,9 +11,7 @@ import { Teardown } from "../teardown";
 export type PluginCtor<P extends Plugin, O extends PluginOptions> = new (options: O) => P;
 
 export interface Plugin {
-
     readonly name: string;
-
     afterComplete(subscription: Subscription): void;
     afterError(subscription: Subscription, error: any): void;
     afterLift(operator: Operator<any, any>, source: Observable<any>, sink: Observable<any>): void;
@@ -37,7 +35,7 @@ export interface PluginHost {
     readonly logger: Logger;
     readonly tick: number;
     readonly version: string;
-    find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>, dependent?: PluginCtor<any, any>): P[];
+    findPlugins<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>, dependent?: PluginCtor<any, any>): P[];
     plug(...plugins: Plugin[]): Teardown;
     unplug(...plugins: Plugin[]): void;
 }
@@ -48,9 +46,7 @@ export interface PluginOptions {
 }
 
 export class BasePlugin implements Plugin {
-
     constructor(public readonly name: string) {}
-
     afterComplete(subscription: Subscription): void {}
     afterError(subscription: Subscription, error: any): void {}
     afterLift(operator: Operator<any, any>, source: Observable<any>, sink: Observable<any>): void {}

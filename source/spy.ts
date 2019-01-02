@@ -216,7 +216,7 @@ export class Spy {
 
     diff(id: string, options: { teardown?: boolean } = {}): void {
 
-        const diffPlugin = this.find(DiffPlugin).find(plugin => plugin.id === id);
+        const diffPlugin = this.findPlugins(DiffPlugin).find(plugin => plugin.id === id);
         if (diffPlugin) {
             const diff = diffPlugin.diff();
             if (diff) {
@@ -231,7 +231,7 @@ export class Spy {
         }
     }
 
-    find<P extends Plugin, O extends PluginOptions>(
+    findPlugins<P extends Plugin, O extends PluginOptions>(
         ctor: PluginCtor<P, O>,
         dependent?: PluginCtor<any, any>
     ): P[] {
@@ -321,7 +321,7 @@ export class Spy {
             compile(arg) :
             { evaluator: arg, keys: [] };
 
-        const [snapshotPlugin] = this.find(SnapshotPlugin);
+        const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
         if (!snapshotPlugin) {
             this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
@@ -469,7 +469,7 @@ export class Spy {
             match = anyTagged;
         }
 
-        const [snapshotPlugin] = this.find(SnapshotPlugin);
+        const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
         if (!snapshotPlugin) {
             this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
@@ -552,7 +552,7 @@ export class Spy {
 
     stats(partialLogger?: PartialLogger): void {
 
-        const [statsPlugin] = this.find(StatsPlugin);
+        const [statsPlugin] = this.findPlugins(StatsPlugin);
         if (!statsPlugin) {
             this.defaultLogger_.warnOnce("Stats are not enabled.");
             return;

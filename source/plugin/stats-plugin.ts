@@ -140,7 +140,7 @@ export class StatsPlugin extends BasePlugin {
             return foundPlugins_;
         }
 
-        const [graphPlugin] = pluginHost_.find(GraphPlugin, StatsPlugin);
+        const [graphPlugin] = pluginHost_.findPlugins(GraphPlugin, StatsPlugin);
         this.foundPlugins_ = { graphPlugin };
         return this.foundPlugins_;
     }

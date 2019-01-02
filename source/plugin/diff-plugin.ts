@@ -133,8 +133,8 @@ export class DiffPlugin extends BasePlugin {
         if (foundPlugins_) {
             return foundPlugins_;
         }
-        const [graphPlugin] = pluginHost_.find(GraphPlugin, DiffPlugin);
-        const [stackTracePlugin] = pluginHost_.find(StackTracePlugin, DiffPlugin);
+        const [graphPlugin] = pluginHost_.findPlugins(GraphPlugin, DiffPlugin);
+        const [stackTracePlugin] = pluginHost_.findPlugins(StackTracePlugin, DiffPlugin);
         if (!graphPlugin) {
             pluginHost_.logger.warnOnce("Graphing is not enabled; add the GraphPlugin before the DiffPlugin.");
         }

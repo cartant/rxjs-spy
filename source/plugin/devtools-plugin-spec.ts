@@ -165,7 +165,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const [found] = spy.find(LogPlugin);
+                    const [found] = spy.findPlugins(LogPlugin);
                     expect(found).to.exist;
 
                     next({
@@ -183,7 +183,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.exist;
                     expect(response).to.have.property("request");
 
-                    const [found] = spy.find(LogPlugin);
+                    const [found] = spy.findPlugins(LogPlugin);
                     expect(found).to.not.exist;
                 });
         });
@@ -214,7 +214,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const [found] = spy.find(PausePlugin);
+                    const [found] = spy.findPlugins(PausePlugin);
                     expect(found).to.exist;
 
                     next({
@@ -234,7 +234,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const [found] = spy.find(PausePlugin);
+                    const [found] = spy.findPlugins(PausePlugin);
                     expect(found).to.exist;
 
                     next({
@@ -252,7 +252,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.exist;
                     expect(response).to.have.property("request");
 
-                    const [found] = spy.find(PausePlugin);
+                    const [found] = spy.findPlugins(PausePlugin);
                     expect(found).to.not.exist;
                 });
         });
