@@ -57,7 +57,8 @@ const defaultDerivations: QueryDerivations = {
     blocking: ({ nextAge, sourceNextAge }) => sourceNextAge > nextAge,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
-    id: record => (match: number | string) => matchId(record, match)
+    id: record => (match: number | string) => matchId(record, match),
+    tag: record => (match: string | RegExp) => matchTag(record, match)
 };
 
 export class Spy {
@@ -991,4 +992,15 @@ function matchStackTrace(
     default:
         return false;
     }
+}
+
+function matchTag(
+    queryRecord: QueryRecord,
+    match: string | RegExp
+): boolean {
+    const { tag } = queryRecord;
+    if (typeof match === "string") {
+        return tag === match;
+    }
+    return (match && match.test) ? match.test(tag) : false;
 }
