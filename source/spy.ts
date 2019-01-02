@@ -959,7 +959,7 @@ export class Spy {
         Object.keys(derivations_).forEach(key => {
             derived[key] = derivations_[key](queryRecord);
         });
-        return { ...defaultDerived, ...derived, ...queryRecord };
+        return { ...queryRecord, ...defaultDerived, ...derived };
     }
 }
 
