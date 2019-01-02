@@ -54,8 +54,7 @@ const previousGlobalScope: Record<string, any> = {};
 
 const defaultDerivations: QueryDerivations = {
     age: ({ completeAge, errorAge, nextAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, unsubscribeAge || Infinity),
-    blocked: ({ nextAge, sinkNextAge }) => nextAge > sinkNextAge,
-    blocking: ({ nextAge, sourceNextAge }) => sourceNextAge > nextAge,
+    blocked: ({ nextAge, sourceNextAge }) => nextAge > sourceNextAge,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
     id: record => (match: number | string) => matchId(record, match),
