@@ -53,7 +53,7 @@ const observableSubscribe = Observable.prototype.subscribe;
 const previousGlobalScope: Record<string, any> = {};
 
 const defaultDerivations: QueryDerivations = {
-    age: ({ completeAge, errorAge, nextAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, unsubscribeAge || Infinity),
+    age: ({ completeAge, errorAge, nextAge, subscribeAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, subscribeAge || Infinity, unsubscribeAge || Infinity),
     blocked: ({ nextAge, sourceNextAge }) => nextAge > sourceNextAge,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
