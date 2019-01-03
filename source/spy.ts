@@ -60,6 +60,8 @@ const defaultDerivations: QueryDerivations = {
     id: record => (match: number | string) => matchId(record, match),
     tag: record => (match: string | RegExp) => matchTag(record, match)
 };
+const defaultLimit = 20;
+const defaultOrderBy = "age asc";
 
 export class Spy {
 
@@ -68,7 +70,8 @@ export class Spy {
     private auditor_: Auditor;
     private defaultLogger_: Logger;
     private derivations_: QueryDerivations;
-    private limit_ = 20;
+    private limit_ = defaultLimit;
+    private orderBy_ = defaultOrderBy;
     private plugins_: Plugin[];
     private pluginsSubject_: BehaviorSubject<Plugin[]>;
     private teardown_: Teardown | undefined;
@@ -198,6 +201,16 @@ export class Spy {
     get logger(): Logger {
 
         return this.defaultLogger_;
+    }
+
+    get orderBy(): string {
+
+        return this.orderBy_;
+    }
+
+    set orderBy(value: string) {
+
+        this.orderBy_ = value || defaultOrderBy;
     }
 
     get tick(): number {
