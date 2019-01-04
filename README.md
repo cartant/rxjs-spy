@@ -92,7 +92,7 @@ spy.log(tag => tag === "some-tag");
 The methods in the module API are callable via imports, requires or the UMD `rxjsSpy` global. Most methods return a teardown function that will undo the API method's action when called.
 
 * [`create`](#module-create)
-* [`Spy.show`](#module-show)
+* [`Spy.query`](#module-query)
 * [`Spy.log`](#module-log)
 * [`Spy.pause`](#module-pause)
 * [`Spy.pipe`](#module-pipe)
@@ -100,7 +100,7 @@ The methods in the module API are callable via imports, requires or the UMD `rxj
 * [`Spy.diff`](#module-diff)
 * [`Spy.plug`](#module-plug)
 * [`Spy.unplug`](#module-unplug)
-* [`Spy.find`](#module-find)
+* [`Spy.findPlugins`](#module-findPlugins)
 * [`Spy.teardown`](#module-teardown)
 
 <a name="module-create"></a>
@@ -123,14 +123,15 @@ Calling `create` attaches the spy to `Observable.prototype.subscribe` and return
 interface Spy {
   readonly tick: number;
   diff(id: string, options?: { flush?: boolean }): void;
-  find<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
+  findPlugins<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
   pause(match: Match): Deck;
   pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, complete?: boolean): Teardown;
   plug(...plugins: Plugin[]): Teardown;
-  show(match: Match, partialLogger?: PartialLogger): void;
-  show(partialLogger?: PartialLogger): void;
+  query(predicate: string | QueryPredicate, orderBy: string, limit: number, partialLogger?: PartialLogger): void;
+  query(predicate: string | QueryPredicate, orderBy: string, partialLogger?: PartialLogger): void;
+  query(predicate: string | QueryPredicate, partialLogger?: PartialLogger): void;
   stats(partialLogger?: PartialLogger): void;
   teardown(): void;
   unplug(...plugins: Plugin[]): void;
@@ -162,23 +163,31 @@ Options passed to `create` are forwarded to the plugins, so the following can be
 
 This method returns a teardown function.
 
-<a name="module-show"></a>
+<a name="module-query"></a>
 
-### show
+### query
 
 ```ts
 interface Spy {
-  show(
-    match: string | RegExp | MatchPredicate | Observable<any>,
-    partialLogger: PartialLogger = console
+  query(
+    predicate: string | QueryPredicate,
+    orderBy: string,
+    limit: number,
+    partialLogger?: PartialLogger
   ): void;
-  show(
-    partialLogger: PartialLogger = console
+  query(
+    predicate: string | QueryPredicate,
+    orderBy: string,
+    partialLogger?: PartialLogger
+  ): void;
+  query(
+    predicate: string | QueryPredicate,
+    partialLogger?: PartialLogger
   ): void;
 }
 ```
 
-`show` will log information regarding the matching observables to the console or to the specified logger. If no `match` is specified, all tagged observables will be logged.
+`query` will log information regarding the matching observables to the console or to the specified logger.
 
 The logged information is retrieved from the most recent snapshot, so if snapshotting is not enabled, an error will be thrown.
 
@@ -311,13 +320,13 @@ interface Spy {
 
 Removes the specified plugin(s).
 
-<a name="module-find"></a>
+<a name="module-findPlugins"></a>
 
-### find
+### findplugins
 
 ```ts
 interface Spy {
-  find<P extends Plugin, O extends PluginOptions>(
+  findPlugins<P extends Plugin, O extends PluginOptions>(
     ctor: PluginCtor<P, O>
   ): P[];
 }

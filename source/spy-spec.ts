@@ -303,7 +303,7 @@ describe("spy", () => {
         });
     });
 
-    describe("show", () => {
+    describe("query", () => {
 
         it("should show snapshotted information for the tagged observable", () => {
 
@@ -313,13 +313,13 @@ describe("spy", () => {
             const subject = new Subject<number>();
             subject.pipe(tag("people")).subscribe();
 
-            spy.show("people", {
+            spy.query("tag(/people/)", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["1 snapshot(s) matching people"]);
-            expect(calls[1][0]).to.match(/Tag = people/);
+            expect(calls[0]).to.deep.equal(["1 snapshot(s) found"]);
+            expect(calls[1][0]).to.match(/tag = people/);
         });
 
         it("should show snapshotted information all/any tagged observables", () => {
@@ -330,7 +330,7 @@ describe("spy", () => {
             const subject = new Subject<number>();
             subject.pipe(tag("people")).subscribe();
 
-            spy.show({
+            spy.query("", {
                 log(...args: any[]): void { calls.push(args); }
             });
 

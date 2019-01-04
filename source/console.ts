@@ -53,10 +53,6 @@ export function forConsole(
             deprecation();
             spy.query.apply(spy, args);
         },
-        show(...args: any[]): void {
-            deprecation();
-            spy.show.apply(spy, args);
-        },
         stats(): void {
             deprecation();
             spy.stats();

@@ -42,13 +42,13 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
 1. To inspect the current snapshots of all tagged observables, run the following in the console:
 
-        spy.show();
+        spy.query("tag()");
 
     You'll see a listing of snapshots for all tagged observables. There are two: an interval observable; and an observable that emits people's names.
 
-    To inspect a specific tagged observable, you can pass a string or a regular expression to `show`. For example:
+    To inspect a specific tagged observable, you can pass a string or a regular expression to `query`. For example:
 
-        spy.show("people");
+        spy.query("tag(/people/)");
 
 1. Logging can be enabled using the API's `log`method. For example:
 

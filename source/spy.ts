@@ -17,7 +17,7 @@ import { compile, compileOrderBy } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
-import { Match, matches, toString as matchToString } from "./match";
+import { Match } from "./match";
 import { hide } from "./operators";
 
 import {
@@ -487,99 +487,6 @@ export class Spy {
         });
     }
 
-    show(match: Match, partialLogger?: PartialLogger): void;
-    show(partialLogger?: PartialLogger): void;
-    show(match: any, partialLogger?: PartialLogger): void {
-
-        const anyTagged = /.+/;
-        if (!match) {
-            match = anyTagged;
-        } else if (typeof match.log === "function") {
-            partialLogger = match;
-            match = anyTagged;
-        }
-
-        const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
-        if (!snapshotPlugin) {
-            this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
-            return;
-        }
-
-        const snapshot = snapshotPlugin.snapshotAll();
-        const matched = Array
-            .from(snapshot.observables.values())
-            .filter(observableSnapshot => matches(observableSnapshot.observable, match));
-        const logger = toLogger(partialLogger || this.defaultLogger_);
-
-        const { limit_ } = this;
-        const omitted = (matched.length > limit_) ? matched.length - limit_ : 0;
-        if (omitted) {
-            matched.splice(limit_, omitted);
-        }
-
-        snapshot.mapStackTraces(matched).subscribe(() => {
-            logger.group(`${matched.length + omitted} snapshot(s) matching ${matchToString(match)}`);
-
-            const observableGroupMethod = (matched.length > 3) ? "groupCollapsed" : "group";
-            matched.forEach(observableSnapshot => {
-
-                logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
-                    `Tag = ${observableSnapshot.tag}; ID = ${observableSnapshot.id}` :
-                    `ID = ${observableSnapshot.id}`
-                );
-                logger.log("Path =", observableSnapshot.path);
-                logger.log("Type =", observableSnapshot.type);
-
-                const { subscriptions } = observableSnapshot;
-                const subscriberGroupMethod = (subscriptions.size > 3) ? "groupCollapsed" : "group";
-                logger.group(`${subscriptions.size} subscriber(s)`);
-                subscriptions.forEach(subscriptionSnapshot => {
-
-                    const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
-                    if (subscriberSnapshot) {
-
-                        const { values, valuesFlushed } = subscriberSnapshot;
-                        logger[subscriberGroupMethod].call(logger, "Subscriber");
-                        logger.log("Value count =", values.length + valuesFlushed);
-                        if (values.length > 0) {
-                            logger.log("Last value =", values[values.length - 1].value);
-                        }
-                        this.logSubscription_(
-                            logger,
-                            observableSnapshot,
-                            subscriberSnapshot,
-                            subscriptionSnapshot
-                        );
-
-                        const otherSubscriptions = Array
-                            .from(subscriberSnapshot.subscriptions.values())
-                            .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot);
-                        otherSubscriptions.forEach(otherSubscriptionSnapshot => {
-                            logger.groupCollapsed("Other subscription");
-                            this.logSubscription_(
-                                logger,
-                                observableSnapshot,
-                                subscriberSnapshot,
-                                otherSubscriptionSnapshot
-                            );
-                            logger.groupEnd();
-                        });
-                        logger.groupEnd();
-                    } else {
-                        logger.warn("Cannot find subscriber snapshot");
-                    }
-                });
-                logger.groupEnd();
-                logger.groupEnd();
-            });
-
-            if (omitted) {
-                logger.log(`... another ${omitted} snapshot(s) not logged.`);
-            }
-            logger.groupEnd();
-        });
-    }
-
     stats(partialLogger?: PartialLogger): void {
 
         const [statsPlugin] = this.findPlugins(StatsPlugin);
@@ -1031,9 +938,12 @@ function matchStackTrace(
 
 function matchTag(
     queryRecord: QueryRecord,
-    match: string | RegExp
+    match: string | RegExp | undefined
 ): boolean {
     const { tag } = queryRecord;
+    if (match === undefined) {
+        return Boolean(tag);
+    }
     if (typeof match === "string") {
         return tag === match;
     }
