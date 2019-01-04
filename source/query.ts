@@ -3,6 +3,12 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+import { SubscriptionSnapshot } from "./plugin";
+
 export type QueryRecord = Record<string, any>;
 export type QueryPredicate = (queryRecord: QueryRecord) => boolean;
-export type QueryDerivations = Record<string, (queryRecord: QueryRecord) => any>;
+export type QueryDerivation = (
+    queryRecord: QueryRecord,
+    subscriptionSnapshot: SubscriptionSnapshot
+) => any;
+export type QueryDerivations = Record<string, QueryDerivation>;

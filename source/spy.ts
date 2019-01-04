@@ -982,12 +982,18 @@ export class Spy {
 
         const defaultDerived = {};
         Object.keys(defaultDerivations).forEach(key => {
-            defaultDerived[key] = defaultDerivations[key](queryRecord);
+            defaultDerived[key] = defaultDerivations[key](
+                queryRecord,
+                subscriptionSnapshot
+            );
         });
 
         const derived = {};
         Object.keys(derivations_).forEach(key => {
-            derived[key] = derivations_[key](queryRecord);
+            derived[key] = derivations_[key](
+                queryRecord,
+                subscriptionSnapshot
+            );
         });
         return { ...queryRecord, ...defaultDerived, ...derived };
     }
