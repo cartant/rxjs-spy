@@ -4,6 +4,7 @@
  */
 
 import { Subscription } from "rxjs";
+import { Logger, PartialLogger, toLogger } from "../logger";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 
@@ -29,6 +30,7 @@ type FoundPlugins = {
 export class StatsPlugin extends BasePlugin {
 
     private foundPlugins_: FoundPlugins | undefined;
+    private logger_: Logger;
     private pluginHost_: PluginHost;
     private stats_: Stats;
     private time_: number;
@@ -38,6 +40,7 @@ export class StatsPlugin extends BasePlugin {
         super("stats");
 
         this.foundPlugins_ = undefined;
+        this.logger_ = pluginHost.logger;
         this.pluginHost_ = pluginHost;
         this.stats_ = {
             completes: 0,
@@ -54,6 +57,11 @@ export class StatsPlugin extends BasePlugin {
             unsubscribes: 0
         };
         this.time_ = 0;
+    }
+
+    get stats(): Stats {
+        const { stats_ } = this;
+        return { ...stats_ };
     }
 
     afterSubscribe(subscription: Subscription): void {
@@ -118,9 +126,32 @@ export class StatsPlugin extends BasePlugin {
         this.all_();
     }
 
-    public get stats(): Stats {
-        const { stats_ } = this;
-        return { ...stats_ };
+    logStats(stats: Stats, partialLogger?: PartialLogger): void {
+
+        const { innerSubscribes, leafSubscribes, maxDepth, rootSubscribes, totalDepth } = stats;
+        const logger = toLogger(partialLogger || this.logger_);
+        logger.group("Stats");
+        logger.log("Subscribes =", stats.subscribes);
+        if (rootSubscribes > 0) {
+            logger.log("Root subscribes =", rootSubscribes);
+        }
+        if (leafSubscribes > 0) {
+            logger.log("Leaf subscribes =", leafSubscribes);
+        }
+        if (innerSubscribes > 0) {
+            logger.log("Inner subscribes =", innerSubscribes);
+        }
+        logger.log("Unsubscribes =", stats.unsubscribes);
+        logger.log("Nexts =", stats.nexts);
+        logger.log("Errors =", stats.errors);
+        logger.log("Completes =", stats.completes);
+        if (maxDepth > 0) {
+            logger.log("Max. depth =", maxDepth);
+            logger.log("Avg. depth =", (totalDepth / leafSubscribes).toFixed(1));
+        }
+        logger.log("Tick =", stats.tick);
+        logger.log("Timespan =", stats.timespan);
+        logger.groupEnd();
     }
 
     private all_(): void {

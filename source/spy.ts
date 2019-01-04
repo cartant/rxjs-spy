@@ -496,30 +496,7 @@ export class Spy {
         }
 
         const stats = statsPlugin.stats;
-        const { innerSubscribes, leafSubscribes, maxDepth, rootSubscribes, totalDepth } = stats;
-        const logger = toLogger(partialLogger || this.defaultLogger_);
-        logger.group("Stats");
-        logger.log("Subscribes =", stats.subscribes);
-        if (rootSubscribes > 0) {
-            logger.log("Root subscribes =", rootSubscribes);
-        }
-        if (leafSubscribes > 0) {
-            logger.log("Leaf subscribes =", leafSubscribes);
-        }
-        if (innerSubscribes > 0) {
-            logger.log("Inner subscribes =", innerSubscribes);
-        }
-        logger.log("Unsubscribes =", stats.unsubscribes);
-        logger.log("Nexts =", stats.nexts);
-        logger.log("Errors =", stats.errors);
-        logger.log("Completes =", stats.completes);
-        if (maxDepth > 0) {
-            logger.log("Max. depth =", maxDepth);
-            logger.log("Avg. depth =", (totalDepth / leafSubscribes).toFixed(1));
-        }
-        logger.log("Tick =", stats.tick);
-        logger.log("Timespan =", stats.timespan);
-        logger.groupEnd();
+        statsPlugin.logStats(stats, partialLogger);
     }
 
     teardown(): void {
