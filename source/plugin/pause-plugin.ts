@@ -63,38 +63,7 @@ export class Deck {
         this.broadcast_();
     }
 
-    log(partialLogger: PartialLogger = defaultLogger): void {
-
-        const logger = toLogger(partialLogger);
-
-        logger.group(`Deck matching ${matchToString(this.match_)}`);
-        logger.log("Paused =", this.paused_);
-        this.states_.forEach(state => {
-            logger.group(`Observable; tag = ${state.tag_}`);
-            logger.log("Notifications =", state.notifications_);
-            logger.groupEnd();
-        });
-        logger.groupEnd();
-    }
-
-    pause(): void {
-
-        this.paused_ = true;
-        this.broadcast_();
-    }
-
-    resume(): void {
-
-        this.states_.forEach(state => {
-            while (state.notifications_.length > 0) {
-                state.subject_.next(state.notifications_.shift());
-            }
-        });
-        this.paused_ = false;
-        this.broadcast_();
-    }
-
-    operator(subscription: Subscription): (source: Observable<any>) => Observable<any> {
+    getOperator(subscription: Subscription): (source: Observable<any>) => Observable<any> {
 
         const { observable } = getSubscriptionRecord(subscription);
         return (source: Observable<any>) => {
@@ -131,6 +100,37 @@ export class Deck {
                 dematerialize()
             );
         };
+    }
+
+    log(partialLogger: PartialLogger = defaultLogger): void {
+
+        const logger = toLogger(partialLogger);
+
+        logger.group(`Deck matching ${matchToString(this.match_)}`);
+        logger.log("Paused =", this.paused_);
+        this.states_.forEach(state => {
+            logger.group(`Observable; tag = ${state.tag_}`);
+            logger.log("Notifications =", state.notifications_);
+            logger.groupEnd();
+        });
+        logger.groupEnd();
+    }
+
+    pause(): void {
+
+        this.paused_ = true;
+        this.broadcast_();
+    }
+
+    resume(): void {
+
+        this.states_.forEach(state => {
+            while (state.notifications_.length > 0) {
+                state.subject_.next(state.notifications_.shift());
+            }
+        });
+        this.paused_ = false;
+        this.broadcast_();
     }
 
     skip(): void {
@@ -202,12 +202,12 @@ export class PausePlugin extends BasePlugin {
         return match_;
     }
 
-    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined {
+    getOperator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { deck_, match_ } = this;
 
         if (matches(subscription, match_)) {
-            return deck_.operator(subscription);
+            return deck_.getOperator(subscription);
         }
         return undefined;
     }

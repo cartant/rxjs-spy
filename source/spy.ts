@@ -803,7 +803,7 @@ export class Spy {
             },
 
             pipe(plugins: Plugin[]): void {
-                const operators = plugins.map(plugin => plugin.operator(subscription)).filter(Boolean);
+                const operators = plugins.map(plugin => plugin.getOperator(subscription)).filter(Boolean);
                 if (operators.length > 0) {
                     if (!this.preOpSubject) {
                         this.preOpSubject = new Subject<any>();

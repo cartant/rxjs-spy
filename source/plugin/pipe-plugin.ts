@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { merge, NEVER, Observable, Subscription } from "rxjs";
+import { concat, NEVER, Observable, Subscription } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin, PluginHost } from "./plugin";
 
@@ -27,10 +27,10 @@ export class PipePlugin extends BasePlugin {
         super(`pipe(${matchToString(match)})`);
 
         this.match_ = match;
-        this.operator_ = complete ? operator : source => merge(NEVER, operator(source));
+        this.operator_ = complete ? operator : source => concat(operator(source), NEVER);
     }
 
-    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined {
+    getOperator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined {
 
         const { match_, operator_: operator_ } = this;
 

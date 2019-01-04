@@ -26,7 +26,7 @@ export interface Plugin {
     beforePipe(operators: OperatorFunction<any, any>[], source: Observable<any>): void;
     beforeSubscribe(subscription: Subscription): void;
     beforeUnsubscribe(subscription: Subscription): void;
-    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined;
+    getOperator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined;
     teardown(): void;
 }
 
@@ -61,6 +61,6 @@ export class BasePlugin implements Plugin {
     beforePipe(operators: OperatorFunction<any, any>[], source: Observable<any>): void {}
     beforeSubscribe(subscription: Subscription): void {}
     beforeUnsubscribe(subscription: Subscription): void {}
-    operator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }
+    getOperator(subscription: Subscription): ((source: Observable<any>) => Observable<any>) | undefined { return undefined; }
     teardown(): void {}
 }

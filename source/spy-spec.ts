@@ -438,7 +438,7 @@ function stubPlugin(): Plugin {
         beforePipe: sinon.stub(),
         beforeSubscribe: sinon.stub(),
         beforeUnsubscribe: sinon.stub(),
-        operator: sinon.stub().returns(undefined),
+        getOperator: sinon.stub().returns(undefined),
         teardown: sinon.stub()
     } as any;
 }
