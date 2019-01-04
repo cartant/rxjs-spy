@@ -328,9 +328,9 @@ export class Spy {
     query(derivations: QueryDerivations): void;
     query(...args: any[]): void {
 
-        const [derivations] = args;
-        if ((typeof derivations !== "string") && (typeof derivations !== "function")) {
-            this.derivations_ = derivations;
+        const [derivationsArg] = args;
+        if (typeof derivationsArg === "object") {
+            this.derivations_ = derivationsArg;
             return;
         }
 
@@ -349,7 +349,7 @@ export class Spy {
         ];
 
         const { evaluator: predicate, keys } = (typeof predicateArg === "string") ?
-            compile(predicateArg) :
+            compile(predicateArg || "true") :
             { evaluator: predicateArg, keys: [] };
 
         const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
