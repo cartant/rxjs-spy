@@ -3,11 +3,13 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
+const literalRegExp = /^(false|null|true|undefined)$/;
+
 export function compile(expression: string): {
     evaluator: (context: any) => any,
     keys: string[]
 } {
-    const keys = expression.split(/[^a-z]+/i).filter(Boolean);
+    const keys = expression.split(/[^a-z]+/i).filter(key => key && !literalRegExp.test(key));
     const replaced = expression.replace(/===/g, "==").replace(/!==/g, "!=");
 
     // https://stackoverflow.com/a/28244500/6680611

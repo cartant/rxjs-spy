@@ -330,13 +330,13 @@ describe("spy", () => {
             const subject = new Subject<number>();
             subject.pipe(tag("people")).subscribe();
 
-            spy.query("", {
+            spy.query("tag()", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
             expect(calls).to.not.be.empty;
-            expect(calls[0]).to.deep.equal(["1 snapshot(s) matching /.+/"]);
-            expect(calls[1][0]).to.match(/Tag = people/);
+            expect(calls[0]).to.deep.equal(["1 snapshot(s) found"]);
+            expect(calls[1][0]).to.match(/tag = people/);
         });
     });
 
