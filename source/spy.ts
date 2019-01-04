@@ -322,18 +322,35 @@ export class Spy {
         return () => this.unplug(...plugins);
     }
 
-    query(predicate: string | QueryPredicate, orderBy?: string, partialLogger?: PartialLogger): void;
+    query(predicate: string | QueryPredicate, orderBy: string, limit: number, partialLogger?: PartialLogger): void;
+    query(predicate: string | QueryPredicate, orderBy: string, partialLogger?: PartialLogger): void;
+    query(predicate: string | QueryPredicate, partialLogger?: PartialLogger): void;
     query(derivations: QueryDerivations): void;
-    query(arg: string | QueryPredicate | QueryDerivations, orderBy?: string, partialLogger?: PartialLogger): void {
+    query(...args: any[]): void {
 
-        if ((typeof arg !== "string") && (typeof arg !== "function")) {
-            this.derivations_ = arg;
+        const [derivations] = args;
+        if ((typeof derivations !== "string") && (typeof derivations !== "function")) {
+            this.derivations_ = derivations;
             return;
         }
 
-        const { evaluator: predicate, keys } = (typeof arg === "string") ?
-            compile(arg) :
-            { evaluator: arg, keys: [] };
+        const partialLogger = (typeof args[args.length - 1] === "object") ?
+            args.pop() :
+            this.defaultLogger_;
+
+        const [
+            predicateArg,
+            orderByArg,
+            limitArg
+        ] = args as [
+            string | QueryPredicate,
+            string?,
+            number?
+        ];
+
+        const { evaluator: predicate, keys } = (typeof predicateArg === "string") ?
+            compile(predicateArg) :
+            { evaluator: predicateArg, keys: [] };
 
         const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
         if (!snapshotPlugin) {
@@ -356,9 +373,9 @@ export class Spy {
                 }[]
             }[] = [];
 
-            const { comparer } = orderBy ?
-                compileOrderBy(orderBy) :
-                { comparer: () => 0 };
+            const limit = limitArg || this.limit_;
+            const orderBy = orderByArg || this.orderBy_;
+            const { comparer } = compileOrderBy(orderBy);
 
             observableSnapshots.forEach(observableSnapshot => {
 
@@ -405,10 +422,9 @@ export class Spy {
                 ));
             }
 
-            const { limit_ } = this;
-            const omitted = (found.length > limit_) ? found.length - limit_ : 0;
+            const omitted = (found.length > limit) ? found.length - limit : 0;
             if (omitted) {
-                found.splice(limit_, omitted);
+                found.splice(limit, omitted);
             }
 
             logger.group(`${found.length + omitted} snapshot(s) found`);
