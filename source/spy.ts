@@ -43,7 +43,7 @@ const defaultOrderBy = "age asc";
 const observableLift = Observable.prototype.lift;
 const observablePipe = Observable.prototype.pipe;
 const observableSubscribe = Observable.prototype.subscribe;
-const previousGlobalScope: Record<string, any> = {};
+const prePatchGlobalScope: Record<string, any> = {};
 
 export class Spy {
 
@@ -102,7 +102,7 @@ export class Spy {
             [preferredKey, "rxSpy"].forEach(key => {
                 if (globalScope.hasOwnProperty(key)) {
                     this.defaultLogger_.log(`Overwriting ${globalName}.${key}`);
-                    previousGlobalScope[key] = globalScope[key];
+                    prePatchGlobalScope[key] = globalScope[key];
                 }
                 globalScope[key] = forConsole(this, key !== preferredKey ?
                     () => this.defaultLogger_.warnOnce(`${globalName}.${key} is deprecated and has been renamed; use ${globalName}.spy instead`) :
@@ -125,10 +125,10 @@ export class Spy {
 
             if (globalScope) {
                 [options.global || "spy", "rxSpy"].forEach(key => {
-                    if (previousGlobalScope.hasOwnProperty(key)) {
+                    if (prePatchGlobalScope.hasOwnProperty(key)) {
                         this.defaultLogger_.log(`Restoring ${globalName}.${key}`);
-                        globalScope[key] = previousGlobalScope[key];
-                        delete previousGlobalScope[key];
+                        globalScope[key] = prePatchGlobalScope[key];
+                        delete prePatchGlobalScope[key];
                     } else {
                         delete globalScope[key];
                     }
