@@ -18,7 +18,7 @@ const options = {
     warning: false
 };
 
-describe.only("issues", () => {
+describe("issues", () => {
 
     let patcher: Patcher;
 
