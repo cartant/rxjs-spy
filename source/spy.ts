@@ -32,12 +32,13 @@ import {
     Plugin,
     PluginCtor,
     PluginOptions,
+    QueryDerivations,
+    QueryPredicate,
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin
 } from "./plugin";
 
-import { QueryDerivations, QueryPredicate } from "./query";
 import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record";
 import { Teardown } from "./teardown";
 import { toSubscriber } from "./util";

@@ -7,8 +7,15 @@
 import { compile, compileOrderBy } from "../expression";
 import { identify } from "../identify";
 import { Logger } from "../logger";
-import { QueryDerivations, QueryPredicate, QueryRecord } from "../query";
-import { ObservableSnapshot, Snapshot, SubscriberSnapshot, SubscriptionSnapshot } from "./snapshots";
+import {
+    ObservableSnapshot,
+    QueryDerivations,
+    QueryPredicate,
+    QueryRecord,
+    Snapshot,
+    SubscriberSnapshot,
+    SubscriptionSnapshot
+} from "./snapshot-plugin-types";
 
 const defaultDerivations: QueryDerivations = {
     age: ({ completeAge, errorAge, nextAge, subscribeAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, subscribeAge || Infinity, unsubscribeAge || Infinity),

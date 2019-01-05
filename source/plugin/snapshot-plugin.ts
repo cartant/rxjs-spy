@@ -9,13 +9,20 @@ import { identify } from "../identify";
 import { Logger } from "../logger";
 import { read } from "../match";
 import { hide } from "../operators";
-import { QueryDerivations, QueryPredicate, QueryRecord } from "../query";
 import { getSubscriptionRecord } from "../subscription-record";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 import { query } from "./snapshot-plugin-query";
-import { ObservableSnapshot, Snapshot, SubscriberSnapshot, SubscriptionSnapshot } from "./snapshots";
+import {
+    ObservableSnapshot,
+    QueryDerivations,
+    QueryPredicate,
+    QueryRecord,
+    Snapshot,
+    SubscriberSnapshot,
+    SubscriptionSnapshot
+} from "./snapshot-plugin-types";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
 const snapshotRecordSymbol = Symbol("snapshotRecord");
@@ -27,7 +34,7 @@ export interface SnapshotRecord {
     valuesFlushed: number;
 }
 
-export * from "./snapshots";
+export * from "./snapshot-plugin-types";
 
 type FoundPlugins = {
     graphPlugin: GraphPlugin | undefined;

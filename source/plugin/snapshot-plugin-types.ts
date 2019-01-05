@@ -5,17 +5,14 @@
 
 import { StackFrame } from "error-stack-parser";
 import { Observable, Subscriber, Subscription } from "rxjs";
-import { QueryRecord } from "../query";
 
-export interface Snapshot {
-    observables: Map<Observable<any>, ObservableSnapshot>;
-    subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
-    subscriptions: Map<Subscription, SubscriptionSnapshot>;
-    tick: number;
-    mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
-    mapStackTraces(subscriberSnapshots: SubscriberSnapshot[]): Observable<void>;
-    mapStackTraces(subscriptionSnapshots: SubscriptionSnapshot[]): Observable<void>;
-}
+export type QueryRecord = Record<string, any>;
+export type QueryPredicate = (queryRecord: QueryRecord) => boolean;
+export type QueryDerivation = (
+    queryRecord: QueryRecord,
+    subscriptionSnapshot: SubscriptionSnapshot
+) => any;
+export type QueryDerivations = Record<string, QueryDerivation>;
 
 export interface ObservableSnapshot {
     id: string;
@@ -25,6 +22,16 @@ export interface ObservableSnapshot {
     tag: string | undefined;
     tick: number;
     type: string;
+}
+
+export interface Snapshot {
+    observables: Map<Observable<any>, ObservableSnapshot>;
+    subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
+    subscriptions: Map<Subscription, SubscriptionSnapshot>;
+    tick: number;
+    mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
+    mapStackTraces(subscriberSnapshots: SubscriberSnapshot[]): Observable<void>;
+    mapStackTraces(subscriptionSnapshots: SubscriptionSnapshot[]): Observable<void>;
 }
 
 export interface SubscriberSnapshot {
