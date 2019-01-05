@@ -26,8 +26,8 @@ describe("DiffPlugin", () => {
     beforeEach(() => {
 
         spy = create({ ...options });
-        diffPlugin = new DiffPlugin({ id: "", pluginHost: spy });
-        spy.plug(diffPlugin);
+        diffPlugin = new DiffPlugin({ id: "", pluginHost: spy.pluginHost });
+        spy.pluginHost.plug(diffPlugin);
     });
 
     it("should find subscriptions and unsubscriptions", () => {

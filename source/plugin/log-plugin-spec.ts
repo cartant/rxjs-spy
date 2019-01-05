@@ -35,9 +35,9 @@ describe("LogPlugin", () => {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: "people",
-                pluginHost: spy
+                pluginHost: spy.pluginHost
             });
-            spy.plug(plugin);
+            spy.pluginHost.plug(plugin);
             calls = [];
         });
 
@@ -147,8 +147,8 @@ describe("LogPlugin", () => {
         beforeEach(() => {
 
             spy = create(options);
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
-            spy.plug(subscriptionRecordsPlugin);
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
+            spy.pluginHost.plug(subscriptionRecordsPlugin);
             calls = [];
         });
 
@@ -158,12 +158,12 @@ describe("LogPlugin", () => {
             subject.subscribe();
 
             const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
-            spy.plug(new LogPlugin({
+            spy.pluginHost.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.observable),
-                pluginHost: spy
+                pluginHost: spy.pluginHost
             }));
 
             calls = [];
@@ -179,12 +179,12 @@ describe("LogPlugin", () => {
             subject.subscribe();
 
             const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
-            spy.plug(new LogPlugin({
+            spy.pluginHost.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.subscriber),
-                pluginHost: spy
+                pluginHost: spy.pluginHost
             }));
 
             calls = [];
@@ -200,12 +200,12 @@ describe("LogPlugin", () => {
             subject.subscribe();
 
             const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
-            spy.plug(new LogPlugin({
+            spy.pluginHost.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.subscription),
-                pluginHost: spy
+                pluginHost: spy.pluginHost
             }));
 
             calls = [];

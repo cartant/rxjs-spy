@@ -4,7 +4,6 @@
  */
 
 import {
-    BehaviorSubject,
     Observable,
     Operator,
     Subject,
@@ -14,28 +13,23 @@ import {
 import { Auditor } from "./auditor";
 import { forConsole } from "./console";
 import { hidden } from "./hidden";
+import { Host } from "./host";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 import { Match } from "./match";
 import { hide } from "./operators";
 
 import {
-    BufferPlugin,
-    CyclePlugin,
     Deck,
-    DevToolsPlugin,
     DiffPlugin,
-    GraphPlugin,
     LogPlugin,
     PausePlugin,
     PipePlugin,
     Plugin,
-    PluginCtor,
-    PluginOptions,
+    PluginHost,
     QueryDerivations,
     QueryPredicate,
     SnapshotPlugin,
-    StackTracePlugin,
     StatsPlugin
 } from "./plugin";
 
@@ -54,16 +48,11 @@ const previousGlobalScope: Record<string, any> = {};
 export class Spy {
 
     private static spy_: Spy | undefined = undefined;
-
-    private auditor_: Auditor;
     private defaultLogger_: Logger;
+    private host_: Host;
     private limit_ = defaultLimit;
     private orderBy_ = defaultOrderBy;
-    private plugins_: Plugin[];
-    private pluginsSubject_: BehaviorSubject<Plugin[]>;
     private teardown_: Teardown | undefined;
-    private tick_: number;
-    private undos_: Plugin[];
 
     constructor(options: {
         [key: string]: any,
@@ -88,26 +77,15 @@ export class Spy {
         Observable.prototype.pipe = Spy.patchedPipe_;
         Observable.prototype.subscribe = Spy.patchedSubscribe_;
 
-        this.auditor_ = new Auditor(options.audit || 0);
         this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
-        if (options.defaultPlugins ===  false) {
-            this.plugins_ = [];
-        } else {
-            this.plugins_ = [
-                new StackTracePlugin({ ...options, pluginHost: this }),
-                new GraphPlugin({ ...options, pluginHost: this }),
-                new SnapshotPlugin({ ...options, pluginHost: this }),
-                new BufferPlugin({ ...options, pluginHost: this }),
-                new CyclePlugin({ ...options, pluginHost: this }),
-                new StatsPlugin({ pluginHost: this })
-            ];
-            if (options.devTools !==  false) {
-                this.plugins_.push(new DevToolsPlugin({ pluginHost: this }));
-            }
-        }
-        this.pluginsSubject_ = new BehaviorSubject(this.plugins_);
-        this.tick_ = 0;
-        this.undos_ = [];
+        this.host_ = new Host({
+            ...options,
+            auditor: new Auditor(options.audit || 0),
+            logger: this.defaultLogger_,
+            version: __RXJS_SPY_VERSION__
+        });
+
+        this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
 
         let globalScope: any;
         let globalName: string = "";
@@ -157,66 +135,47 @@ export class Spy {
                 });
             }
 
-            this.plugins_.forEach(plugin => plugin.teardown());
-            this.plugins_ = [];
-            this.pluginsSubject_.next(this.plugins_);
-            this.undos_ = [];
-
+            this.host_.teardown();
             Spy.spy_ = undefined;
+
             Observable.prototype.lift = observableLift;
             Observable.prototype.pipe = observablePipe;
             Observable.prototype.subscribe = observableSubscribe;
         };
     }
 
-    get auditor(): Auditor {
-
-        return this.auditor_;
-    }
-
     get limit(): number {
-
         return this.limit_;
     }
 
     set limit(value: number) {
-
         this.limit_ = Math.max(value, 1);
     }
 
-    get logger(): Logger {
-
-        return this.defaultLogger_;
-    }
-
     get orderBy(): string {
-
         return this.orderBy_;
     }
 
     set orderBy(value: string) {
-
         this.orderBy_ = value || defaultOrderBy;
     }
 
-    get tick(): number {
-
-        return this.tick_;
+    get pluginHost(): PluginHost {
+        return this.host_;
     }
 
     get undos(): Plugin[] {
-
-        return [...this.undos_];
+        return this.host_.undos;
     }
 
     get version(): string {
-
         return __RXJS_SPY_VERSION__;
     }
 
     diff(id: string, options: { teardown?: boolean } = {}): void {
 
-        const diffPlugin = this.findPlugins(DiffPlugin).find(plugin => plugin.id === id);
+        const { host_ } = this;
+        const diffPlugin = host_.findPlugins(DiffPlugin).find(plugin => plugin.id === id);
         if (diffPlugin) {
             const diff = diffPlugin.diff();
             if (diff) {
@@ -224,23 +183,11 @@ export class Spy {
                 diffPlugin.logDiff(diff, defaultLogger_);
             }
             if (options.teardown) {
-                this.unplug(diffPlugin);
+                host_.unplug(diffPlugin);
             }
         } else if (!options.teardown) {
-            this.plug(new DiffPlugin({ id, pluginHost: this }));
+            host_.plug(new DiffPlugin({ id, pluginHost: host_ }));
         }
-    }
-
-    findPlugins<P extends Plugin, O extends PluginOptions>(
-        ctor: PluginCtor<P, O>,
-        dependent?: PluginCtor<any, any>
-    ): P[] {
-
-        const { plugins_ } = this;
-        if (dependent && (plugins_.findIndex(plugin => plugin instanceof dependent) < plugins_.findIndex(plugin => plugin instanceof ctor))) {
-            return [];
-        }
-        return plugins_.filter(plugin => plugin instanceof ctor) as P[];
     }
 
     log(observableMatch: Match, notificationMatch: Match, partialLogger?: PartialLogger): Teardown;
@@ -271,18 +218,20 @@ export class Spy {
             [observableMatch, notificationMatch, partialLogger] = args;
         }
 
-        return this.plug(new LogPlugin({
+        const { host_ } = this;
+        return host_.plug(new LogPlugin({
             logger: partialLogger,
             notificationMatch,
             observableMatch,
-            pluginHost: this
+            pluginHost: host_
         }));
     }
 
     pause(match: Match): Deck {
 
-        const pausePlugin = new PausePlugin({ match, pluginHost: this });
-        const teardown = this.plug(pausePlugin);
+        const { host_ } = this;
+        const pausePlugin = new PausePlugin({ match, pluginHost: host_ });
+        const teardown = host_.plug(pausePlugin);
 
         const deck = pausePlugin.deck;
         deck.teardown = teardown;
@@ -291,21 +240,13 @@ export class Spy {
 
     pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, complete?: boolean): Teardown {
 
-        return this.plug(new PipePlugin({
+        const { host_ } = this;
+        return host_.plug(new PipePlugin({
             complete,
             match,
             operator,
-            pluginHost: this
+            pluginHost: host_
         }));
-    }
-
-    plug(...plugins: Plugin[]): Teardown {
-
-        this.plugins_.push(...plugins);
-        this.pluginsSubject_.next(this.plugins_);
-
-        this.undos_.push(...plugins);
-        return () => this.unplug(...plugins);
     }
 
     query(predicate: string | QueryPredicate, orderBy: string, limit: number, partialLogger?: PartialLogger): void;
@@ -314,7 +255,7 @@ export class Spy {
     query(derivations: QueryDerivations): void;
     query(...args: any[]): void {
 
-        const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
+        const [snapshotPlugin] = this.host_.findPlugins(SnapshotPlugin);
         if (!snapshotPlugin) {
             this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
@@ -350,7 +291,7 @@ export class Spy {
 
     stats(partialLogger?: PartialLogger): void {
 
-        const [statsPlugin] = this.findPlugins(StatsPlugin);
+        const [statsPlugin] = this.host_.findPlugins(StatsPlugin);
         if (!statsPlugin) {
             this.defaultLogger_.warnOnce("Stats are not enabled.");
             return;
@@ -368,18 +309,6 @@ export class Spy {
         }
     }
 
-    unplug(...plugins: Plugin[]): void {
-
-        plugins.forEach(plugin => {
-            if (this.plugins_.find(p => p === plugin)) {
-                plugin.teardown();
-                this.plugins_ = this.plugins_.filter(p => p !== plugin);
-                this.pluginsSubject_.next(this.plugins_);
-                this.undos_ = this.undos_.filter(u => u !== plugin);
-            }
-        });
-    }
-
     /*tslint:disable-next-line:member-ordering*/
     private static patchedLift_(this: Observable<any>, operator: Operator<any, any>): Observable<any> {
 
@@ -391,10 +320,14 @@ export class Spy {
             return observableLift.call(source, operator);
         }
 
-        spy_.plugins_.forEach(plugin => plugin.beforeLift(operator, source));
-        const sink = observableLift.call(source, operator);
-        spy_.plugins_.forEach(plugin => plugin.afterLift(operator, source, sink));
-        return sink;
+        /*tslint:disable:object-literal-sort-keys*/
+        const result = spy_.host_.notifyPlugins<Observable<any>>({
+            beforeEach: plugin => plugin.beforeLift(operator, source),
+            between: () => observableLift.call(source, operator),
+            afterEach: (plugin, sink) => plugin.afterLift(operator, source, sink)
+        });
+        /*tslint:enable:object-literal-sort-keys*/
+        return result;
     }
 
     /*tslint:disable-next-line:member-ordering*/
@@ -408,10 +341,14 @@ export class Spy {
             return observablePipe.apply(source, args);
         }
 
-        spy_.plugins_.forEach(plugin => plugin.beforePipe(args, source));
-        const sink = observablePipe.apply(source, args);
-        spy_.plugins_.forEach(plugin => plugin.afterPipe(args, source, sink));
-        return sink;
+        /*tslint:disable:object-literal-sort-keys*/
+        const result = spy_.host_.notifyPlugins<any>({
+            beforeEach: plugin => plugin.beforePipe(args, source),
+            between: () => observablePipe.apply(source, args),
+            afterEach: (plugin, sink) => plugin.afterPipe(args, source, sink)
+        });
+        /*tslint:enable:object-literal-sort-keys*/
+        return result;
     }
 
     /*tslint:disable-next-line:member-ordering*/
@@ -433,6 +370,7 @@ export class Spy {
             }
         }
 
+        const { host_ } = spy_;
         const subscriber = toSubscriber.apply(undefined, args);
         const subscription = new Subscription();
 
@@ -454,25 +392,21 @@ export class Spy {
         };
         setSubscriptionRecord(subscription, subscriptionRecord);
 
-        const notify_ = (before: (plugin: Plugin) => void, block: () => void, after: (plugin: Plugin) => void) => {
-            subscriptionRecord.tick = ++spy_.tick_;
-            spy_.plugins_.forEach(before);
-            block();
-            spy_.plugins_.forEach(after);
-        };
-
         const subscriberUnsubscribe = subscriber.unsubscribe;
         subscriber.unsubscribe = () => {
             if (!subscriber.closed) {
-                notify_(
-                    plugin => plugin.beforeUnsubscribe(subscription),
-                    () => {
+                /*tslint:disable:object-literal-sort-keys*/
+                host_.notifyPlugins({
+                    before: () => subscriptionRecord.tick = host_.tick,
+                    beforeEach: plugin => plugin.beforeUnsubscribe(subscription),
+                    between: () => {
                         subscriptionRecord.subscription.unsubscribe();
                         subscriptionRecord.unsubscribeTimestamp = Date.now();
                         subscriberUnsubscribe.call(subscriber);
                     },
-                    plugin => plugin.afterUnsubscribe(subscription)
-                );
+                    afterEach: plugin => plugin.afterUnsubscribe(subscription)
+                });
+                /*tslint:enable:object-literal-sort-keys*/
             } else {
                 subscriberUnsubscribe.call(subscriber);
             }
@@ -481,37 +415,46 @@ export class Spy {
         const postOpObserver = {
 
             complete(): void {
-                notify_(
-                    plugin => plugin.beforeComplete(subscription),
-                    () => {
+                /*tslint:disable:object-literal-sort-keys*/
+                host_.notifyPlugins({
+                    before: () => subscriptionRecord.tick = host_.tick,
+                    beforeEach: plugin => plugin.beforeComplete(subscription),
+                    between: () => {
                         subscriber.complete();
                         subscriptionRecord.completeTimestamp = Date.now();
                     },
-                    plugin => plugin.afterComplete(subscription)
-                );
+                    afterEach: plugin => plugin.afterComplete(subscription)
+                });
+                /*tslint:enable:object-literal-sort-keys*/
             },
 
             error(error: any): void {
-                notify_(
-                    plugin => plugin.beforeError(subscription, error),
-                    () => {
+                /*tslint:disable:object-literal-sort-keys*/
+                host_.notifyPlugins({
+                    before: () => subscriptionRecord.tick = host_.tick,
+                    beforeEach: plugin => plugin.beforeError(subscription, error),
+                    between: () => {
                         subscriber.error(error);
                         subscriptionRecord.errorTimestamp = Date.now();
                     },
-                    plugin => plugin.afterError(subscription, error)
-                );
+                    afterEach: plugin => plugin.afterError(subscription, error)
+                });
+                /*tslint:enable:object-literal-sort-keys*/
             },
 
             next(value: any): void {
-                notify_(
-                    plugin => plugin.beforeNext(subscription, value),
-                    () => {
+                /*tslint:disable:object-literal-sort-keys*/
+                host_.notifyPlugins({
+                    before: () => subscriptionRecord.tick = host_.tick,
+                    beforeEach: plugin => plugin.beforeNext(subscription, value),
+                    between: () => {
                         subscriber.next(value);
                         ++subscriptionRecord.nextCount;
                         subscriptionRecord.nextTimestamp = Date.now();
                     },
-                    plugin => plugin.afterNext(subscription, value)
-                );
+                    afterEach: plugin => plugin.afterNext(subscription, value)
+                });
+                /*tslint:enable:object-literal-sort-keys*/
             }
         };
 
@@ -585,18 +528,21 @@ export class Spy {
             unsubscribed: false
         };
 
-        subscriber.add(spy_.pluginsSubject_.pipe(hide()).subscribe({
+        subscriber.add(host_.plugins.pipe(hide()).subscribe({
             next: (plugins: any) => preOpObserver.pipe(plugins)
         }));
 
-        notify_(
-            plugin => plugin.beforeSubscribe(subscription),
-            () => {
+        /*tslint:disable:object-literal-sort-keys*/
+        host_.notifyPlugins({
+            before: () => subscriptionRecord.tick = host_.tick,
+            beforeEach: plugin => plugin.beforeSubscribe(subscription),
+            between: () => {
                 subscriber.add(observableSubscribe.call(observable, preOpObserver));
                 subscriber.add(() => preOpObserver.unsubscribe());
             },
-            plugin => plugin.afterSubscribe(subscription)
-        );
+            afterEach: plugin => plugin.afterSubscribe(subscription)
+        });
+        /*tslint:enable:object-literal-sort-keys*/
         return subscriber;
     }
 }

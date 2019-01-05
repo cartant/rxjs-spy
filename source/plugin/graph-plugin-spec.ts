@@ -32,9 +32,9 @@ describe("GraphPlugin", () => {
             beforeEach(() => {
 
                 spy = create({ defaultPlugins: false, warning: false });
-                graphPlugin = new GraphPlugin({ keptDuration: duration, pluginHost: spy });
-                subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
-                spy.plug(graphPlugin, subscriptionRecordsPlugin);
+                graphPlugin = new GraphPlugin({ keptDuration: duration, pluginHost: spy.pluginHost });
+                subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
+                spy.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
             });
 
             it("should flush completed root subscriptions", () => {
@@ -301,9 +301,9 @@ describe("GraphPlugin", () => {
         beforeEach(() => {
 
             spy = create({ defaultPlugins: false, warning: false });
-            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy });
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
-            spy.plug(graphPlugin, subscriptionRecordsPlugin);
+            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy.pluginHost });
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
+            spy.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
         });
 
         it("should graph sources and sinks", () => {
@@ -617,9 +617,9 @@ describe("GraphPlugin", () => {
         beforeEach(() => {
 
             spy = create({ defaultPlugins: false, warning: false });
-            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy });
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
-            spy.plug(graphPlugin, subscriptionRecordsPlugin);
+            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy.pluginHost });
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
+            spy.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
         });
 
         describe("findRootSubscriptions", () => {

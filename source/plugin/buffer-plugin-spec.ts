@@ -33,12 +33,12 @@ describe("BufferPlugin", () => {
             warn: sinon.stub()
         };
         spy = create({ ...options, defaultLogger: stubs as any });
-        spy.plug(new StackTracePlugin({ pluginHost: spy }));
-        spy.plug(new GraphPlugin({ pluginHost: spy }));
-        spy.plug(new SnapshotPlugin({ pluginHost: spy }));
-        spy.plug(new BufferPlugin({
+        spy.pluginHost.plug(new StackTracePlugin({ pluginHost: spy.pluginHost }));
+        spy.pluginHost.plug(new GraphPlugin({ pluginHost: spy.pluginHost }));
+        spy.pluginHost.plug(new SnapshotPlugin({ pluginHost: spy.pluginHost }));
+        spy.pluginHost.plug(new BufferPlugin({
             bufferThreshold: 2,
-            pluginHost: spy
+            pluginHost: spy.pluginHost
         }));
     });
 

@@ -21,9 +21,9 @@ describe("StackTracePlugin", () => {
     beforeEach(() => {
 
         spy = create({ defaultPlugins: false, warning: false });
-        stackTracePlugin = new StackTracePlugin({ pluginHost: spy });
-        subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy });
-        spy.plug(stackTracePlugin, subscriptionRecordsPlugin);
+        stackTracePlugin = new StackTracePlugin({ pluginHost: spy.pluginHost });
+        subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
+        spy.pluginHost.plug(stackTracePlugin, subscriptionRecordsPlugin);
     });
 
     it("should determine the stack traces", () => {

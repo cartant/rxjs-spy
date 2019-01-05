@@ -30,10 +30,10 @@ describe("CyclePlugin", () => {
             warn: sinon.stub()
         };
         spy = create({ ...options, defaultLogger: stubs as any });
-        spy.plug(new StackTracePlugin({ pluginHost: spy }));
-        spy.plug(new CyclePlugin({
+        spy.pluginHost.plug(new StackTracePlugin({ pluginHost: spy.pluginHost }));
+        spy.pluginHost.plug(new CyclePlugin({
             cycleThreshold: 1,
-            pluginHost: spy
+            pluginHost: spy.pluginHost
         }));
     });
 

@@ -22,7 +22,7 @@ export function forConsole(
         },
         deck(call?: number): any {
             deprecation();
-            const pausePlugins = spy.findPlugins(PausePlugin);
+            const pausePlugins = spy.pluginHost.findPlugins(PausePlugin);
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
                 logger.group(`${pausePlugins.length} Deck(s)`);
@@ -67,7 +67,7 @@ export function forConsole(
                 args
                     .map(at => spy.undos[at - 1])
                     .filter(Boolean)
-                    .forEach(undo => spy.unplug(undo));
+                    .forEach(undo => spy.pluginHost.unplug(undo));
             }
         }
     };

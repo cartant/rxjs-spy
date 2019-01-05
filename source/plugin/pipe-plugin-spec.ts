@@ -23,9 +23,9 @@ describe("PipePlugin", () => {
         const plugin = new PipePlugin({
             match: "people",
             operator: () => operated,
-            pluginHost: spy
+            pluginHost: spy.pluginHost
         });
-        spy.plug(plugin);
+        spy.pluginHost.plug(plugin);
 
         const values: any[] = [];
         const subject = new Subject<string>();
@@ -47,10 +47,10 @@ describe("PipePlugin", () => {
         subject.pipe(tag("people")).subscribe(value => values.push(value));
 
         const operated = new Subject<string>();
-        spy.plug(new PipePlugin({
+        spy.pluginHost.plug(new PipePlugin({
             match: "people",
             operator: () => operated,
-            pluginHost: spy
+            pluginHost: spy.pluginHost
         }));
 
         subject.next("alice");
@@ -68,10 +68,10 @@ describe("PipePlugin", () => {
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe(value => values.push(value));
 
-        spy.plug(new PipePlugin({
+        spy.pluginHost.plug(new PipePlugin({
             match: "people",
             operator: () => of("bob"),
-            pluginHost: spy
+            pluginHost: spy.pluginHost
         }));
 
         subject.next("alice");
@@ -87,11 +87,11 @@ describe("PipePlugin", () => {
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe(value => values.push(value));
 
-        spy.plug(new PipePlugin({
+        spy.pluginHost.plug(new PipePlugin({
             complete: false,
             match: "people",
             operator: () => of("bob"),
-            pluginHost: spy
+            pluginHost: spy.pluginHost
         }));
 
         subject.next("alice");

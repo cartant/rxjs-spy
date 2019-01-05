@@ -36,6 +36,12 @@ export interface PluginHost {
     readonly tick: number;
     readonly version: string;
     findPlugins<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>, dependent?: PluginCtor<any, any>): P[];
+    notifyPlugins<T = void>(options: {
+        before?: () => void,
+        beforeEach: (plugin: Plugin) => void,
+        between: () => T,
+        afterEach: (plugin: Plugin, result: T) => void
+    }): T;
     plug(...plugins: Plugin[]): Teardown;
     unplug(...plugins: Plugin[]): void;
 }
