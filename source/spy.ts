@@ -331,7 +331,7 @@ export class Spy {
     }
 
     /*tslint:disable-next-line:member-ordering*/
-    private static patchedPipe_(this: Observable<any>, ...args: any[]): any {
+    private static patchedPipe_(this: Observable<any>, ...args: any[]): Observable<any> {
 
         /*tslint:disable-next-line:no-invalid-this*/
         const source = this;
@@ -342,7 +342,7 @@ export class Spy {
         }
 
         /*tslint:disable:object-literal-sort-keys*/
-        const result = spy_.host_.notifyPlugins<any>({
+        const result = spy_.host_.notifyPlugins<Observable<any>>({
             beforeEach: plugin => plugin.beforePipe(args, source),
             between: () => observablePipe.apply(source, args),
             afterEach: (plugin, sink) => plugin.afterPipe(args, source, sink)
