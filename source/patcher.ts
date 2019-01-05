@@ -37,7 +37,7 @@ import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record
 import { Teardown } from "./teardown";
 import { toSubscriber } from "./util";
 
-declare const __RXJS_SPY_VERSION__: string;
+declare const __RXJS_DEVTOOLS_VERSION__: string;
 const defaultLimit = 20;
 const defaultOrderBy = "age asc";
 const observableLift = Observable.prototype.lift;
@@ -84,7 +84,7 @@ export class Patcher {
             ...options,
             auditor: new Auditor(options.audit || 0),
             logger: this.defaultLogger_,
-            version: __RXJS_SPY_VERSION__
+            version: __RXJS_DEVTOOLS_VERSION__
         });
 
         this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
@@ -171,7 +171,7 @@ export class Patcher {
     }
 
     get version(): string {
-        return __RXJS_SPY_VERSION__;
+        return __RXJS_DEVTOOLS_VERSION__;
     }
 
     diff(id: string, options: { teardown?: boolean } = {}): void {

@@ -5,4 +5,4 @@
 
 export const BATCH_MILLISECONDS = 40;
 export const BATCH_NOTIFICATIONS = 100;
-export const EXTENSION_KEY = "__RXJS_SPY_EXTENSION__";
+export const EXTENSION_KEY = "__RXJS_DEVTOOLS_EXTENSION__";

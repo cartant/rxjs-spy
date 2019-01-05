@@ -16,7 +16,7 @@ files.forEach(file => {
 
     try {
         const content = fs.readFileSync(file).toString();
-        fs.writeFileSync(file, content.replace(/__RXJS_SPY_VERSION__/g, version));
+        fs.writeFileSync(file, content.replace(/__RXJS_DEVTOOLS_VERSION__/g, version));
     } catch (error) {
         if (error.code !== "ENOENT") {
             throw error;
