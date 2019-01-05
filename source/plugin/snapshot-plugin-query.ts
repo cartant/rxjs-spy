@@ -23,6 +23,11 @@ const defaultDerivations: QueryDerivations = {
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
     id: record => (match: number | string) => matchId(record, match),
+    innerIncompleteCount: (record, { inners }) => {
+        let count = 0;
+        inners.forEach(({ completeTimestamp, errorTimestamp, unsubscribeTimestamp }) => count += (completeTimestamp || errorTimestamp || unsubscribeTimestamp) ? 0 : 1);
+        return count;
+    },
     tag: record => (match: string | RegExp) => matchTag(record, match)
 };
 
