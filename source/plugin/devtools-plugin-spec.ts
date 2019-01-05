@@ -67,7 +67,7 @@ if (typeof window !== "undefined") {
                     const [args] = mockConnection.post.args;
                     const [batch] = args;
                     expect(batch).to.have.property("messages");
-                    expect(batch.messages.map((m: any) => m.notification.type)).to.deep.equal([
+                    expect(batch.messages.map((m: any) => m.notification.notificationType)).to.deep.equal([
                         "before-subscribe",
                         "after-subscribe",
                         "before-next",
@@ -97,7 +97,7 @@ if (typeof window !== "undefined") {
                     const [args] = mockConnection.post.args;
                     const [batch] = args;
                     expect(batch).to.have.property("messages");
-                    expect(batch.messages.map((m: any) => m.notification.type)).to.deep.equal([
+                    expect(batch.messages.map((m: any) => m.notification.notificationType)).to.deep.equal([
                         "before-subscribe",
                         "after-subscribe",
                         "before-next"

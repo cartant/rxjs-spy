@@ -383,25 +383,19 @@ export class DevToolsPlugin extends BasePlugin {
         const { observable, subscriber, subscription } = subscriptionRecord;
 
         return {
-            id: identify({}),
-            observable: {
-                id: identify(observable),
-                path: inferPath(observable),
-                tag: orNull(read(observable)),
-                type: inferType(observable)
-            },
-            subscriber: {
-                id: identify(subscriber)
-            },
-            subscription: {
-                error,
-                graph: orNull(this.toGraph_(subscription)),
-                id: identify(subscription),
-                stackTrace: orNull(stackTracePlugin && stackTracePlugin.getStackTrace(subscription))
-            },
+            error,
+            graph: orNull(this.toGraph_(subscription)),
+            notificationId: identify({}),
+            notificationType: `${prefix}-${notification}`,
+            observableId: identify(observable),
+            observablePath: inferPath(observable),
+            observableType: inferType(observable),
+            subscriberId: identify(subscriber),
+            subscriptionId: identify(subscription),
+            subscriptionStackTrace: orNull(stackTracePlugin && stackTracePlugin.getStackTrace(subscription)),
+            tag: orNull(read(observable)),
             tick: this.pluginHost_.tick,
             timestamp: Date.now(),
-            type: `${prefix}-${notification}`,
             value: (value === undefined) ? undefined : toValue(value)
         };
     }

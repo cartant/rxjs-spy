@@ -19,25 +19,19 @@ export interface Graph {
 }
 
 export interface Notification {
-    id: string;
-    observable: {
-        id: string;
-        path: string;
-        tag: string | null;
-        type: string;
-    };
-    subscriber: {
-        id: string;
-    };
-    subscription: {
-        error?: any;
-        graph: Graph | null;
-        id: string;
-        stackTrace: StackFrame[] | null;
-    };
+    error?: any;
+    graph: Graph | null;
+    notificationId: string;
+    notificationType: string;
+    observableId: string;
+    observablePath: string;
+    observableType: string;
+    subscriberId: string;
+    subscriptionId: string;
+    subscriptionStackTrace: StackFrame[] | null;
+    tag: string | null;
     tick: number;
     timestamp: number;
-    type: string;
     value?: { json: string };
 }
 
