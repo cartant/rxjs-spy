@@ -7,21 +7,21 @@
 import { expect } from "chai";
 import { NEVER, Subject, timer } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
-import { create } from "../factory";
-import { Spy } from "../spy";
+import { patch } from "../factory";
+import { Patcher } from "../patcher";
 import { GraphPlugin } from "./graph-plugin";
 import { StatsPlugin } from "./stats-plugin";
 
 describe("StatsPlugin", () => {
 
-    let spy: Spy;
+    let patcher: Patcher;
     let statsPlugin: StatsPlugin;
 
     beforeEach(() => {
 
-        spy = create({ defaultPlugins: false, warning: false });
-        statsPlugin = new StatsPlugin({ pluginHost: spy.pluginHost });
-        spy.pluginHost.plug(new GraphPlugin({ keptDuration: -1, pluginHost: spy.pluginHost }), statsPlugin);
+        patcher = patch({ defaultPlugins: false, warning: false });
+        statsPlugin = new StatsPlugin({ pluginHost: patcher.pluginHost });
+        patcher.pluginHost.plug(new GraphPlugin({ keptDuration: -1, pluginHost: patcher.pluginHost }), statsPlugin);
     });
 
     it("should count subscribes/unsubscribes", () => {
@@ -213,8 +213,8 @@ describe("StatsPlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

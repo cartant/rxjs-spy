@@ -6,26 +6,26 @@
 
 import { expect } from "chai";
 import { of, Subject } from "rxjs";
-import { create } from "../factory";
+import { patch } from "../factory";
 import { tag } from "../operators";
-import { Spy } from "../spy";
+import { Patcher } from "../patcher";
 import { PipePlugin } from "./pipe-plugin";
 
 describe("PipePlugin", () => {
 
-    let spy: Spy;
+    let patcher: Patcher;
 
     it("should apply the operator to a tag's source", () => {
 
         const operated = new Subject<string>();
 
-        spy = create({ defaultPlugins: false, warning: false });
+        patcher = patch({ defaultPlugins: false, warning: false });
         const plugin = new PipePlugin({
             match: "people",
             operator: () => operated,
-            pluginHost: spy.pluginHost
+            pluginHost: patcher.pluginHost
         });
-        spy.pluginHost.plug(plugin);
+        patcher.pluginHost.plug(plugin);
 
         const values: any[] = [];
         const subject = new Subject<string>();
@@ -40,17 +40,17 @@ describe("PipePlugin", () => {
 
     it("should apply the operator to an already-subscribed tag's source", () => {
 
-        spy = create({ defaultPlugins: false, warning: false });
+        patcher = patch({ defaultPlugins: false, warning: false });
 
         const values: any[] = [];
         const subject = new Subject<string>();
         subject.pipe(tag("people")).subscribe(value => values.push(value));
 
         const operated = new Subject<string>();
-        spy.pluginHost.plug(new PipePlugin({
+        patcher.pluginHost.plug(new PipePlugin({
             match: "people",
             operator: () => operated,
-            pluginHost: spy.pluginHost
+            pluginHost: patcher.pluginHost
         }));
 
         subject.next("alice");
@@ -62,16 +62,16 @@ describe("PipePlugin", () => {
 
     it("should forward completion notifications from the source by default", () => {
 
-        spy = create({ defaultPlugins: false, warning: false });
+        patcher = patch({ defaultPlugins: false, warning: false });
 
         const values: any[] = [];
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe(value => values.push(value));
 
-        spy.pluginHost.plug(new PipePlugin({
+        patcher.pluginHost.plug(new PipePlugin({
             match: "people",
             operator: () => of("bob"),
-            pluginHost: spy.pluginHost
+            pluginHost: patcher.pluginHost
         }));
 
         subject.next("alice");
@@ -81,17 +81,17 @@ describe("PipePlugin", () => {
 
     it("should ignore completion notifications from the source if required", () => {
 
-        spy = create({ defaultPlugins: false, warning: false });
+        patcher = patch({ defaultPlugins: false, warning: false });
 
         const values: any[] = [];
         const subject = new Subject<string>();
         const subscription = subject.pipe(tag("people")).subscribe(value => values.push(value));
 
-        spy.pluginHost.plug(new PipePlugin({
+        patcher.pluginHost.plug(new PipePlugin({
             complete: false,
             match: "people",
             operator: () => of("bob"),
-            pluginHost: spy.pluginHost
+            pluginHost: patcher.pluginHost
         }));
 
         subject.next("alice");
@@ -101,8 +101,8 @@ describe("PipePlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

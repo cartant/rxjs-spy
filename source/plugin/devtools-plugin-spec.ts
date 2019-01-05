@@ -8,8 +8,8 @@ import { expect } from "chai";
 import { Subject } from "rxjs";
 import * as sinon from "sinon";
 import { BATCH_MILLISECONDS, EXTENSION_KEY, MESSAGE_REQUEST, PANEL_MESSAGE } from "../devtools";
-import { create } from "../factory";
-import { Spy } from "../spy";
+import { patch } from "../factory";
+import { Patcher } from "../patcher";
 import { DevToolsPlugin } from "./devtools-plugin";
 import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
@@ -24,8 +24,8 @@ if (typeof window !== "undefined") {
         let mockConnection: any;
         let mockExtension: any;
         let mockUnsubscribe: any;
+        let patcher: Patcher;
         let snapshotPlugin: SnapshotPlugin;
-        let spy: Spy;
 
         beforeEach(() => {
 
@@ -40,13 +40,13 @@ if (typeof window !== "undefined") {
             };
             window[EXTENSION_KEY] = mockExtension;
 
-            spy = create({ defaultPlugins: false, warning: false });
-            snapshotPlugin = new SnapshotPlugin({ keptValues: 1, pluginHost: spy.pluginHost });
-            spy.pluginHost.plug(
-                new StackTracePlugin({ pluginHost: spy.pluginHost }),
-                new GraphPlugin({ keptDuration: -1, pluginHost: spy.pluginHost }),
+            patcher = patch({ defaultPlugins: false, warning: false });
+            snapshotPlugin = new SnapshotPlugin({ keptValues: 1, pluginHost: patcher.pluginHost });
+            patcher.pluginHost.plug(
+                new StackTracePlugin({ pluginHost: patcher.pluginHost }),
+                new GraphPlugin({ keptDuration: -1, pluginHost: patcher.pluginHost }),
                 snapshotPlugin,
-                new DevToolsPlugin({ pluginHost: spy.pluginHost })
+                new DevToolsPlugin({ pluginHost: patcher.pluginHost })
             );
         });
 
@@ -151,10 +151,10 @@ if (typeof window !== "undefined") {
 
             next({
                 messageType: MESSAGE_REQUEST,
+                patcherId: "1",
                 postId: "0",
                 postType: PANEL_MESSAGE,
-                requestType: "log",
-                spyId: "1"
+                requestType: "log"
             });
 
             return waitAfterSnapshot()
@@ -165,7 +165,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const [found] = spy.pluginHost.findPlugins(LogPlugin);
+                    const [found] = patcher.pluginHost.findPlugins(LogPlugin);
                     expect(found).to.exist;
 
                     next({
@@ -183,7 +183,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.exist;
                     expect(response).to.have.property("request");
 
-                    const [found] = spy.pluginHost.findPlugins(LogPlugin);
+                    const [found] = patcher.pluginHost.findPlugins(LogPlugin);
                     expect(found).to.not.exist;
                 });
         });
@@ -200,10 +200,10 @@ if (typeof window !== "undefined") {
 
             next({
                 messageType: MESSAGE_REQUEST,
+                patcherId: "1",
                 postId: "0",
                 postType: PANEL_MESSAGE,
-                requestType: "pause",
-                spyId: "1"
+                requestType: "pause"
             });
 
             return waitAfterSnapshot()
@@ -214,7 +214,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const [found] = spy.pluginHost.findPlugins(PausePlugin);
+                    const [found] = patcher.pluginHost.findPlugins(PausePlugin);
                     expect(found).to.exist;
 
                     next({
@@ -234,7 +234,7 @@ if (typeof window !== "undefined") {
                     expect(response).to.have.property("request");
                     expect(response).to.have.property("pluginId", "0");
 
-                    const [found] = spy.pluginHost.findPlugins(PausePlugin);
+                    const [found] = patcher.pluginHost.findPlugins(PausePlugin);
                     expect(found).to.exist;
 
                     next({
@@ -252,15 +252,15 @@ if (typeof window !== "undefined") {
                     expect(response).to.exist;
                     expect(response).to.have.property("request");
 
-                    const [found] = spy.pluginHost.findPlugins(PausePlugin);
+                    const [found] = patcher.pluginHost.findPlugins(PausePlugin);
                     expect(found).to.not.exist;
                 });
         });
 
         afterEach(() => {
 
-            if (spy) {
-                spy.teardown();
+            if (patcher) {
+                patcher.teardown();
             }
             expect(mockExtension.connect).to.have.property("callCount", 1);
             expect(mockConnection.disconnect).to.have.property("callCount", 1);

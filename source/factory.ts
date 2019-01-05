@@ -4,15 +4,18 @@
  */
 
 import { PartialLogger } from "./logger";
-import { Spy } from "./spy";
+import { Patcher } from "./patcher";
 
-export function create(options: {
+export function patch(options: {
     [key: string]: any,
     defaultLogger?: PartialLogger,
     defaultPlugins?: boolean,
     global?: string,
     warning?: boolean
-} = {}): Spy {
+} = {}): Patcher {
 
-    return new Spy(options);
+    return new Patcher(options);
 }
+
+export type Spy = Patcher;
+export const create = patch;

@@ -45,9 +45,9 @@ const observablePipe = Observable.prototype.pipe;
 const observableSubscribe = Observable.prototype.subscribe;
 const prePatchGlobalScope: Record<string, any> = {};
 
-export class Spy {
+export class Patcher {
 
-    private static spy_: Spy | undefined = undefined;
+    private static patcher_: Patcher | undefined = undefined;
     private defaultLogger_: Logger;
     private host_: Host;
     private lifting_ = false;
@@ -66,18 +66,18 @@ export class Spy {
         warning?: boolean
     } = {}) {
 
-        if (Spy.spy_) {
-            throw new Error("Already spying on Observable.prototype.subscribe.");
+        if (Patcher.patcher_) {
+            throw new Error("Already patched Observable.prototype.subscribe.");
         }
         if (options.warning) {
             /*tslint:disable-next-line:no-console*/
-            console.warn("Spying on Observable.prototype.subscribe.");
+            console.warn("Patching Observable.prototype.subscribe.");
         }
 
-        Spy.spy_ = this;
-        Observable.prototype.lift = Spy.patchedLift_;
-        Observable.prototype.pipe = Spy.patchedPipe_;
-        Observable.prototype.subscribe = Spy.patchedSubscribe_;
+        Patcher.patcher_ = this;
+        Observable.prototype.lift = Patcher.patchedLift_;
+        Observable.prototype.pipe = Patcher.patchedPipe_;
+        Observable.prototype.subscribe = Patcher.patchedSubscribe_;
 
         this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
         this.host_ = new Host({
@@ -138,7 +138,7 @@ export class Spy {
             }
 
             this.host_.teardown();
-            Spy.spy_ = undefined;
+            Patcher.patcher_ = undefined;
 
             Observable.prototype.lift = observableLift;
             Observable.prototype.pipe = observablePipe;
@@ -317,18 +317,18 @@ export class Spy {
         /*tslint:disable-next-line:no-invalid-this*/
         const source = this;
 
-        const { spy_ } = Spy;
-        if (!spy_ || spy_.lifting_) {
+        const { patcher_ } = Patcher;
+        if (!patcher_ || patcher_.lifting_) {
             return observableLift.call(source, operator);
         }
 
         /*tslint:disable:object-literal-sort-keys*/
-        const result = spy_.host_.notifyPlugins<Observable<any>>({
-            before: () => spy_.lifting_ = true,
+        const result = patcher_.host_.notifyPlugins<Observable<any>>({
+            before: () => patcher_.lifting_ = true,
             beforeEach: plugin => plugin.beforeLift(operator, source),
             between: () => observableLift.call(source, operator),
             afterEach: (plugin, sink) => plugin.afterLift(operator, source, sink),
-            after: () => spy_.lifting_ = false
+            after: () => patcher_.lifting_ = false
         });
         /*tslint:enable:object-literal-sort-keys*/
         return result;
@@ -340,18 +340,18 @@ export class Spy {
         /*tslint:disable-next-line:no-invalid-this*/
         const source = this;
 
-        const { spy_ } = Spy;
-        if (!spy_ || spy_.piping_) {
+        const { patcher_ } = Patcher;
+        if (!patcher_ || patcher_.piping_) {
             return observablePipe.apply(source, args);
         }
 
         /*tslint:disable:object-literal-sort-keys*/
-        const result = spy_.host_.notifyPlugins<Observable<any>>({
-            before: () => spy_.piping_ = true,
+        const result = patcher_.host_.notifyPlugins<Observable<any>>({
+            before: () => patcher_.piping_ = true,
             beforeEach: plugin => plugin.beforePipe(args, source),
             between: () => observablePipe.apply(source, args),
             afterEach: (plugin, sink) => plugin.afterPipe(args, source, sink),
-            after: () => spy_.piping_ = false
+            after: () => patcher_.piping_ = false
         });
         /*tslint:enable:object-literal-sort-keys*/
         return result;
@@ -363,20 +363,20 @@ export class Spy {
         /*tslint:disable-next-line:no-invalid-this*/
         const observable = this;
 
-        const { spy_ } = Spy;
-        if (!spy_) {
+        const { patcher_ } = Patcher;
+        if (!patcher_) {
             return observableSubscribe.apply(observable, args);
         }
         if (hidden(observable)) {
-            Spy.spy_ = undefined;
+            Patcher.patcher_ = undefined;
             try {
                 return observableSubscribe.apply(observable, args);
             } finally {
-                Spy.spy_ = spy_;
+                Patcher.patcher_ = patcher_;
             }
         }
 
-        const { host_ } = spy_;
+        const { host_ } = patcher_;
         const subscriber = toSubscriber.apply(undefined, args);
         const subscription = new Subscription();
 

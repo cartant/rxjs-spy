@@ -6,22 +6,22 @@
 
 import { expect } from "chai";
 import { Notification, Subject } from "rxjs";
-import { create } from "../factory";
+import { patch } from "../factory";
 import { tag } from "../operators";
-import { Spy } from "../spy";
+import { Patcher } from "../patcher";
 import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 
 describe("PausePlugin", () => {
 
     let deck: Deck;
+    let patcher: Patcher;
     let plugin: PausePlugin;
-    let spy: Spy;
 
     beforeEach(() => {
 
-        spy = create({ defaultPlugins: false, warning: false });
-        plugin = new PausePlugin({ match: "people", pluginHost: spy.pluginHost });
-        spy.pluginHost.plug(plugin);
+        patcher = patch({ defaultPlugins: false, warning: false });
+        plugin = new PausePlugin({ match: "people", pluginHost: patcher.pluginHost });
+        patcher.pluginHost.plug(plugin);
         deck = plugin.deck;
     });
 
@@ -280,8 +280,8 @@ describe("PausePlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

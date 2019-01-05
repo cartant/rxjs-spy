@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { BehaviorSubject, Subject } from "rxjs";
 import { mergeMap } from "rxjs/operators";
-import { create } from "../factory";
+import { patch } from "../factory";
 import { tag } from "../operators";
-import { Spy } from "../spy";
+import { Patcher } from "../patcher";
 import { DiffPlugin } from "./diff-plugin";
 
 const options = {
@@ -21,13 +21,13 @@ const options = {
 describe("DiffPlugin", () => {
 
     let diffPlugin: DiffPlugin;
-    let spy: Spy;
+    let patcher: Patcher;
 
     beforeEach(() => {
 
-        spy = create({ ...options });
-        diffPlugin = new DiffPlugin({ id: "", pluginHost: spy.pluginHost });
-        spy.pluginHost.plug(diffPlugin);
+        patcher = patch({ ...options });
+        diffPlugin = new DiffPlugin({ id: "", pluginHost: patcher.pluginHost });
+        patcher.pluginHost.plug(diffPlugin);
     });
 
     it("should find subscriptions and unsubscriptions", () => {
@@ -87,8 +87,8 @@ describe("DiffPlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

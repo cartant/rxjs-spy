@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { combineLatest, of, Subject } from "rxjs";
 import { map, mergeMap, switchMap } from "rxjs/operators";
-import { create } from "../factory";
+import { patch } from "../factory";
 import { tag } from "../operators";
-import { Spy } from "../spy";
+import { Patcher } from "../patcher";
 import { toSubscriber } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { SnapshotPlugin, SubscriptionSnapshot } from "./snapshot-plugin";
@@ -19,18 +19,18 @@ describe("SnapshotPlugin", () => {
     const keptDuration = -1;
     const keptValues = 2;
     let plugin: SnapshotPlugin;
-    let spy: Spy;
+    let patcher: Patcher;
 
     beforeEach(() => {
 
-        spy = create({ defaultPlugins: false, warning: false });
-        plugin = new SnapshotPlugin({ keptValues, pluginHost: spy.pluginHost });
-        spy.pluginHost.plug(new GraphPlugin({ keptDuration, pluginHost: spy.pluginHost }), plugin);
+        patcher = patch({ defaultPlugins: false, warning: false });
+        plugin = new SnapshotPlugin({ keptValues, pluginHost: patcher.pluginHost });
+        patcher.pluginHost.plug(new GraphPlugin({ keptDuration, pluginHost: patcher.pluginHost }), plugin);
     });
 
     describe("snapshotAll", () => {
 
-        it("should spy on subscriptions", () => {
+        it("should snapshot on subscriptions", () => {
 
             let snapshot = plugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 0);
@@ -64,7 +64,7 @@ describe("SnapshotPlugin", () => {
             expect(subscriptionSnapshot).to.have.property("unsubscribeTimestamp", 0);
         });
 
-        it("should spy on unsubscriptions", () => {
+        it("should snapshot unsubscriptions", () => {
 
             const subject = new Subject<number>();
             const subscription = subject.subscribe();
@@ -103,7 +103,7 @@ describe("SnapshotPlugin", () => {
             expect(subscriptionSnapshot.unsubscribeTimestamp).to.be.above(0);
         });
 
-        it("should spy on completions", () => {
+        it("should snapshot completions", () => {
 
             const subject = new Subject<number>();
             subject.subscribe();
@@ -143,7 +143,7 @@ describe("SnapshotPlugin", () => {
             expect(subscriptionSnapshot.unsubscribeTimestamp).to.be.above(0);
         });
 
-        it("should spy on errors", () => {
+        it("should snapshot errors", () => {
 
             const subject = new Subject<number>();
             subject.subscribe(value => {}, error => {});
@@ -184,7 +184,7 @@ describe("SnapshotPlugin", () => {
             expect(subscriptionSnapshot.unsubscribeTimestamp).to.be.above(0);
         });
 
-        it("should spy on values", () => {
+        it("should snapshot values", () => {
 
             const subject = new Subject<number>();
             subject.subscribe();
@@ -224,7 +224,7 @@ describe("SnapshotPlugin", () => {
             expect(subscriberSnapshot.values.map(t => t.value)).to.deep.equal([1, -1]);
         });
 
-        it("should spy on changes since the specified snapshot", () => {
+        it("should snapshot changes since the specified snapshot", () => {
 
             const subject = new Subject<number>();
             subject.subscribe();
@@ -247,7 +247,7 @@ describe("SnapshotPlugin", () => {
             expect(snapshot.subscriptions).to.have.property("size", 1);
         });
 
-        it("should spy on sources and sinks", () => {
+        it("should snapshot sources and sinks", () => {
 
             const subject = new Subject<number>();
             const mapped = subject.pipe(map(value => value));
@@ -270,7 +270,7 @@ describe("SnapshotPlugin", () => {
             expect(getAt(mappedSubscriptionSnapshot.sources, 0)).to.equal(subjectSubscriptionSnapshot);
         });
 
-        it("should spy on array-based sources", () => {
+        it("should snapshot array-based sources", () => {
 
             const subject1 = new Subject<number>();
             const subject2 = new Subject<number>();
@@ -296,7 +296,7 @@ describe("SnapshotPlugin", () => {
             expect(hasSource(combinedSubscriptionSnapshot, subject2SubscriptionSnapshot)).to.be.true;
         });
 
-        it("should spy on inner subscriptions", () => {
+        it("should snapshot inner subscriptions", () => {
 
             const subject = new Subject<number>();
             const outer = subject.pipe(tag("outer"));
@@ -475,8 +475,8 @@ describe("SnapshotPlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

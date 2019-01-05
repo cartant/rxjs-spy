@@ -7,10 +7,10 @@
 import { expect } from "chai";
 import { combineLatest, NEVER, Observable, Subject, Subscription } from "rxjs";
 import { filter, map, mergeMap, switchMap, tap } from "rxjs/operators";
-import { create } from "../factory";
+import { patch } from "../factory";
 import { identify } from "../identify";
 import { tag } from "../operators";
-import { Spy } from "../spy";
+import { Patcher } from "../patcher";
 import { GraphPlugin, GraphRecord } from "./graph-plugin";
 import { SubscriptionRecordsPlugin } from "./subscription-records-plugin";
 
@@ -19,7 +19,7 @@ describe("GraphPlugin", () => {
     describe("flushing", () => {
 
         let graphPlugin: GraphPlugin;
-        let spy: Spy;
+        let patcher: Patcher;
         let subscriptionRecordsPlugin: SubscriptionRecordsPlugin;
 
         function delay(duration: number): Promise<void> {
@@ -31,10 +31,10 @@ describe("GraphPlugin", () => {
 
             beforeEach(() => {
 
-                spy = create({ defaultPlugins: false, warning: false });
-                graphPlugin = new GraphPlugin({ keptDuration: duration, pluginHost: spy.pluginHost });
-                subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
-                spy.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
+                patcher = patch({ defaultPlugins: false, warning: false });
+                graphPlugin = new GraphPlugin({ keptDuration: duration, pluginHost: patcher.pluginHost });
+                subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: patcher.pluginHost });
+                patcher.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
             });
 
             it("should flush completed root subscriptions", () => {
@@ -275,8 +275,8 @@ describe("GraphPlugin", () => {
 
             afterEach(() => {
 
-                if (spy) {
-                    spy.teardown();
+                if (patcher) {
+                    patcher.teardown();
                 }
             });
         }
@@ -295,15 +295,15 @@ describe("GraphPlugin", () => {
     describe("graphing", () => {
 
         let graphPlugin: GraphPlugin;
-        let spy: Spy;
+        let patcher: Patcher;
         let subscriptionRecordsPlugin: SubscriptionRecordsPlugin;
 
         beforeEach(() => {
 
-            spy = create({ defaultPlugins: false, warning: false });
-            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy.pluginHost });
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
-            spy.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
+            patcher = patch({ defaultPlugins: false, warning: false });
+            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: patcher.pluginHost });
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: patcher.pluginHost });
+            patcher.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
         });
 
         it("should graph sources and sinks", () => {
@@ -584,8 +584,8 @@ describe("GraphPlugin", () => {
 
         afterEach(() => {
 
-            if (spy) {
-                spy.teardown();
+            if (patcher) {
+                patcher.teardown();
             }
         });
 
@@ -611,15 +611,15 @@ describe("GraphPlugin", () => {
     describe("methods", () => {
 
         let graphPlugin: GraphPlugin;
-        let spy: Spy;
+        let patcher: Patcher;
         let subscriptionRecordsPlugin: SubscriptionRecordsPlugin;
 
         beforeEach(() => {
 
-            spy = create({ defaultPlugins: false, warning: false });
-            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: spy.pluginHost });
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
-            spy.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
+            patcher = patch({ defaultPlugins: false, warning: false });
+            graphPlugin = new GraphPlugin({ keptDuration: 0, pluginHost: patcher.pluginHost });
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: patcher.pluginHost });
+            patcher.pluginHost.plug(graphPlugin, subscriptionRecordsPlugin);
         });
 
         describe("findRootSubscriptions", () => {
@@ -688,8 +688,8 @@ describe("GraphPlugin", () => {
 
         afterEach(() => {
 
-            if (spy) {
-                spy.teardown();
+            if (patcher) {
+                patcher.teardown();
             }
         });
     });

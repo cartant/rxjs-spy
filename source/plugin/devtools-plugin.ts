@@ -49,9 +49,9 @@ interface NotificationRecord {
 }
 
 interface PluginRecord {
+    patcherId: string;
     plugin: Plugin;
     pluginId: string;
-    spyId: string;
     teardown: () => void;
 }
 
@@ -104,10 +104,10 @@ export class DevToolsPlugin extends BasePlugin {
                     switch (request.requestType) {
                     case "log": {
                         const plugin = new LogPlugin({
-                            observableMatch: request["spyId"],
+                            observableMatch: request["patcherId"],
                             pluginHost: this.pluginHost_
                         });
-                        this.plug_(request["spyId"], request.postId, plugin);
+                        this.plug_(request["patcherId"], request.postId, plugin);
                         response["pluginId"] = request.postId;
                         break;
                     }
@@ -116,12 +116,12 @@ export class DevToolsPlugin extends BasePlugin {
                         break;
                     case "pause": {
                         const plugin = new PausePlugin({
-                            match: request["spyId"],
+                            match: request["patcherId"],
                             pluginHost: this.pluginHost_
                         });
-                        this.plug_(request["spyId"], request.postId, plugin);
+                        this.plug_(request["patcherId"], request.postId, plugin);
                         plugin.deck.stats.pipe(hide()).subscribe((stats: DeckStats) => {
-                            this.batchDeckStats_(toStats(request["spyId"], stats));
+                            this.batchDeckStats_(toStats(request["patcherId"], stats));
                         });
                         response["pluginId"] = request.postId;
                         break;
@@ -344,10 +344,10 @@ export class DevToolsPlugin extends BasePlugin {
         return this.foundPlugins_;
     }
 
-    private plug_(spyId: string, pluginId: string, plugin: Plugin): void {
+    private plug_(patcherId: string, pluginId: string, plugin: Plugin): void {
 
         const teardown = this.pluginHost_.plug(plugin);
-        this.plugins_.set(pluginId, { plugin, pluginId, spyId, teardown });
+        this.plugins_.set(pluginId, { plugin, pluginId, patcherId, teardown });
     }
 
     private toGraph_(subscription: Subscription): GraphPayload | undefined {

@@ -8,10 +8,10 @@ import { expect } from "chai";
 import { Subject } from "rxjs";
 import { mapTo } from "rxjs/operators";
 import * as sinon from "sinon";
-import { create } from "./factory";
+import { patch } from "./factory";
 import { tag }  from "./operators";
+import { Patcher } from "./patcher";
 import { Plugin } from "./plugin";
-import { Spy } from "./spy";
 
 const options = {
     keptDuration: -1,
@@ -19,20 +19,20 @@ const options = {
     warning: false
 };
 
-describe("spy", () => {
+describe("patcher", () => {
 
-    let spy: Spy;
+    let patcher: Patcher;
 
     describe("log", () => {
 
         it("should log the tagged observable", () => {
 
-            spy = create({ defaultPlugins: false, ...options });
+            patcher = patch({ defaultPlugins: false, ...options });
 
             const subject = new Subject<string>();
             let calls: any[][] = [];
 
-            spy.log("people", {
+            patcher.log("people", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -55,12 +55,12 @@ describe("spy", () => {
 
         it("should log all/any tagged observables", () => {
 
-            spy = create({ defaultPlugins: false, ...options });
+            patcher = patch({ defaultPlugins: false, ...options });
 
             const subject = new Subject<string>();
             const calls: any[][] = [];
 
-            spy.log({
+            patcher.log({
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -71,12 +71,12 @@ describe("spy", () => {
 
         it("should support a notification match", () => {
 
-            spy = create({ defaultPlugins: false, ...options });
+            patcher = patch({ defaultPlugins: false, ...options });
 
             const subject = new Subject<string>();
             const calls: any[][] = [];
 
-            spy.log(/people/, /next/, {
+            patcher.log(/people/, /next/, {
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -93,8 +93,8 @@ describe("spy", () => {
 
         it("should pause the tagged observable's subscriptions", () => {
 
-            spy = create({ defaultPlugins: false, ...options });
-            const deck = spy.pause("people");
+            patcher = patch({ defaultPlugins: false, ...options });
+            const deck = patcher.pause("people");
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -109,8 +109,8 @@ describe("spy", () => {
 
         it("should resume upon teardown", () => {
 
-            spy = create({ defaultPlugins: false, ...options });
-            spy.pause("people");
+            patcher = patch({ defaultPlugins: false, ...options });
+            patcher.pause("people");
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -119,7 +119,7 @@ describe("spy", () => {
             subject.next("alice");
             subject.next("bob");
             expect(values).to.deep.equal([]);
-            spy.teardown();
+            patcher.teardown();
             expect(values).to.deep.equal(["alice", "bob"]);
         });
     });
@@ -128,8 +128,8 @@ describe("spy", () => {
 
         it("should apply the operator to the tagged observable", () => {
 
-            spy = create({ defaultPlugins: false, ...options });
-            spy.pipe("people", source => source.pipe(mapTo("bob")));
+            patcher = patch({ defaultPlugins: false, ...options });
+            patcher.pipe("people", source => source.pipe(mapTo("bob")));
 
             const values: any[] = [];
             const subject = new Subject<string>();
@@ -149,8 +149,8 @@ describe("spy", () => {
             beforeEach(() => {
 
                 plugin = stubPlugin();
-                spy = create({ defaultPlugins: false, ...options });
-                spy.pluginHost.plug(plugin);
+                patcher = patch({ defaultPlugins: false, ...options });
+                patcher.pluginHost.plug(plugin);
             });
 
             it("should call the plugin subscribe/next/unsubscribe methods", () => {
@@ -238,7 +238,7 @@ describe("spy", () => {
                 expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
                 expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
-                spy.pause("people");
+                patcher.pause("people");
                 subscription.unsubscribe();
                 expect(plugin.beforeUnsubscribe).to.have.property("calledTwice", true);
                 expect(plugin.afterUnsubscribe).to.have.property("calledTwice", true);
@@ -252,7 +252,7 @@ describe("spy", () => {
                 expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
                 expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
-                const deck = spy.pause("people");
+                const deck = patcher.pause("people");
                 subject.complete();
                 expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
                 expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
@@ -269,7 +269,7 @@ describe("spy", () => {
                 expect(plugin.beforeSubscribe).to.have.property("calledTwice", true);
                 expect(plugin.afterSubscribe).to.have.property("calledTwice", true);
 
-                const deck = spy.pause("people");
+                const deck = patcher.pause("people");
                 subject.error(new Error("Boom!"));
                 expect(plugin.beforeUnsubscribe).to.have.property("calledOnce", true);
                 expect(plugin.afterUnsubscribe).to.have.property("calledOnce", true);
@@ -309,21 +309,21 @@ describe("spy", () => {
 
             it("should increment with each subscription and value, etc.", () => {
 
-                spy = create({ defaultPlugins: false, ...options });
+                patcher = patch({ defaultPlugins: false, ...options });
 
                 const subject = new Subject<string>();
 
-                let last = spy.pluginHost.tick;
+                let last = patcher.pluginHost.tick;
                 const subscription = subject.subscribe();
-                expect(spy.pluginHost.tick).to.be.above(last);
+                expect(patcher.pluginHost.tick).to.be.above(last);
 
-                last = spy.pluginHost.tick;
+                last = patcher.pluginHost.tick;
                 subject.next("alice");
-                expect(spy.pluginHost.tick).to.be.above(last);
+                expect(patcher.pluginHost.tick).to.be.above(last);
 
-                last = spy.pluginHost.tick;
+                last = patcher.pluginHost.tick;
                 subscription.unsubscribe();
-                expect(spy.pluginHost.tick).to.be.above(last);
+                expect(patcher.pluginHost.tick).to.be.above(last);
             });
         });
     });
@@ -332,13 +332,13 @@ describe("spy", () => {
 
         it("should show snapshotted information for the tagged observable", () => {
 
-            spy = create({ ...options });
+            patcher = patch({ ...options });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
             subject.pipe(tag("people")).subscribe();
 
-            spy.query("tag(/people/)", {
+            patcher.query("tag(/people/)", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -349,13 +349,13 @@ describe("spy", () => {
 
         it("should show snapshotted information all/any tagged observables", () => {
 
-            spy = create({ ...options });
+            patcher = patch({ ...options });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
             subject.pipe(tag("people")).subscribe();
 
-            spy.query("tag()", {
+            patcher.query("tag()", {
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -369,13 +369,13 @@ describe("spy", () => {
 
         it("should show the stats", () => {
 
-            spy = create({ ...options });
+            patcher = patch({ ...options });
 
             const calls: any[][] = [];
             const subject = new Subject<number>();
             subject.subscribe();
 
-            spy.stats({
+            patcher.stats({
                 log(...args: any[]): void { calls.push(args); }
             });
 
@@ -392,8 +392,8 @@ describe("spy", () => {
 
         it("should return the package version", () => {
 
-            spy = create({ defaultPlugins: false, ...options });
-            expect(spy).to.have.property("version", require("../package.json").version);
+            patcher = patch({ defaultPlugins: false, ...options });
+            expect(patcher).to.have.property("version", require("../package.json").version);
         });
     });
 
@@ -403,13 +403,13 @@ describe("spy", () => {
 
             it("should create a global named 'spy' by default", () => {
 
-                spy = create({ ...options });
+                patcher = patch({ ...options });
                 expect(window).to.have.property("spy");
             });
 
             it("should create a global with the specified name", () => {
 
-                spy = create({ global: "_spy", ...options });
+                patcher = patch({ global: "_spy", ...options });
                 expect(window).to.not.have.property("spy");
                 expect(window).to.have.property("_spy");
             });
@@ -418,8 +418,8 @@ describe("spy", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

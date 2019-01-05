@@ -7,8 +7,8 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import * as sinon from "sinon";
-import { create } from "../factory";
-import { Spy } from "../spy";
+import { patch } from "../factory";
+import { Patcher } from "../patcher";
 import { CyclePlugin } from "./cycle-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
@@ -19,7 +19,7 @@ const options = {
 
 describe("CyclePlugin", () => {
 
-    let spy: Spy;
+    let patcher: Patcher;
     let stubs: Record<string, sinon.SinonStub>;
 
     beforeEach(() => {
@@ -29,11 +29,11 @@ describe("CyclePlugin", () => {
             log: sinon.stub(),
             warn: sinon.stub()
         };
-        spy = create({ ...options, defaultLogger: stubs as any });
-        spy.pluginHost.plug(new StackTracePlugin({ pluginHost: spy.pluginHost }));
-        spy.pluginHost.plug(new CyclePlugin({
+        patcher = patch({ ...options, defaultLogger: stubs as any });
+        patcher.pluginHost.plug(new StackTracePlugin({ pluginHost: patcher.pluginHost }));
+        patcher.pluginHost.plug(new CyclePlugin({
             cycleThreshold: 1,
-            pluginHost: spy.pluginHost
+            pluginHost: patcher.pluginHost
         }));
     });
 
@@ -65,8 +65,8 @@ describe("CyclePlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

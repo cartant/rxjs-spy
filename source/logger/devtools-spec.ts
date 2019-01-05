@@ -6,7 +6,7 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { toLogger } from "./spy";
+import { toLogger } from "./devtools";
 
 describe("logger", () => {
 

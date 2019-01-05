@@ -6,10 +6,10 @@
 
 import { expect } from "chai";
 import { Subject } from "rxjs";
-import { create } from "../factory";
+import { patch } from "../factory";
 import { identify } from "../identify";
 import { tag } from "../operators";
-import { Spy } from "../spy";
+import { Patcher } from "../patcher";
 import { LogPlugin } from "./log-plugin";
 import { SubscriptionRecordsPlugin } from "./subscription-records-plugin";
 
@@ -21,23 +21,23 @@ const options = {
 describe("LogPlugin", () => {
 
     let calls: any[][];
-    let spy: Spy;
+    let patcher: Patcher;
     let subscriptionRecordsPlugin: SubscriptionRecordsPlugin;
 
     describe("tags", () => {
 
         beforeEach(() => {
 
-            spy = create(options);
+            patcher = patch(options);
 
             const plugin = new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: "people",
-                pluginHost: spy.pluginHost
+                pluginHost: patcher.pluginHost
             });
-            spy.pluginHost.plug(plugin);
+            patcher.pluginHost.plug(plugin);
             calls = [];
         });
 
@@ -146,9 +146,9 @@ describe("LogPlugin", () => {
 
         beforeEach(() => {
 
-            spy = create(options);
-            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
-            spy.pluginHost.plug(subscriptionRecordsPlugin);
+            patcher = patch(options);
+            subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: patcher.pluginHost });
+            patcher.pluginHost.plug(subscriptionRecordsPlugin);
             calls = [];
         });
 
@@ -158,12 +158,12 @@ describe("LogPlugin", () => {
             subject.subscribe();
 
             const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
-            spy.pluginHost.plug(new LogPlugin({
+            patcher.pluginHost.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.observable),
-                pluginHost: spy.pluginHost
+                pluginHost: patcher.pluginHost
             }));
 
             calls = [];
@@ -179,12 +179,12 @@ describe("LogPlugin", () => {
             subject.subscribe();
 
             const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
-            spy.pluginHost.plug(new LogPlugin({
+            patcher.pluginHost.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.subscriber),
-                pluginHost: spy.pluginHost
+                pluginHost: patcher.pluginHost
             }));
 
             calls = [];
@@ -200,12 +200,12 @@ describe("LogPlugin", () => {
             subject.subscribe();
 
             const subscriptionRecord = subscriptionRecordsPlugin.getSubscriptionRecord(subject);
-            spy.pluginHost.plug(new LogPlugin({
+            patcher.pluginHost.plug(new LogPlugin({
                 logger: {
                     log(...args: any[]): void { calls.push(args); }
                 },
                 observableMatch: identify(subscriptionRecord.subscription),
-                pluginHost: spy.pluginHost
+                pluginHost: patcher.pluginHost
             }));
 
             calls = [];
@@ -218,8 +218,8 @@ describe("LogPlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

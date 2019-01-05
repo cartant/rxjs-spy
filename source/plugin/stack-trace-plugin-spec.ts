@@ -7,23 +7,23 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import { map } from "rxjs/operators";
-import { create } from "../factory";
-import { Spy } from "../spy";
+import { patch } from "../factory";
+import { Patcher } from "../patcher";
 import { StackTracePlugin } from "./stack-trace-plugin";
 import { SubscriptionRecordsPlugin } from "./subscription-records-plugin";
 
 describe("StackTracePlugin", () => {
 
-    let spy: Spy;
+    let patcher: Patcher;
     let stackTracePlugin: StackTracePlugin;
     let subscriptionRecordsPlugin: SubscriptionRecordsPlugin;
 
     beforeEach(() => {
 
-        spy = create({ defaultPlugins: false, warning: false });
-        stackTracePlugin = new StackTracePlugin({ pluginHost: spy.pluginHost });
-        subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: spy.pluginHost });
-        spy.pluginHost.plug(stackTracePlugin, subscriptionRecordsPlugin);
+        patcher = patch({ defaultPlugins: false, warning: false });
+        stackTracePlugin = new StackTracePlugin({ pluginHost: patcher.pluginHost });
+        subscriptionRecordsPlugin = new SubscriptionRecordsPlugin({ pluginHost: patcher.pluginHost });
+        patcher.pluginHost.plug(stackTracePlugin, subscriptionRecordsPlugin);
     });
 
     it("should determine the stack traces", () => {
@@ -47,8 +47,8 @@ describe("StackTracePlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

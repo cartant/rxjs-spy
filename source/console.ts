@@ -4,25 +4,25 @@
  */
 
 import { defaultLogger, toLogger } from "./logger";
+import { Patcher } from "./patcher";
 import { PausePlugin } from "./plugin";
-import { Spy } from "./spy";
 
 export function forConsole(
-    spy: Spy,
+    patcher: Patcher,
     deprecation: () => void = () => {}
 ): any {
     return {
         get limit(): number {
             deprecation();
-            return spy.limit;
+            return patcher.limit;
         },
         set limit(value: number) {
             deprecation();
-            spy.limit = value;
+            patcher.limit = value;
         },
         deck(call?: number): any {
             deprecation();
-            const pausePlugins = spy.pluginHost.findPlugins(PausePlugin);
+            const pausePlugins = patcher.pluginHost.findPlugins(PausePlugin);
             if (call === undefined) {
                 const logger = toLogger(defaultLogger);
                 logger.group(`${pausePlugins.length} Deck(s)`);
@@ -35,39 +35,39 @@ export function forConsole(
         },
         diff(...args: any[]): void {
             deprecation();
-            spy.diff.apply(spy, args);
+            patcher.diff.apply(patcher, args);
         },
         log(...args: any[]): void {
             deprecation();
-            spy.log.apply(spy, args);
+            patcher.log.apply(patcher, args);
         },
         pause(...args: any[]): any {
             deprecation();
-            return spy.pause.apply(spy, args);
+            return patcher.pause.apply(patcher, args);
         },
         pipe(...args: any[]): void {
             deprecation();
-            spy.pipe.apply(spy, args);
+            patcher.pipe.apply(patcher, args);
         },
         query(...args: any[]): void {
             deprecation();
-            spy.query.apply(spy, args);
+            patcher.query.apply(patcher, args);
         },
         stats(): void {
             deprecation();
-            spy.stats();
+            patcher.stats();
         },
         undo(...args: any[]): void {
             if (args.length === 0) {
                 const logger = toLogger(defaultLogger);
-                logger.group(`${spy.undos.length} undo(s)`);
-                spy.undos.forEach((undo, index) => logger.log(`${index + 1} ${undo.name}`));
+                logger.group(`${patcher.undos.length} undo(s)`);
+                patcher.undos.forEach((undo, index) => logger.log(`${index + 1} ${undo.name}`));
                 logger.groupEnd();
             } else {
                 args
-                    .map(at => spy.undos[at - 1])
+                    .map(at => patcher.undos[at - 1])
                     .filter(Boolean)
-                    .forEach(undo => spy.pluginHost.unplug(undo));
+                    .forEach(undo => patcher.pluginHost.unplug(undo));
             }
         }
     };

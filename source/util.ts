@@ -49,7 +49,7 @@ const SubscriberSymbol = Symbol.for("rxSubscriber");
 //
 // toSubscriber is not part of the RxJS bundle's public API, so if it were to
 // be imported using a Rollup CommonJS plugin, it would need to be included in
-// the spy's bundle - but the other RxJS modules should not be included. This
+// this lib's bundle - but the other RxJS modules should not be included. This
 // seems too complicated, for the moment.
 
 export function toSubscriber<T>(

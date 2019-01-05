@@ -8,8 +8,8 @@ import { expect } from "chai";
 import { NEVER, Subject, zip } from "rxjs";
 import { bufferWhen, concatMap, mergeMap } from "rxjs/operators";
 import * as sinon from "sinon";
-import { create } from "../factory";
-import { Spy } from "../spy";
+import { patch } from "../factory";
+import { Patcher } from "../patcher";
 import { BufferPlugin } from "./buffer-plugin";
 import { GraphPlugin } from "./graph-plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
@@ -22,7 +22,7 @@ const options = {
 
 describe("BufferPlugin", () => {
 
-    let spy: Spy;
+    let patcher: Patcher;
     let stubs: Record<string, sinon.SinonStub>;
 
     beforeEach(() => {
@@ -32,13 +32,13 @@ describe("BufferPlugin", () => {
             log: sinon.stub(),
             warn: sinon.stub()
         };
-        spy = create({ ...options, defaultLogger: stubs as any });
-        spy.pluginHost.plug(new StackTracePlugin({ pluginHost: spy.pluginHost }));
-        spy.pluginHost.plug(new GraphPlugin({ pluginHost: spy.pluginHost }));
-        spy.pluginHost.plug(new SnapshotPlugin({ pluginHost: spy.pluginHost }));
-        spy.pluginHost.plug(new BufferPlugin({
+        patcher = patch({ ...options, defaultLogger: stubs as any });
+        patcher.pluginHost.plug(new StackTracePlugin({ pluginHost: patcher.pluginHost }));
+        patcher.pluginHost.plug(new GraphPlugin({ pluginHost: patcher.pluginHost }));
+        patcher.pluginHost.plug(new SnapshotPlugin({ pluginHost: patcher.pluginHost }));
+        patcher.pluginHost.plug(new BufferPlugin({
             bufferThreshold: 2,
-            pluginHost: spy.pluginHost
+            pluginHost: patcher.pluginHost
         }));
     });
 
@@ -138,8 +138,8 @@ describe("BufferPlugin", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });

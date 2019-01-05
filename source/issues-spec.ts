@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { concat, NEVER, of } from "rxjs";
 import { share } from "rxjs/operators";
-import { create } from "./factory";
+import { patch } from "./factory";
 import { hide } from "./operators";
-import { Spy } from "./spy";
+import { Patcher } from "./patcher";
 
 const options = {
     defaultPlugins: true,
@@ -18,13 +18,13 @@ const options = {
     warning: false
 };
 
-describe("issues", () => {
+describe.only("issues", () => {
 
-    let spy: Spy;
+    let patcher: Patcher;
 
     beforeEach(() => {
 
-        spy = create(options);
+        patcher = patch(options);
     });
 
     describe("37", () => {
@@ -66,8 +66,8 @@ describe("issues", () => {
 
     afterEach(() => {
 
-        if (spy) {
-            spy.teardown();
+        if (patcher) {
+            patcher.teardown();
         }
     });
 });
