@@ -3,17 +3,19 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { StackFrame } from "error-stack-parser";
 import { forkJoin, Observable, of, Subscriber, Subscription } from "rxjs";
 import { mapTo } from "rxjs/operators";
 import { identify } from "../identify";
+import { Logger } from "../logger";
 import { read } from "../match";
 import { hide } from "../operators";
-import { QueryRecord } from "../query";
+import { QueryDerivations, QueryPredicate, QueryRecord } from "../query";
 import { getSubscriptionRecord } from "../subscription-record";
 import { inferPath, inferType } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
+import { query } from "./snapshot-plugin-query";
+import { ObservableSnapshot, Snapshot, SubscriberSnapshot, SubscriptionSnapshot } from "./snapshots";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
 const snapshotRecordSymbol = Symbol("snapshotRecord");
@@ -25,61 +27,7 @@ export interface SnapshotRecord {
     valuesFlushed: number;
 }
 
-export interface Snapshot {
-    observables: Map<Observable<any>, ObservableSnapshot>;
-    subscribers: Map<Subscriber<any>, SubscriberSnapshot>;
-    subscriptions: Map<Subscription, SubscriptionSnapshot>;
-    tick: number;
-    mapStackTraces(observableSnapshots: ObservableSnapshot[]): Observable<void>;
-    mapStackTraces(subscriberSnapshots: SubscriberSnapshot[]): Observable<void>;
-    mapStackTraces(subscriptionSnapshots: SubscriptionSnapshot[]): Observable<void>;
-}
-
-export interface ObservableSnapshot {
-    id: string;
-    observable: Observable<any>;
-    path: string;
-    subscriptions: Map<Subscription, SubscriptionSnapshot>;
-    tag: string | undefined;
-    tick: number;
-    type: string;
-}
-
-export interface SubscriberSnapshot {
-    id: string;
-    subscriber: Subscriber<any>;
-    subscriptions: Map<Subscription, SubscriptionSnapshot>;
-    tick: number;
-    values: { tick: number; timestamp: number; value: any; }[];
-    valuesFlushed: number;
-}
-
-export interface SubscriptionSnapshot {
-    completeTimestamp: number;
-    error: any;
-    errorTimestamp: number;
-    id: string;
-    inner: boolean;
-    inners: Map<Subscription, SubscriptionSnapshot>;
-    innersFlushed: number;
-    mappedStackTrace: Observable<StackFrame[]>;
-    nextCount: number;
-    nextTimestamp: number;
-    observable: Observable<any>;
-    queryRecord: QueryRecord;
-    rootSink: SubscriptionSnapshot | undefined;
-    sink: SubscriptionSnapshot | undefined;
-    sources: Map<Subscription, SubscriptionSnapshot>;
-    sourcesFlushed: number;
-    stackTrace: StackFrame[];
-    subscribeTimestamp: number;
-    subscriber: Subscriber<any>;
-    subscription: Subscription;
-    tick: number;
-    unsubscribeTimestamp: number;
-    values: { tick: number; timestamp: number; value: any; }[];
-    valuesFlushed: number;
-}
+export * from "./snapshots";
 
 type FoundPlugins = {
     graphPlugin: GraphPlugin | undefined;
@@ -88,9 +36,10 @@ type FoundPlugins = {
 
 export class SnapshotPlugin extends BasePlugin {
 
+    private derivations_: QueryDerivations;
     private foundPlugins_: FoundPlugins | undefined;
     private keptValues_: number;
-    private pluginHost_: PluginHost;
+        private pluginHost_: PluginHost;
 
     constructor({
         keptValues = 4,
@@ -102,9 +51,20 @@ export class SnapshotPlugin extends BasePlugin {
 
         super("snapshot");
 
+        this.derivations_ = {};
         this.foundPlugins_ = undefined;
         this.keptValues_ = keptValues;
         this.pluginHost_ = pluginHost;
+    }
+
+    get derivations(): QueryDerivations {
+
+        return this.derivations_;
+    }
+
+    set derivations(value: QueryDerivations) {
+
+        this.derivations_ = value;
     }
 
     beforeError(subscription: Subscription, error: any): void {
@@ -169,6 +129,20 @@ export class SnapshotPlugin extends BasePlugin {
                 observables.push(subscriptionSnapshot.rootSink.mappedStackTrace);
             }
         }
+    }
+
+    query(options: {
+        limit: number,
+        logger: Logger,
+        orderBy: string,
+        predicate: string | QueryPredicate
+    }): void {
+
+        query({
+            ...options,
+            derivations: this.derivations_,
+            snapshot: this.snapshotAll()
+        });
     }
 
     snapshotAll({

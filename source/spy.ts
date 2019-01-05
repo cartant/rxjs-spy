@@ -13,7 +13,6 @@ import {
 
 import { Auditor } from "./auditor";
 import { forConsole } from "./console";
-import { compile, compileOrderBy } from "./expression";
 import { hidden } from "./hidden";
 import { identify } from "./identify";
 import { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
@@ -28,7 +27,6 @@ import {
     DiffPlugin,
     GraphPlugin,
     LogPlugin,
-    ObservableSnapshot,
     PausePlugin,
     PipePlugin,
     Plugin,
@@ -36,32 +34,21 @@ import {
     PluginOptions,
     SnapshotPlugin,
     StackTracePlugin,
-    StatsPlugin,
-    SubscriberSnapshot,
-    SubscriptionSnapshot
+    StatsPlugin
 } from "./plugin";
 
-import { QueryDerivations, QueryPredicate, QueryRecord } from "./query";
+import { QueryDerivations, QueryPredicate } from "./query";
 import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record";
 import { Teardown } from "./teardown";
 import { toSubscriber } from "./util";
 
 declare const __RXJS_SPY_VERSION__: string;
+const defaultLimit = 20;
+const defaultOrderBy = "age asc";
 const observableLift = Observable.prototype.lift;
 const observablePipe = Observable.prototype.pipe;
 const observableSubscribe = Observable.prototype.subscribe;
 const previousGlobalScope: Record<string, any> = {};
-
-const defaultDerivations: QueryDerivations = {
-    age: ({ completeAge, errorAge, nextAge, subscribeAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, subscribeAge || Infinity, unsubscribeAge || Infinity),
-    blocked: ({ nextAge, sourceNextAge }) => nextAge > sourceNextAge,
-    file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
-    func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
-    id: record => (match: number | string) => matchId(record, match),
-    tag: record => (match: string | RegExp) => matchTag(record, match)
-};
-const defaultLimit = 20;
-const defaultOrderBy = "age asc";
 
 export class Spy {
 
@@ -69,7 +56,6 @@ export class Spy {
 
     private auditor_: Auditor;
     private defaultLogger_: Logger;
-    private derivations_: QueryDerivations;
     private limit_ = defaultLimit;
     private orderBy_ = defaultOrderBy;
     private plugins_: Plugin[];
@@ -103,7 +89,6 @@ export class Spy {
 
         this.auditor_ = new Auditor(options.audit || 0);
         this.defaultLogger_ = toLogger(options.defaultLogger || defaultLogger);
-        this.derivations_ = {};
         if (options.defaultPlugins ===  false) {
             this.plugins_ = [];
         } else {
@@ -328,14 +313,20 @@ export class Spy {
     query(derivations: QueryDerivations): void;
     query(...args: any[]): void {
 
-        const [derivationsArg] = args;
-        if (typeof derivationsArg === "object") {
-            this.derivations_ = derivationsArg;
+        const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
+        if (!snapshotPlugin) {
+            this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
             return;
         }
 
-        const partialLogger = (typeof args[args.length - 1] === "object") ?
-            args.pop() :
+        const [derivationsArg] = args;
+        if (typeof derivationsArg === "object") {
+            snapshotPlugin.derivations = derivationsArg;
+            return;
+        }
+
+        const logger = (typeof args[args.length - 1] === "object") ?
+            toLogger(args.pop()) :
             this.defaultLogger_;
 
         const [
@@ -348,142 +339,11 @@ export class Spy {
             number?
         ];
 
-        const { evaluator: predicate, keys } = (typeof predicateArg === "string") ?
-            compile(predicateArg || "true") :
-            { evaluator: predicateArg, keys: [] };
-
-        const [snapshotPlugin] = this.findPlugins(SnapshotPlugin);
-        if (!snapshotPlugin) {
-            this.defaultLogger_.warnOnce("Snapshotting is not enabled.");
-            return;
-        }
-
-        const snapshot = snapshotPlugin.snapshotAll();
-        const observableSnapshots = Array.from(snapshot.observables.values());
-        const logger = toLogger(partialLogger || this.defaultLogger_);
-
-        snapshot.mapStackTraces(observableSnapshots).subscribe(() => {
-
-            const found: {
-                observable: ObservableSnapshot;
-                orderByRecord: QueryRecord;
-                subs: {
-                    subscriber: SubscriberSnapshot;
-                    subscription: SubscriptionSnapshot;
-                }[]
-            }[] = [];
-
-            const limit = limitArg || this.limit_;
-            const orderBy = orderByArg || this.orderBy_;
-            const { comparer } = compileOrderBy(orderBy);
-
-            observableSnapshots.forEach(observableSnapshot => {
-
-                let find: typeof found[0] | undefined;
-
-                const { subscriptions } = observableSnapshot;
-                subscriptions.forEach(subscriptionSnapshot => {
-
-                    const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
-                    if (subscriberSnapshot) {
-                        const queryRecord = this.toQueryRecord_(
-                            observableSnapshot,
-                            subscriberSnapshot,
-                            subscriptionSnapshot
-                        );
-                        if (predicate(queryRecord)) {
-                            const orderByRecord = queryRecord;
-                            if (!find) {
-                                find = {
-                                    observable: observableSnapshot,
-                                    orderByRecord,
-                                    subs: []
-                                };
-                            } else if (comparer(orderByRecord, find.orderByRecord) < 0) {
-                                find.orderByRecord = orderByRecord;
-                            }
-                            find.subs.push({
-                                subscriber: subscriberSnapshot,
-                                subscription: subscriptionSnapshot
-                            });
-                        }
-                    }
-                });
-
-                if (find) {
-                    found.push(find);
-                }
-            });
-
-            if (comparer) {
-                found.sort((l, r) => comparer(
-                    l.orderByRecord,
-                    r.orderByRecord
-                ));
-            }
-
-            const omitted = (found.length > limit) ? found.length - limit : 0;
-            if (omitted) {
-                found.splice(limit, omitted);
-            }
-
-            logger.group(`${found.length + omitted} snapshot(s) found`);
-
-            const observableGroupMethod = (found.length > 3) ? "groupCollapsed" : "group";
-            found.forEach(find => {
-                const observableSnapshot = find.observable;
-                logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
-                    `ID = ${observableSnapshot.id}; tag = ${observableSnapshot.tag}` :
-                    `ID = ${observableSnapshot.id}`
-                );
-                logger.log("Path =", observableSnapshot.path);
-                logger.log("Type =", observableSnapshot.type);
-
-                const { subs } = find;
-                const subscriberGroupMethod = (find.subs.length > 3) ? "groupCollapsed" : "group";
-                logger.group(`${subs.length} subscriber(s)`);
-                subs.forEach(sub => {
-
-                    const subscriptionSnapshot = sub.subscription;
-                    const subscriberSnapshot = sub.subscriber;
-                    const { values, valuesFlushed } = subscriberSnapshot;
-                    logger[subscriberGroupMethod].call(logger, "Subscriber");
-                    logger.log("Value count =", values.length + valuesFlushed);
-                    if (values.length > 0) {
-                        logger.log("Last value =", values[values.length - 1].value);
-                    }
-                    this.logSubscription_(
-                        logger,
-                        observableSnapshot,
-                        subscriberSnapshot,
-                        subscriptionSnapshot,
-                        keys
-                    );
-
-                    const otherSubscriptions = Array
-                        .from(subscriberSnapshot.subscriptions.values())
-                        .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot);
-                    otherSubscriptions.forEach(otherSubscriptionSnapshot => {
-                        logger.groupCollapsed("Other subscription");
-                        this.logSubscription_(
-                            logger,
-                            observableSnapshot,
-                            subscriberSnapshot,
-                            otherSubscriptionSnapshot,
-                            keys
-                        );
-                        logger.groupEnd();
-                    });
-                    logger.groupEnd();
-                });
-                logger.groupEnd();
-                logger.groupEnd();
-            });
-
-            if (omitted) {
-                logger.log(`... another ${omitted} snapshot(s) not logged.`);
-            }
-            logger.groupEnd();
+        snapshotPlugin.query({
+            limit: limitArg || defaultLimit,
+            logger,
+            orderBy: orderByArg || defaultOrderBy,
+            predicate: predicateArg
         });
     }
 
@@ -738,191 +598,4 @@ export class Spy {
         );
         return subscriber;
     }
-
-    private logStackTrace_(
-        logger: Logger,
-        subscriptionSnapshot: SubscriptionSnapshot
-    ): void {
-
-        const { mappedStackTrace, rootSink } = subscriptionSnapshot;
-        const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
-        mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
-    }
-
-    private logSubscription_(
-        logger: Logger,
-        observableSnapshot: ObservableSnapshot,
-        subscriberSnapshot: SubscriberSnapshot,
-        subscriptionSnapshot: SubscriptionSnapshot,
-        queryKeys: string[] = []
-    ): void {
-
-        const {
-            completeTimestamp,
-            error,
-            errorTimestamp,
-            unsubscribeTimestamp
-        } = subscriptionSnapshot;
-        const record = this.toQueryRecord_(
-            observableSnapshot,
-            subscriberSnapshot,
-            subscriptionSnapshot
-        );
-
-        logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
-        queryKeys = queryKeys
-            .sort()
-            .filter(key => !["function", "undefined"].includes(typeof record[key]));
-        if (queryKeys.length > 0) {
-            logger.group("Query match");
-            queryKeys.forEach(key => logger.log(`${key} =`, record[key]));
-            logger.groupEnd();
-        }
-        logger.groupCollapsed("Query record");
-        Object.keys(record)
-            .sort()
-            .filter(key => !["function", "undefined"].includes(typeof record[key]))
-            .forEach(key => logger.log(`${key} =`, record[key]));
-        logger.groupEnd();
-        if (errorTimestamp) {
-            logger.error("Error =", error || "unknown");
-        }
-        if (unsubscribeTimestamp) {
-            logger.log("Unsubscribed =", true);
-        }
-        this.logStackTrace_(logger, subscriptionSnapshot);
-    }
-
-    private toQueryRecord_(
-        observableSnapshot: ObservableSnapshot,
-        subscriberSnapshot: SubscriberSnapshot,
-        subscriptionSnapshot: SubscriptionSnapshot
-    ): QueryRecord {
-
-        const now = Date.now();
-        function age(timestamp: number): number | undefined {
-            return timestamp ? ((now - timestamp) / 1e3) : undefined;
-        }
-
-        const {
-            completeTimestamp,
-            error,
-            errorTimestamp,
-            inner,
-            inners,
-            innersFlushed,
-            nextCount,
-            nextTimestamp,
-            observable,
-            rootSink,
-            sink,
-            sources,
-            sourcesFlushed,
-            stackTrace,
-            subscribeTimestamp,
-            subscriber,
-            subscription,
-            unsubscribeTimestamp
-        } = subscriptionSnapshot;
-        const { derivations_ } = this;
-
-        const innerSnapshots = Array.from(inners.values());
-        const sourceSnapshots = Array.from(sources.values());
-
-        const queryRecord = {
-            ...subscriptionSnapshot.queryRecord,
-            complete: completeTimestamp !== 0,
-            completeAge: age(completeTimestamp),
-            error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
-            errorAge: age(errorTimestamp),
-            frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
-            incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
-            inner,
-            innerCount: innerSnapshots.length + innersFlushed,
-            innerIds: innerSnapshots.map(inner => inner.id),
-            innerNextAge: age(innerSnapshots.reduce((max, inner) => Math.max(max, inner.nextTimestamp), 0)),
-            innerNextCount: innerSnapshots.reduce((total, inner) => total + inner.nextCount, 0),
-            nextAge: age(nextTimestamp),
-            nextCount,
-            observableId: identify(observable),
-            root: !sink,
-            rootSinkId: rootSink ? rootSink.id : undefined,
-            sinkId: sink ? sink.id : undefined,
-            sinkNextAge: sink ? age(sink.nextTimestamp) : undefined,
-            sinkNextCount: sink ? sink.nextCount : 0,
-            sourceCount: sourceSnapshots.length + sourcesFlushed,
-            sourceIds: sourceSnapshots.map(source => source.id),
-            sourceNextAge: age(sourceSnapshots.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
-            sourceNextCount: sourceSnapshots.reduce((total, source) => total + source.nextCount, 0),
-            stackTrace,
-            subscribeAge: age(subscribeTimestamp),
-            subscriberId: identify(subscriber),
-            subscriptionId: identify(subscription),
-            tag: observableSnapshot.tag,
-            type: observableSnapshot.type,
-            unsubscribeAge: age(unsubscribeTimestamp),
-            unsubscribed: unsubscribeTimestamp !== 0
-        };
-
-        const defaultDerived = {};
-        Object.keys(defaultDerivations).forEach(key => {
-            defaultDerived[key] = defaultDerivations[key](
-                queryRecord,
-                subscriptionSnapshot
-            );
-        });
-
-        const derived = {};
-        Object.keys(derivations_).forEach(key => {
-            derived[key] = derivations_[key](
-                queryRecord,
-                subscriptionSnapshot
-            );
-        });
-        return { ...queryRecord, ...defaultDerived, ...derived };
-    }
-}
-
-function matchId(
-    { observableId, subscriberId, subscriptionId }: QueryRecord,
-    match: number | string
-): boolean {
-    if (typeof match === "number") {
-        match = match.toString();
-    }
-    return (match === observableId) || (match === subscriberId) || (match === subscriptionId);
-}
-
-function matchStackTrace(
-    queryRecord: QueryRecord,
-    property: string,
-    match: string | RegExp
-): boolean {
-    const [stackFrame] = queryRecord.stackTrace;
-    if (!stackFrame) {
-        return false;
-    }
-    const value: string = stackFrame[property];
-    switch (property) {
-    case "fileName":
-        return (typeof match === "string") ? value.endsWith(match) : match.test(value);
-    case "functionName":
-        return (typeof match === "string") ? (value === match) : match.test(value);
-    default:
-        return false;
-    }
-}
-
-function matchTag(
-    queryRecord: QueryRecord,
-    match: string | RegExp | undefined
-): boolean {
-    const { tag } = queryRecord;
-    if (match === undefined) {
-        return Boolean(tag);
-    }
-    if (typeof match === "string") {
-        return tag === match;
-    }
-    return (match && match.test) ? match.test(tag) : false;
 }

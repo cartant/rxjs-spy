@@ -4,7 +4,7 @@
  */
 
 import { Subscription } from "rxjs";
-import { Logger, PartialLogger, toLogger } from "../logger";
+import { PartialLogger, toLogger } from "../logger";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 
@@ -30,7 +30,6 @@ type FoundPlugins = {
 export class StatsPlugin extends BasePlugin {
 
     private foundPlugins_: FoundPlugins | undefined;
-    private logger_: Logger;
     private pluginHost_: PluginHost;
     private stats_: Stats;
     private time_: number;
@@ -40,7 +39,6 @@ export class StatsPlugin extends BasePlugin {
         super("stats");
 
         this.foundPlugins_ = undefined;
-        this.logger_ = pluginHost.logger;
         this.pluginHost_ = pluginHost;
         this.stats_ = {
             completes: 0,
@@ -129,7 +127,7 @@ export class StatsPlugin extends BasePlugin {
     logStats(stats: Stats, partialLogger?: PartialLogger): void {
 
         const { innerSubscribes, leafSubscribes, maxDepth, rootSubscribes, totalDepth } = stats;
-        const logger = toLogger(partialLogger || this.logger_);
+        const logger = toLogger(partialLogger || this.pluginHost_.logger);
         logger.group("Stats");
         logger.log("Subscribes =", stats.subscribes);
         if (rootSubscribes > 0) {
