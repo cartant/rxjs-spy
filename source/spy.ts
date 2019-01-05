@@ -50,8 +50,10 @@ export class Spy {
     private static spy_: Spy | undefined = undefined;
     private defaultLogger_: Logger;
     private host_: Host;
+    private lifting_ = false;
     private limit_ = defaultLimit;
     private orderBy_ = defaultOrderBy;
+    private piping_ = false;
     private teardown_: Teardown | undefined;
 
     constructor(options: {
@@ -316,15 +318,17 @@ export class Spy {
         const source = this;
 
         const { spy_ } = Spy;
-        if (!spy_) {
+        if (!spy_ || spy_.lifting_) {
             return observableLift.call(source, operator);
         }
 
         /*tslint:disable:object-literal-sort-keys*/
         const result = spy_.host_.notifyPlugins<Observable<any>>({
+            before: () => spy_.lifting_ = true,
             beforeEach: plugin => plugin.beforeLift(operator, source),
             between: () => observableLift.call(source, operator),
-            afterEach: (plugin, sink) => plugin.afterLift(operator, source, sink)
+            afterEach: (plugin, sink) => plugin.afterLift(operator, source, sink),
+            after: () => spy_.lifting_ = false
         });
         /*tslint:enable:object-literal-sort-keys*/
         return result;
@@ -337,15 +341,17 @@ export class Spy {
         const source = this;
 
         const { spy_ } = Spy;
-        if (!spy_) {
+        if (!spy_ || spy_.piping_) {
             return observablePipe.apply(source, args);
         }
 
         /*tslint:disable:object-literal-sort-keys*/
         const result = spy_.host_.notifyPlugins<Observable<any>>({
+            before: () => spy_.piping_ = true,
             beforeEach: plugin => plugin.beforePipe(args, source),
             between: () => observablePipe.apply(source, args),
-            afterEach: (plugin, sink) => plugin.afterPipe(args, source, sink)
+            afterEach: (plugin, sink) => plugin.afterPipe(args, source, sink),
+            after: () => spy_.piping_ = false
         });
         /*tslint:enable:object-literal-sort-keys*/
         return result;

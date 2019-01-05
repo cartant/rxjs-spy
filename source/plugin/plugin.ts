@@ -40,7 +40,8 @@ export interface PluginHost {
         before?: () => void,
         beforeEach: (plugin: Plugin) => void,
         between: () => T,
-        afterEach: (plugin: Plugin, result: T) => void
+        afterEach: (plugin: Plugin, result: T) => void,
+        after?: () => void
     }): T;
     plug(...plugins: Plugin[]): Teardown;
     unplug(...plugins: Plugin[]): void;

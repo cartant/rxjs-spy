@@ -4,7 +4,7 @@
  */
 
 import { parse, StackFrame } from "error-stack-parser";
-import { defer, Observable, of, Subscription } from "rxjs";
+import { defer, Observable, of, OperatorFunction, Subscription } from "rxjs";
 import { publishReplay, refCount } from "rxjs/operators";
 
 // @ts-ignore: Could not find a declaration file for module 'stacktrace-gps'.
@@ -32,19 +32,74 @@ export class StackTracePlugin extends BasePlugin {
         sourceMaps?: boolean,
         pluginHost: PluginHost
     }) {
-
         super("stackTrace");
-
         this.sourceCache_ = {};
-        this.sourceMaps_ = sourceMaps;
+        this.sourceMaps_ = sourceMaps &&
+            (typeof window !== "undefined") &&
+            (window.location.protocol !== "file:");
+    }
+
+    beforePipe(operators: OperatorFunction<any, any>[], source: Observable<any>): void {
+        const stackFrames = this.getStackFrames_();
+        operators.forEach((operator, index) => {
+            operators[index] = source => {
+                const sink = operator(source);
+                this.recordStackTrace_(sink, stackFrames);
+                return sink;
+            };
+        });
     }
 
     beforeSubscribe(subscription: Subscription): void {
-
         const stackFrames = this.getStackFrames_();
+        this.recordStackTrace_(subscription, stackFrames);
+    }
 
-        if (this.sourceMaps_ && (typeof window !== "undefined") && (window.location.protocol !== "file:")) {
-            this.setStackTraceRecord_(subscription, {
+    getMappedStackTrace(observable: Observable<any>): Observable<StackFrame[]>;
+    getMappedStackTrace(subscription: Subscription): Observable<StackFrame[]>;
+    getMappedStackTrace(arg: any): Observable<StackFrame[]> {
+        const stackTraceRecord = this.getStackTraceRecord(arg);
+        return stackTraceRecord ? stackTraceRecord.mappedStackTrace : of([]);
+    }
+
+    getStackTrace(observable: Observable<any>): StackFrame[];
+    getStackTrace(subscription: Subscription): StackFrame[];
+    getStackTrace(arg: any): StackFrame[] {
+        const stackTraceRecord = this.getStackTraceRecord(arg);
+        return stackTraceRecord ? stackTraceRecord.stackTrace : [];
+    }
+
+    getStackTraceRecord(observable: Observable<any>): StackTraceRecord;
+    getStackTraceRecord(subscription: Subscription): StackTraceRecord;
+    getStackTraceRecord(arg: any): StackTraceRecord {
+        return arg[stackTraceRecordSymbol];
+    }
+
+    teardown(): void {
+        this.sourceCache_ = {};
+    }
+
+    private getStackFrames_(): StackFrame[] {
+        try {
+            throw new Error();
+        } catch (error) {
+            let patched = true;
+            return parse(error).filter(stackFrame => {
+                const result = !patched;
+                if (/patched(Lift|Pipe|Subscribe)_/.test(stackFrame.functionName || "")) {
+                    patched = false;
+                }
+                return result;
+            });
+        }
+    }
+
+    private recordStackTrace_(
+        target: Observable<any> | Subscription,
+        stackFrames: StackFrame[]
+    ): void {
+        if (this.sourceMaps_) {
+            this.setStackTraceRecord_(target, {
                 mappedStackTrace: defer(() => {
                     const gps = new StackTraceGps({ sourceCache: this.sourceCache_ });
                     return Promise.all(stackFrames.map(stackFrame => gps
@@ -62,54 +117,15 @@ export class StackTracePlugin extends BasePlugin {
                 stackTrace: stackFrames
             });
         } else {
-            this.setStackTraceRecord_(subscription, {
+            this.setStackTraceRecord_(target, {
                 mappedStackTrace: of(stackFrames).pipe(hide()),
                 stackTrace: stackFrames
             });
         }
     }
 
-    getMappedStackTrace(subscription: Subscription): Observable<StackFrame[]> {
-
-        const stackTraceRecord = this.getStackTraceRecord(subscription);
-        return stackTraceRecord ? stackTraceRecord.mappedStackTrace : of([]);
-    }
-
-    getStackTrace(subscription: Subscription): StackFrame[] {
-
-        const stackTraceRecord = this.getStackTraceRecord(subscription);
-        return stackTraceRecord ? stackTraceRecord.stackTrace : [];
-    }
-
-    getStackTraceRecord(subscription: Subscription): StackTraceRecord {
-
-        return subscription[stackTraceRecordSymbol];
-    }
-
-    teardown(): void {
-
-        this.sourceCache_ = {};
-    }
-
-    private getStackFrames_(): StackFrame[] {
-
-        try {
-            throw new Error();
-        } catch (error) {
-            let patched = true;
-            return parse(error).filter(stackFrame => {
-                const result = !patched;
-                if (/patched(Lift|Pipe|Subscribe)_/.test(stackFrame.functionName || "")) {
-                    patched = false;
-                }
-                return result;
-            });
-        }
-    }
-
-    private setStackTraceRecord_(subscription: Subscription, record: StackTraceRecord): StackTraceRecord {
-
-        subscription[stackTraceRecordSymbol] = record;
+    private setStackTraceRecord_(target: Observable<any> | Subscription, record: StackTraceRecord): StackTraceRecord {
+        target[stackTraceRecordSymbol] = record;
         return record;
     }
 }
