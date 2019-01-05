@@ -20,6 +20,16 @@ import {
 const defaultDerivations: QueryDerivations = {
     age: ({ completeAge, errorAge, nextAge, subscribeAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, subscribeAge || Infinity, unsubscribeAge || Infinity),
     blocked: ({ nextAge, sourceNextAge }) => nextAge > sourceNextAge,
+    depth: (record, { rootSink, sink }) => {
+        if (!sink) {
+            return 0;
+        }
+        let depth = 1;
+        for (; sink !== rootSink; ++depth) {
+            sink = sink.sink!;
+        }
+        return depth;
+    },
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
     id: record => (match: number | string) => matchId(record, match),
