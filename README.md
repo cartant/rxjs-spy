@@ -143,7 +143,7 @@ By default, `create` will wire up the snapshotting plugin and numerous others. H
 
 ```ts
 import { create } from "rxjs-spy";
-import { GraphPlugin, SnapshotPlugin } from "rxjs-spy/plugin";
+import { GraphPlugin, SnapshotPlugin } from "rxjs-spy/plugins";
 const spy = create({ defaultPlugins: false });
 spy.plug(
   new GraphPlugin({ keptDuration: -1 }),

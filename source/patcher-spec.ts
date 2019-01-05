@@ -11,7 +11,7 @@ import * as sinon from "sinon";
 import { patch } from "./factory";
 import { tag }  from "./operators";
 import { Patcher } from "./patcher";
-import { Plugin } from "./plugin";
+import { Plugin } from "./plugins";
 
 const options = {
     keptDuration: -1,

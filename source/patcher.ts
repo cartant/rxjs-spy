@@ -31,7 +31,7 @@ import {
     QueryPredicate,
     SnapshotPlugin,
     StatsPlugin
-} from "./plugin";
+} from "./plugins";
 
 import { setSubscriptionRecord, SubscriptionRecord } from "./subscription-record";
 import { Teardown } from "./teardown";

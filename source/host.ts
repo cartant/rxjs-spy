@@ -17,7 +17,7 @@ import {
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin
-} from "./plugin";
+} from "./plugins";
 import { Teardown } from "./teardown";
 
 export class Host {

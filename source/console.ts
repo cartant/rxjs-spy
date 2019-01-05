@@ -5,7 +5,7 @@
 
 import { defaultLogger, toLogger } from "./logger";
 import { Patcher } from "./patcher";
-import { PausePlugin } from "./plugin";
+import { PausePlugin } from "./plugins";
 
 export function forConsole(
     patcher: Patcher,
