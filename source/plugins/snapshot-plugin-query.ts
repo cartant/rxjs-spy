@@ -17,26 +17,13 @@ import {
 } from "./snapshot-plugin-types";
 
 const defaultDerivations: QueryDerivations = {
-    age: ({ completeAge, errorAge, nextAge, subscribeAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, subscribeAge || Infinity, unsubscribeAge || Infinity),
-    blocked: ({ nextAge, sourceNextAge }) => ((nextAge === undefined) && (sourceNextAge !== undefined)) || (nextAge > sourceNextAge),
-    depth: (record, { rootSink, sink }) => {
-        if (!sink) {
-            return 0;
-        }
-        let depth = 1;
-        for (; sink !== rootSink; ++depth) {
-            sink = sink.sink!;
-        }
-        return depth;
-    },
+    age: deriveAge,
+    blocked: deriveBlocked,
+    depth: deriveDepth,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
     id: record => (match: number | string) => matchId(record, match),
-    innerIncompleteCount: (record, { inners }) => {
-        let count = 0;
-        inners.forEach(({ completeTimestamp, errorTimestamp, unsubscribeTimestamp }) => count += (completeTimestamp || errorTimestamp || unsubscribeTimestamp) ? 0 : 1);
-        return count;
-    },
+    innerIncompleteCount: deriveInnerIncompleteCount,
     tag: record => (match: string | RegExp) => matchTag(record, match)
 };
 
@@ -186,6 +173,56 @@ export function query(options: {
         }
         logger.groupEnd();
     });
+}
+
+function deriveAge({
+    completeAge,
+    errorAge,
+    nextAge,
+    subscribeAge,
+    unsubscribeAge
+}: QueryRecord): number {
+    return Math.min(
+        completeAge || Infinity,
+        errorAge || Infinity,
+        nextAge || Infinity,
+        subscribeAge || Infinity,
+        unsubscribeAge || Infinity
+    );
+}
+
+function deriveBlocked({
+    nextAge,
+    sourceNextAge
+}: QueryRecord): boolean {
+    return ((nextAge === undefined) && (sourceNextAge !== undefined)) || (nextAge > sourceNextAge);
+}
+
+function deriveDepth(
+    record: QueryRecord,
+    { rootSink, sink }: SubscriptionSnapshot
+): number {
+    if (!sink) {
+        return 0;
+    }
+    let depth = 1;
+    for (; sink !== rootSink; ++depth) {
+        sink = sink.sink!;
+    }
+    return depth;
+}
+
+function deriveInnerIncompleteCount(
+    record: QueryRecord,
+    { inners }: SubscriptionSnapshot
+): number {
+    let count = 0;
+    inners.forEach(({
+        completeTimestamp,
+        errorTimestamp,
+        unsubscribeTimestamp
+    }) => count += (completeTimestamp || errorTimestamp || unsubscribeTimestamp) ? 0 : 1);
+    return count;
 }
 
 function logStackTrace(
