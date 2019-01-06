@@ -109,6 +109,17 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("incomplete", () => {
+
+        it("should match incomplete observables", () => {
+            const result = query("incomplete");
+            expect(result).to.match(foundRegExp(3));
+            expect(result).to.match(idRegExp(harness.outer));
+            expect(result).to.match(idRegExp(harness.mapped));
+            expect(result).to.match(idRegExp(harness.tagged));
+        });
+    });
+
     describe("innerIncompleteCount", () => {
 
         it("should match observables with incomplete inner observables", () => {
