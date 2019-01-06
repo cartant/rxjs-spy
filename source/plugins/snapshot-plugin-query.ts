@@ -1,7 +1,6 @@
 /**
  * @license Use of this source code is governed by an MIT-style license that
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
-
  */
 
 import { compile, compileOrderBy } from "../expression";
@@ -260,19 +259,25 @@ function matchStackTrace(
     property: string,
     match: string | RegExp
 ): boolean {
-    const [stackFrame] = queryRecord.stackTrace;
-    if (!stackFrame) {
-        return false;
-    }
-    const value: string = stackFrame[property];
-    switch (property) {
-    case "fileName":
-        return (typeof match === "string") ? value.endsWith(match) : match.test(value);
-    case "functionName":
-        return (typeof match === "string") ? (value === match) : match.test(value);
-    default:
-        return false;
-    }
+    const predicate = (stackFrame: any) => {
+        const value: string = stackFrame[property];
+        switch (property) {
+        case "fileName":
+            return (typeof match === "string") ? value.endsWith(match) : match.test(value);
+        case "functionName":
+            return (typeof match === "string") ? (value === match) : match.test(value);
+        default:
+            return false;
+        }
+    };
+    const {
+        observableStackTrace,
+        rootStackTrace,
+        subscriptionStackTrace
+    } = queryRecord;
+    return observableStackTrace.some(predicate) ||
+        rootStackTrace.some(predicate) ||
+        subscriptionStackTrace.some(predicate);
 }
 
 function matchTag(
@@ -302,6 +307,10 @@ function toQueryRecord(
     }
 
     const {
+        stackTrace: observableStackTrace
+    } = observableSnapshot;
+
+    const {
         completeTimestamp,
         error,
         errorTimestamp,
@@ -315,7 +324,7 @@ function toQueryRecord(
         sink,
         sources,
         sourcesFlushed,
-        stackTrace,
+        stackTrace: subscriptionStackTrace,
         subscribeTimestamp,
         subscriber,
         subscription,
@@ -342,8 +351,10 @@ function toQueryRecord(
         nextAge: age(nextTimestamp),
         nextCount,
         observableId: identify(observable),
+        observableStackTrace,
         root: !sink,
         rootSinkId: rootSink ? rootSink.id : undefined,
+        rootStackTrace: rootSink ? rootSink.stackTrace : [],
         sinkId: sink ? sink.id : undefined,
         sinkNextAge: sink ? age(sink.nextTimestamp) : undefined,
         sinkNextCount: sink ? sink.nextCount : 0,
@@ -351,10 +362,10 @@ function toQueryRecord(
         sourceIds: sourceSnapshots.map(source => source.id),
         sourceNextAge: age(sourceSnapshots.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
         sourceNextCount: sourceSnapshots.reduce((total, source) => total + source.nextCount, 0),
-        stackTrace,
         subscribeAge: age(subscribeTimestamp),
         subscriberId: identify(subscriber),
         subscriptionId: identify(subscription),
+        subscriptionStackTrace,
         tag: observableSnapshot.tag,
         unsubscribeAge: age(unsubscribeTimestamp),
         unsubscribed: unsubscribeTimestamp !== 0

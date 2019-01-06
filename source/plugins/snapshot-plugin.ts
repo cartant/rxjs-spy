@@ -119,6 +119,9 @@ export class SnapshotPlugin extends BasePlugin {
         snapshots.forEach(snapshot => {
 
             if (snapshot.subscriptions) {
+                if (snapshot.mappedStackTrace) {
+                    observables.push(snapshot.mappedStackTrace);
+                }
                 snapshot.subscriptions.forEach(mapSubscriptionStackTraces);
             } else {
                 mapSubscriptionStackTraces(snapshot);
@@ -247,9 +250,15 @@ export class SnapshotPlugin extends BasePlugin {
                 if (!observableSnapshot) {
                     observableSnapshot = {
                         id: identify(observable),
+                        mappedStackTrace: stackTracePlugin ?
+                            stackTracePlugin.getMappedStackTrace(observable) :
+                            of([]),
                         name: inferName(observable),
                         observable,
                         pipeline: inferPipeline(observable),
+                        stackTrace: stackTracePlugin ?
+                            stackTracePlugin.getStackTrace(observable) :
+                            [],
                         subscriptions: new Map<Subscription, SubscriptionSnapshot>(),
                         tag: read(observable),
                         tick

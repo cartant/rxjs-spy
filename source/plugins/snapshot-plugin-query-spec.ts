@@ -5,7 +5,7 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable, Subject } from "rxjs";
+import { Observable, Subject, isObservable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { patch } from "../factory";
 import { identify } from "../identify";
@@ -57,23 +57,29 @@ describe("SnapshotPlugin#query", () => {
             harness.outer.next(0);
             const result = query("blocked");
             expect(result).to.match(foundRegExp(1));
-            expect(result).to.match(idRegExp(identify(harness.mapped)));
+            expect(result).to.match(idRegExp(harness.mapped));
         });
     });
 
     describe("file", () => {
 
-        it.skip("should match observables declared within the specified function", () => {
+        it("should match observables declared within the specified function", () => {
             const result = query("file(/snapshot-plugin-query/)");
-            expect(result).to.match(foundRegExp(4));
+            expect(result).to.match(foundRegExp(3));
+            expect(result).to.match(idRegExp(harness.outer));
+            expect(result).to.match(idRegExp(harness.mapped));
+            expect(result).to.match(idRegExp(harness.tagged));
         });
     });
 
     describe("func", () => {
 
-        it.skip("should match observables declared within the specified function", () => {
+        it("should match observables declared within the specified function", () => {
             const result = query("func(/composeHarness/)");
-            expect(result).to.match(foundRegExp(4));
+            expect(result).to.match(foundRegExp(3));
+            expect(result).to.match(idRegExp(harness.outer));
+            expect(result).to.match(idRegExp(harness.mapped));
+            expect(result).to.match(idRegExp(harness.tagged));
         });
     });
 
@@ -100,7 +106,7 @@ describe("SnapshotPlugin#query", () => {
             harness.outer.next(0);
             const result = query("innerIncompleteCount === 1");
             expect(result).to.match(foundRegExp(1));
-            expect(result).to.match(idRegExp(identify(harness.mapped)));
+            expect(result).to.match(idRegExp(harness.mapped));
         });
     });
 
@@ -175,7 +181,8 @@ describe("SnapshotPlugin#query", () => {
         return new RegExp(`${count} snapshot\\(s\\) found`);
     }
 
-    function idRegExp(id: number | string): RegExp {
+    function idRegExp(arg: number | string | Observable<number>): RegExp {
+        const id = isObservable(arg) ? identify(arg) : arg;
         return new RegExp(`ID = ${id}`);
     }
 

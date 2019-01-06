@@ -16,9 +16,11 @@ export type QueryDerivations = Record<string, QueryDerivation>;
 
 export interface ObservableSnapshot {
     id: string;
+    mappedStackTrace: Observable<StackFrame[]>;
     name: string;
     observable: Observable<any>;
     pipeline: string;
+    stackTrace: StackFrame[];
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tag: string | undefined;
     tick: number;
