@@ -5,7 +5,15 @@
 
 import { Observable, OperatorFunction, PartialObserver, Subscriber } from "rxjs";
 
-export function inferName(observable: Observable<any>): string {
+export function inferName(observable: Observable<any>): string;
+export function inferName(operator: OperatorFunction<any, any>): string;
+export function inferName(target: Observable<any> | OperatorFunction<any, any>): string {
+    return isObservable(target) ?
+        inferObservableName(target) :
+        inferOperatorName(target);
+}
+
+function inferObservableName(observable: Observable<any>): string {
     const { operator } = observable as any;
     const prototype = Object.getPrototypeOf(operator ? operator : observable);
     if (prototype.constructor && prototype.constructor.name) {
@@ -16,7 +24,7 @@ export function inferName(observable: Observable<any>): string {
     return "unknown";
 }
 
-export function inferOperatorName(operator: OperatorFunction<any, any>): string {
+function inferOperatorName(operator: OperatorFunction<any, any>): string {
     let name = operator.name || "unknown";
     name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
     return name.replace(/^(\w+)(Operation)$/, (match: string, p: string) => p);

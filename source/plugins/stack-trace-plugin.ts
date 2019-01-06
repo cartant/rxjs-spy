@@ -12,7 +12,7 @@ import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
 import { getSubscriptionRecord } from "../subscription-record";
-import { inferName, inferOperatorName } from "../util";
+import { inferName } from "../util";
 import { BasePlugin, PluginHost } from "./plugin";
 
 const nameRecordSymbol = Symbol("nameRecord");
@@ -116,7 +116,7 @@ export class StackTracePlugin extends BasePlugin {
         if (!target[nameRecordSymbol]) {
             target[nameRecordSymbol] = {
                 observableName: inferName(target),
-                operatorName: operator ? inferOperatorName(operator) : undefined
+                operatorName: operator ? inferName(operator) : undefined
             };
         }
     }

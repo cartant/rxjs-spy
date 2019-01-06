@@ -8,7 +8,7 @@ import { expect } from "chai";
 import { interval, Subject } from "rxjs";
 import { map, mapTo } from "rxjs/operators";
 import { tag } from "./operators";
-import { inferName, inferOperatorName, inferPipeline } from "./util";
+import { inferName, inferPipeline } from "./util";
 
 describe("util", () => {
 
@@ -28,13 +28,10 @@ describe("util", () => {
             const source = new Subject<number>();
             expect(inferName(source)).to.equal("subject");
         });
-    });
 
-    describe("inferOperatorName", () => {
-
-        it("should infer an operator's name", () => {
+        it("should infer an operator function's name", () => {
             const operator = map(value => value);
-            expect(inferOperatorName(operator)).to.equal("map");
+            expect(inferName(operator)).to.equal("map");
         });
     });
 
