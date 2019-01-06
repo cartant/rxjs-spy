@@ -100,14 +100,14 @@ export class Host {
         beforeEach: (plugin: Plugin) => void,
         between: () => T,
         afterEach: (plugin: Plugin, result: T) => void,
-        after?: () => void
+        after?: (result: T) => void
     }): T {
         const { plugins_ } = this;
         before();
         plugins_.forEach(beforeEach);
         const result = between();
         plugins_.forEach(plugin => afterEach(plugin, result));
-        after();
+        after(result);
         return result;
     }
 
