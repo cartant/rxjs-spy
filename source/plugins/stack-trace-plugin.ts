@@ -11,12 +11,20 @@ import { publishReplay, refCount } from "rxjs/operators";
 import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
+import { getSubscriptionRecord } from "../subscription-record";
+import { inferName, inferOperatorName } from "../util";
 import { BasePlugin, PluginHost } from "./plugin";
 
+const nameRecordSymbol = Symbol("nameRecord");
 const stackTraceRecordSymbol = Symbol("stackTraceRecord");
+
+export interface NameRecord {
+    operationName: string;
+}
 
 export interface StackTraceRecord {
     mappedStackTrace: Observable<StackFrame[]>;
+    opertionName?: string;
     stackTrace: StackFrame[];
 }
 
@@ -44,6 +52,7 @@ export class StackTracePlugin extends BasePlugin {
         operators.forEach((operator, index) => {
             operators[index] = source => {
                 const sink = operator(source);
+                this.recordName_(sink, operator);
                 this.recordStackTrace_(sink, stackFrames);
                 return sink;
             };
@@ -53,6 +62,8 @@ export class StackTracePlugin extends BasePlugin {
     beforeSubscribe(subscription: Subscription): void {
         const stackFrames = this.getStackFrames_();
         this.recordStackTrace_(subscription, stackFrames);
+        const subscriptionRecord = getSubscriptionRecord(subscription);
+        this.recordName_(subscriptionRecord.observable);
     }
 
     getMappedStackTrace(observable: Observable<any>): Observable<StackFrame[]>;
@@ -60,6 +71,10 @@ export class StackTracePlugin extends BasePlugin {
     getMappedStackTrace(arg: any): Observable<StackFrame[]> {
         const stackTraceRecord = this.getStackTraceRecord(arg);
         return stackTraceRecord ? stackTraceRecord.mappedStackTrace : of([]);
+    }
+
+    getNameRecord(observable: Observable<any>): NameRecord {
+        return observable[nameRecordSymbol];
     }
 
     getStackTrace(observable: Observable<any>): StackFrame[];
@@ -91,6 +106,18 @@ export class StackTracePlugin extends BasePlugin {
                 }
                 return result;
             });
+        }
+    }
+
+    private recordName_(
+        target: Observable<any>,
+        operator?: OperatorFunction<any, any>
+    ): void {
+        if (!target[nameRecordSymbol]) {
+            target[nameRecordSymbol] = {
+                observableName: inferName(target),
+                operatorName: operator ? inferOperatorName(operator) : undefined
+            };
         }
     }
 

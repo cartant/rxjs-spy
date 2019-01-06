@@ -136,8 +136,8 @@ export function query(options: {
                 `ID = ${observableSnapshot.id}; tag = ${observableSnapshot.tag}` :
                 `ID = ${observableSnapshot.id}`
             );
+            logger.log("Name =", observableSnapshot.name);
             logger.log("Path =", observableSnapshot.path);
-            logger.log("Type =", observableSnapshot.type);
 
             const { subs } = find;
             const subscriberGroupMethod = (find.subs.length > 3) ? "groupCollapsed" : "group";
@@ -338,6 +338,7 @@ function toQueryRecord(
         innerIds: innerSnapshots.map(inner => inner.id),
         innerNextAge: age(innerSnapshots.reduce((max, inner) => Math.max(max, inner.nextTimestamp), 0)),
         innerNextCount: innerSnapshots.reduce((total, inner) => total + inner.nextCount, 0),
+        name: observableSnapshot.name,
         nextAge: age(nextTimestamp),
         nextCount,
         observableId: identify(observable),
@@ -355,7 +356,6 @@ function toQueryRecord(
         subscriberId: identify(subscriber),
         subscriptionId: identify(subscription),
         tag: observableSnapshot.tag,
-        type: observableSnapshot.type,
         unsubscribeAge: age(unsubscribeTimestamp),
         unsubscribed: unsubscribeTimestamp !== 0
     };

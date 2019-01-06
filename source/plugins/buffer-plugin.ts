@@ -6,7 +6,7 @@
 import { Subscription } from "rxjs";
 import { Logger } from "../logger";
 import { getSubscriptionRecord, SubscriptionRecord } from "../subscription-record";
-import { inferType } from "../util";
+import { inferName } from "../util";
 import { GraphPlugin, GraphRecord } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 import { SnapshotPlugin, SnapshotRecord } from "./snapshot-plugin";
@@ -84,8 +84,8 @@ export class BufferPlugin extends BasePlugin {
             const stackTrace = stackTracePlugin ?
                 `; subscribed at\n${stackTracePlugin.getStackTrace(sinkGraphRecord.rootSink || sinkSubscriptionRecord.subscription).join("\n")}` :
                 "";
-            const type = inferType(sinkSubscriptionRecord.observable);
-            logger_.warn(`Excessive buffering detected; type = ${type}; count = ${bufferCount}${stackTrace}`);
+            const name = inferName(sinkSubscriptionRecord.observable);
+            logger_.warn(`Excessive buffering detected; name = ${name}; count = ${bufferCount}${stackTrace}`);
         }
         if (sinkSnapshotRecord) {
             sinkSnapshotRecord.queryRecord.bufferCount = bufferCount;
@@ -131,8 +131,8 @@ export class BufferPlugin extends BasePlugin {
         }
 
         const sinkSubscriptionRecord = getSubscriptionRecord(sink);
-        const sinkObservableType = inferType(sinkSubscriptionRecord.observable);
-        if (!unboundedRegExp.test(sinkObservableType)) {
+        const sinkObservableName = inferName(sinkSubscriptionRecord.observable);
+        if (!unboundedRegExp.test(sinkObservableName)) {
             return;
         }
 
@@ -149,7 +149,7 @@ export class BufferPlugin extends BasePlugin {
             });
         }
 
-        if (higherOrderRegExp.test(sinkObservableType)) {
+        if (higherOrderRegExp.test(sinkObservableName)) {
             this.setHigherOrderBufferRecord_(subscription, bufferRecord);
         } else {
             bufferRecord.sourceSubscriptionRecords.push(subscriptionRecord);

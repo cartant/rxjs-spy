@@ -8,7 +8,7 @@ import { defaultLogger, Logger } from "../logger";
 import { Match, matches } from "../match";
 import { Notification } from "../notification";
 import { getSubscriptionRecord } from "../subscription-record";
-import { inferType } from "../util";
+import { inferName } from "../util";
 import { BasePlugin, PluginHost } from "./plugin";
 
 const graphRecordSymbol = Symbol("graphRecord");
@@ -194,7 +194,7 @@ export class GraphPlugin extends BasePlugin {
 
         const log = (indent: string, source: Subscription, kind: string) => {
             const { observable } = getSubscriptionRecord(source);
-            logger.log(`${indent}${inferType(observable)} (${kind})`);
+            logger.log(`${indent}${inferName(observable)} (${kind})`);
             const graphRecord = this.getGraphRecord(source);
             graphRecord.sources.forEach(source => log(`${indent}  `, source, "source"));
             graphRecord.inners.forEach(inner => log(`${indent}  `, inner, "inner"));

@@ -10,7 +10,7 @@ import { Logger } from "../logger";
 import { read } from "../match";
 import { hide } from "../operators";
 import { getSubscriptionRecord } from "../subscription-record";
-import { inferPath, inferType } from "../util";
+import { inferName, inferPath } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 import { query } from "./snapshot-plugin-query";
@@ -247,12 +247,12 @@ export class SnapshotPlugin extends BasePlugin {
                 if (!observableSnapshot) {
                     observableSnapshot = {
                         id: identify(observable),
+                        name: inferName(observable),
                         observable,
                         path: inferPath(observable),
                         subscriptions: new Map<Subscription, SubscriptionSnapshot>(),
                         tag: read(observable),
-                        tick,
-                        type: inferType(observable)
+                        tick
                     };
                     observables.set(observable, observableSnapshot);
                 }

@@ -6,7 +6,7 @@
 import { Subscription } from "rxjs";
 import { Logger } from "../logger";
 import { getSubscriptionRecord } from "../subscription-record";
-import { inferType } from "../util";
+import { inferName } from "../util";
 import { BasePlugin, PluginHost } from "./plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
 import { StackTracePlugin } from "./stack-trace-plugin";
@@ -63,8 +63,8 @@ export class CyclePlugin extends BasePlugin {
                         `; subscribed at\n${stackTracePlugin.getStackTrace(subscription).join("\n")}` :
                         "";
                     const { observable } = getSubscriptionRecord(subscription);
-                    const type = inferType(observable);
-                    logger_.warn(`Cyclic next detected; type = ${type}; value = ${value}${stackTrace}`);
+                    const name = inferName(observable);
+                    logger_.warn(`Cyclic next detected; name = ${name}; value = ${value}${stackTrace}`);
                 }
             }
 

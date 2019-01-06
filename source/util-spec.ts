@@ -6,16 +6,15 @@
 
 import { expect } from "chai";
 import { interval, Subject } from "rxjs";
-import { mapTo } from "rxjs/operators";
+import { map, mapTo } from "rxjs/operators";
 import { tag } from "./operators";
-import { inferPath, inferType } from "./util";
+import { inferName, inferOperatorName, inferPath } from "./util";
 
 describe("util", () => {
 
     describe("inferPath", () => {
 
         it("should infer a composed observable's path", () => {
-
             const source = interval(1000).pipe(
                 tag("interval"),
                 mapTo(0),
@@ -25,24 +24,29 @@ describe("util", () => {
         });
     });
 
-    describe("inferType", () => {
+    describe("inferName", () => {
 
-        it("should infer an observable's type", () => {
-
+        it("should infer an observable's name", () => {
             const source = interval(1000);
-            expect(inferType(source)).to.equal("observable");
+            expect(inferName(source)).to.equal("observable");
         });
 
-        it("should infer an operator's type", () => {
-
+        it("should infer an operator's name", () => {
             const source = interval(1000).pipe(mapTo(0));
-            expect(inferType(source)).to.equal("mapTo");
+            expect(inferName(source)).to.equal("mapTo");
         });
 
-        it("should infer a subject's type", () => {
-
+        it("should infer a subject's name", () => {
             const source = new Subject<number>();
-            expect(inferType(source)).to.equal("subject");
+            expect(inferName(source)).to.equal("subject");
+        });
+    });
+
+    describe("inferOperatorName", () => {
+
+        it("should infer an operator's name", () => {
+            const operator = map(value => value);
+            expect(inferOperatorName(operator)).to.equal("map");
         });
     });
 });

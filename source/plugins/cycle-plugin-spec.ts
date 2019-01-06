@@ -57,7 +57,7 @@ describe("CyclePlugin", () => {
         expect(stubs.warn).to.have.property("calledOnce", true);
         const [message] = stubs.warn.firstCall.args;
         expect(message).to.match(/^Cyclic next detected/);
-        expect(message).to.match(/type = subject/);
+        expect(message).to.match(/name = subject/);
         expect(message).to.match(/value = \d+/);
         expect(message).to.match(/subscribed at\n/);
         expect(message).to.match(/cycle-plugin-spec\.(js|ts)/);

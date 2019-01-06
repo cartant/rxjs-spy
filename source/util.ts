@@ -3,33 +3,34 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, PartialObserver, Subscriber } from "rxjs";
+import { Observable, OperatorFunction, PartialObserver, Subscriber } from "rxjs";
 
 export function inferPath(observable: Observable<any>): string {
-
     const { source } = observable as any;
-
     if (source) {
-        return `${inferPath(source)}/${inferType(observable)}`;
+        return `${inferPath(source)}/${inferName(observable)}`;
     }
-    return `/${inferType(observable)}`;
+    return `/${inferName(observable)}`;
 }
 
-export function inferType(observable: Observable<any>): string {
-
+export function inferName(observable: Observable<any>): string {
     const { operator } = observable as any;
-
     const prototype = Object.getPrototypeOf(operator ? operator : observable);
     if (prototype.constructor && prototype.constructor.name) {
-        let { name } = prototype.constructor;
+        let name = prototype.constructor.name || "unknown";
         name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
         return name.replace(/^(\w+)(Observable|Operator)$/, (match: string, p: string) => p);
     }
     return "unknown";
 }
 
-export function isObservable(arg: any): arg is Observable<any> {
+export function inferOperatorName(operator: OperatorFunction<any, any>): string {
+    let name = operator.name || "unknown";
+    name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
+    return name.replace(/^(\w+)(Operation)$/, (match: string, p: string) => p);
+}
 
+export function isObservable(arg: any): arg is Observable<any> {
     return arg && arg.subscribe;
 }
 
@@ -57,7 +58,6 @@ export function toSubscriber<T>(
     error?: (error: any) => void,
     complete?: () => void
 ): Subscriber<T> {
-
     if (nextOrObserver) {
         if (nextOrObserver instanceof Subscriber) {
             return nextOrObserver as Subscriber<T>;
@@ -66,7 +66,6 @@ export function toSubscriber<T>(
             return nextOrObserver[SubscriberSymbol]();
         }
     }
-
     if (!nextOrObserver && !error && !complete) {
         return new Subscriber(empty);
     }

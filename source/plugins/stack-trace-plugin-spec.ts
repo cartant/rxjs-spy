@@ -45,6 +45,25 @@ describe("StackTracePlugin", () => {
         expect(mappedStackTrace).to.not.be.empty;
     });
 
+    it("should add name records to observables", () => {
+
+        const subject = new Subject<number>();
+        const mapped = subject.pipe(map(value => value));
+        mapped.subscribe();
+
+        const subjectNameRecord = stackTracePlugin.getNameRecord(subject);
+        const mappedNameRecord = stackTracePlugin.getNameRecord(mapped);
+
+        expect(subjectNameRecord).to.deep.equal({
+            observableName: "subject",
+            operatorName: undefined
+        });
+        expect(mappedNameRecord).to.deep.equal({
+            observableName: "map",
+            operatorName: "map"
+        });
+    });
+
     afterEach(() => {
 
         if (patcher) {

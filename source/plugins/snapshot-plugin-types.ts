@@ -16,12 +16,12 @@ export type QueryDerivations = Record<string, QueryDerivation>;
 
 export interface ObservableSnapshot {
     id: string;
+    name: string;
     observable: Observable<any>;
     path: string;
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tag: string | undefined;
     tick: number;
-    type: string;
 }
 
 export interface Snapshot {

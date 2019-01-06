@@ -57,7 +57,7 @@ describe("BufferPlugin", () => {
         expect(stubs.warn).to.have.property("calledOnce", true);
         const [message] = stubs.warn.firstCall.args;
         expect(message).to.match(/^Excessive buffering detected/);
-        expect(message).to.match(/type = bufferWhen/);
+        expect(message).to.match(/name = bufferWhen/);
         expect(message).to.match(/count = 2/);
         expect(message).to.match(/subscribed at\n/);
         expect(message).to.match(/buffer-plugin-spec\.(js|ts)/);
@@ -84,7 +84,7 @@ describe("BufferPlugin", () => {
         expect(stubs.warn).to.have.property("calledOnce", true);
         const [message] = stubs.warn.firstCall.args;
         expect(message).to.match(/^Excessive buffering detected/);
-        expect(message).to.match(/type = mergeMap/);
+        expect(message).to.match(/name = mergeMap/);
         expect(message).to.match(/count = 2/);
         expect(message).to.match(/subscribed at\n/);
         expect(message).to.match(/buffer-plugin-spec\.(js|ts)/);
@@ -128,7 +128,7 @@ describe("BufferPlugin", () => {
         expect(stubs.warn).to.have.property("calledOnce", true);
         const [message] = stubs.warn.firstCall.args;
         expect(message).to.match(/^Excessive buffering detected/);
-        expect(message).to.match(/type = zip/);
+        expect(message).to.match(/name = zip/);
         expect(message).to.match(/count = 2/);
         expect(message).to.match(/subscribed at\n/);
         expect(message).to.match(/buffer-plugin-spec\.(js|ts)/);

@@ -7,7 +7,7 @@ export { create } from "./factory";
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
 export { BasePlugin, Plugin } from "./plugins";
-export { inferPath, inferType } from "./util";
+export { inferName, inferPath } from "./util";
 
 import { hide, tag } from "./operators";
 
