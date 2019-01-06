@@ -19,7 +19,7 @@ import {
 
 const defaultDerivations: QueryDerivations = {
     age: ({ completeAge, errorAge, nextAge, subscribeAge, unsubscribeAge }) => Math.min(completeAge || Infinity, errorAge || Infinity, nextAge || Infinity, subscribeAge || Infinity, unsubscribeAge || Infinity),
-    blocked: ({ nextAge, sourceNextAge }) => nextAge > sourceNextAge,
+    blocked: ({ nextAge, sourceNextAge }) => ((nextAge === undefined) && (sourceNextAge !== undefined)) || (nextAge > sourceNextAge),
     depth: (record, { rootSink, sink }) => {
         if (!sink) {
             return 0;
