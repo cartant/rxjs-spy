@@ -61,6 +61,15 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("depth", () => {
+
+        it("should match observables with the specified depth", () => {
+            const result = query("depth > 1");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.outer));
+        });
+    });
+
     describe("file", () => {
 
         it("should match observables declared within the specified function", () => {
