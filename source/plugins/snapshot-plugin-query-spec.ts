@@ -5,7 +5,7 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Observable, Subject, isObservable } from "rxjs";
+import { isObservable, Observable, Subject } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { patch } from "../factory";
 import { identify } from "../identify";
