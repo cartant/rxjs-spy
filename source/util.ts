@@ -5,14 +5,6 @@
 
 import { Observable, OperatorFunction, PartialObserver, Subscriber } from "rxjs";
 
-export function inferPath(observable: Observable<any>): string {
-    const { source } = observable as any;
-    if (source) {
-        return `${inferPath(source)}/${inferName(observable)}`;
-    }
-    return `/${inferName(observable)}`;
-}
-
 export function inferName(observable: Observable<any>): string {
     const { operator } = observable as any;
     const prototype = Object.getPrototypeOf(operator ? operator : observable);
@@ -28,6 +20,14 @@ export function inferOperatorName(operator: OperatorFunction<any, any>): string 
     let name = operator.name || "unknown";
     name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
     return name.replace(/^(\w+)(Operation)$/, (match: string, p: string) => p);
+}
+
+export function inferPipeline(observable: Observable<any>): string {
+    const { source } = observable as any;
+    if (source) {
+        return `${inferPipeline(source)}-${inferName(observable)}`;
+    }
+    return `${inferName(observable)}`;
 }
 
 export function isObservable(arg: any): arg is Observable<any> {

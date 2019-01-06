@@ -10,7 +10,7 @@ import { Logger } from "../logger";
 import { read } from "../match";
 import { hide } from "../operators";
 import { getSubscriptionRecord } from "../subscription-record";
-import { inferName, inferPath } from "../util";
+import { inferName, inferPipeline } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { BasePlugin, PluginHost } from "./plugin";
 import { query } from "./snapshot-plugin-query";
@@ -249,7 +249,7 @@ export class SnapshotPlugin extends BasePlugin {
                         id: identify(observable),
                         name: inferName(observable),
                         observable,
-                        path: inferPath(observable),
+                        pipeline: inferPipeline(observable),
                         subscriptions: new Map<Subscription, SubscriptionSnapshot>(),
                         tag: read(observable),
                         tick

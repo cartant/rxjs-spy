@@ -18,7 +18,7 @@ export interface ObservableSnapshot {
     id: string;
     name: string;
     observable: Observable<any>;
-    path: string;
+    pipeline: string;
     subscriptions: Map<Subscription, SubscriptionSnapshot>;
     tag: string | undefined;
     tick: number;

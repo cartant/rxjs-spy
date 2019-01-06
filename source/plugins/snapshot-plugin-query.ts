@@ -137,7 +137,7 @@ export function query(options: {
                 `ID = ${observableSnapshot.id}`
             );
             logger.log("Name =", observableSnapshot.name);
-            logger.log("Path =", observableSnapshot.path);
+            logger.log("Pipeline =", observableSnapshot.pipeline);
 
             const { subs } = find;
             const subscriberGroupMethod = (find.subs.length > 3) ? "groupCollapsed" : "group";

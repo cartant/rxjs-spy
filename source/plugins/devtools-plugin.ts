@@ -32,7 +32,7 @@ import { read } from "../match";
 import { Notification } from "../notification";
 import { hide } from "../operators";
 import { getSubscriptionRecord, SubscriptionRecord } from "../subscription-record";
-import { inferName, inferPath } from "../util";
+import { inferName, inferPipeline } from "../util";
 import { GraphPlugin } from "./graph-plugin";
 import { LogPlugin } from "./log-plugin";
 import { DeckStats, PausePlugin } from "./pause-plugin";
@@ -389,7 +389,7 @@ export class DevToolsPlugin extends BasePlugin {
             notificationType: `${prefix}-${notification}`,
             observableId: identify(observable),
             observableName: inferName(observable),
-            observablePath: inferPath(observable),
+            observablePipeline: inferPipeline(observable),
             subscriberId: identify(subscriber),
             subscriptionId: identify(subscription),
             subscriptionStackTrace: orNull(stackTracePlugin && stackTracePlugin.getStackTrace(subscription)),
@@ -424,7 +424,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
             .map(s => ({
                 id: s.id,
                 name: s.name,
-                path: s.path,
+                pipeline: s.pipeline,
                 subscriptions: Array
                     .from(s.subscriptions.values())
                     .map(s => s.id),

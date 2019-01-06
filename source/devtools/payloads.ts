@@ -25,7 +25,7 @@ export interface Notification {
     notificationType: string;
     observableId: string;
     observableName: string;
-    observablePath: string;
+    observablePipeline: string;
     subscriberId: string;
     subscriptionId: string;
     subscriptionStackTrace: StackFrame[] | null;
@@ -38,7 +38,7 @@ export interface Notification {
 export interface ObservableSnapshot {
     id: string;
     name: string;
-    path: string;
+    pipeline: string;
     subscriptions: string[];
     tag: string | null;
     tick: number;

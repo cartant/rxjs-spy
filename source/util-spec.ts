@@ -8,21 +8,9 @@ import { expect } from "chai";
 import { interval, Subject } from "rxjs";
 import { map, mapTo } from "rxjs/operators";
 import { tag } from "./operators";
-import { inferName, inferOperatorName, inferPath } from "./util";
+import { inferName, inferOperatorName, inferPipeline } from "./util";
 
 describe("util", () => {
-
-    describe("inferPath", () => {
-
-        it("should infer a composed observable's path", () => {
-            const source = interval(1000).pipe(
-                tag("interval"),
-                mapTo(0),
-                tag("map")
-            );
-            expect(inferPath(source)).to.equal("/observable/tag/mapTo/tag");
-        });
-    });
 
     describe("inferName", () => {
 
@@ -47,6 +35,18 @@ describe("util", () => {
         it("should infer an operator's name", () => {
             const operator = map(value => value);
             expect(inferOperatorName(operator)).to.equal("map");
+        });
+    });
+
+    describe("inferPipeline", () => {
+
+        it("should infer a composed observable's pipeline", () => {
+            const source = interval(1000).pipe(
+                tag("interval"),
+                mapTo(0),
+                tag("map")
+            );
+            expect(inferPipeline(source)).to.equal("observable-tag-mapTo-tag");
         });
     });
 });
