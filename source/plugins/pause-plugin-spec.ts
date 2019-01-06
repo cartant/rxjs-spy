@@ -15,14 +15,14 @@ describe("PausePlugin", () => {
 
     let deck: Deck;
     let patcher: Patcher;
-    let plugin: PausePlugin;
+    let pausePlugin: PausePlugin;
 
     beforeEach(() => {
 
         patcher = patch({ defaultPlugins: false, warning: false });
-        plugin = new PausePlugin({ match: "people", pluginHost: patcher.pluginHost });
-        patcher.pluginHost.plug(plugin);
-        deck = plugin.deck;
+        pausePlugin = new PausePlugin({ match: "people", pluginHost: patcher.pluginHost });
+        patcher.pluginHost.plug(pausePlugin);
+        deck = pausePlugin.deck;
     });
 
     describe("clear", () => {

@@ -18,35 +18,38 @@ describe("SnapshotPlugin", () => {
 
     const keptDuration = -1;
     const keptValues = 2;
-    let plugin: SnapshotPlugin;
     let patcher: Patcher;
+    let snapshotPlugin: SnapshotPlugin;
 
     beforeEach(() => {
 
         patcher = patch({ defaultPlugins: false, warning: false });
-        plugin = new SnapshotPlugin({ keptValues, pluginHost: patcher.pluginHost });
-        patcher.pluginHost.plug(new GraphPlugin({ keptDuration, pluginHost: patcher.pluginHost }), plugin);
+        snapshotPlugin = new SnapshotPlugin({ keptValues, pluginHost: patcher.pluginHost });
+        patcher.pluginHost.plug(
+            new GraphPlugin({ keptDuration, pluginHost: patcher.pluginHost }),
+            snapshotPlugin
+        );
     });
 
     describe("snapshotAll", () => {
 
         it("should snapshot on subscriptions", () => {
 
-            let snapshot = plugin.snapshotAll();
+            let snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 0);
             expect(snapshot.subscribers).to.have.property("size", 0);
             expect(snapshot.subscriptions).to.have.property("size", 0);
 
             const subject = new Subject<number>();
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 0);
             expect(snapshot.subscribers).to.have.property("size", 0);
             expect(snapshot.subscriptions).to.have.property("size", 0);
 
             subject.subscribe();
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
             expect(snapshot.subscribers).to.have.property("size", 1);
             expect(snapshot.subscriptions).to.have.property("size", 1);
@@ -69,7 +72,7 @@ describe("SnapshotPlugin", () => {
             const subject = new Subject<number>();
             const subscription = subject.subscribe();
 
-            let snapshot = plugin.snapshotAll();
+            let snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
@@ -86,7 +89,7 @@ describe("SnapshotPlugin", () => {
 
             subscription.unsubscribe();
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
@@ -108,7 +111,7 @@ describe("SnapshotPlugin", () => {
             const subject = new Subject<number>();
             subject.subscribe();
 
-            let snapshot = plugin.snapshotAll();
+            let snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
@@ -125,7 +128,7 @@ describe("SnapshotPlugin", () => {
 
             subject.complete();
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
@@ -148,7 +151,7 @@ describe("SnapshotPlugin", () => {
             const subject = new Subject<number>();
             subject.subscribe(value => {}, error => {});
 
-            let snapshot = plugin.snapshotAll();
+            let snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
@@ -166,7 +169,7 @@ describe("SnapshotPlugin", () => {
             const error = new Error("Boom!");
             subject.error(error);
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
@@ -189,7 +192,7 @@ describe("SnapshotPlugin", () => {
             const subject = new Subject<number>();
             subject.subscribe();
 
-            let snapshot = plugin.snapshotAll();
+            let snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             let observableSnapshot = get(snapshot.observables, subject);
@@ -201,7 +204,7 @@ describe("SnapshotPlugin", () => {
 
             subject.next(1);
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
@@ -213,7 +216,7 @@ describe("SnapshotPlugin", () => {
 
             subject.next(-1);
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
 
             observableSnapshot = get(snapshot.observables, subject);
@@ -229,19 +232,19 @@ describe("SnapshotPlugin", () => {
             const subject = new Subject<number>();
             subject.subscribe();
 
-            const since = plugin.snapshotAll();
+            const since = snapshotPlugin.snapshotAll();
             expect(since.observables).to.have.property("size", 1);
             expect(since.subscribers).to.have.property("size", 1);
             expect(since.subscriptions).to.have.property("size", 1);
 
-            let snapshot = plugin.snapshotAll({ since });
+            let snapshot = snapshotPlugin.snapshotAll({ since });
             expect(snapshot.observables).to.have.property("size", 0);
             expect(snapshot.subscribers).to.have.property("size", 0);
             expect(snapshot.subscriptions).to.have.property("size", 0);
 
             subject.next(1);
 
-            snapshot = plugin.snapshotAll({ since });
+            snapshot = snapshotPlugin.snapshotAll({ since });
             expect(snapshot.observables).to.have.property("size", 1);
             expect(snapshot.subscribers).to.have.property("size", 1);
             expect(snapshot.subscriptions).to.have.property("size", 1);
@@ -253,7 +256,7 @@ describe("SnapshotPlugin", () => {
             const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
-            const snapshot = plugin.snapshotAll();
+            const snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 2);
 
             const subjectSnapshot = get(snapshot.observables, subject);
@@ -277,7 +280,7 @@ describe("SnapshotPlugin", () => {
             const combined = combineLatest(subject1, subject2);
             combined.subscribe();
 
-            const snapshot = plugin.snapshotAll();
+            const snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
 
             const subject1Snapshot = get(snapshot.observables, subject1);
@@ -303,7 +306,7 @@ describe("SnapshotPlugin", () => {
             const composed = outer.pipe(mergeMap(value => of(value).pipe(tag("inner"))));
             composed.subscribe();
 
-            let snapshot = plugin.snapshotAll();
+            let snapshot = snapshotPlugin.snapshotAll();
             let composedSnapshot = get(snapshot.observables, composed);
             let composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             let composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
@@ -313,7 +316,7 @@ describe("SnapshotPlugin", () => {
 
             subject.next(0);
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             composedSnapshot = get(snapshot.observables, composed);
             composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
@@ -323,7 +326,7 @@ describe("SnapshotPlugin", () => {
 
             subject.next(0);
 
-            snapshot = plugin.snapshotAll();
+            snapshot = snapshotPlugin.snapshotAll();
             composedSnapshot = get(snapshot.observables, composed);
             composedSubscription = getAt(composedSnapshot.subscriptions, 0);
             composedSubscriber = get(snapshot.subscribers, composedSubscription.subscriber);
@@ -338,7 +341,7 @@ describe("SnapshotPlugin", () => {
             const mapped = subject.pipe(map(value => value));
             mapped.subscribe();
 
-            const snapshot = plugin.snapshotAll();
+            const snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 2);
 
             const subjectSnapshot = get(snapshot.observables, subject);
@@ -363,7 +366,7 @@ describe("SnapshotPlugin", () => {
             const remapped = mapped.pipe(map(value => value));
             remapped.subscribe();
 
-            const snapshot = plugin.snapshotAll();
+            const snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 3);
 
             const subjectSnapshot = get(snapshot.observables, subject);
@@ -393,7 +396,7 @@ describe("SnapshotPlugin", () => {
             const combined = combineLatest(subject1, subject2);
             combined.subscribe();
 
-            const snapshot = plugin.snapshotAll();
+            const snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
 
             const subject1Snapshot = get(snapshot.observables, subject1);
@@ -428,7 +431,7 @@ describe("SnapshotPlugin", () => {
 
             outerSubject.next(1);
 
-            const snapshot = plugin.snapshotAll();
+            const snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.not.have.property("size", 0);
 
             const composed1Snapshot = get(snapshot.observables, composed1);
@@ -460,7 +463,7 @@ describe("SnapshotPlugin", () => {
             source.subscribe(subscriber);
             source.subscribe(subscriber);
 
-            const snapshot = plugin.snapshotAll();
+            const snapshot = snapshotPlugin.snapshotAll();
             expect(snapshot.observables).to.have.property("size", 1);
             expect(snapshot.subscribers).to.have.property("size", 1);
             expect(snapshot.subscriptions).to.have.property("size", 2);
