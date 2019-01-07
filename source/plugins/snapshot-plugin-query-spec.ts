@@ -81,6 +81,19 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("error", () => {
+
+        it("should match observables that have errored", () => {
+            harness.outer.next(0);
+            harness.inner.error(new Error("Kaboom!"));
+            const result = query("error");
+            expect(result).to.match(foundRegExp(3));
+            expect(result).to.match(idRegExp(harness.inner));
+            expect(result).to.match(idRegExp(harness.mapped));
+            expect(result).to.match(idRegExp(harness.tagged));
+        });
+    });
+
     describe("file", () => {
 
         it("should match observables declared within the specified function", () => {
