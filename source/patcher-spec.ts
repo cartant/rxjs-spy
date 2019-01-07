@@ -414,6 +414,23 @@ describe("patcher", () => {
                 expect(window).to.have.property("_spy");
             });
         });
+    } else if (typeof global !== "undefined") {
+
+        describe("global", () => {
+
+            it("should create a global named 'spy' by default", () => {
+
+                patcher = patch({ ...options });
+                expect(global).to.have.property("spy");
+            });
+
+            it("should create a global with the specified name", () => {
+
+                patcher = patch({ ...options, global: "_spy" });
+                expect(global).to.not.have.property("spy");
+                expect(global).to.have.property("_spy");
+            });
+        });
     }
 
     afterEach(() => {
