@@ -18,7 +18,7 @@ import {
 
 const defaultDerivations: QueryDerivations = {
     age: deriveAge,
-    blocked: deriveBlocked,
+    blocking: deriveBlocking,
     depth: deriveDepth,
     file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
@@ -191,7 +191,7 @@ function deriveAge({
     );
 }
 
-function deriveBlocked({
+function deriveBlocking({
     nextAge,
     sourceNextAge
 }: QueryRecord): boolean {
