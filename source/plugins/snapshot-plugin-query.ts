@@ -26,6 +26,7 @@ const defaultDerivations: QueryDerivations = {
     innerIncompleteCount: deriveInnerIncompleteCount,
     leaking: (record, snapshot, derived) => (threshold: number) => matchLeaking(record, derived, threshold),
     pipeline: record => (match: string | RegExp) => matchPipeline(record, match),
+    slow: record => (threshold: number) => matchSlow(record, threshold),
     tag: record => (match: string | RegExp) => matchTag(record, match)
 };
 
@@ -310,6 +311,13 @@ function matchPipeline(
         return observablePipeline.indexOf(match) !== -1;
     }
     return (match && match.test) ? match.test(observablePipeline) : false;
+}
+
+function matchSlow(
+    { nextAge, subscribeAge }: QueryRecord,
+    threshold: number
+): boolean {
+    return (nextAge || subscribeAge) > (threshold / 1e3);
 }
 
 function matchStackTrace(

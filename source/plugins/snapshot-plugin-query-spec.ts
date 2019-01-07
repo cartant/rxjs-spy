@@ -215,6 +215,22 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("slow", () => {
+
+        it("should match slow observables", (done: Mocha.Done) => {
+            harness.outer.next(0);
+            setTimeout(() => {
+                harness.outer.next(0);
+                const result = query("slow(10)");
+                expect(result).to.match(foundRegExp(3));
+                expect(result).to.match(idRegExp(harness.inner));
+                expect(result).to.match(idRegExp(harness.mapped));
+                expect(result).to.match(idRegExp(harness.tagged));
+                done();
+            }, 20);
+        });
+    });
+
     describe("tag", () => {
 
         it("should match all tags if no argument is passed", () => {
