@@ -10,7 +10,8 @@ export type QueryRecord = Record<string, any>;
 export type QueryPredicate = (queryRecord: QueryRecord) => boolean;
 export type QueryDerivation = (
     queryRecord: QueryRecord,
-    subscriptionSnapshot: SubscriptionSnapshot
+    subscriptionSnapshot: SubscriptionSnapshot,
+    derivedQueryRecord: QueryRecord
 ) => any;
 export type QueryDerivations = Record<string, QueryDerivation>;
 

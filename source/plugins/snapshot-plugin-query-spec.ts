@@ -154,6 +154,16 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("leaking", () => {
+
+        it("should match observables that appear to be leaking", () => {
+            Array.from(new Array(101), () => harness.outer.next(0));
+            const result = query("leaking");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.mapped));
+        });
+    });
+
     describe("observableId", () => {
 
         it("should match string IDs", () => {
