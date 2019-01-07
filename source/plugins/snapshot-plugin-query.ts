@@ -24,7 +24,7 @@ const defaultDerivations: QueryDerivations = {
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
     id: record => (match: number | string) => matchId(record, match),
     innerIncompleteCount: deriveInnerIncompleteCount,
-    leaking: deriveLeaking,
+    leaking: (record, snapshot, derived) => (threshold: number) => matchLeaking(record, derived, threshold),
     pipeline: record => (match: string | RegExp) => matchPipeline(record, match),
     tag: record => (match: string | RegExp) => matchTag(record, match)
 };
@@ -227,18 +227,6 @@ function deriveInnerIncompleteCount(
     return count;
 }
 
-function deriveLeaking(
-    { bufferCount }: QueryRecord,
-    subscriptionSnapshot: SubscriptionSnapshot,
-    { innerIncompleteCount }: QueryRecord
-): boolean {
-    if (innerIncompleteCount === undefined) {
-        throw new Error("Dependent derivation not defined.");
-    }
-    const threshold = 100;
-    return (bufferCount > threshold) || (innerIncompleteCount > threshold);
-}
-
 function logStackTrace(
     logger: Logger,
     subscriptionSnapshot: SubscriptionSnapshot
@@ -303,6 +291,14 @@ function matchId(
         match = match.toString();
     }
     return (match === observableId) || (match === subscriberId) || (match === subscriptionId);
+}
+
+function matchLeaking(
+    { bufferCount }: QueryRecord,
+    { innerIncompleteCount }: QueryRecord,
+    threshold: number
+): boolean {
+    return (bufferCount > threshold) || (innerIncompleteCount > threshold);
 }
 
 function matchPipeline(
