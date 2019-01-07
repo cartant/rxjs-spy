@@ -5,7 +5,7 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { isObservable, Observable, Subject } from "rxjs";
+import { isObservable, noop, Observable, Subject } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { patch } from "../factory";
 import { identify } from "../identify";
@@ -46,7 +46,7 @@ describe("SnapshotPlugin#query", () => {
             const mapped = outer.pipe(mergeMap(() => inner));
             const tagged = mapped.pipe(tag("mapped"));
             harness = { inner, mapped, outer, tagged };
-            tagged.subscribe();
+            tagged.subscribe(noop, noop, noop);
         }
         composeHarness();
     });
@@ -58,6 +58,17 @@ describe("SnapshotPlugin#query", () => {
             const result = query("blocking");
             expect(result).to.match(foundRegExp(1));
             expect(result).to.match(idRegExp(harness.mapped));
+        });
+    });
+
+    describe("complete", () => {
+
+        it("should match observables that have completed", () => {
+            harness.outer.next(0);
+            harness.inner.complete();
+            const result = query("complete");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.inner));
         });
     });
 
