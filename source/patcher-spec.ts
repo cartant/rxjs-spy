@@ -27,7 +27,7 @@ describe("patcher", () => {
 
         it("should log the tagged observable", () => {
 
-            patcher = patch({ defaultPlugins: false, ...options });
+            patcher = patch({ ...options, defaultPlugins: false });
 
             const subject = new Subject<string>();
             let calls: any[][] = [];
@@ -55,7 +55,7 @@ describe("patcher", () => {
 
         it("should log all/any tagged observables", () => {
 
-            patcher = patch({ defaultPlugins: false, ...options });
+            patcher = patch({ ...options, defaultPlugins: false });
 
             const subject = new Subject<string>();
             const calls: any[][] = [];
@@ -71,7 +71,7 @@ describe("patcher", () => {
 
         it("should support a notification match", () => {
 
-            patcher = patch({ defaultPlugins: false, ...options });
+            patcher = patch({ ...options, defaultPlugins: false });
 
             const subject = new Subject<string>();
             const calls: any[][] = [];
@@ -93,7 +93,7 @@ describe("patcher", () => {
 
         it("should pause the tagged observable's subscriptions", () => {
 
-            patcher = patch({ defaultPlugins: false, ...options });
+            patcher = patch({ ...options, defaultPlugins: false });
             const deck = patcher.pause("people");
 
             const values: any[] = [];
@@ -109,7 +109,7 @@ describe("patcher", () => {
 
         it("should resume upon teardown", () => {
 
-            patcher = patch({ defaultPlugins: false, ...options });
+            patcher = patch({ ...options, defaultPlugins: false });
             patcher.pause("people");
 
             const values: any[] = [];
@@ -128,7 +128,7 @@ describe("patcher", () => {
 
         it("should apply the operator to the tagged observable", () => {
 
-            patcher = patch({ defaultPlugins: false, ...options });
+            patcher = patch({ ...options, defaultPlugins: false });
             patcher.pipe("people", source => source.pipe(mapTo("bob")));
 
             const values: any[] = [];
@@ -149,7 +149,7 @@ describe("patcher", () => {
             beforeEach(() => {
 
                 plugin = stubPlugin();
-                patcher = patch({ defaultPlugins: false, ...options });
+                patcher = patch({ ...options, defaultPlugins: false });
                 patcher.pluginHost.plug(plugin);
             });
 
@@ -309,7 +309,7 @@ describe("patcher", () => {
 
             it("should increment with each subscription and value, etc.", () => {
 
-                patcher = patch({ defaultPlugins: false, ...options });
+                patcher = patch({ ...options, defaultPlugins: false });
 
                 const subject = new Subject<string>();
 
@@ -392,7 +392,7 @@ describe("patcher", () => {
 
         it("should return the package version", () => {
 
-            patcher = patch({ defaultPlugins: false, ...options });
+            patcher = patch({ ...options, defaultPlugins: false });
             expect(patcher).to.have.property("version", require("../package.json").version);
         });
     });
@@ -409,7 +409,7 @@ describe("patcher", () => {
 
             it("should create a global with the specified name", () => {
 
-                patcher = patch({ global: "_spy", ...options });
+                patcher = patch({ ...options, global: "_spy" });
                 expect(window).to.not.have.property("spy");
                 expect(window).to.have.property("_spy");
             });

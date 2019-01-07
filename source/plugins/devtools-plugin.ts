@@ -487,7 +487,7 @@ function toSnapshot(snapshot: Snapshot): SnapshotPayload {
 
 function toStats(id: string, stats: DeckStats): DeckStatsPayload {
 
-    return { id, ...stats };
+    return { ...stats, id };
 }
 
 function toValue(value: any): { json: string } {
