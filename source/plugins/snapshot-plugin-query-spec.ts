@@ -147,6 +147,22 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("pipeline", () => {
+
+        it("should match a string", () => {
+            const result = query("pipeline('subject-mergeMap')");
+            expect(result).to.match(foundRegExp(2));
+            expect(result).to.match(idRegExp(harness.mapped));
+            expect(result).to.match(idRegExp(harness.tagged));
+        });
+
+        it("should match a regular expression", () => {
+            const result = query("pipeline(/^subject-mergeMap$/)");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.mapped));
+        });
+    });
+
     describe("root", () => {
 
         beforeEach(() => {

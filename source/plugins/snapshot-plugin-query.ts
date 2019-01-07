@@ -24,6 +24,7 @@ const defaultDerivations: QueryDerivations = {
     func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
     id: record => (match: number | string) => matchId(record, match),
     innerIncompleteCount: deriveInnerIncompleteCount,
+    pipeline: record => (match: string | RegExp) => matchPipeline(record, match),
     tag: record => (match: string | RegExp) => matchTag(record, match)
 };
 
@@ -291,6 +292,17 @@ function matchId(
     return (match === observableId) || (match === subscriberId) || (match === subscriptionId);
 }
 
+function matchPipeline(
+    queryRecord: QueryRecord,
+    match: string | RegExp | undefined
+): boolean {
+    const { observablePipeline } = queryRecord;
+    if (typeof match === "string") {
+        return observablePipeline.indexOf(match) !== -1;
+    }
+    return (match && match.test) ? match.test(observablePipeline) : false;
+}
+
 function matchStackTrace(
     queryRecord: QueryRecord,
     property: string,
@@ -344,6 +356,7 @@ function toQueryRecord(
     }
 
     const {
+        pipeline,
         stackTrace: observableStackTrace
     } = observableSnapshot;
 
@@ -388,6 +401,7 @@ function toQueryRecord(
         nextAge: age(nextTimestamp),
         nextCount,
         observableId: identify(observable),
+        observablePipeline: pipeline,
         observableStackTrace,
         root: !sink,
         rootSinkId: rootSink ? rootSink.id : undefined,
