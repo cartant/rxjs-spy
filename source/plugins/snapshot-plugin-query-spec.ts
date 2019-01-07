@@ -256,6 +256,19 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("value", () => {
+
+        it("should match observables their nexted value", () => {
+            harness.outer.next(0);
+            harness.inner.next(1);
+            const result = query("value === 1");
+            expect(result).to.match(foundRegExp(3));
+            expect(result).to.match(idRegExp(harness.inner));
+            expect(result).to.match(idRegExp(harness.mapped));
+            expect(result).to.match(idRegExp(harness.tagged));
+        });
+    });
+
     afterEach(() => {
 
         if (patcher) {

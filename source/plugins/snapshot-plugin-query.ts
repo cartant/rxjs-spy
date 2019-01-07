@@ -395,7 +395,8 @@ function toQueryRecord(
         subscribeTimestamp,
         subscriber,
         subscription,
-        unsubscribeTimestamp
+        unsubscribeTimestamp,
+        values
     } = subscriptionSnapshot;
 
     const innerSnapshots = Array.from(inners.values());
@@ -436,7 +437,8 @@ function toQueryRecord(
         subscriptionStackTrace,
         tag: observableSnapshot.tag,
         unsubscribeAge: age(unsubscribeTimestamp),
-        unsubscribed: unsubscribeTimestamp !== 0
+        unsubscribed: unsubscribeTimestamp !== 0,
+        value: values.length ? values[0].value : undefined
     };
 
     const defaultDerived = {};
