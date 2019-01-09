@@ -14,7 +14,7 @@ import { tag } from "../operators";
 import { Patcher } from "../patcher";
 import { GraphPlugin } from "./graph-plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
-import { QueryPredicate } from "./snapshot-plugin-types";
+import { QueryPredicate, QueryRecord } from "./snapshot-plugin-types";
 import { StackTracePlugin } from "./stack-trace-plugin";
 
 describe("SnapshotPlugin#query", () => {
@@ -78,6 +78,20 @@ describe("SnapshotPlugin#query", () => {
             const result = query("depth > 1");
             expect(result).to.match(foundRegExp(1));
             expect(result).to.match(idRegExp(harness.outer));
+        });
+    });
+
+    describe("derivations", () => {
+
+        it("should support custom derivations", () => {
+            patcher.query({
+                custom: function (this: QueryRecord): boolean {
+                    return this.incomplete && this.root;
+                }
+            });
+            const result = query("custom()");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.tagged));
         });
     });
 

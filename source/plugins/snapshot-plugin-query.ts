@@ -20,7 +20,6 @@ class QueryContext {
     readonly observableSnapshot_: ObservableSnapshot;
     readonly subscriberSnapshot_: SubscriberSnapshot;
     readonly subscriptionSnapshot_: SubscriptionSnapshot;
-    private readonly derivations_: QueryDerivations;
     private readonly now_ = Date.now();
 
     constructor(
@@ -29,10 +28,10 @@ class QueryContext {
         subscriptionSnapshot: SubscriptionSnapshot,
         derivations: QueryDerivations
     ) {
-        this.derivations_ = derivations;
         this.observableSnapshot_ = observableSnapshot;
         this.subscriberSnapshot_ = subscriberSnapshot;
         this.subscriptionSnapshot_ = subscriptionSnapshot;
+        Object.assign(this, derivations);
         Object.assign(this, subscriptionSnapshot.queryRecord);
     }
 
