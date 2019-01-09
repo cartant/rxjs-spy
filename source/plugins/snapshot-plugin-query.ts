@@ -4,7 +4,6 @@
  */
 
 import { compile, compileOrderBy } from "../expression";
-import { identify } from "../identify";
 import { Logger } from "../logger";
 import {
     ObservableSnapshot,
@@ -16,19 +15,385 @@ import {
     SubscriptionSnapshot
 } from "./snapshot-plugin-types";
 
-const defaultDerivations: QueryDerivations = {
-    age: deriveAge,
-    blocking: deriveBlocking,
-    depth: deriveDepth,
-    file: record => (match: string | RegExp) => matchStackTrace(record, "fileName", match),
-    func: record => (match: string | RegExp) => matchStackTrace(record, "functionName", match),
-    id: record => (match: number | string) => matchId(record, match),
-    innerIncompleteCount: deriveInnerIncompleteCount,
-    leaking: (record, snapshot, derived) => (threshold: number) => matchLeaking(record, derived, threshold),
-    pipeline: record => (match: string | RegExp) => matchPipeline(record, match),
-    slow: record => (threshold: number) => matchSlow(record, threshold),
-    tag: record => (match: string | RegExp) => matchTag(record, match)
-};
+class QueryContext {
+
+    private derivations_: QueryDerivations;
+    private now_ = Date.now();
+    private observableSnapshot_: ObservableSnapshot;
+    private subscriberSnapshot_: SubscriberSnapshot;
+    private subscriptionSnapshot_: SubscriptionSnapshot;
+
+    constructor(
+        observableSnapshot: ObservableSnapshot,
+        subscriberSnapshot: SubscriberSnapshot,
+        subscriptionSnapshot: SubscriptionSnapshot,
+        derivations: QueryDerivations
+    ) {
+        this.derivations_ = derivations;
+        this.observableSnapshot_ = observableSnapshot;
+        this.subscriberSnapshot_ = subscriberSnapshot;
+        this.subscriptionSnapshot_ = subscriptionSnapshot;
+        // subscriptionSnapshot.queryRecord
+    }
+
+    get age(): number {
+        const {
+            completeAge,
+            errorAge,
+            nextAge,
+            subscribeAge,
+            unsubscribeAge
+        } = this;
+        return Math.min(
+            completeAge || Infinity,
+            errorAge || Infinity,
+            nextAge || Infinity,
+            subscribeAge || Infinity,
+            unsubscribeAge || Infinity
+        );
+    }
+
+    get blocking(): boolean {
+        const { nextAge, sourceNextAge } = this;
+        return (sourceNextAge !== undefined) && ((nextAge === undefined) || (nextAge > sourceNextAge));
+    }
+
+    get complete(): boolean {
+        const { subscriptionSnapshot_ } = this;
+        const { completeTimestamp } = subscriptionSnapshot_;
+        return completeTimestamp !== 0;
+    }
+
+    get completeAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { completeTimestamp } = subscriptionSnapshot_;
+        return this.age_(completeTimestamp);
+    }
+
+    get depth(): number {
+        const { subscriptionSnapshot_ } = this;
+        let { rootSink, sink } = subscriptionSnapshot_;
+        if (!sink) {
+            return 0;
+        }
+        let depth = 1;
+        for (; sink !== rootSink; ++depth) {
+            sink = sink.sink!;
+        }
+        return depth;
+    }
+
+    get error(): any {
+        const { subscriptionSnapshot_ } = this;
+        const { error, errorTimestamp } = subscriptionSnapshot_;
+        return (errorTimestamp === 0) ? undefined : (error || "unknown");
+    }
+
+    get errorAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { errorTimestamp } = subscriptionSnapshot_;
+        return this.age_(errorTimestamp);
+    }
+
+    get frequency(): number {
+        const { subscriptionSnapshot_ } = this;
+        const { nextCount, nextTimestamp, subscribeTimestamp } = subscriptionSnapshot_;
+        return nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0;
+    }
+
+    get incomplete(): boolean {
+        const { subscriptionSnapshot_ } = this;
+        const { completeTimestamp, errorTimestamp } = subscriptionSnapshot_;
+        return (completeTimestamp === 0) && (errorTimestamp === 0);
+    }
+
+    get inner(): boolean {
+        const { subscriptionSnapshot_ } = this;
+        return subscriptionSnapshot_.inner;
+    }
+
+    get innerCount(): number {
+        const { subscriptionSnapshot_ } = this;
+        const { inners, innersFlushed } = subscriptionSnapshot_;
+        return inners.size + innersFlushed;
+    }
+
+    get innerIds(): string[] {
+        const { subscriptionSnapshot_ } = this;
+        const { inners } = subscriptionSnapshot_;
+        const innerSnapshots = Array.from(inners.values());
+        return innerSnapshots.map(inner => inner.id);
+    }
+
+    get innerIncompleteCount(): number {
+        const { subscriptionSnapshot_ } = this;
+        const { inners } = subscriptionSnapshot_;
+        let count = 0;
+        inners.forEach(({
+            completeTimestamp,
+            errorTimestamp,
+            unsubscribeTimestamp
+        }) => count += (completeTimestamp || errorTimestamp || unsubscribeTimestamp) ? 0 : 1);
+        return count;
+    }
+
+    get innerNextAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { inners } = subscriptionSnapshot_;
+        const innerSnapshots = Array.from(inners.values());
+        return this.age_(innerSnapshots.reduce((max, inner) => Math.max(max, inner.nextTimestamp), 0));
+    }
+
+    get innerNextCount(): number {
+        const { subscriptionSnapshot_ } = this;
+        const { inners } = subscriptionSnapshot_;
+        const innerSnapshots = Array.from(inners.values());
+        return innerSnapshots.reduce((total, inner) => total + inner.nextCount, 0);
+    }
+
+    get name(): string {
+        const { observableSnapshot_ } = this;
+        return observableSnapshot_.name;
+    }
+
+    get nextAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { nextTimestamp } = subscriptionSnapshot_;
+        return this.age_(nextTimestamp);
+    }
+
+    get nextCount(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        return subscriptionSnapshot_.nextCount;
+    }
+
+    get observableId(): string {
+        const { observableSnapshot_ } = this;
+        return observableSnapshot_.id;
+    }
+
+    get observablePipeline(): string {
+        const { observableSnapshot_ } = this;
+        return observableSnapshot_.pipeline;
+    }
+
+    get root(): boolean {
+        const { subscriptionSnapshot_ } = this;
+        return !subscriptionSnapshot_.sink;
+    }
+
+    get rootSinkId(): string | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { rootSink } = subscriptionSnapshot_;
+        return rootSink ? rootSink.id : undefined;
+    }
+
+    get sinkId(): string | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { sink } = subscriptionSnapshot_;
+        return sink ? sink.id : undefined;
+    }
+
+    get sinkNextAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { sink } = subscriptionSnapshot_;
+        return sink ? this.age_(sink.nextTimestamp) : undefined;
+    }
+
+    get sinkNextCount(): number {
+        const { subscriptionSnapshot_ } = this;
+        const { sink } = subscriptionSnapshot_;
+        return sink ? sink.nextCount : 0;
+    }
+
+    get sourceCount(): number {
+        const { subscriptionSnapshot_ } = this;
+        const { sources, sourcesFlushed } = subscriptionSnapshot_;
+        return sources.size + sourcesFlushed;
+    }
+
+    get sourceIds(): string[] {
+        const { subscriptionSnapshot_ } = this;
+        const { sources } = subscriptionSnapshot_;
+        const sourceSnapshots = Array.from(sources.values());
+        return sourceSnapshots.map(source => source.id);
+    }
+
+    get sourceNextAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { sources } = subscriptionSnapshot_;
+        const sourceSnapshots = Array.from(sources.values());
+        return this.age_(sourceSnapshots.reduce((max, source) => Math.max(max, source.nextTimestamp), 0));
+    }
+
+    get sourceNextCount(): number {
+        const { subscriptionSnapshot_ } = this;
+        const { sources } = subscriptionSnapshot_;
+        const sourceSnapshots = Array.from(sources.values());
+        return sourceSnapshots.reduce((total, source) => total + source.nextCount, 0);
+    }
+
+    get subscribeAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { subscribeTimestamp } = subscriptionSnapshot_;
+        return this.age_(subscribeTimestamp);
+    }
+
+    get subscriberId(): string {
+        const { subscriberSnapshot_ } = this;
+        return subscriberSnapshot_.id;
+    }
+
+    get subscriptionId(): string {
+        const { subscriptionSnapshot_ } = this;
+        return subscriptionSnapshot_.id;
+    }
+
+    get unsubscribeAge(): number | undefined {
+        const { subscriptionSnapshot_ } = this;
+        const { unsubscribeTimestamp } = subscriptionSnapshot_;
+        return this.age_(unsubscribeTimestamp);
+    }
+
+    get unsubscribed(): boolean {
+        const { subscriptionSnapshot_ } = this;
+        const { unsubscribeTimestamp } = subscriptionSnapshot_;
+        return unsubscribeTimestamp !== 0;
+    }
+
+    get value(): any {
+        const { subscriptionSnapshot_ } = this;
+        const { values } = subscriptionSnapshot_;
+        return values.length ? values[0].value : undefined;
+    }
+
+    file(match: string | RegExp): boolean {
+        return this.stackTrace_("fileName", match);
+    }
+
+    func(match: string | RegExp): boolean {
+        return this.stackTrace_("functionName", match);
+    }
+
+    id(match: number | string): boolean {
+        const { observableId, subscriberId, subscriptionId } = this;
+        if (typeof match === "number") {
+            match = match.toString();
+        }
+        return (match === observableId) || (match === subscriberId) || (match === subscriptionId);
+    }
+
+    leaking(threshold: number): boolean {
+        const { bufferCount, innerIncompleteCount } = this as QueryRecord;
+        return (bufferCount > threshold) || (innerIncompleteCount > threshold);
+    }
+
+    logStackTrace_(logger: Logger): void {
+        const { subscriptionSnapshot_ } = this;
+        const { mappedStackTrace, rootSink } = subscriptionSnapshot_;
+        const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
+        mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
+    }
+
+    logSubscriber_(logger: Logger, subscriberGroupMethod: string, keys: string[] = []): void {
+        const { subscriberSnapshot_, subscriptionSnapshot_ } = this;
+        const { values, valuesFlushed } = subscriberSnapshot_;
+        logger[subscriberGroupMethod].call(logger, "Subscriber");
+        logger.log("Value count =", values.length + valuesFlushed);
+        if (values.length > 0) {
+            logger.log("Last value =", values[values.length - 1].value);
+        }
+        this.logSubscription_(logger, keys);
+        const otherSubscriptions = Array
+            .from(subscriberSnapshot_.subscriptions.values())
+            .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot_);
+        otherSubscriptions.forEach(otherSubscriptionSnapshot => {
+            logger.groupCollapsed("Other subscription");
+            this.logSubscription_(logger, keys);
+            logger.groupEnd();
+        });
+        logger.groupEnd();
+    }
+
+    logSubscription_(logger: Logger, keys: string[] = []): void {
+        const { complete, error, unsubscribed } = this;
+        logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
+        keys = keys
+            .sort()
+            .filter(key => !["function", "undefined"].includes(typeof this[key]));
+        if (keys.length > 0) {
+            logger.group("Query match");
+            keys.forEach(key => logger.log(`${key} =`, this[key]));
+            logger.groupEnd();
+        }
+        logger.groupCollapsed("Query record");
+        [...Object.keys(Object.getPrototypeOf(this)), ...Object.keys(this)]
+            .sort()
+            .filter(key => !["function", "undefined"].includes(typeof this[key]))
+            .forEach(key => logger.log(`${key} =`, this[key]));
+        logger.groupEnd();
+        if (error) {
+            logger.error("Error =", error || "unknown");
+        }
+        if (unsubscribed) {
+            logger.log("Unsubscribed =", true);
+        }
+        this.logStackTrace_(logger);
+    }
+
+    pipeline(match: string | RegExp): boolean {
+        const { observablePipeline } = this;
+        if (typeof match === "string") {
+            return observablePipeline.indexOf(match) !== -1;
+        }
+        return (match && match.test) ? match.test(observablePipeline) : false;
+    }
+
+    slow(threshold: number): boolean {
+        const { nextAge, subscribeAge } = this;
+        return (nextAge || subscribeAge || 0) > (threshold / 1e3);
+    }
+
+    tag(match: string | RegExp): boolean {
+        const { observableSnapshot_ } = this;
+        const { tag } = observableSnapshot_;
+        if (match === undefined) {
+            return Boolean(tag);
+        }
+        if (typeof match === "string") {
+            return tag === match;
+        }
+        return (match && match.test && tag) ? match.test(tag) : false;
+    }
+
+    private age_(timestamp: number): number | undefined {
+        const { now_ } = this;
+        return timestamp ? ((now_ - timestamp) / 1e3) : undefined;
+    }
+
+    private stackTrace_(property: string, match: string | RegExp): boolean {
+        const predicate = (stackFrame: any) => {
+            const value: string = stackFrame[property];
+            switch (property) {
+            case "fileName":
+                return (typeof match === "string") ? value.endsWith(match) : match.test(value);
+            case "functionName":
+                return (typeof match === "string") ? (value === match) : match.test(value);
+            default:
+                return false;
+            }
+        };
+        const {
+            observableSnapshot_,
+            subscriptionSnapshot_
+        } = this;
+        const rootStackTrace = subscriptionSnapshot_.rootSink ?
+            subscriptionSnapshot_.rootSink.stackTrace : [];
+        return observableSnapshot_.stackTrace.some(predicate) ||
+            subscriptionSnapshot_.stackTrace.some(predicate) ||
+            rootStackTrace.some(predicate);
+    }
+}
 
 export function query(options: {
     derivations: QueryDerivations,
@@ -59,10 +424,7 @@ export function query(options: {
         const found: {
             observable: ObservableSnapshot;
             orderByRecord: QueryRecord;
-            subs: {
-                subscriber: SubscriberSnapshot;
-                subscription: SubscriptionSnapshot;
-            }[]
+            queryContexts: QueryContext[];
         }[] = [];
 
         observableSnapshots.forEach(observableSnapshot => {
@@ -74,27 +436,24 @@ export function query(options: {
 
                 const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                 if (subscriberSnapshot) {
-                    const queryRecord = toQueryRecord(
-                        derivations,
+                    const queryContext = new QueryContext(
                         observableSnapshot,
                         subscriberSnapshot,
-                        subscriptionSnapshot
+                        subscriptionSnapshot,
+                        derivations
                     );
-                    if (predicateEvaluator(queryRecord)) {
-                        const orderByRecord = queryRecord;
+                    if (predicateEvaluator(queryContext)) {
+                        const orderByRecord = queryContext;
                         if (!find) {
                             find = {
                                 observable: observableSnapshot,
                                 orderByRecord,
-                                subs: []
+                                queryContexts: []
                             };
                         } else if (comparer(orderByRecord, find.orderByRecord) < 0) {
                             find.orderByRecord = orderByRecord;
                         }
-                        find.subs.push({
-                            subscriber: subscriberSnapshot,
-                            subscription: subscriptionSnapshot
-                        });
+                        find.queryContexts.push(queryContext);
                     }
                 }
             });
@@ -127,46 +486,10 @@ export function query(options: {
             );
             logger.log("Name =", observableSnapshot.name);
             logger.log("Pipeline =", observableSnapshot.pipeline);
-
-            const { subs } = find;
-            const subscriberGroupMethod = (find.subs.length > 3) ? "groupCollapsed" : "group";
-            logger.group(`${subs.length} subscriber(s)`);
-            subs.forEach(sub => {
-
-                const subscriptionSnapshot = sub.subscription;
-                const subscriberSnapshot = sub.subscriber;
-                const { values, valuesFlushed } = subscriberSnapshot;
-                logger[subscriberGroupMethod].call(logger, "Subscriber");
-                logger.log("Value count =", values.length + valuesFlushed);
-                if (values.length > 0) {
-                    logger.log("Last value =", values[values.length - 1].value);
-                }
-                logSubscription(
-                    logger,
-                    derivations,
-                    keys,
-                    observableSnapshot,
-                    subscriberSnapshot,
-                    subscriptionSnapshot
-                );
-
-                const otherSubscriptions = Array
-                    .from(subscriberSnapshot.subscriptions.values())
-                    .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot);
-                otherSubscriptions.forEach(otherSubscriptionSnapshot => {
-                    logger.groupCollapsed("Other subscription");
-                    logSubscription(
-                        logger,
-                        derivations,
-                        keys,
-                        observableSnapshot,
-                        subscriberSnapshot,
-                        otherSubscriptionSnapshot
-                    );
-                    logger.groupEnd();
-                });
-                logger.groupEnd();
-            });
+            const { queryContexts } = find;
+            const subscriberGroupMethod = (queryContexts.length > 3) ? "groupCollapsed" : "group";
+            logger.group(`${queryContexts.length} subscriber(s)`);
+            queryContexts.forEach(queryContext => queryContext.logSubscriber_(logger, subscriberGroupMethod, keys));
             logger.groupEnd();
             logger.groupEnd();
         });
@@ -176,287 +499,4 @@ export function query(options: {
         }
         logger.groupEnd();
     });
-}
-
-function deriveAge({
-    completeAge,
-    errorAge,
-    nextAge,
-    subscribeAge,
-    unsubscribeAge
-}: QueryRecord): number {
-    return Math.min(
-        completeAge || Infinity,
-        errorAge || Infinity,
-        nextAge || Infinity,
-        subscribeAge || Infinity,
-        unsubscribeAge || Infinity
-    );
-}
-
-function deriveBlocking({
-    nextAge,
-    sourceNextAge
-}: QueryRecord): boolean {
-    return ((nextAge === undefined) && (sourceNextAge !== undefined)) || (nextAge > sourceNextAge);
-}
-
-function deriveDepth(
-    record: QueryRecord,
-    { rootSink, sink }: SubscriptionSnapshot
-): number {
-    if (!sink) {
-        return 0;
-    }
-    let depth = 1;
-    for (; sink !== rootSink; ++depth) {
-        sink = sink.sink!;
-    }
-    return depth;
-}
-
-function deriveInnerIncompleteCount(
-    record: QueryRecord,
-    { inners }: SubscriptionSnapshot
-): number {
-    let count = 0;
-    inners.forEach(({
-        completeTimestamp,
-        errorTimestamp,
-        unsubscribeTimestamp
-    }) => count += (completeTimestamp || errorTimestamp || unsubscribeTimestamp) ? 0 : 1);
-    return count;
-}
-
-function logStackTrace(
-    logger: Logger,
-    subscriptionSnapshot: SubscriptionSnapshot
-): void {
-
-    const { mappedStackTrace, rootSink } = subscriptionSnapshot;
-    const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
-    mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
-}
-
-function logSubscription(
-    logger: Logger,
-    derivations: QueryDerivations,
-    keys: string[] = [],
-    observableSnapshot: ObservableSnapshot,
-    subscriberSnapshot: SubscriberSnapshot,
-    subscriptionSnapshot: SubscriptionSnapshot
-): void {
-
-    const {
-        completeTimestamp,
-        error,
-        errorTimestamp,
-        unsubscribeTimestamp
-    } = subscriptionSnapshot;
-    const record = toQueryRecord(
-        derivations,
-        observableSnapshot,
-        subscriberSnapshot,
-        subscriptionSnapshot
-    );
-
-    logger.log("State =", completeTimestamp ? "complete" : errorTimestamp ? "error" : "incomplete");
-    keys = keys
-        .sort()
-        .filter(key => !["function", "undefined"].includes(typeof record[key]));
-    if (keys.length > 0) {
-        logger.group("Query match");
-        keys.forEach(key => logger.log(`${key} =`, record[key]));
-        logger.groupEnd();
-    }
-    logger.groupCollapsed("Query record");
-    Object.keys(record)
-        .sort()
-        .filter(key => !["function", "undefined"].includes(typeof record[key]))
-        .forEach(key => logger.log(`${key} =`, record[key]));
-    logger.groupEnd();
-    if (errorTimestamp) {
-        logger.error("Error =", error || "unknown");
-    }
-    if (unsubscribeTimestamp) {
-        logger.log("Unsubscribed =", true);
-    }
-    logStackTrace(logger, subscriptionSnapshot);
-}
-
-function matchId(
-    { observableId, subscriberId, subscriptionId }: QueryRecord,
-    match: number | string
-): boolean {
-    if (typeof match === "number") {
-        match = match.toString();
-    }
-    return (match === observableId) || (match === subscriberId) || (match === subscriptionId);
-}
-
-function matchLeaking(
-    { bufferCount }: QueryRecord,
-    { innerIncompleteCount }: QueryRecord,
-    threshold: number
-): boolean {
-    return (bufferCount > threshold) || (innerIncompleteCount > threshold);
-}
-
-function matchPipeline(
-    queryRecord: QueryRecord,
-    match: string | RegExp | undefined
-): boolean {
-    const { observablePipeline } = queryRecord;
-    if (typeof match === "string") {
-        return observablePipeline.indexOf(match) !== -1;
-    }
-    return (match && match.test) ? match.test(observablePipeline) : false;
-}
-
-function matchSlow(
-    { nextAge, subscribeAge }: QueryRecord,
-    threshold: number
-): boolean {
-    return (nextAge || subscribeAge) > (threshold / 1e3);
-}
-
-function matchStackTrace(
-    queryRecord: QueryRecord,
-    property: string,
-    match: string | RegExp
-): boolean {
-    const predicate = (stackFrame: any) => {
-        const value: string = stackFrame[property];
-        switch (property) {
-        case "fileName":
-            return (typeof match === "string") ? value.endsWith(match) : match.test(value);
-        case "functionName":
-            return (typeof match === "string") ? (value === match) : match.test(value);
-        default:
-            return false;
-        }
-    };
-    const {
-        observableStackTrace,
-        rootStackTrace,
-        subscriptionStackTrace
-    } = queryRecord;
-    return observableStackTrace.some(predicate) ||
-        rootStackTrace.some(predicate) ||
-        subscriptionStackTrace.some(predicate);
-}
-
-function matchTag(
-    queryRecord: QueryRecord,
-    match: string | RegExp | undefined
-): boolean {
-    const { tag } = queryRecord;
-    if (match === undefined) {
-        return Boolean(tag);
-    }
-    if (typeof match === "string") {
-        return tag === match;
-    }
-    return (match && match.test) ? match.test(tag) : false;
-}
-
-function toQueryRecord(
-    derivations: QueryDerivations,
-    observableSnapshot: ObservableSnapshot,
-    subscriberSnapshot: SubscriberSnapshot,
-    subscriptionSnapshot: SubscriptionSnapshot
-): QueryRecord {
-
-    const now = Date.now();
-    function age(timestamp: number): number | undefined {
-        return timestamp ? ((now - timestamp) / 1e3) : undefined;
-    }
-
-    const {
-        pipeline,
-        stackTrace: observableStackTrace
-    } = observableSnapshot;
-
-    const {
-        completeTimestamp,
-        error,
-        errorTimestamp,
-        inner,
-        inners,
-        innersFlushed,
-        nextCount,
-        nextTimestamp,
-        observable,
-        rootSink,
-        sink,
-        sources,
-        sourcesFlushed,
-        stackTrace: subscriptionStackTrace,
-        subscribeTimestamp,
-        subscriber,
-        subscription,
-        unsubscribeTimestamp,
-        values
-    } = subscriptionSnapshot;
-
-    const innerSnapshots = Array.from(inners.values());
-    const sourceSnapshots = Array.from(sources.values());
-
-    const queryRecord = {
-        ...subscriptionSnapshot.queryRecord,
-        complete: completeTimestamp !== 0,
-        completeAge: age(completeTimestamp),
-        error: (errorTimestamp === 0) ? undefined : (error || "unknown"),
-        errorAge: age(errorTimestamp),
-        frequency: nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0,
-        incomplete: (completeTimestamp === 0) && (errorTimestamp === 0),
-        inner,
-        innerCount: innerSnapshots.length + innersFlushed,
-        innerIds: innerSnapshots.map(inner => inner.id),
-        innerNextAge: age(innerSnapshots.reduce((max, inner) => Math.max(max, inner.nextTimestamp), 0)),
-        innerNextCount: innerSnapshots.reduce((total, inner) => total + inner.nextCount, 0),
-        name: observableSnapshot.name,
-        nextAge: age(nextTimestamp),
-        nextCount,
-        observableId: identify(observable),
-        observablePipeline: pipeline,
-        observableStackTrace,
-        root: !sink,
-        rootSinkId: rootSink ? rootSink.id : undefined,
-        rootStackTrace: rootSink ? rootSink.stackTrace : [],
-        sinkId: sink ? sink.id : undefined,
-        sinkNextAge: sink ? age(sink.nextTimestamp) : undefined,
-        sinkNextCount: sink ? sink.nextCount : 0,
-        sourceCount: sourceSnapshots.length + sourcesFlushed,
-        sourceIds: sourceSnapshots.map(source => source.id),
-        sourceNextAge: age(sourceSnapshots.reduce((max, source) => Math.max(max, source.nextTimestamp), 0)),
-        sourceNextCount: sourceSnapshots.reduce((total, source) => total + source.nextCount, 0),
-        subscribeAge: age(subscribeTimestamp),
-        subscriberId: identify(subscriber),
-        subscriptionId: identify(subscription),
-        subscriptionStackTrace,
-        tag: observableSnapshot.tag,
-        unsubscribeAge: age(unsubscribeTimestamp),
-        unsubscribed: unsubscribeTimestamp !== 0,
-        value: values.length ? values[0].value : undefined
-    };
-
-    const defaultDerived = {};
-    Object.keys(defaultDerivations).forEach(key => {
-        defaultDerived[key] = defaultDerivations[key](
-            queryRecord,
-            subscriptionSnapshot,
-            defaultDerived
-        );
-    });
-
-    const derived = {};
-    Object.keys(derivations).forEach(key => {
-        derived[key] = derivations[key](
-            queryRecord,
-            subscriptionSnapshot,
-            { ...defaultDerived, ...derived }
-        );
-    });
-    return { ...queryRecord, ...defaultDerived, ...derived };
 }
