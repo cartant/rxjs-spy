@@ -235,13 +235,13 @@ describe("SnapshotPlugin#query", () => {
             harness.outer.next(0);
             setTimeout(() => {
                 harness.outer.next(0);
-                const result = query("slow(10)");
+                const result = query("slow(50)");
                 expect(result).to.match(foundRegExp(3));
                 expect(result).to.match(idRegExp(harness.inner));
                 expect(result).to.match(idRegExp(harness.mapped));
                 expect(result).to.match(idRegExp(harness.tagged));
                 done();
-            }, 20);
+            }, 100);
         });
     });
 
