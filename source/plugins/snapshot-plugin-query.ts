@@ -33,7 +33,7 @@ class QueryContext {
         this.observableSnapshot_ = observableSnapshot;
         this.subscriberSnapshot_ = subscriberSnapshot;
         this.subscriptionSnapshot_ = subscriptionSnapshot;
-        // subscriptionSnapshot.queryRecord
+        Object.assign(this, subscriptionSnapshot.queryRecord);
     }
 
     get age(): number {
