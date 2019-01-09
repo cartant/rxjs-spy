@@ -20,9 +20,15 @@ export function compile(expression: string): {
         `return ${replaced};`
     ]))();
 
-    const evaluator = (record: Record<string, any>) => compiled(
-        ...keys.map(key => record[key])
-    );
+    const evaluator = (context: Record<string, any>) => {
+        return compiled(...keys.map(key => {
+            let value = context[key];
+            if (typeof value === "function") {
+                value = value.bind(context);
+            }
+            return value;
+        }));
+    };
     return { evaluator, keys };
 }
 

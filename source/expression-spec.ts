@@ -47,6 +47,17 @@ describe("expression", () => {
                 file: (name: RegExp) => name.test("abc")
             })).to.be.true;
         });
+
+        it("should bind functions to the context", () => {
+            const { evaluator } = compile(`file(/a/)`);
+            expect(evaluator({
+                file(name: RegExp): boolean {
+                    /*tslint:disable-next-line:no-invalid-this*/
+                    return name.test(this.name);
+                },
+                name: "abc"
+            })).to.be.true;
+        });
     });
 
     describe("compileOrderBy", () => {
