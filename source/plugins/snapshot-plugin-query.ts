@@ -17,11 +17,11 @@ import {
 
 class QueryContext {
 
-    private derivations_: QueryDerivations;
-    private now_ = Date.now();
-    private observableSnapshot_: ObservableSnapshot;
-    private subscriberSnapshot_: SubscriberSnapshot;
-    private subscriptionSnapshot_: SubscriptionSnapshot;
+    readonly observableSnapshot_: ObservableSnapshot;
+    readonly subscriberSnapshot_: SubscriberSnapshot;
+    readonly subscriptionSnapshot_: SubscriptionSnapshot;
+    private readonly derivations_: QueryDerivations;
+    private readonly now_ = Date.now();
 
     constructor(
         observableSnapshot: ObservableSnapshot,
@@ -288,59 +288,6 @@ class QueryContext {
         return (bufferCount > threshold) || (innerIncompleteCount > threshold);
     }
 
-    logStackTrace_(logger: Logger): void {
-        const { subscriptionSnapshot_ } = this;
-        const { mappedStackTrace, rootSink } = subscriptionSnapshot_;
-        const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
-        mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
-    }
-
-    logSubscriber_(logger: Logger, subscriberGroupMethod: string, keys: string[] = []): void {
-        const { subscriberSnapshot_, subscriptionSnapshot_ } = this;
-        const { values, valuesFlushed } = subscriberSnapshot_;
-        logger[subscriberGroupMethod].call(logger, "Subscriber");
-        logger.log("Value count =", values.length + valuesFlushed);
-        if (values.length > 0) {
-            logger.log("Last value =", values[values.length - 1].value);
-        }
-        this.logSubscription_(logger, keys);
-        const otherSubscriptions = Array
-            .from(subscriberSnapshot_.subscriptions.values())
-            .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot_);
-        otherSubscriptions.forEach(otherSubscriptionSnapshot => {
-            logger.groupCollapsed("Other subscription");
-            this.logSubscription_(logger, keys);
-            logger.groupEnd();
-        });
-        logger.groupEnd();
-    }
-
-    logSubscription_(logger: Logger, keys: string[] = []): void {
-        const { complete, error, unsubscribed } = this;
-        logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
-        keys = keys
-            .sort()
-            .filter(key => !["function", "undefined"].includes(typeof this[key]));
-        if (keys.length > 0) {
-            logger.group("Query match");
-            keys.forEach(key => logger.log(`${key} =`, this[key]));
-            logger.groupEnd();
-        }
-        logger.groupCollapsed("Query record");
-        [...Object.keys(Object.getPrototypeOf(this)), ...Object.keys(this)]
-            .sort()
-            .filter(key => !["function", "undefined"].includes(typeof this[key]))
-            .forEach(key => logger.log(`${key} =`, this[key]));
-        logger.groupEnd();
-        if (error) {
-            logger.error("Error =", error || "unknown");
-        }
-        if (unsubscribed) {
-            logger.log("Unsubscribed =", true);
-        }
-        this.logStackTrace_(logger);
-    }
-
     pipeline(match: string | RegExp): boolean {
         const { observablePipeline } = this;
         if (typeof match === "string") {
@@ -487,9 +434,8 @@ export function query(options: {
             logger.log("Name =", observableSnapshot.name);
             logger.log("Pipeline =", observableSnapshot.pipeline);
             const { queryContexts } = find;
-            const subscriberGroupMethod = (queryContexts.length > 3) ? "groupCollapsed" : "group";
             logger.group(`${queryContexts.length} subscriber(s)`);
-            queryContexts.forEach(queryContext => queryContext.logSubscriber_(logger, subscriberGroupMethod, keys));
+            queryContexts.forEach(queryContext => logSubscriber_(logger, queryContext, queryContexts.length <= 3, keys));
             logger.groupEnd();
             logger.groupEnd();
         });
@@ -499,4 +445,57 @@ export function query(options: {
         }
         logger.groupEnd();
     });
+}
+
+function logStackTrace_(logger: Logger, queryContext: QueryContext): void {
+    const { subscriptionSnapshot_ } = queryContext;
+    const { mappedStackTrace, rootSink } = subscriptionSnapshot_;
+    const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
+    mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
+}
+
+function logSubscriber_(logger: Logger, queryContext: QueryContext, group: boolean, keys: string[] = []): void {
+    const { subscriberSnapshot_, subscriptionSnapshot_ } = queryContext;
+    const { values, valuesFlushed } = subscriberSnapshot_;
+    logger[group ? "group" : "groupCollapsed"].call(logger, "Subscriber");
+    logger.log("Value count =", values.length + valuesFlushed);
+    if (values.length > 0) {
+        logger.log("Last value =", values[values.length - 1].value);
+    }
+    logSubscription_(logger, queryContext, keys);
+    const otherSubscriptions = Array
+        .from(subscriberSnapshot_.subscriptions.values())
+        .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot_);
+    otherSubscriptions.forEach(otherSubscriptionSnapshot => {
+        logger.groupCollapsed("Other subscription");
+        logSubscription_(logger, queryContext, keys);
+        logger.groupEnd();
+    });
+    logger.groupEnd();
+}
+
+function logSubscription_(logger: Logger, queryContext: QueryContext, keys: string[] = []): void {
+    const { complete, error, unsubscribed } = queryContext;
+    logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
+    keys = keys
+        .sort()
+        .filter(key => !["function", "undefined"].includes(typeof queryContext[key]));
+    if (keys.length > 0) {
+        logger.group("Query match");
+        keys.forEach(key => logger.log(`${key} =`, queryContext[key]));
+        logger.groupEnd();
+    }
+    logger.groupCollapsed("Query record");
+    Object.keys(queryContext)
+        .sort()
+        .filter(key => !["function", "undefined"].includes(typeof queryContext[key]))
+        .forEach(key => logger.log(`${key} =`, queryContext[key]));
+    logger.groupEnd();
+    if (error) {
+        logger.error("Error =", error || "unknown");
+    }
+    if (unsubscribed) {
+        logger.log("Unsubscribed =", true);
+    }
+    logStackTrace_(logger, queryContext);
 }
