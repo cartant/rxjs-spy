@@ -5,13 +5,15 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { isObservable, noop, Observable, Subject } from "rxjs";
+import { isObservable, noop, Observable, Subject, zip } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { patch } from "../factory";
 import { identify } from "../identify";
 import { toLogger } from "../logger";
 import { tag } from "../operators";
 import { Patcher } from "../patcher";
+import { BufferPlugin } from "./buffer-plugin";
+import { CyclePlugin } from "./cycle-plugin";
 import { GraphPlugin } from "./graph-plugin";
 import { SnapshotPlugin } from "./snapshot-plugin";
 import { QueryPredicate, QueryRecord } from "./snapshot-plugin-types";
@@ -37,7 +39,9 @@ describe("SnapshotPlugin#query", () => {
         patcher.pluginHost.plug(
             new StackTracePlugin({ sourceMaps: false, pluginHost: patcher.pluginHost }),
             new GraphPlugin({ keptDuration, pluginHost: patcher.pluginHost }),
-            snapshotPlugin
+            snapshotPlugin,
+            new BufferPlugin({ pluginHost: patcher.pluginHost }),
+            new CyclePlugin({ pluginHost: patcher.pluginHost })
         );
 
         function composeHarness(): void {
@@ -61,6 +65,20 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("bufferCount", () => {
+
+        it("should match buffer counts", () => {
+            const first = new Subject<number>();
+            const second = new Subject<number>();
+            const zipped = zip(first, second);
+            zipped.subscribe(noop, noop, noop);
+            first.next(1);
+            const result = query("bufferCount > 0");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(zipped));
+        });
+    });
+
     describe("complete", () => {
 
         it("should match observables that have completed", () => {
@@ -69,6 +87,27 @@ describe("SnapshotPlugin#query", () => {
             const result = query("complete");
             expect(result).to.match(foundRegExp(1));
             expect(result).to.match(idRegExp(harness.inner));
+        });
+    });
+
+    describe("cycleCount", () => {
+
+        it("should match cycle counts", () => {
+            const subject1 = new Subject<number>();
+            const subject2 = new Subject<number>();
+            subject1.subscribe(value => {
+                if (value < 10) {
+                    subject2.next(value + 1);
+                }
+            });
+            subject2.subscribe(value => {
+                if (value < 10) {
+                    subject1.next(value + 1);
+                }
+            });
+            subject1.next(0);
+            const result = query("cycleCount > 0");
+            expect(result).to.match(foundRegExp(2));
         });
     });
 
@@ -324,7 +363,7 @@ describe("SnapshotPlugin#query", () => {
         return new RegExp(`${count} snapshot\\(s\\) found`);
     }
 
-    function idRegExp(arg: number | string | Observable<number>): RegExp {
+    function idRegExp(arg: number | string | Observable<any>): RegExp {
         const id = isObservable(arg) ? identify(arg) : arg;
         return new RegExp(`ID = ${id}`);
     }
