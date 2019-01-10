@@ -28,11 +28,11 @@ class QueryContext {
         subscriptionSnapshot: SubscriptionSnapshot,
         derivations: QueryDerivations
     ) {
+        Object.assign(this, subscriptionSnapshot.queryRecord);
+        Object.assign(this, derivations);
         this.observableSnapshot = observableSnapshot;
         this.subscriberSnapshot = subscriberSnapshot;
         this.subscriptionSnapshot = subscriptionSnapshot;
-        Object.assign(this, subscriptionSnapshot.queryRecord);
-        Object.assign(this, derivations);
     }
 
     get age(): number {
