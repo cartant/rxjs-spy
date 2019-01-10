@@ -297,7 +297,7 @@ class QueryContext {
 
     slow(threshold: number): boolean {
         const { nextAge, subscribeAge } = this;
-        return (nextAge || subscribeAge || 0) > (threshold / 1e3);
+        return ((nextAge === undefined) ? (subscribeAge || 0) : nextAge) > (threshold / 1e3);
     }
 
     tag(match: string | RegExp): boolean {
