@@ -17,9 +17,9 @@ import {
 
 class QueryContext {
 
-    readonly observableSnapshot_: ObservableSnapshot;
-    readonly subscriberSnapshot_: SubscriberSnapshot;
-    readonly subscriptionSnapshot_: SubscriptionSnapshot;
+    readonly observableSnapshot: ObservableSnapshot;
+    readonly subscriberSnapshot: SubscriberSnapshot;
+    readonly subscriptionSnapshot: SubscriptionSnapshot;
     private readonly now_ = Date.now();
 
     constructor(
@@ -28,9 +28,9 @@ class QueryContext {
         subscriptionSnapshot: SubscriptionSnapshot,
         derivations: QueryDerivations
     ) {
-        this.observableSnapshot_ = observableSnapshot;
-        this.subscriberSnapshot_ = subscriberSnapshot;
-        this.subscriptionSnapshot_ = subscriptionSnapshot;
+        this.observableSnapshot = observableSnapshot;
+        this.subscriberSnapshot = subscriberSnapshot;
+        this.subscriptionSnapshot = subscriptionSnapshot;
         Object.assign(this, derivations);
         Object.assign(this, subscriptionSnapshot.queryRecord);
     }
@@ -58,20 +58,20 @@ class QueryContext {
     }
 
     get complete(): boolean {
-        const { subscriptionSnapshot_ } = this;
-        const { completeTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { completeTimestamp } = subscriptionSnapshot;
         return completeTimestamp !== 0;
     }
 
     get completeAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { completeTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { completeTimestamp } = subscriptionSnapshot;
         return this.age_(completeTimestamp);
     }
 
     get depth(): number {
-        const { subscriptionSnapshot_ } = this;
-        let { rootSink, sink } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        let { rootSink, sink } = subscriptionSnapshot;
         if (!sink) {
             return 0;
         }
@@ -83,50 +83,50 @@ class QueryContext {
     }
 
     get error(): any {
-        const { subscriptionSnapshot_ } = this;
-        const { error, errorTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { error, errorTimestamp } = subscriptionSnapshot;
         return (errorTimestamp === 0) ? undefined : (error || "unknown");
     }
 
     get errorAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { errorTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { errorTimestamp } = subscriptionSnapshot;
         return this.age_(errorTimestamp);
     }
 
     get frequency(): number {
-        const { subscriptionSnapshot_ } = this;
-        const { nextCount, nextTimestamp, subscribeTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { nextCount, nextTimestamp, subscribeTimestamp } = subscriptionSnapshot;
         return nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0;
     }
 
     get incomplete(): boolean {
-        const { subscriptionSnapshot_ } = this;
-        const { completeTimestamp, errorTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { completeTimestamp, errorTimestamp } = subscriptionSnapshot;
         return (completeTimestamp === 0) && (errorTimestamp === 0);
     }
 
     get inner(): boolean {
-        const { subscriptionSnapshot_ } = this;
-        return subscriptionSnapshot_.inner;
+        const { subscriptionSnapshot } = this;
+        return subscriptionSnapshot.inner;
     }
 
     get innerCount(): number {
-        const { subscriptionSnapshot_ } = this;
-        const { inners, innersFlushed } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { inners, innersFlushed } = subscriptionSnapshot;
         return inners.size + innersFlushed;
     }
 
     get innerIds(): string[] {
-        const { subscriptionSnapshot_ } = this;
-        const { inners } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { inners } = subscriptionSnapshot;
         const innerSnapshots = Array.from(inners.values());
         return innerSnapshots.map(inner => inner.id);
     }
 
     get innerIncompleteCount(): number {
-        const { subscriptionSnapshot_ } = this;
-        const { inners } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { inners } = subscriptionSnapshot;
         let count = 0;
         inners.forEach(({
             completeTimestamp,
@@ -137,132 +137,132 @@ class QueryContext {
     }
 
     get innerNextAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { inners } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { inners } = subscriptionSnapshot;
         const innerSnapshots = Array.from(inners.values());
         return this.age_(innerSnapshots.reduce((max, inner) => Math.max(max, inner.nextTimestamp), 0));
     }
 
     get innerNextCount(): number {
-        const { subscriptionSnapshot_ } = this;
-        const { inners } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { inners } = subscriptionSnapshot;
         const innerSnapshots = Array.from(inners.values());
         return innerSnapshots.reduce((total, inner) => total + inner.nextCount, 0);
     }
 
     get name(): string {
-        const { observableSnapshot_ } = this;
-        return observableSnapshot_.name;
+        const { observableSnapshot } = this;
+        return observableSnapshot.name;
     }
 
     get nextAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { nextTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { nextTimestamp } = subscriptionSnapshot;
         return this.age_(nextTimestamp);
     }
 
     get nextCount(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        return subscriptionSnapshot_.nextCount;
+        const { subscriptionSnapshot } = this;
+        return subscriptionSnapshot.nextCount;
     }
 
     get observableId(): string {
-        const { observableSnapshot_ } = this;
-        return observableSnapshot_.id;
+        const { observableSnapshot } = this;
+        return observableSnapshot.id;
     }
 
     get observablePipeline(): string {
-        const { observableSnapshot_ } = this;
-        return observableSnapshot_.pipeline;
+        const { observableSnapshot } = this;
+        return observableSnapshot.pipeline;
     }
 
     get root(): boolean {
-        const { subscriptionSnapshot_ } = this;
-        return !subscriptionSnapshot_.sink;
+        const { subscriptionSnapshot } = this;
+        return !subscriptionSnapshot.sink;
     }
 
     get rootSinkId(): string | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { rootSink } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { rootSink } = subscriptionSnapshot;
         return rootSink ? rootSink.id : undefined;
     }
 
     get sinkId(): string | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { sink } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { sink } = subscriptionSnapshot;
         return sink ? sink.id : undefined;
     }
 
     get sinkNextAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { sink } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { sink } = subscriptionSnapshot;
         return sink ? this.age_(sink.nextTimestamp) : undefined;
     }
 
     get sinkNextCount(): number {
-        const { subscriptionSnapshot_ } = this;
-        const { sink } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { sink } = subscriptionSnapshot;
         return sink ? sink.nextCount : 0;
     }
 
     get sourceCount(): number {
-        const { subscriptionSnapshot_ } = this;
-        const { sources, sourcesFlushed } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { sources, sourcesFlushed } = subscriptionSnapshot;
         return sources.size + sourcesFlushed;
     }
 
     get sourceIds(): string[] {
-        const { subscriptionSnapshot_ } = this;
-        const { sources } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { sources } = subscriptionSnapshot;
         const sourceSnapshots = Array.from(sources.values());
         return sourceSnapshots.map(source => source.id);
     }
 
     get sourceNextAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { sources } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { sources } = subscriptionSnapshot;
         const sourceSnapshots = Array.from(sources.values());
         return this.age_(sourceSnapshots.reduce((max, source) => Math.max(max, source.nextTimestamp), 0));
     }
 
     get sourceNextCount(): number {
-        const { subscriptionSnapshot_ } = this;
-        const { sources } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { sources } = subscriptionSnapshot;
         const sourceSnapshots = Array.from(sources.values());
         return sourceSnapshots.reduce((total, source) => total + source.nextCount, 0);
     }
 
     get subscribeAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { subscribeTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { subscribeTimestamp } = subscriptionSnapshot;
         return this.age_(subscribeTimestamp);
     }
 
     get subscriberId(): string {
-        const { subscriberSnapshot_ } = this;
-        return subscriberSnapshot_.id;
+        const { subscriberSnapshot: subscriberSnapshot } = this;
+        return subscriberSnapshot.id;
     }
 
     get subscriptionId(): string {
-        const { subscriptionSnapshot_ } = this;
-        return subscriptionSnapshot_.id;
+        const { subscriptionSnapshot } = this;
+        return subscriptionSnapshot.id;
     }
 
     get unsubscribeAge(): number | undefined {
-        const { subscriptionSnapshot_ } = this;
-        const { unsubscribeTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { unsubscribeTimestamp } = subscriptionSnapshot;
         return this.age_(unsubscribeTimestamp);
     }
 
     get unsubscribed(): boolean {
-        const { subscriptionSnapshot_ } = this;
-        const { unsubscribeTimestamp } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { unsubscribeTimestamp } = subscriptionSnapshot;
         return unsubscribeTimestamp !== 0;
     }
 
     get value(): any {
-        const { subscriptionSnapshot_ } = this;
-        const { values } = subscriptionSnapshot_;
+        const { subscriptionSnapshot } = this;
+        const { values } = subscriptionSnapshot;
         return values.length ? values[0].value : undefined;
     }
 
@@ -301,8 +301,8 @@ class QueryContext {
     }
 
     tag(match: string | RegExp): boolean {
-        const { observableSnapshot_ } = this;
-        const { tag } = observableSnapshot_;
+        const { observableSnapshot: observableSnapshot } = this;
+        const { tag } = observableSnapshot;
         if (match === undefined) {
             return Boolean(tag);
         }
@@ -330,13 +330,13 @@ class QueryContext {
             }
         };
         const {
-            observableSnapshot_,
-            subscriptionSnapshot_
+            observableSnapshot: observableSnapshot,
+            subscriptionSnapshot
         } = this;
-        const rootStackTrace = subscriptionSnapshot_.rootSink ?
-            subscriptionSnapshot_.rootSink.stackTrace : [];
-        return observableSnapshot_.stackTrace.some(predicate) ||
-            subscriptionSnapshot_.stackTrace.some(predicate) ||
+        const rootStackTrace = subscriptionSnapshot.rootSink ?
+            subscriptionSnapshot.rootSink.stackTrace : [];
+        return observableSnapshot.stackTrace.some(predicate) ||
+            subscriptionSnapshot.stackTrace.some(predicate) ||
             rootStackTrace.some(predicate);
     }
 }
@@ -447,15 +447,15 @@ export function query(options: {
 }
 
 function logStackTrace_(logger: Logger, queryContext: QueryContext): void {
-    const { subscriptionSnapshot_ } = queryContext;
-    const { mappedStackTrace, rootSink } = subscriptionSnapshot_;
+    const { subscriptionSnapshot } = queryContext;
+    const { mappedStackTrace, rootSink } = subscriptionSnapshot;
     const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
     mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
 }
 
 function logSubscriber_(logger: Logger, queryContext: QueryContext, group: boolean, keys: string[] = []): void {
-    const { subscriberSnapshot_, subscriptionSnapshot_ } = queryContext;
-    const { values, valuesFlushed } = subscriberSnapshot_;
+    const { subscriberSnapshot: subscriberSnapshot, subscriptionSnapshot } = queryContext;
+    const { values, valuesFlushed } = subscriberSnapshot;
     logger[group ? "group" : "groupCollapsed"].call(logger, "Subscriber");
     logger.log("Value count =", values.length + valuesFlushed);
     if (values.length > 0) {
@@ -463,8 +463,8 @@ function logSubscriber_(logger: Logger, queryContext: QueryContext, group: boole
     }
     logSubscription_(logger, queryContext, keys);
     const otherSubscriptions = Array
-        .from(subscriberSnapshot_.subscriptions.values())
-        .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot_);
+        .from(subscriberSnapshot.subscriptions.values())
+        .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot);
     otherSubscriptions.forEach(otherSubscriptionSnapshot => {
         logger.groupCollapsed("Other subscription");
         logSubscription_(logger, queryContext, keys);
