@@ -178,6 +178,21 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("observable", () => {
+
+        it("should match a string", () => {
+            const result = query(`observable("subject")`);
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.outer));
+        });
+
+        it("should match a regular expression", () => {
+            const result = query(`observable(/subject/)`);
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.outer));
+        });
+    });
+
     describe("observableId", () => {
 
         it("should match string IDs", () => {
@@ -192,6 +207,21 @@ describe("SnapshotPlugin#query", () => {
             const result = query(`observableId === ${id}`);
             expect(result).to.match(foundRegExp(1));
             expect(result).to.match(idRegExp(id));
+        });
+    });
+
+    describe("operator", () => {
+
+        it("should match a string", () => {
+            const result = query(`observable("mergeMap")`);
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.mapped));
+        });
+
+        it("should match a regular expression", () => {
+            const result = query(`observable(/mergeMap/)`);
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.mapped));
         });
     });
 

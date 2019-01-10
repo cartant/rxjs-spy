@@ -287,6 +287,16 @@ class QueryContext {
         return (bufferCount > threshold) || (innerIncompleteCount > threshold);
     }
 
+    observable(match: string | RegExp): boolean {
+        const { observableSnapshot } = this;
+        const { name } = observableSnapshot;
+        return (typeof match === "string") ? (name === match) : match.test(name);
+    }
+
+    operator(match: string | RegExp): boolean {
+        return this.observable(match);
+    }
+
     pipeline(match: string | RegExp): boolean {
         const { observablePipeline } = this;
         if (typeof match === "string") {
