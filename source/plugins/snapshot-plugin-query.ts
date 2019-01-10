@@ -15,7 +15,7 @@ import {
     SubscriptionSnapshot
 } from "./snapshot-plugin-types";
 
-class QueryContext {
+class LazyQueryRecord {
 
     readonly observableSnapshot: ObservableSnapshot;
     readonly subscriberSnapshot: SubscriberSnapshot;
@@ -379,8 +379,8 @@ export function query(options: {
 
         const found: {
             observable: ObservableSnapshot;
-            orderByRecord: QueryRecord;
-            queryContexts: QueryContext[];
+            orderByQueryRecord: QueryRecord;
+            queryRecords: LazyQueryRecord[];
         }[] = [];
 
         observableSnapshots.forEach(observableSnapshot => {
@@ -392,24 +392,24 @@ export function query(options: {
 
                 const subscriberSnapshot = snapshot.subscribers.get(subscriptionSnapshot.subscriber);
                 if (subscriberSnapshot) {
-                    const queryContext = new QueryContext(
+                    const queryRecord = new LazyQueryRecord(
                         observableSnapshot,
                         subscriberSnapshot,
                         subscriptionSnapshot,
                         derivations
                     );
-                    if (predicateEvaluator(queryContext)) {
-                        const orderByRecord = queryContext;
+                    if (predicateEvaluator(queryRecord)) {
+                        const orderByRecord = queryRecord;
                         if (!find) {
                             find = {
                                 observable: observableSnapshot,
-                                orderByRecord,
-                                queryContexts: []
+                                orderByQueryRecord: orderByRecord,
+                                queryRecords: []
                             };
-                        } else if (comparer(orderByRecord, find.orderByRecord) < 0) {
-                            find.orderByRecord = orderByRecord;
+                        } else if (comparer(orderByRecord, find.orderByQueryRecord) < 0) {
+                            find.orderByQueryRecord = orderByRecord;
                         }
-                        find.queryContexts.push(queryContext);
+                        find.queryRecords.push(queryRecord);
                     }
                 }
             });
@@ -421,8 +421,8 @@ export function query(options: {
 
         if (comparer) {
             found.sort((l, r) => comparer(
-                l.orderByRecord,
-                r.orderByRecord
+                l.orderByQueryRecord,
+                r.orderByQueryRecord
             ));
         }
 
@@ -442,9 +442,9 @@ export function query(options: {
             );
             logger.log("Name =", observableSnapshot.name);
             logger.log("Pipeline =", observableSnapshot.pipeline);
-            const { queryContexts } = find;
-            logger.group(`${queryContexts.length} subscriber(s)`);
-            queryContexts.forEach(queryContext => logSubscriber_(logger, queryContext, queryContexts.length <= 3, keys));
+            const { queryRecords } = find;
+            logger.group(`${queryRecords.length} subscriber(s)`);
+            queryRecords.forEach(queryRecord => logSubscriber_(logger, queryRecord, queryRecords.length <= 3, keys));
             logger.groupEnd();
             logger.groupEnd();
         });
@@ -456,49 +456,49 @@ export function query(options: {
     });
 }
 
-function logStackTrace_(logger: Logger, queryContext: QueryContext): void {
-    const { subscriptionSnapshot } = queryContext;
+function logStackTrace_(logger: Logger, queryRecord: LazyQueryRecord): void {
+    const { subscriptionSnapshot } = queryRecord;
     const { mappedStackTrace, rootSink } = subscriptionSnapshot;
     const mapped = rootSink ? rootSink.mappedStackTrace : mappedStackTrace;
     mapped.subscribe(stackTrace => logger.log("Root subscribe at", stackTrace));
 }
 
-function logSubscriber_(logger: Logger, queryContext: QueryContext, group: boolean, keys: string[] = []): void {
-    const { subscriberSnapshot: subscriberSnapshot, subscriptionSnapshot } = queryContext;
+function logSubscriber_(logger: Logger, queryRecord: LazyQueryRecord, group: boolean, keys: string[] = []): void {
+    const { subscriberSnapshot: subscriberSnapshot, subscriptionSnapshot } = queryRecord;
     const { values, valuesFlushed } = subscriberSnapshot;
     logger[group ? "group" : "groupCollapsed"].call(logger, "Subscriber");
     logger.log("Value count =", values.length + valuesFlushed);
     if (values.length > 0) {
         logger.log("Last value =", values[values.length - 1].value);
     }
-    logSubscription_(logger, queryContext, keys);
+    logSubscription_(logger, queryRecord, keys);
     const otherSubscriptions = Array
         .from(subscriberSnapshot.subscriptions.values())
         .filter(otherSubscriptionSnapshot => otherSubscriptionSnapshot !== subscriptionSnapshot);
     otherSubscriptions.forEach(otherSubscriptionSnapshot => {
         logger.groupCollapsed("Other subscription");
-        logSubscription_(logger, queryContext, keys);
+        logSubscription_(logger, queryRecord, keys);
         logger.groupEnd();
     });
     logger.groupEnd();
 }
 
-function logSubscription_(logger: Logger, queryContext: QueryContext, keys: string[] = []): void {
-    const { complete, error, unsubscribed } = queryContext;
+function logSubscription_(logger: Logger, queryRecord: LazyQueryRecord, keys: string[] = []): void {
+    const { complete, error, unsubscribed } = queryRecord;
     logger.log("State =", complete ? "complete" : error ? "error" : "incomplete");
     keys = keys
         .sort()
-        .filter(key => !["function", "undefined"].includes(typeof queryContext[key]));
+        .filter(key => !["function", "undefined"].includes(typeof queryRecord[key]));
     if (keys.length > 0) {
         logger.group("Query match");
-        keys.forEach(key => logger.log(`${key} =`, queryContext[key]));
+        keys.forEach(key => logger.log(`${key} =`, queryRecord[key]));
         logger.groupEnd();
     }
     logger.groupCollapsed("Query record");
-    Object.keys(queryContext)
+    Object.keys(queryRecord)
         .sort()
-        .filter(key => !["function", "undefined"].includes(typeof queryContext[key]))
-        .forEach(key => logger.log(`${key} =`, queryContext[key]));
+        .filter(key => !["function", "undefined"].includes(typeof queryRecord[key]))
+        .forEach(key => logger.log(`${key} =`, queryRecord[key]));
     logger.groupEnd();
     if (error) {
         logger.error("Error =", error || "unknown");
@@ -506,5 +506,5 @@ function logSubscription_(logger: Logger, queryContext: QueryContext, keys: stri
     if (unsubscribed) {
         logger.log("Unsubscribed =", true);
     }
-    logStackTrace_(logger, queryContext);
+    logStackTrace_(logger, queryRecord);
 }
