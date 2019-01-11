@@ -58,14 +58,16 @@ describe("SnapshotPlugin#query", () => {
     describe("age", () => {
 
         it("should match observable ages", (done: Mocha.Done) => {
+            const result = query("age > 0.05");
+            expect(result).to.match(foundRegExp(0));
             setTimeout(() => {
-                harness.outer.next(0);
-                const result = query("age > 0.010");
-                expect(result).to.match(foundRegExp(2));
+                const result = query("age > 0.05");
+                expect(result).to.match(foundRegExp(3));
+                expect(result).to.match(idRegExp(harness.outer));
                 expect(result).to.match(idRegExp(harness.mapped));
                 expect(result).to.match(idRegExp(harness.tagged));
                 done();
-            }, 20);
+            }, 50);
         });
     });
 
@@ -279,6 +281,18 @@ describe("SnapshotPlugin#query", () => {
             const result = query("name === 'mergeMap'");
             expect(result).to.match(foundRegExp(1));
             expect(result).to.match(idRegExp(harness.mapped));
+        });
+    });
+
+    describe("nextCount", () => {
+
+        it("should match observable next counts", () => {
+            let result = query("nextCount > 0");
+            expect(result).to.match(foundRegExp(0));
+            harness.outer.next(0);
+            result = query("nextCount > 0");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.outer));
         });
     });
 
