@@ -273,6 +273,15 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("name", () => {
+
+        it("should match observable names", () => {
+            const result = query("name === 'mergeMap'");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.mapped));
+        });
+    });
+
     describe("observable", () => {
 
         it("should match a string", () => {
