@@ -58,16 +58,17 @@ describe("SnapshotPlugin#query", () => {
     describe("age", () => {
 
         it("should match observable ages", (done: Mocha.Done) => {
-            const result = query("age > 0.05");
+            const timeout = 50;
+            const result = query(`age > ${timeout}`);
             expect(result).to.match(foundRegExp(0));
             setTimeout(() => {
-                const result = query("age > 0.05");
+                const result = query(`age > ${timeout}`);
                 expect(result).to.match(foundRegExp(3));
                 expect(result).to.match(idRegExp(harness.outer));
                 expect(result).to.match(idRegExp(harness.mapped));
                 expect(result).to.match(idRegExp(harness.tagged));
                 done();
-            }, 50);
+            }, timeout);
         });
     });
 
@@ -380,16 +381,17 @@ describe("SnapshotPlugin#query", () => {
     describe("slow", () => {
 
         it("should match slow observables", (done: Mocha.Done) => {
+            const timeout = 50;
             harness.outer.next(0);
             setTimeout(() => {
                 harness.outer.next(0);
-                const result = query("slow(10)");
+                const result = query(`slow(${timeout / 2})`);
                 expect(result).to.match(foundRegExp(3));
                 expect(result).to.match(idRegExp(harness.inner));
                 expect(result).to.match(idRegExp(harness.mapped));
                 expect(result).to.match(idRegExp(harness.tagged));
                 done();
-            }, 20);
+            }, timeout);
         });
     });
 

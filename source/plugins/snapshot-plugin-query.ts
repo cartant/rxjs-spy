@@ -314,7 +314,7 @@ class LazyQueryRecord {
 
     slow(threshold: number): boolean {
         const { nextAge, subscribeAge } = this;
-        return ((nextAge === undefined) ? (subscribeAge || 0) : nextAge) > (threshold / 1e3);
+        return ((nextAge === undefined) ? (subscribeAge || 0) : nextAge) > threshold;
     }
 
     tag(match: string | RegExp): boolean {
@@ -331,7 +331,7 @@ class LazyQueryRecord {
 
     private age_(timestamp: number): number | undefined {
         const { now_ } = this;
-        return timestamp ? ((now_ - timestamp) / 1e3) : undefined;
+        return timestamp ? (now_ - timestamp) : undefined;
     }
 
     private stackTrace_(property: string, match: string | RegExp): boolean {
