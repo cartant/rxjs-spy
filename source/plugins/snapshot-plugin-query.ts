@@ -239,7 +239,7 @@ class LazyQueryRecord {
     }
 
     get subscriberId(): string {
-        const { subscriberSnapshot: subscriberSnapshot } = this;
+        const { subscriberSnapshot } = this;
         return subscriberSnapshot.id;
     }
 
@@ -311,7 +311,7 @@ class LazyQueryRecord {
     }
 
     tag(match: string | RegExp): boolean {
-        const { observableSnapshot: observableSnapshot } = this;
+        const { observableSnapshot } = this;
         const { tag } = observableSnapshot;
         if (match === undefined) {
             return Boolean(tag);
@@ -340,7 +340,7 @@ class LazyQueryRecord {
             }
         };
         const {
-            observableSnapshot: observableSnapshot,
+            observableSnapshot,
             subscriptionSnapshot
         } = this;
         const rootStackTrace = subscriptionSnapshot.rootSink ?
@@ -378,7 +378,7 @@ export function query(options: {
     snapshot.mapStackTraces(observableSnapshots).subscribe(() => {
 
         const found: {
-            observable: ObservableSnapshot;
+            observableSnapshot: ObservableSnapshot;
             orderByQueryRecord: QueryRecord;
             queryRecords: LazyQueryRecord[];
         }[] = [];
@@ -402,7 +402,7 @@ export function query(options: {
                         const orderByRecord = queryRecord;
                         if (!find) {
                             find = {
-                                observable: observableSnapshot,
+                                observableSnapshot,
                                 orderByQueryRecord: orderByRecord,
                                 queryRecords: []
                             };
@@ -435,7 +435,7 @@ export function query(options: {
 
         const observableGroupMethod = (found.length > 3) ? "groupCollapsed" : "group";
         found.forEach(find => {
-            const observableSnapshot = find.observable;
+            const { observableSnapshot } = find;
             logger[observableGroupMethod].call(logger, observableSnapshot.tag ?
                 `ID = ${observableSnapshot.id}; tag = ${observableSnapshot.tag}` :
                 `ID = ${observableSnapshot.id}`
@@ -464,7 +464,7 @@ function logStackTrace_(logger: Logger, queryRecord: LazyQueryRecord): void {
 }
 
 function logSubscriber_(logger: Logger, queryRecord: LazyQueryRecord, group: boolean, keys: string[] = []): void {
-    const { subscriberSnapshot: subscriberSnapshot, subscriptionSnapshot } = queryRecord;
+    const { subscriberSnapshot, subscriptionSnapshot } = queryRecord;
     const { values, valuesFlushed } = subscriberSnapshot;
     logger[group ? "group" : "groupCollapsed"].call(logger, "Subscriber");
     logger.log("Value count =", values.length + valuesFlushed);
