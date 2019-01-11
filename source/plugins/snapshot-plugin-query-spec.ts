@@ -240,6 +240,19 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("innerNextCount", () => {
+
+        it("should match inner observable next counts", () => {
+            harness.outer.next(0);
+            let result = query("innerNextCount > 0");
+            expect(result).to.match(foundRegExp(0));
+            harness.inner.next(0);
+            result = query("innerNextCount > 0");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.mapped));
+        });
+    });
+
     describe("innerIncompleteCount", () => {
 
         it("should match observables with incomplete inner observables", () => {
