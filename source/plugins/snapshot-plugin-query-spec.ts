@@ -86,7 +86,7 @@ describe("SnapshotPlugin#query", () => {
             const second = new Subject<number>();
             const zipped = zip(first, second);
             zipped.subscribe(noop, noop, noop);
-            first.next(1);
+            first.next(0);
             const result = query("bufferCount > 0");
             expect(result).to.match(foundRegExp(1));
             expect(result).to.match(idRegExp(zipped));
@@ -167,6 +167,25 @@ describe("SnapshotPlugin#query", () => {
             const result = query("file(/snapshot-plugin-query/)");
             expect(result).to.match(foundRegExp(3));
             expect(result).to.match(idRegExp(harness.outer));
+            expect(result).to.match(idRegExp(harness.mapped));
+            expect(result).to.match(idRegExp(harness.tagged));
+        });
+    });
+
+    describe("frequency", () => {
+
+        it("should match observable frequencies", () => {
+            harness.outer.next(0);
+            const result = query("frequency > 0");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.outer));
+        });
+
+        it("should assign a frequency of zero to observables that have not emitted", () => {
+            harness.outer.next(0);
+            const result = query("frequency === 0");
+            expect(result).to.match(foundRegExp(3));
+            expect(result).to.match(idRegExp(harness.inner));
             expect(result).to.match(idRegExp(harness.mapped));
             expect(result).to.match(idRegExp(harness.tagged));
         });

@@ -97,7 +97,14 @@ class LazyQueryRecord {
     get frequency(): number {
         const { subscriptionSnapshot } = this;
         const { nextCount, nextTimestamp, subscribeTimestamp } = subscriptionSnapshot;
-        return nextTimestamp ? (nextCount / (nextTimestamp - subscribeTimestamp)) * 1e3 : 0;
+        if ((nextCount === 0) || (nextTimestamp === 0)) {
+            return 0;
+        }
+        const elapsed = nextTimestamp - subscribeTimestamp;
+        if (elapsed === 0) {
+            return Infinity;
+        }
+        return (nextCount / elapsed) * 1e3;
     }
 
     get incomplete(): boolean {
