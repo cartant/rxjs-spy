@@ -55,6 +55,20 @@ describe("SnapshotPlugin#query", () => {
         composeHarness();
     });
 
+    describe("age", () => {
+
+        it("should match observable ages", (done: Mocha.Done) => {
+            setTimeout(() => {
+                harness.outer.next(0);
+                const result = query("age > 0.010");
+                expect(result).to.match(foundRegExp(2));
+                expect(result).to.match(idRegExp(harness.mapped));
+                expect(result).to.match(idRegExp(harness.tagged));
+                done();
+            }, 20);
+        });
+    });
+
     describe("blocking", () => {
 
         it("should match blocking observables", () => {

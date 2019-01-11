@@ -44,11 +44,11 @@ class LazyQueryRecord {
             unsubscribeAge
         } = this;
         return Math.min(
-            completeAge || Infinity,
-            errorAge || Infinity,
-            nextAge || Infinity,
-            subscribeAge || Infinity,
-            unsubscribeAge || Infinity
+            (completeAge === undefined) ? Infinity : completeAge,
+            (errorAge === undefined) ? Infinity : errorAge,
+            (nextAge === undefined) ? Infinity : nextAge,
+            (subscribeAge === undefined) ? Infinity : subscribeAge,
+            (unsubscribeAge === undefined) ? Infinity : unsubscribeAge
         );
     }
 
