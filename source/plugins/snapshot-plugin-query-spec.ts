@@ -197,6 +197,16 @@ describe("SnapshotPlugin#query", () => {
         });
     });
 
+    describe("inner", () => {
+
+        it("should match inner observables", () => {
+            harness.outer.next(0);
+            const result = query("inner");
+            expect(result).to.match(foundRegExp(1));
+            expect(result).to.match(idRegExp(harness.inner));
+        });
+    });
+
     describe("innerIncompleteCount", () => {
 
         it("should match observables with incomplete inner observables", () => {
