@@ -1,8 +1,7 @@
 {
   "defaultSeverity": "error",
   "extends": [
-    "rxjs-tslint-rules",
-    "tslint-etc"
+    "rxjs-tslint-rules"
   ],
   "jsRules": {},
   "rules": {
@@ -41,15 +40,11 @@
     "max-line-length": { "severity": "off" },
     "member-access": { "severity": "off" },
     "member-ordering": {
-      "options": {
-        "order": [
-          "static-field",
-          "static-method",
-          "instance-field",
-          "constructor",
-          "instance-method"
-        ]
-      },
+      "options": [
+        "public-before-private",
+        "static-before-instance",
+        "variables-before-functions"
+      ],
       "severity": "error"
     },
     "new-parens": { "severity": "error" },
@@ -68,6 +63,7 @@
       ],
       "severity": "warning"
     },
+    "no-consecutive-blank-lines": { "severity": "error" },
     "no-construct": { "severity": "error" },
     "no-debugger": { "severity": "error" },
     "no-default-export": { "severity": "off" },
@@ -101,7 +97,6 @@
     "no-trailing-whitespace": { "severity": "error" },
     "no-unnecessary-callback-wrapper": { "severity": "warning" },
     "no-unsafe-finally": { "severity": "error" },
-    "no-unused-declaration": { "severity": "error" },
     "no-unused-expression": { "severity": "error" },
     "no-use-before-declare": { "severity": "error" },
     "no-var-keyword": { "severity": "error" },
@@ -132,12 +127,10 @@
     "only-arrow-functions": { "severity": "off" },
     "ordered-imports": {
       "options": [{
-        "grouped-imports": false,
         "import-sources-order": "case-insensitive",
-        "module-source-path": "full",
         "named-imports-order": "case-insensitive"
       }],
-      "severity": "warn"
+      "severity": "off"
     },
     "prefer-const": { "severity": "off" },
     "prefer-for-of": { "severity": "off" },
@@ -201,7 +194,7 @@
         "check-decl",
         "check-module",
         "check-operator",
-        "check-separator",
+        "check-seperator",
         "check-type"
       ],
       "severity": "error"

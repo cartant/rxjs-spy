@@ -8,7 +8,7 @@ import { expect } from "chai";
 import { from, Observable, of } from "rxjs";
 import * as sinon from "sinon";
 import { identify } from "./identify";
-import { matches } from "./match";
+import { matches, read, toString } from "./match";
 import { tag } from "./operators";
 
 describe("match", () => {
@@ -39,13 +39,6 @@ describe("match", () => {
             const identity = identify(source);
             expect(matches(source, identity)).to.be.true;
             expect(matches(of("mallory"), identity)).to.be.false;
-        });
-
-        it("should match a numeric identity", () => {
-
-            const identity = parseInt(identify(source), 10);
-            expect(matches(source, identity as any)).to.be.true;
-            expect(matches(of("mallory"), identity as any)).to.be.false;
         });
 
         it("should match a regular expression", () => {

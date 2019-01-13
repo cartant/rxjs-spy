@@ -3,42 +3,33 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, OperatorFunction, PartialObserver, Subscriber } from "rxjs";
+import { Observable, PartialObserver, Subscriber } from "rxjs";
 
-export function inferName(observable: Observable<any>): string;
-export function inferName(operator: OperatorFunction<any, any>): string;
-export function inferName(target: Observable<any> | OperatorFunction<any, any>): string {
-    return isObservable(target) ?
-        inferObservableName(target) :
-        inferOperatorName(target);
+export function inferPath(observable: Observable<any>): string {
+
+    const { source } = observable as any;
+
+    if (source) {
+        return `${inferPath(source)}/${inferType(observable)}`;
+    }
+    return `/${inferType(observable)}`;
 }
 
-function inferObservableName(observable: Observable<any>): string {
+export function inferType(observable: Observable<any>): string {
+
     const { operator } = observable as any;
+
     const prototype = Object.getPrototypeOf(operator ? operator : observable);
     if (prototype.constructor && prototype.constructor.name) {
-        let name = prototype.constructor.name || "unknown";
+        let { name } = prototype.constructor;
         name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
         return name.replace(/^(\w+)(Observable|Operator)$/, (match: string, p: string) => p);
     }
     return "unknown";
 }
 
-function inferOperatorName(operator: OperatorFunction<any, any>): string {
-    let name = operator.name || "unknown";
-    name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
-    return name.replace(/^(\w+)(Operation)$/, (match: string, p: string) => p);
-}
-
-export function inferPipeline(observable: Observable<any>): string {
-    const { source } = observable as any;
-    if (source) {
-        return `${inferPipeline(source)}-${inferName(observable)}`;
-    }
-    return `${inferName(observable)}`;
-}
-
 export function isObservable(arg: any): arg is Observable<any> {
+
     return arg && arg.subscribe;
 }
 
@@ -58,7 +49,7 @@ const SubscriberSymbol = Symbol.for("rxSubscriber");
 //
 // toSubscriber is not part of the RxJS bundle's public API, so if it were to
 // be imported using a Rollup CommonJS plugin, it would need to be included in
-// this lib's bundle - but the other RxJS modules should not be included. This
+// the spy's bundle - but the other RxJS modules should not be included. This
 // seems too complicated, for the moment.
 
 export function toSubscriber<T>(
@@ -66,6 +57,7 @@ export function toSubscriber<T>(
     error?: (error: any) => void,
     complete?: () => void
 ): Subscriber<T> {
+
     if (nextOrObserver) {
         if (nextOrObserver instanceof Subscriber) {
             return nextOrObserver as Subscriber<T>;
@@ -74,6 +66,7 @@ export function toSubscriber<T>(
             return nextOrObserver[SubscriberSymbol]();
         }
     }
+
     if (!nextOrObserver && !error && !complete) {
         return new Subscriber(empty);
     }

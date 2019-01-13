@@ -1,0 +1,11 @@
+{
+    "headers": [{
+        "source": "**/*.@(html|js)",
+        "headers": [{
+            "key": "Cache-Control",
+            "value": "no-cache"
+        }]
+    }],
+    "redirects": [],
+    "rewrites": [{ "source": "/", "destination": "/harness/index.html" }]
+}

@@ -42,13 +42,13 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
 1. To inspect the current snapshots of all tagged observables, run the following in the console:
 
-        spy.query("tag()");
+        spy.show();
 
     You'll see a listing of snapshots for all tagged observables. There are two: an interval observable; and an observable that emits people's names.
 
-    To inspect a specific tagged observable, you can pass a string or a regular expression to `query`. For example:
+    To inspect a specific tagged observable, you can pass a string or a regular expression to `show`. For example:
 
-        spy.query("tag(/people/)");
+        spy.show("people");
 
 1. Logging can be enabled using the API's `log`method. For example:
 
@@ -68,11 +68,11 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
 
         spy.undo(3);
 
-1. The spy API can modify the a tagged observable using the `pipe` method. The method behaves in a similar manner to the RxJS `Observable.prototype.pipe` method.
+1. The spy API can modify the a tagged observable using the `let` method. The method behaves in a similar manner to the RxJS `let` operator.
 
     For example, the following call will replace the value emitted from the people observable:
 
-        spy.pipe("people", source => source.mapTo("mallory"));
+        spy.let("people", source => source.mapTo("mallory"));
 
     Note that the changes will be seen by both current and future subscribers to the observable.
 

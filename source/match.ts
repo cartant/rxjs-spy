@@ -5,17 +5,17 @@
 
 import { Observable, Subscriber, Subscription } from "rxjs";
 import { identify } from "./identify";
-import { getSubscriptionRecord } from "./subscription-record";
+import { isSubscriptionRef, SubscriberRef } from "./subscription-ref";
 import { isObservable } from "./util";
 
 export type MatchPredicate = (value: string | undefined, observable?: Observable<any>) => boolean;
-export type Match = Observable<any> | number | string | RegExp | MatchPredicate;
+export type Match = Observable<any> | string | RegExp | MatchPredicate;
 
 export function matches<T>(observable: Observable<T>, match: Match, value?: string): boolean;
 export function matches<T>(observable: Observable<T>, match: Match): boolean;
-export function matches(subscription: Subscription, match: Match, value?: string): boolean;
-export function matches(subscription: Subscription, match: Match): boolean;
-export function matches<T>(arg: Observable<T> | Subscription, match: Match, value?: string): boolean {
+export function matches(subscriberRef: SubscriberRef, match: Match, value?: string): boolean;
+export function matches(subscriberRef: SubscriberRef, match: Match): boolean;
+export function matches<T>(arg: Observable<T> | SubscriberRef, match: Match, value?: string): boolean {
 
     let observable: Observable<T>;
     let subscriber: Subscriber<T> | undefined = undefined;
@@ -24,10 +24,9 @@ export function matches<T>(arg: Observable<T> | Subscription, match: Match, valu
     if (isObservable(arg)) {
         observable = arg;
     } else {
-        const subscriptionRecord = getSubscriptionRecord(arg);
-        observable = subscriptionRecord.observable;
-        subscriber = subscriptionRecord.subscriber;
-        subscription = subscriptionRecord.subscription;
+        observable = arg.observable;
+        subscriber = arg.subscriber;
+        subscription = isSubscriptionRef(arg) ? arg.subscription : undefined;
     }
 
     if (isObservable(match)) {
@@ -41,10 +40,6 @@ export function matches<T>(arg: Observable<T> | Subscription, match: Match, valu
 
     if (typeof match === "function") {
         return match(tag, observable);
-    }
-    if (typeof match === "number") {
-        const text = match.toString();
-        return (text === observableId) || (text === subscriberId) || (text === subscriptionId);
     }
     if (typeof match === "string") {
         return (match === observableId) || (match === subscriberId) || (match === subscriptionId) || (match === tag);

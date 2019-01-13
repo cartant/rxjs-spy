@@ -92,16 +92,19 @@ spy.log(tag => tag === "some-tag");
 The methods in the module API are callable via imports, requires or the UMD `rxjsSpy` global. Most methods return a teardown function that will undo the API method's action when called.
 
 * [`create`](#module-create)
-* [`Spy.query`](#module-query)
+* [`Spy.show`](#module-show)
 * [`Spy.log`](#module-log)
 * [`Spy.pause`](#module-pause)
-* [`Spy.pipe`](#module-pipe)
-* [`Spy.stats`](#module-stats)
-* [`Spy.diff`](#module-diff)
+* [`Spy.let`](#module-let)
+* [`Spy.debug`](#module-debug)
+* [`Spy.flush`](#module-flush)
 * [`Spy.plug`](#module-plug)
 * [`Spy.unplug`](#module-unplug)
-* [`Spy.findPlugins`](#module-findPlugins)
+* [`Spy.find`](#module-find)
+* [`Spy.findAll`](#module-findAll)
+* [`Spy.stats`](#module-stats)
 * [`Spy.teardown`](#module-teardown)
+* [`detect`](#module-detect)
 
 <a name="module-create"></a>
 
@@ -122,16 +125,18 @@ Calling `create` attaches the spy to `Observable.prototype.subscribe` and return
 ```ts
 interface Spy {
   readonly tick: number;
-  diff(id: string, options?: { flush?: boolean }): void;
-  findPlugins<P extends Plugin, O extends PluginOptions>(ctor: PluginCtor<P, O>): P[];
+  debug(match: Match, ...notifications: Notification[]): Teardown;
+  find<T extends Plugin>(ctor: Ctor<T>): T | undefined;
+  findAll<T extends Plugin>(ctor: Ctor<T>): T[];
+  findAll(): Plugin[];
+  flush(): void;
+  let(match: Match, select: (source: Observable<any>) => Observable<any>, options?: Options): Teardown;
   log(match: Match, partialLogger?: PartialLogger): Teardown;
   log(partialLogger?: PartialLogger): Teardown;
   pause(match: Match): Deck;
-  pipe(match: Match, operator: (source: Observable<any>) => Observable<any>, complete?: boolean): Teardown;
   plug(...plugins: Plugin[]): Teardown;
-  query(predicate: string | QueryPredicate, orderBy: string, limit: number, partialLogger?: PartialLogger): void;
-  query(predicate: string | QueryPredicate, orderBy: string, partialLogger?: PartialLogger): void;
-  query(predicate: string | QueryPredicate, partialLogger?: PartialLogger): void;
+  show(match: Match, partialLogger?: PartialLogger): void;
+  show(partialLogger?: PartialLogger): void;
   stats(partialLogger?: PartialLogger): void;
   teardown(): void;
   unplug(...plugins: Plugin[]): void;
@@ -143,7 +148,7 @@ By default, `create` will wire up the snapshotting plugin and numerous others. H
 
 ```ts
 import { create } from "rxjs-spy";
-import { GraphPlugin, SnapshotPlugin } from "rxjs-spy/plugins";
+import { GraphPlugin, SnapshotPlugin } from "rxjs-spy/plugin";
 const spy = create({ defaultPlugins: false });
 spy.plug(
   new GraphPlugin({ keptDuration: -1 }),
@@ -163,31 +168,23 @@ Options passed to `create` are forwarded to the plugins, so the following can be
 
 This method returns a teardown function.
 
-<a name="module-query"></a>
+<a name="module-show"></a>
 
-### query
+### show
 
 ```ts
 interface Spy {
-  query(
-    predicate: string | QueryPredicate,
-    orderBy: string,
-    limit: number,
-    partialLogger?: PartialLogger
+  show(
+    match: string | RegExp | MatchPredicate | Observable<any>,
+    partialLogger: PartialLogger = console
   ): void;
-  query(
-    predicate: string | QueryPredicate,
-    orderBy: string,
-    partialLogger?: PartialLogger
-  ): void;
-  query(
-    predicate: string | QueryPredicate,
-    partialLogger?: PartialLogger
+  show(
+    partialLogger: PartialLogger = console
   ): void;
 }
 ```
 
-`query` will log information regarding the matching observables to the console or to the specified logger.
+`show` will log information regarding the matching observables to the console or to the specified logger. If no `match` is specified, all tagged observables will be logged.
 
 The logged information is retrieved from the most recent snapshot, so if snapshotting is not enabled, an error will be thrown.
 
@@ -246,55 +243,60 @@ interface Deck {
 
 Calling `step` will release a single paused notification. The other methods to what their names suggest. Calling `resume` will play all buffered notifications before resuming.
 
-<a name="module-pipe"></a>
+<a name="module-let"></a>
 
-### pipe
+### let
 
 ```ts
 interface Spy {
-  pipe({
-    complete,
-    match,
-    operator
-  }: {
-    complete?: boolean
-    match: Match,
-    operator: (source: Observable<any>) => Observable<any>
-  }): Teardown;
+  let(
+    match: string | RegExp | MatchPredicate | Observable<any>,
+    select: (source: Observable<any>) => Observable<any>,
+    options?: Options
+  ): Teardown;
 }
 ```
 
-Wires up an instance of the pipe plugin for matching observables.
+Wires up an instance of the let plugin for matching observables.
 
-This analogous to the `Observable.prototype.pipe` method. All subscriptions to matching observables will instead be made to the observable returned by the specified `operator` function.
+This is equivalent to the `let` operator. All subscriptions to matching observables will instead be made to the observable returned by the specified `select` function.
 
-If `complete` option is `false`, completion notifications received from the souce observable will not be forwarded to subscribers.
+If `complete` option is `false`, completion notifications received from the selected observable will not be forwarded to subscribers.
 
 This method returns a teardown function.
 
-<a name="module-stats"></a>
+<a name="module-debug"></a>
 
-### stats
-
-```ts
-interface Spy {
-  stats(partialLogger: PartialLogger = console): void;
-}
-```
-
-Writes, to the console, counts of the number of notifications, etc.
-
-<a name="module-diff"></a>
-
-### diff
+### debug
 
 ```ts
 interface Spy {
-  function diff(id: string, options: { teardown?: boolean } = {}): void;
+  debug(
+    match: string | RegExp | MatchPredicate | Observable<any>,
+    ...notifications: ("complete" | "error" | "next" | "subscribe" | "unsubscribe")[]
+  ): Teardown;
 }
 ```
 
-Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `diff` call with the specified `id`.
+Wires up an instance of the debug plugin for matching observables.
+
+Whenever one of the specified notifications occurs, a `debugger` statement in the plugin will pause execution. If no notifications are specified in the call, execution will be paused when any of the notifications occurs.
+
+This method returns a teardown function.
+
+<a name="module-flush"></a>
+
+### flush
+
+```ts
+interface Spy {
+  flush(): void;
+}
+```
+
+Calling `flush` will see `flush` called on each plugin.
+
+If snapshotting is enabled, calling `flush` will release excess values and completed or errored obervables from within snapshots.
 
 <a name="module-plug"></a>
 
@@ -320,19 +322,42 @@ interface Spy {
 
 Removes the specified plugin(s).
 
-<a name="module-findPlugins"></a>
+<a name="module-find"></a>
 
-### findplugins
+### find
 
 ```ts
 interface Spy {
-  findPlugins<P extends Plugin, O extends PluginOptions>(
-    ctor: PluginCtor<P, O>
-  ): P[];
+  find<T extends Plugin>(constructor: { new (...args: any[]): T }): T | undefined;
 }
 ```
 
-Returns all plugins matching the specified constructor/class.
+Returns the first plugin matching the specified constructor/class.
+
+<a name="module-findAll"></a>
+
+### findAll
+
+```ts
+interface Spy {
+  findAll<T extends Plugin>(constructor: { new (...args: any[]): T }): T[];
+  findAll(): T[];
+}
+```
+
+Returns all plugins matching the specified constructor/class. Or all plugins of no constructor is specified.
+
+<a name="module-stats"></a>
+
+### stats
+
+```ts
+interface Spy {
+  stats(partialLogger: PartialLogger = console): void;
+}
+```
+
+Writes, to the console, counts of the number of notifications, etc.
 
 <a name="module-teardown"></a>
 
@@ -345,6 +370,22 @@ interface Spy {
 ```
 
 Tears down the spy.
+
+<a name="module-detect"></a>
+
+### detect
+
+```ts
+function detect(id: string): void;
+```
+
+Writes, to the console, any subscriptions and unsubscriptions that have occurred since the previous `detect` call with the specified `id`.
+
+The `detect` method is implemented so that it can be imported and called regardless of whether or not the spy is configured. That is, calls can be left in production code, as they become no-ops. It should be imported like this:
+
+```ts
+import { detect } from "rxjs-spy/detect";
+```
 
 ## Console API
 

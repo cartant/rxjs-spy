@@ -16,7 +16,6 @@ module.exports = env => {
 
     return {
         context: path.join(__dirname, "./"),
-        devtool: "source-map",
         entry: {
             index: "./source/index.ts"
         },

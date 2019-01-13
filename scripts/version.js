@@ -9,14 +9,14 @@ const fs = require("fs");
 const version = JSON.stringify(require("../package.json").version);
 
 const files = [
-    "./build/patcher.js",
-    "./dist/patcher.js"
+    "./build/spy-core.js",
+    "./dist/spy-core.js"
 ];
 files.forEach(file => {
 
     try {
         const content = fs.readFileSync(file).toString();
-        fs.writeFileSync(file, content.replace(/__RXJS_DEVTOOLS_VERSION__/g, version));
+        fs.writeFileSync(file, content.replace(/__RX_SPY_VERSION__/g, version));
     } catch (error) {
         if (error.code !== "ENOENT") {
             throw error;

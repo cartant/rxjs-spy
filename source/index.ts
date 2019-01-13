@@ -3,37 +3,34 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-export { create } from "./factory";
+export { detect } from "./detect";
 export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
 export { matches } from "./match";
-export { BasePlugin, Plugin } from "./plugins";
-export { inferName, inferPipeline } from "./util";
+export { BasePlugin, Plugin } from "./plugin";
+export { create } from "./spy-factory";
+export { inferPath, inferType } from "./util";
 
 import { hide, tag } from "./operators";
 
 import {
-    BufferPlugin,
-    CyclePlugin,
+    DebugPlugin,
     DevToolsPlugin,
-    DiffPlugin,
     GraphPlugin,
+    LetPlugin,
     LogPlugin,
     PausePlugin,
-    PipePlugin,
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin
-} from "./plugins";
+} from "./plugin";
 
 export const plugins = {
-    BufferPlugin,
-    CyclePlugin,
+    DebugPlugin,
     DevToolsPlugin,
-    DiffPlugin,
     GraphPlugin,
+    LetPlugin,
     LogPlugin,
     PausePlugin,
-    PipePlugin,
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin
