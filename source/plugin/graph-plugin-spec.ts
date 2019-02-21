@@ -5,7 +5,7 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { combineLatest, NEVER, Observable, Observer, Subject, Subscription } from "rxjs";
+import { AsyncSubject, combineLatest, NEVER, Observable, of, Subject, Subscription } from "rxjs";
 import { map, mergeMap, switchMap } from "rxjs/operators";
 import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
 import { tag } from "../operators";
@@ -275,6 +275,36 @@ describe("GraphPlugin", () => {
                     expect(sinkGraphRef.sources).to.have.length(1);
                 }
                 return delay(duration).then(() => expect(sinkGraphRef.sources).to.have.length(0));
+            });
+
+            it("should flush synchronous observables", () => {
+
+                const source = of(42);
+                source.subscribe();
+
+                const { sentinel } = getGraphRef(subscriberRefsPlugin.get(source));
+                if (duration === 0) {
+                    expect(sentinel.sources).to.have.length(0);
+                } else {
+                    expect(sentinel.sources).to.have.length(1);
+                }
+                return delay(duration).then(() => expect(sentinel.sources).to.have.length(0));
+            });
+
+            it("should flush completed AsyncSubjects", () => {
+
+                const subject = new AsyncSubject<number>();
+                subject.next(1);
+                subject.complete();
+                subject.subscribe();
+
+                const { sentinel } = getGraphRef(subscriberRefsPlugin.get(subject));
+                if (duration === 0) {
+                    expect(sentinel.sources).to.have.length(0);
+                } else {
+                    expect(sentinel.sources).to.have.length(1);
+                }
+                return delay(duration).then(() => expect(sentinel.sources).to.have.length(0));
             });
 
             afterEach(() => {
