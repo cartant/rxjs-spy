@@ -13,6 +13,7 @@ export { inferPath, inferType } from "./util";
 import { hide, tag } from "./operators";
 
 import {
+    CyclePlugin,
     DebugPlugin,
     DevToolsPlugin,
     GraphPlugin,
@@ -25,6 +26,7 @@ import {
 } from "./plugin";
 
 export const plugins = {
+    CyclePlugin,
     DebugPlugin,
     DevToolsPlugin,
     GraphPlugin,
