@@ -1,3 +1,10 @@
+<a name="7.5.1"></a>
+## [7.5.1](https://github.com/cartant/rxjs-spy/compare/v7.5.0...v7.5.1) (2019-03-10)
+
+### Fixes
+
+* Export `CyclePlugin`. ([3066820](https://github.com/cartant/rxjs-spy/commit/3066820))
+
 <a name="7.5.0"></a>
 ## [7.5.0](https://github.com/cartant/rxjs-spy/compare/v7.4.0...v7.5.0) (2018-12-13)
 
