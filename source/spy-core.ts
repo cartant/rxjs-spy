@@ -23,7 +23,6 @@ import {
     CyclePlugin,
     DebugPlugin,
     Deck,
-    DevToolsPlugin,
     GraphPlugin,
     LetPlugin,
     LogPlugin,
@@ -67,7 +66,6 @@ export class SpyCore implements Spy {
         audit?: number;
         defaultLogger?: PartialLogger,
         defaultPlugins?: boolean,
-        devTools?: boolean,
         global?: string,
         plugins?: Plugin[],
         warning?: boolean
@@ -96,9 +94,6 @@ export class SpyCore implements Spy {
                 new CyclePlugin(this, this.defaultLogger_),
                 new StatsPlugin(this)
             ];
-            if (options.devTools !==  false) {
-                this.plugins_.push(new DevToolsPlugin(this));
-            }
         }
         this.pluginsSubject_ = new BehaviorSubject(this.plugins_);
         this.tick_ = 0;

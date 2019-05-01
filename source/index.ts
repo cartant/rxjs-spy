@@ -15,7 +15,6 @@ import { hide, tag } from "./operators";
 import {
     CyclePlugin,
     DebugPlugin,
-    DevToolsPlugin,
     GraphPlugin,
     LetPlugin,
     LogPlugin,
@@ -28,7 +27,6 @@ import {
 export const plugins = {
     CyclePlugin,
     DebugPlugin,
-    DevToolsPlugin,
     GraphPlugin,
     LetPlugin,
     LogPlugin,
