@@ -100,7 +100,7 @@ export class LogPlugin extends BasePlugin {
             auditor_.audit(this, (ignored) => {
 
                 const { logger_ } = this;
-                const { observable, subscriber } = ref;
+                const { observable } = ref;
                 const tag = read(observable);
                 const type = inferType(observable);
 

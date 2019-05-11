@@ -126,7 +126,10 @@ describe("StatsPlugin", () => {
     it("should count errors", () => {
 
         const subject = new Subject<number>();
-        const subscription = subject.subscribe(() => {}, () => {});
+        const subscription = subject.subscribe({
+            error: () => {},
+            next: () => {}
+        });
 
         let stats = statsPlugin.stats;
         expect(stats.errors).to.equal(0);
@@ -164,14 +167,14 @@ describe("StatsPlugin", () => {
 
     it("should determine the timespan between the first and last notification", (callback: any) => {
 
-        timer(10).subscribe(
-            () => {
+        timer(10).subscribe({
+            complete: callback,
+            error: callback,
+            next: () => {
                 const stats = statsPlugin.stats;
                 expect(stats.timespan).to.not.be.below(10);
-            },
-            callback,
-            callback
-        );
+            }
+        });
     });
 
     it("should determine the maximum and total depth", () => {

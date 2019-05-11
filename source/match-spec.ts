@@ -8,7 +8,7 @@ import { expect } from "chai";
 import { from, Observable, of } from "rxjs";
 import * as sinon from "sinon";
 import { identify } from "./identify";
-import { matches, read, toString } from "./match";
+import { matches } from "./match";
 import { tag } from "./operators";
 
 describe("match", () => {

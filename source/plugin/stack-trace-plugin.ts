@@ -2,6 +2,7 @@
  * @license Use of this source code is governed by an MIT-style license that
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
+/*tslint:disable:rxjs-no-sharereplay*/
 
 import { parse, StackFrame } from "error-stack-parser";
 import { defer, Observable, of } from "rxjs";
@@ -12,7 +13,7 @@ import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
 import { BasePlugin } from "./plugin";
-import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { SubscriberRef } from "../subscription-ref";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
 

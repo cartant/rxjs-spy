@@ -3,7 +3,6 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, Subscriber } from "rxjs";
 import { getGraphRef } from "./graph-plugin";
 import { BasePlugin } from "./plugin";
 import { Spy } from "../spy-interface";

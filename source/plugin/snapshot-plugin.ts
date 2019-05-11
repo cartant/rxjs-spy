@@ -10,7 +10,7 @@ import { getGraphRef, GraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
-import { BasePlugin, Notification } from "./plugin";
+import { BasePlugin } from "./plugin";
 import { Spy } from "../spy-interface";
 import { getMappedStackTrace, getStackTrace } from "./stack-trace-plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
@@ -174,7 +174,7 @@ export class SnapshotPlugin extends BasePlugin {
 
     beforeSubscribe(ref: SubscriberRef): void {
 
-        const snapshotRef = setSnapshotRef(ref, {
+        setSnapshotRef(ref, {
             complete: false,
             error: undefined,
             tick: this.spy_.tick,

@@ -30,7 +30,6 @@ import {
     ObservableSnapshot,
     PausePlugin,
     Plugin,
-    Snapshot,
     SnapshotPlugin,
     StackTracePlugin,
     StatsPlugin,
@@ -40,10 +39,11 @@ import {
 
 import { wrap } from "./spy-console";
 import { Ctor, Options, Spy, Teardown } from "./spy-interface";
-import { SubscriberRef, SubscriptionRef } from "./subscription-ref";
-import { isObservable, toSubscriber } from "./util";
+import { SubscriptionRef } from "./subscription-ref";
+import { toSubscriber } from "./util";
 
 declare const __RX_SPY_VERSION__: string;
+/*tslint:disable-next-line:deprecation*/
 const observableSubscribe = Observable.prototype.subscribe;
 const previousWindow: Record<string, any> = {};
 
@@ -80,6 +80,7 @@ export class SpyCore implements Spy {
         }
 
         SpyCore.spy_ = this;
+        /*tslint:disable-next-line:deprecation*/
         Observable.prototype.subscribe = SpyCore.coreSubscribe_;
 
         this.auditor_ = new Auditor(options.audit || 0);
@@ -137,6 +138,7 @@ export class SpyCore implements Spy {
             this.undos_ = [];
 
             SpyCore.spy_ = undefined;
+            /*tslint:disable-next-line:deprecation*/
             Observable.prototype.subscribe = observableSubscribe;
         };
     }
@@ -201,7 +203,6 @@ export class SpyCore implements Spy {
 
         let tagMatch: Match = /.+/;
         let notificationMatch: Match = /.+/;
-        let predicate: (notification: Notification) => boolean = () => true;
         let partialLogger: PartialLogger = this.defaultLogger_;
 
         if (args.length === 1) {

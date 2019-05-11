@@ -7,12 +7,11 @@ import {
     Notification,
     Observable,
     Subject,
-    Subscriber,
     Subscription
 } from "rxjs";
 
 import { dematerialize, materialize } from "rxjs/operators";
-import { defaultLogger, Logger, PartialLogger, toLogger } from "../logger";
+import { defaultLogger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { hide } from "../operators";
 import { BasePlugin } from "./plugin";

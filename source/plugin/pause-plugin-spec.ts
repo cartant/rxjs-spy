@@ -5,8 +5,7 @@
 /*tslint:disable:no-unused-expression*/
 
 import { expect } from "chai";
-import { Notification, Observable, Subject } from "rxjs";
-import { PartialLogger } from "../logger";
+import { Notification, Subject } from "rxjs";
 import { tag } from "../operators";
 import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 import { create } from "../spy-factory";

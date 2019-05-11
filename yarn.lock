@@ -26,6 +26,21 @@
     core-js "^2.6.5"
     regenerator-runtime "^0.13.2"
 
+"@cartant/tslint-config-etc@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@cartant/tslint-config-etc/-/tslint-config-etc-2.0.0.tgz#47374a04d08df1059a4386af8a13c75fb80a5ecf"
+  integrity sha512-5KfYtlxMWEAwj6RLyfxCScS/qqLVqQTDARKbaZVZy5Ydd1r98oL9oXS5vrxzPXQt6OjYC8UeDh6GUvi3Aak6Cg==
+
+"@cartant/tslint-config-rxjs@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@cartant/tslint-config-rxjs/-/tslint-config-rxjs-2.0.0.tgz#86ed50c97c1fcf90c335187188a257796ea014bb"
+  integrity sha512-5yAayR+lwVkCAzoWnMREa0tUFQWae7783g+L1cMFbiJi0GttH2QIOl+krx8/8klK58qp24iZ9GnmBlnIRCNCyA==
+
+"@cartant/tslint-config@^2.0.0":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@cartant/tslint-config/-/tslint-config-2.0.1.tgz#92a777107676f8f685a1b83c4d965270a02822dd"
+  integrity sha512-pMS590b3wW/TTPnrcNmbryCTCZOThivY6T9kLhOcs8tctG8iddKgSXufNCiOxKO3E9kK7PvWKDk65JVb0zuYuw==
+
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@mrmlnc/readdir-enhanced/-/readdir-enhanced-2.2.1.tgz#524af240d1a360527b730475ecfa1344aa540dde"
@@ -5279,6 +5294,16 @@ tslib@^1.6.1, tslib@^1.8.0, tslib@^1.8.1, tslib@^1.9.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
   integrity sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ==
 
+tslint-etc@^1.5.2:
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/tslint-etc/-/tslint-etc-1.5.2.tgz#02b15c3633bf9a558e7ed6d1afd07c75f034d9de"
+  integrity sha512-GhroqSFTpA0+FUQf951cS4ld8nkD83JuNR8m3c4hIGkF2Jo1mJNADg/6iNK6MggsVCJxGNK5fVVNP3dzO8tShg==
+  dependencies:
+    "@phenomnomnominal/tsquery" "^3.0.0"
+    tslib "^1.8.0"
+    tsutils "^3.0.0"
+    tsutils-etc "^1.0.0"
+
 tslint@^5.1.0:
   version "5.16.0"
   resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.16.0.tgz#ae61f9c5a98d295b9a4f4553b1b1e831c1984d67"
@@ -5298,7 +5323,7 @@ tslint@^5.1.0:
     tslib "^1.8.0"
     tsutils "^2.29.0"
 
-tsutils-etc@^1.1.0:
+tsutils-etc@^1.0.0, tsutils-etc@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/tsutils-etc/-/tsutils-etc-1.1.0.tgz#82ce1c92da29e07d3cde95692d5c5e8dbdc92fd0"
   integrity sha512-pJlLtLmQPUyGHqY/Pq6EGnpGmQCnnTDZetQ7eWkeQ5xaw4GtfcR1Zt7HMKFHGDDp53HzQfbqQ+7ps6iJbfa9Hw==

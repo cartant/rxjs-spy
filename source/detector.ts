@@ -6,10 +6,8 @@
 import { Subscription } from "rxjs";
 
 import {
-    ObservableSnapshot,
     Snapshot,
     SnapshotPlugin,
-    SubscriberSnapshot,
     SubscriptionSnapshot
 } from "./plugin/snapshot-plugin";
 

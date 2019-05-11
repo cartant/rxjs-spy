@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { merge, NEVER, Observable, Subscriber } from "rxjs";
+import { merge, NEVER, Observable } from "rxjs";
 import { Match, matches, toString as matchToString } from "../match";
 import { BasePlugin } from "./plugin";
 import { SubscriptionRef } from "../subscription-ref";
