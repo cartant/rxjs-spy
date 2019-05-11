@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/chai": "^4.0.0",
     "@types/mocha": "^5.0.0",
-    "@types/node": "^11.0.0",
+    "@types/node": "^12.0.0",
     "@types/sinon": "^7.0.0",
     "chai": "^4.0.0",
     "cpy-cli": "^2.0.0",
@@ -32,7 +32,7 @@
     "rxjs-tslint-rules": "^4.0.0",
     "sinon": "^7.1.0",
     "superstatic": "^6.0.0",
-    "ts-loader": "^5.0.0",
+    "ts-loader": "^6.0.0",
     "tslib": "^1.6.1",
     "tslint": "^5.1.0",
     "typescript": "~3.4.5",
