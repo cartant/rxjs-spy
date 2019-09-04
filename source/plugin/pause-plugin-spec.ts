@@ -7,9 +7,9 @@
 import { expect } from "chai";
 import { Notification, Subject } from "rxjs";
 import { tag } from "../operators";
-import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
+import { Deck, DeckStats, PausePlugin } from "./pause-plugin";
 
 describe("PausePlugin", () => {
 
@@ -38,7 +38,7 @@ describe("PausePlugin", () => {
             expect(deck).to.have.property("paused", true);
             subject.next("alice");
             expect(notifications(deck)).to.deep.equal([
-                new Notification<any>("N", "alice")
+                new Notification("N", "alice")
             ]);
             deck.clear();
             expect(notifications(deck)).to.deep.equal([]);
@@ -74,7 +74,7 @@ describe("PausePlugin", () => {
                 ["Deck matching people"],
                 ["  Paused =", true],
                 ["  Observable; tag = people"],
-                ["    Notifications =", [new Notification<any>("N", "alice")]]
+                ["    Notifications =", [new Notification("N", "alice")]]
             ]);
         });
 
@@ -113,20 +113,20 @@ describe("PausePlugin", () => {
             subject.next("mallory");
             expect(values).to.deep.equal([]);
             expect(notifications(deck)).to.deep.equal([
-                new Notification<any>("N", "alice"),
-                new Notification<any>("N", "bob"),
-                new Notification<any>("N", "mallory")
+                new Notification("N", "alice"),
+                new Notification("N", "bob"),
+                new Notification("N", "mallory")
             ]);
             deck.skip();
             expect(values).to.deep.equal([]);
             expect(notifications(deck)).to.deep.equal([
-                new Notification<any>("N", "bob"),
-                new Notification<any>("N", "mallory")
+                new Notification("N", "bob"),
+                new Notification("N", "mallory")
             ]);
             deck.skip();
             expect(values).to.deep.equal([]);
             expect(notifications(deck)).to.deep.equal([
-                new Notification<any>("N", "mallory")
+                new Notification("N", "mallory")
             ]);
         });
 
@@ -140,7 +140,7 @@ describe("PausePlugin", () => {
             subject.next("alice");
             expect(values).to.deep.equal([]);
             expect(notifications(deck)).to.deep.equal([
-                new Notification<any>("N", "alice")
+                new Notification("N", "alice")
             ]);
             deck.skip();
             expect(values).to.deep.equal([]);

@@ -5,8 +5,8 @@
 /*tslint:disable:no-debugger*/
 
 import { Match, matches, toString as matchToString } from "../match";
-import { BasePlugin, Notification } from "./plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { BasePlugin, Notification } from "./plugin";
 
 export class DebugPlugin extends BasePlugin {
 

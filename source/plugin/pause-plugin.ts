@@ -14,9 +14,9 @@ import { dematerialize, materialize } from "rxjs/operators";
 import { defaultLogger, PartialLogger, toLogger } from "../logger";
 import { Match, matches, read, toString as matchToString } from "../match";
 import { hide } from "../operators";
-import { BasePlugin } from "./plugin";
 import { Teardown } from "../spy-interface";
 import { SubscriptionRef } from "../subscription-ref";
+import { BasePlugin } from "./plugin";
 
 export interface DeckStats {
     notifications: number;

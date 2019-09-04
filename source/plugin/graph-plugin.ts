@@ -3,8 +3,8 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { BasePlugin, Notification } from "./plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { BasePlugin, Notification } from "./plugin";
 
 const graphRefSymbol = Symbol("graphRef");
 

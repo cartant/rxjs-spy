@@ -6,10 +6,10 @@
 
 import { expect } from "chai";
 import { of, Subject } from "rxjs";
-import { LetPlugin } from "./let-plugin";
 import { tag } from "../operators";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
+import { LetPlugin } from "./let-plugin";
 
 describe("LetPlugin", () => {
 

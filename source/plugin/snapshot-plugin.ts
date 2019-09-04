@@ -6,15 +6,15 @@
 import { StackFrame } from "error-stack-parser";
 import { forkJoin, Observable, of, Subscriber, Subscription } from "rxjs";
 import { mapTo } from "rxjs/operators";
-import { getGraphRef, GraphRef } from "./graph-plugin";
 import { identify } from "../identify";
 import { read } from "../match";
 import { hide } from "../operators";
-import { BasePlugin } from "./plugin";
 import { Spy } from "../spy-interface";
-import { getMappedStackTrace, getStackTrace } from "./stack-trace-plugin";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
 import { inferPath, inferType } from "../util";
+import { getGraphRef, GraphRef } from "./graph-plugin";
+import { BasePlugin } from "./plugin";
+import { getMappedStackTrace, getStackTrace } from "./stack-trace-plugin";
 
 const snapshotRefSymbol = Symbol("snapshotRef");
 

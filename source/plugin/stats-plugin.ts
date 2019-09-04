@@ -3,10 +3,10 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { getGraphRef } from "./graph-plugin";
-import { BasePlugin } from "./plugin";
 import { Spy } from "../spy-interface";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { getGraphRef } from "./graph-plugin";
+import { BasePlugin } from "./plugin";
 
 export interface Stats {
     completes: number;

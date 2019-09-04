@@ -4,11 +4,11 @@
  */
 
 import { Logger, PartialLogger, toLogger } from "../logger";
-import { BasePlugin } from "./plugin";
 import { Spy } from "../spy-interface";
-import { getStackTrace } from "./stack-trace-plugin";
 import { SubscriptionRef } from "../subscription-ref";
 import { inferType } from "../util";
+import { BasePlugin } from "./plugin";
+import { getStackTrace } from "./stack-trace-plugin";
 
 const cycleDetectedSymbol = Symbol("cycleDetected");
 const cycleWarnedSymbol = Symbol("cycleWarned");

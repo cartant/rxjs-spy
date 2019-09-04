@@ -12,8 +12,8 @@ import { shareReplay } from "rxjs/operators";
 import * as StackTraceGps from "stacktrace-gps";
 
 import { hide } from "../operators";
-import { BasePlugin } from "./plugin";
 import { SubscriberRef } from "../subscription-ref";
+import { BasePlugin } from "./plugin";
 
 const stackTraceRefSymbol = Symbol("stackTraceRef");
 

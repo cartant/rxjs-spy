@@ -7,12 +7,12 @@
 import { expect } from "chai";
 import { AsyncSubject, combineLatest, NEVER, Observable, of, Subject, Subscription } from "rxjs";
 import { map, mergeMap, switchMap } from "rxjs/operators";
-import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
 import { tag } from "../operators";
-import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
 import { SubscriberRef, SubscriptionRef } from "../subscription-ref";
+import { getGraphRef, GraphPlugin, GraphRef } from "./graph-plugin";
+import { SubscriberRefsPlugin } from "./subscriber-refs-plugin";
 
 describe("GraphPlugin", () => {
 

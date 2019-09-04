@@ -7,10 +7,10 @@
 import { expect } from "chai";
 import { NEVER, Subject, timer } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
-import { GraphPlugin } from "./graph-plugin";
-import { StatsPlugin } from "./stats-plugin";
 import { create } from "../spy-factory";
 import { Spy } from "../spy-interface";
+import { GraphPlugin } from "./graph-plugin";
+import { StatsPlugin } from "./stats-plugin";
 
 describe("StatsPlugin", () => {
 
