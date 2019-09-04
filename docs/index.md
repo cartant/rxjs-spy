@@ -126,7 +126,6 @@ The observables in the second `script` element are enclosed in an IIFE, so they 
     ga('create', 'UA-103034213-2', 'auto');
     ga('send', 'pageview');
 </script>
-<script src="https://unpkg.com/core-js/client/core.js"></script>
 <script src="https://unpkg.com/rxjs@6/bundles/rxjs.umd.js"></script>
 <script src="https://unpkg.com/rxjs-spy@7/bundles/rxjs-spy.umd.js"></script>
 <script>
