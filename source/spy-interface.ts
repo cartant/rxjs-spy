@@ -4,8 +4,8 @@
  */
 
 import { Observable } from "rxjs";
-import { PartialLogger } from "./logger";
 import { Auditor } from "./auditor";
+import { PartialLogger } from "./logger";
 import { Match } from "./match";
 import { Deck, Notification, Plugin } from "./plugin";
 
