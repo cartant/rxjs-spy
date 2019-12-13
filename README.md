@@ -23,8 +23,8 @@ If you, too, are looking for a less painful RxJS debugging experience, you might
 
 For more detail regarding how the library works and what it can do, you can have a look at:
 
-* [Debugging RxJS, Part 1: Tooling](https://medium.com/@cartant/debugging-rxjs-4f0340286dd3).
-* [Debugging RxJS, Part 2: Logging](https://medium.com/@cartant/debugging-rxjs-part-2-logging-56904459f144).
+* [Debugging RxJS, Part 1: Tooling](https://ncjamieson.com/debugging-rxjs-part-1-tooling/).
+* [Debugging RxJS, Part 2: Logging](https://ncjamieson.com/debugging-rxjs-part-2-logging/).
 * There is an online example in this repo's [GitHub pages](https://cartant.github.io/rxjs-spy/).
 
 ## Install
