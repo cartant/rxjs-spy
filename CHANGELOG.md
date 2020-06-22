@@ -1,3 +1,10 @@
+<a name="7.5.2"></a>
+## [7.5.2](https://github.com/cartant/rxjs-spy/compare/v7.5.1...v7.5.2) (2020-06-22)
+
+### Changes
+
+* Added `rxjs-report-usage`.
+
 <a name="7.5.1"></a>
 ## [7.5.1](https://github.com/cartant/rxjs-spy/compare/v7.5.0...v7.5.1) (2019-03-10)
 
