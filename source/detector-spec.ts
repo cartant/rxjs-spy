@@ -31,7 +31,7 @@ describe("detector", () => {
 
     it("should detect subscriptions and unsubscriptions", () => {
 
-        const subject = new Subject<number>();
+        const subject = new Subject<void>();
         const source = subject.pipe(tag("source"));
 
         subject.next();
@@ -57,7 +57,7 @@ describe("detector", () => {
 
     it("should detect flattening subscriptions and unsubscriptions", () => {
 
-        const subject = new Subject<number>();
+        const subject = new Subject<void>();
         const source = subject.pipe(tag("source"));
         const merged = source.pipe(
             mergeMap((value) => new BehaviorSubject(value).pipe(tag("merge")))
