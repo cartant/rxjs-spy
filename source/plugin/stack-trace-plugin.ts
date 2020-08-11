@@ -91,6 +91,7 @@ export class StackTracePlugin extends BasePlugin {
 
     private getStackFrames_(): StackFrame[] {
 
+        /* tslint:disable:no-implicit-any-catch */
         try {
             throw new Error();
         } catch (error) {
