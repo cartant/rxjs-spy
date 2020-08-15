@@ -85,7 +85,7 @@
     "test:mocha": "mocha build/**/*-spec.js",
     "test:watch": "karma start"
   },
-  "typings": "./dist/index.d.ts",
+  "types": "./dist/cjs/index.d.ts",
   "unpkg": "./bundles/rxjs-spy.min.umd.js",
   "version": "7.5.2"
 }

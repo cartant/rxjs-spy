@@ -1,8 +1,8 @@
 {
   "devDependencies": {},
-  "main": "./index.js",
+  "main": "./cjs/index.js",
   "private": false,
   "scripts": {},
-  "typings": "./index.d.ts",
+  "types": "./cjs/index.d.ts",
   "unpkg": "./bundles/rxjs-spy.min.umd.js"
 }

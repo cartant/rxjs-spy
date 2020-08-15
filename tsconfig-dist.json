@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist/cjs"
   },
   "exclude": [
     "source/**/*-spec.ts"
