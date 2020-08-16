@@ -39,7 +39,7 @@ module.exports = env => {
             filename,
             library: "rxjsSpy",
             libraryTarget: "umd",
-            path: path.resolve(__dirname, "./bundles")
+            path: path.resolve(__dirname, "./dist/bundles")
         },
         plugins: [require("./webpack.define")],
         resolve: {

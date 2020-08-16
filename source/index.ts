@@ -4,9 +4,9 @@
  */
 
 export { detect } from "./detect";
-export { defaultLogger, Logger, PartialLogger, toLogger } from "./logger";
+export * from "./logger";
 export { matches } from "./match";
-export { BasePlugin, Plugin } from "./plugin";
+export * from "./plugin";
 export { create } from "./spy-factory";
 export { inferPath, inferType } from "./util";
 

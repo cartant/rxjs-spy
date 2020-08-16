@@ -1,6 +1,7 @@
 {
   "devDependencies": {},
   "main": "./cjs/index.js",
+  "module": "./esm/index.js",
   "private": false,
   "scripts": {},
   "types": "./cjs/index.d.ts",
