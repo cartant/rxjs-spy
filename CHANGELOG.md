@@ -1,3 +1,10 @@
+<a name="7.5.3"></a>
+## [7.5.3](https://github.com/cartant/rxjs-spy/compare/v7.5.2...v7.5.3) (2020-08-16)
+
+### Changes
+
+* Distribute ESM bundles.
+
 <a name="7.5.2"></a>
 ## [7.5.2](https://github.com/cartant/rxjs-spy/compare/v7.5.1...v7.5.2) (2020-06-22)
 
