@@ -6,6 +6,10 @@ import resolve from "@rollup/plugin-node-resolve";
 const extensions = [".js", ".ts"];
 
 export default {
+    external: [
+        "rxjs",
+        "rxjs/operators"
+    ],
     input: "source/operators/index.ts",
     output: [
         {

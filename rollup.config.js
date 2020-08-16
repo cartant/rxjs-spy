@@ -8,6 +8,10 @@ import pack from "./package.json";
 const extensions = [".js", ".ts"];
 
 export default {
+    external: [
+        "rxjs",
+        "rxjs/operators"
+    ],
     input: "source/index.ts",
     output: [
         {
