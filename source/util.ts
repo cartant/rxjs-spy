@@ -3,10 +3,9 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { Observable, PartialObserver, Subscriber } from "rxjs";
+import { noop, Observable, Observer, PartialObserver, Subscriber } from "rxjs";
 
 export function inferPath(observable: Observable<any>): string {
-
     const { source } = observable as any;
 
     if (source) {
@@ -16,20 +15,21 @@ export function inferPath(observable: Observable<any>): string {
 }
 
 export function inferType(observable: Observable<any>): string {
-
     const { operator } = observable as any;
 
     const prototype = Object.getPrototypeOf(operator ? operator : observable);
     if (prototype.constructor && prototype.constructor.name) {
         let { name } = prototype.constructor;
         name = `${name.charAt(0).toLowerCase()}${name.substring(1)}`;
-        return name.replace(/^(\w+)(Observable|Operator)$/, (match: string, p: string) => p);
+        return name.replace(
+            /^(\w+)(Observable|Operator)$/,
+            (match: string, p: string) => p
+        );
     }
     return "unknown";
 }
 
 export function isObservable(arg: any): arg is Observable<any> {
-
     return arg && arg.subscribe;
 }
 
@@ -39,9 +39,11 @@ export function isObservable(arg: any): arg is Observable<any> {
 
 const empty = {
     closed: true,
-    error(error: any): void { throw error; },
+    error(error: any): void {
+        throw error;
+    },
     next(value: any): void {},
-    complete(): void {}
+    complete(): void {},
 };
 const SubscriberSymbol = Symbol.for("rxSubscriber");
 
@@ -52,23 +54,38 @@ const SubscriberSymbol = Symbol.for("rxSubscriber");
 // the spy's bundle - but the other RxJS modules should not be included. This
 // seems too complicated, for the moment.
 
+/*tslint:disable-next-line:rxjs-no-subclass*/
+class SpySubscriber<T> extends Subscriber<T> {
+    constructor(observer: Observer<T>) {
+        super();
+        this.destination = observer;
+    }
+}
+
 export function toSubscriber<T>(
-    nextOrObserver?: PartialObserver<T> | ((value: T) => void),
+    observerOrNext?: PartialObserver<T> | ((value: T) => void),
     error?: (error: any) => void,
     complete?: () => void
 ): Subscriber<T> {
-
-    if (nextOrObserver) {
-        if (nextOrObserver instanceof Subscriber) {
-            return nextOrObserver as Subscriber<T>;
-        }
-        if (nextOrObserver[SubscriberSymbol]) {
-            return nextOrObserver[SubscriberSymbol]();
-        }
+    if (observerOrNext instanceof Subscriber) {
+        return observerOrNext as Subscriber<T>;
     }
-
-    if (!nextOrObserver && !error && !complete) {
-        return new Subscriber(empty);
+    let next: ((value: T) => void) | undefined;
+    if (typeof observerOrNext === "function") {
+        next = observerOrNext;
+    } else if (observerOrNext) {
+        ({ complete, error, next } = observerOrNext);
+        next = next ? (value) => observerOrNext.next!(value) : undefined;
+        error = error ? (error) => observerOrNext.error!(error) : undefined;
+        complete = complete ? () => observerOrNext.complete!() : undefined;
     }
-    return new Subscriber(nextOrObserver, error, complete);
+    return new SpySubscriber({
+        complete: complete ?? noop,
+        error:
+            error ??
+            ((error: any) => {
+                throw error;
+            }),
+        next: next ?? noop,
+    });
 }

@@ -4,10 +4,12 @@
  */
 
 import {
-    Notification,
+    CompleteNotification,
+    ErrorNotification,
+    NextNotification,
     Observable,
     Subject,
-    Subscription
+    Subscription,
 } from "rxjs";
 
 import { dematerialize, materialize } from "rxjs/operators";
@@ -24,14 +26,19 @@ export interface DeckStats {
 }
 
 interface State {
-    notifications_: Notification<any>[];
-    subject_: Subject<Notification<any>>;
+    notifications_: (
+        | CompleteNotification
+        | ErrorNotification
+        | NextNotification<any>
+    )[];
+    subject_: Subject<
+        CompleteNotification | ErrorNotification | NextNotification<any>
+    >;
     subscription_: Subscription | undefined;
     tag_: string | undefined;
 }
 
 export class Deck {
-
     public teardown: Teardown | undefined;
 
     private match_: Match;
@@ -40,31 +47,35 @@ export class Deck {
     private stats_: Subject<DeckStats>;
 
     constructor(match: Match) {
-
         this.match_ = match;
         this.stats_ = new Subject<DeckStats>();
     }
 
     get stats(): Observable<DeckStats> {
-
         return this.stats_.asObservable();
     }
 
     get paused(): boolean {
-
         return this.paused_;
     }
 
-    clear(predicate: (notification: Notification<any>) => boolean = () => true): void {
-
+    clear(
+        predicate: (
+            notification:
+                | CompleteNotification
+                | ErrorNotification
+                | NextNotification<any>
+        ) => boolean = () => true
+    ): void {
         this.states_.forEach((state) => {
-            state.notifications_ = state.notifications_.filter((notification) => !predicate(notification));
+            state.notifications_ = state.notifications_.filter(
+                (notification) => !predicate(notification)
+            );
         });
         this.broadcast_();
     }
 
     log(partialLogger: PartialLogger = defaultLogger): void {
-
         const logger = toLogger(partialLogger);
 
         logger.group(`Deck matching ${matchToString(this.match_)}`);
@@ -78,16 +89,14 @@ export class Deck {
     }
 
     pause(): void {
-
         this.paused_ = true;
         this.broadcast_();
     }
 
     resume(): void {
-
         this.states_.forEach((state) => {
             while (state.notifications_.length > 0) {
-                state.subject_.next(state.notifications_.shift());
+                state.subject_.next(state.notifications_.shift()!);
             }
         });
         this.paused_ = false;
@@ -95,28 +104,27 @@ export class Deck {
     }
 
     select(ref: SubscriptionRef): (source: Observable<any>) => Observable<any> {
-
         const { observable } = ref;
 
         return (source: Observable<any>) => {
-
             let state = this.states_.get(observable);
             if (state) {
                 state.subscription_!.unsubscribe();
             } else {
                 state = {
                     notifications_: [],
-                    subject_: new Subject<Notification<any>>(),
+                    subject_: new Subject<
+                        | CompleteNotification
+                        | ErrorNotification
+                        | NextNotification<any>
+                    >(),
                     subscription_: undefined,
-                    tag_: read(observable)
+                    tag_: read(observable),
                 };
                 this.states_.set(observable, state);
             }
 
-            state.subscription_ = source.pipe(
-                materialize(),
-                hide()
-            ).subscribe({
+            state.subscription_ = source.pipe(materialize(), hide()).subscribe({
                 next: (notification: any) => {
                     if (this.paused_) {
                         state!.notifications_.push(notification);
@@ -124,18 +132,15 @@ export class Deck {
                         state!.subject_.next(notification);
                     }
                     this.broadcast_();
-                }
+                },
             });
             this.broadcast_();
 
-            return state.subject_.asObservable().pipe(
-                dematerialize()
-            );
+            return state.subject_.asObservable().pipe(dematerialize());
         };
     }
 
     skip(): void {
-
         this.states_.forEach((state) => {
             if (state.notifications_.length > 0) {
                 state.notifications_.shift();
@@ -145,10 +150,9 @@ export class Deck {
     }
 
     step(): void {
-
         this.states_.forEach((state) => {
             if (state.notifications_.length > 0) {
-                state.subject_.next(state.notifications_.shift());
+                state.subject_.next(state.notifications_.shift()!);
             }
         });
         this.broadcast_();
@@ -165,26 +169,25 @@ export class Deck {
     }
 
     private broadcast_(): void {
-
         const { paused_, states_, stats_ } = this;
 
         let notifications = 0;
-        states_.forEach((state) => notifications += state.notifications_.length);
+        states_.forEach(
+            (state) => (notifications += state.notifications_.length)
+        );
 
         stats_.next({
             notifications,
-            paused: paused_
+            paused: paused_,
         });
     }
 }
 
 export class PausePlugin extends BasePlugin {
-
     private match_: Match;
     private deck_: Deck;
 
     constructor(match: Match) {
-
         super(`pause(${matchToString(match)})`);
 
         this.deck_ = new Deck(match);
@@ -192,19 +195,18 @@ export class PausePlugin extends BasePlugin {
     }
 
     get deck(): Deck {
-
         const { deck_ } = this;
         return deck_;
     }
 
     get match(): Match {
-
         const { match_ } = this;
         return match_;
     }
 
-    select(ref: SubscriptionRef): ((source: Observable<any>) => Observable<any>) | undefined {
-
+    select(
+        ref: SubscriptionRef
+    ): ((source: Observable<any>) => Observable<any>) | undefined {
         const { deck_, match_ } = this;
 
         if (matches(ref, match_)) {
@@ -214,7 +216,6 @@ export class PausePlugin extends BasePlugin {
     }
 
     teardown(): void {
-
         const { deck_ } = this;
 
         if (deck_) {

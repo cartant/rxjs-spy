@@ -42,7 +42,7 @@
     "puppeteer": "^9.0.0",
     "rimraf": "^3.0.0",
     "rollup": "^2.26.0",
-    "rxjs": "^6.5.1",
+    "rxjs": "^7.0.0",
     "rxjs-tslint-rules": "^4.0.0",
     "sinon": "^10.0.0",
     "superstatic": "^6.0.0",
@@ -71,7 +71,7 @@
   "name": "rxjs-spy",
   "optionalDependencies": {},
   "peerDependencies": {
-    "rxjs": "^6.0.0"
+    "rxjs": "^7.0.0"
   },
   "private": true,
   "publishConfig": {

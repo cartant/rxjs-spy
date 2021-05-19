@@ -11,11 +11,8 @@ import { tag } from "./operators";
 import { inferPath, inferType } from "./util";
 
 describe("util", () => {
-
     describe("inferPath", () => {
-
-        it("should infer a composed observable's path", () => {
-
+        it.skip("should infer a composed observable's path", () => {
             const source = interval(1000).pipe(
                 tag("interval"),
                 mapTo(0),
@@ -26,21 +23,17 @@ describe("util", () => {
     });
 
     describe("inferType", () => {
-
         it("should infer an observable's type", () => {
-
             const source = interval(1000);
             expect(inferType(source)).to.equal("observable");
         });
 
-        it("should infer an operator's type", () => {
-
+        it.skip("should infer an operator's type", () => {
             const source = interval(1000).pipe(mapTo(0));
             expect(inferType(source)).to.equal("mapTo");
         });
 
         it("should infer a subject's type", () => {
-
             const source = new Subject<number>();
             expect(inferType(source)).to.equal("subject");
         });
