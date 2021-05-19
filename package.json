@@ -99,5 +99,5 @@
   },
   "types": "./dist/cjs/index.d.ts",
   "unpkg": "./dist/bundles/rxjs-spy.min.umd.js",
-  "version": "7.5.3"
+  "version": "8.0.0"
 }
