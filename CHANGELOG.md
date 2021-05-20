@@ -1,3 +1,10 @@
+<a name="8.0.1"></a>
+## [8.0.1](https://github.com/cartant/rxjs-spy/compare/v8.0.0...v8.0.1) (2021-05-20)
+
+### Fixes
+
+* Use `SafeSubscriber` constructor in `toSubscriber`. ([ae1fddc](https://github.com/cartant/rxjs-spy/commit/ae1fddc))
+
 <a name="8.0.0"></a>
 ## [8.0.0](https://github.com/cartant/rxjs-spy/compare/v7.5.3...v8.0.0) (2021-05-19)
 
