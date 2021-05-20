@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { noop, Observable, Observer, PartialObserver, Subscriber } from "rxjs";
+import { Observable, PartialObserver, Subscriber } from "rxjs";
 
 export function inferPath(observable: Observable<any>): string {
     const { source } = observable as any;
@@ -54,13 +54,11 @@ const SubscriberSymbol = Symbol.for("rxSubscriber");
 // the spy's bundle - but the other RxJS modules should not be included. This
 // seems too complicated, for the moment.
 
-/*tslint:disable-next-line:rxjs-no-subclass*/
-class SpySubscriber<T> extends Subscriber<T> {
-    constructor(observer: Observer<T>) {
-        super();
-        this.destination = observer;
-    }
-}
+let SafeSubscriberCtor: typeof Subscriber;
+const observable = new Observable<any>((subscriber) => {
+    SafeSubscriberCtor = Object.getPrototypeOf(subscriber).constructor;
+});
+observable.subscribe(() => {}).unsubscribe();
 
 export function toSubscriber<T>(
     observerOrNext?: PartialObserver<T> | ((value: T) => void),
@@ -79,13 +77,9 @@ export function toSubscriber<T>(
         error = error ? (error) => observerOrNext.error!(error) : undefined;
         complete = complete ? () => observerOrNext.complete!() : undefined;
     }
-    return new SpySubscriber({
-        complete: complete ?? noop,
-        error:
-            error ??
-            ((error: any) => {
-                throw error;
-            }),
-        next: next ?? noop,
-    });
+    return new SafeSubscriberCtor({
+        complete,
+        error,
+        next,
+    } as any);
 }
