@@ -54,7 +54,9 @@ const SubscriberSymbol = Symbol.for("rxSubscriber");
 // the spy's bundle - but the other RxJS modules should not be included. This
 // seems too complicated, for the moment.
 
-let SafeSubscriberCtor: typeof Subscriber;
+let SafeSubscriberCtor: {
+    new <T>(observer: PartialObserver<T>): Subscriber<T>;
+};
 const observable = new Observable<any>((subscriber) => {
     SafeSubscriberCtor = Object.getPrototypeOf(subscriber).constructor;
 });
@@ -81,5 +83,5 @@ export function toSubscriber<T>(
         complete,
         error,
         next,
-    } as any);
+    } as PartialObserver<T>);
 }
