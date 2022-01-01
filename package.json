@@ -55,6 +55,16 @@
     "webpack-cli": "^3.0.0",
     "webpack-rxjs-externals": "^2.0.0"
   },
+  "exports": {
+    ".": {
+      "node": "./dist/cjs/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./operators": {
+      "node": "./dist/cjs/operators/index.js",
+      "default": "./dist/esm/operators/index.js"
+    }
+  },
   "homepage": "https://github.com/cartant/rxjs-spy",
   "keywords": [
     "debug",

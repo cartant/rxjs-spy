@@ -1,5 +1,15 @@
 {
   "devDependencies": {},
+  "exports": {
+    ".": {
+      "node": "./cjs/index.js",
+      "default": "./esm/index.js"
+    },
+    "./operators": {
+      "node": "./cjs/operators/index.js",
+      "default": "./esm/operators/index.js"
+    }
+  },
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
   "private": false,
