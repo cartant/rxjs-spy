@@ -1,3 +1,10 @@
+<a name="8.0.2"></a>
+## [8.0.2](https://github.com/cartant/rxjs-spy/compare/v8.0.1...v8.0.2) (2022-01-01)
+
+### Fixes
+
+* Add `exports` to `package.json`. ([0ccd456](https://github.com/cartant/rxjs-spy/commit/0ccd456))
+
 <a name="8.0.1"></a>
 ## [8.0.1](https://github.com/cartant/rxjs-spy/compare/v8.0.0...v8.0.1) (2021-05-20)
 
