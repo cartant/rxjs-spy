@@ -32,7 +32,7 @@
     "chai": "^4.0.0",
     "cpy-cli": "^3.0.0",
     "eslint": "^7.3.0",
-    "karma": "^5.0.0",
+    "karma": "^6.3.14",
     "karma-chrome-launcher": "^3.1.0",
     "karma-mocha": "^2.0.0",
     "karma-spec-reporter": "^0.0.32",
