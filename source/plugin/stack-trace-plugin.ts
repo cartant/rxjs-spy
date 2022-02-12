@@ -4,7 +4,8 @@
  */
 /*tslint:disable:rxjs-no-sharereplay*/
 
-import { parse, StackFrame } from "error-stack-parser";
+import * as StackFrame from "stackframe";
+import { parse } from "error-stack-parser";
 import { defer, Observable, of } from "rxjs";
 import { shareReplay } from "rxjs/operators";
 
