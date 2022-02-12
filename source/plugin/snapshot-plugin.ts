@@ -3,7 +3,7 @@
  * can be found in the LICENSE file at https://github.com/cartant/rxjs-spy
  */
 
-import { StackFrame } from "error-stack-parser";
+import * as StackFrame from "stackframe";
 import { forkJoin, Observable, of, Subscriber, Subscription } from "rxjs";
 import { mapTo } from "rxjs/operators";
 import { identify } from "../identify";
