@@ -67,7 +67,7 @@ create();
 The `tag` operator can be used with `pipe`:
 
 ```js
-import { tag } from "rxjs-spy/operators/tag";
+import { tag } from "rxjs-spy/operators";
 const source = Observable.of("some-value").pipe(tag("some-tag"));
 ```
 
